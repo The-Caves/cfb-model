@@ -30,6 +30,6 @@ Workflow: [CFB Data Intake](https://github.com/The-Caves/cfb-model/actions/workf
 
 ## Advanced statistics integration (Step 3)
 - 2026 SportsDataverse play-by-play ingestion, game-ID and final-score checks, research-only EPA/success/explosive rates and defensive splits are available in `scripts/ingest_advanced.py`.
-- Advanced drive release is downloaded and audited; drive-rate fields are intentionally blank until verified team-ID joins are implemented.
+- Advanced drive release is reconciled by ESPN game and possession-team IDs, and both sides must pass; verified games contribute drives, yards/drive, and plays/drive. Points/drive remains unavailable.
 - Source timestamps and SHA256 are reported in the advanced manifest. Source snapshots retrieved now are not retrospective proof of historical pregame availability.
 - Advanced ingestion runs as an optional, clearly reported research stage; score ingestion continues if the advanced source is missing or inconsistent. The first live advanced run is pending verification.

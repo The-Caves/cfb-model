@@ -1,5 +1,5 @@
 import unittest
-from scripts.ingest_advanced import per_game_features,aggregate_team_profiles,truth
+from scripts.ingest_advanced import per_game_features,aggregate_team_profiles,truth,merge_drives
 class AdvancedTests(unittest.TestCase):
     def ledger(self):
         return {"77":{"game_id":"77","date":"2026-09-01","home":"Home","away":"Away",
@@ -28,6 +28,29 @@ class AdvancedTests(unittest.TestCase):
         self.assertEqual(h["def_epa_allowed_per_play"],-.3)
         self.assertEqual(h["betting_status"],"PASS_UNVALIDATED")
         self.assertEqual(h["drives_observed"],"")
+
+    def test_two_sided_drive_join(self):
+        teamrows,qa=per_game_features(self.make(),self.ledger(),"2026-10-20")
+        drive_rows=[
+            {"season":2026,"game_id":77,"pos_team":1,"drives":10,
+             "yards_per_drive":37,"plays_per_drive":6.1,"avg_field_position":62},
+            {"season":2026,"game_id":77,"pos_team":2,"drives":8,
+             "yards_per_drive":22,"plays_per_drive":5.4,"avg_field_position":70}]
+        report=merge_drives(teamrows,drive_rows,self.ledger())
+        self.assertEqual(report["drive_rows_applied"],2)
+        self.assertEqual(report["complete_game_pairs"],1)
+        p=aggregate_team_profiles(teamrows,["Home","Away"],"2026-10-20","now")
+        home=next(x for x in p if x["team"]=="Home")
+        self.assertEqual(home["drives_observed"],10)
+        self.assertEqual(home["yards_per_drive"],37)
+        self.assertEqual(home["provider_mean_yards_to_goal_per_play"],62)
+    def test_unmatched_drive_team_and_incomplete_pair(self):
+        teamrows,_=per_game_features(self.make(),self.ledger(),"2026-10-20")
+        drive_rows=[{"season":2026,"game_id":77,"pos_team":1,"drives":10,
+                     "yards_per_drive":37,"plays_per_drive":6,"avg_field_position":62}]
+        qa=merge_drives(teamrows,drive_rows,self.ledger())
+        self.assertEqual(qa["drive_rows_applied"],0)
+        self.assertEqual(qa["complete_game_pairs"],0)
     def test_score_conflict_quarantines_entire_game(self):
         rows,qa=per_game_features(self.make(hs=30),self.ledger(),"2026-10-20")
         self.assertEqual(len(rows),0)

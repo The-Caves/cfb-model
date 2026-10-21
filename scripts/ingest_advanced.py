@@ -14,7 +14,7 @@ COLS=["season","game_id","pos_team_id","homeTeamId","awayTeamId","homeFinalScore
       "status_type_completed","pass","rush","EPA","EPA_scrimmage","EPA_success","success",
       "statYardage","start.yardsToEndzone","down","qb_hurry","sack","passer_player_name",
       "drive.id","turnover_vec"]
-DRIVE_COLS=["season","game_id","pos_team_id","drives","yards_per_drive","plays_per_drive",
+DRIVE_COLS=["season","game_id","pos_team","drives","yards_per_drive","plays_per_drive",
             "avg_field_position","drive_total_gained_yards_rate"]
 TEAM_FIELDS=["games_covered","scrimmage_plays","pass_plays","rush_plays","epa_plays","off_epa_sum",
              "def_epa_plays","def_epa_sum","pass_epa_plays","pass_epa_sum","rush_epa_plays",
@@ -30,7 +30,7 @@ FIELDS=["team","season","asof_exclusive","games_covered","scrimmage_plays","pass
         "explosive_pass_rate_20plus","explosive_rush_rate_12plus","third_down_success_rate",
         "fourth_down_success_rate","redzone_play_success_rate","qb_hurry_rate_observed",
         "sack_rate_observed","drives_observed","yards_per_drive","plays_per_drive",
-        "avg_drive_start_yards_to_goal","source","source_retrieved_utc","betting_status"]
+        "provider_mean_yards_to_goal_per_play","source","source_retrieved_utc","betting_status"]
 
 def number(v):
     if v is None or v=="":return None
@@ -162,7 +162,10 @@ def per_game_features(play_rows,games,asof,min_plays=20):
                 epa=metric(p,"EPA")
                 if epa is None:epa=metric(p,"EPA_scrimmage")
                 if epa is not None:stats["def_epa_plays"]+=1;stats["def_epa_sum"]+=epa
+            hid,aid=ids[gid]
             rows.append({"game_id":gid,"date":g["date"],"team":team,"opponent":opp,
+                        "team_id":hid if team==g["home"] else aid,
+                        "opponent_team_id":aid if team==g["home"] else hid,
                         "plays_for":len(offensive),"plays_against":len(defensive),**stats})
     qa={"pbp_games_seen":len(seen),"games_accepted":len(rows)//2,
         "games_quarantined":len(quarantine),"team_game_rows":len(rows),
@@ -171,18 +174,52 @@ def per_game_features(play_rows,games,asof,min_plays=20):
     return rows,qa
 
 def merge_drives(team_games,drive_rows,games):
-    index={(r["game_id"],r["team"]):r for r in team_games};seen=Counter();ignored=Counter()
+    """Add verified two-sided team/game drive summaries, or keep metrics absent."""
+    index={(r["game_id"],r["team_id"]):r for r in team_games}
+    by_game=defaultdict(dict);ignored=Counter()
     for d in drive_rows:
         gid=key(d.get("game_id"))
         if gid not in games or key(d.get("season"))!="2026":continue
-        ident=key(d.get("pos_team_id"))
-        # Advanced drive feed may use school names; map by associated IDs in PBP rows.
-        # Without verifiable team-id mapping, do not infer which side owned the drives.
-        # Matching names is insufficient to assert home/away or completeness.
-        _=ident
-        ignored["no_independent_drive_team_id_mapping"]+=1
-    return {"drive_rows_examined":sum(ignored.values()),"drive_rows_applied":sum(seen.values()),
-            "status":"NO_ID_MATCH_SAFE_DRIVE_JOIN","excluded":dict(ignored)}
+        tid=key(d.get("pos_team"))
+        row=index.get((gid,tid))
+        if row is None:
+            ignored["unmatched_game_or_team_id"]+=1;continue
+        if tid in by_game[gid]:
+            ignored["duplicate_drive_summary"]+=1
+            by_game[gid][tid]=None;continue
+        count=number(d.get("drives"))
+        yards=number(d.get("yards_per_drive"))
+        plays=number(d.get("plays_per_drive"))
+        position=number(d.get("avg_field_position"))
+        if (count is None or count!=int(count) or not 1<=count<=45 or
+            yards is None or not -30<=yards<=130 or
+            plays is None or not 0<=plays<=35 or
+            position is None or not 0<=position<=100):
+            ignored["invalid_drive_summary"]+=1
+            by_game[gid][tid]=None;continue
+        by_game[gid][tid]={"drives":int(count),"yards_per_drive":yards,
+                          "plays_per_drive":plays,"avg_field_position":position}
+    applied=0;paired=0
+    for gid,groups in by_game.items():
+        sides=[r for r in team_games if r["game_id"]==gid]
+        if len(sides)!=2:continue
+        if any(groups.get(r["team_id"]) is None for r in sides):
+            ignored["incomplete_game_pair"]+=1;continue
+        paired+=1
+        for r in sides:
+            d=groups[r["team_id"]]
+            r["drives"]=d["drives"]
+            r["drive_yards_sum"]=d["yards_per_drive"]*d["drives"]
+            r["drive_plays_sum"]=d["plays_per_drive"]*d["drives"]
+            # Provider's avg_field_position is averaged across scrimmage PLAYS,
+            # not independent drive starts: preserve its weighting and label.
+            r["field_position_sum"]=d["avg_field_position"]*r["scrimmage_plays"]
+            r["field_position_n"]=r["scrimmage_plays"]
+            applied+=1
+    return {"drive_rows_applied":applied,"complete_game_pairs":paired,
+            "games_with_accepted_pbp":len({r["game_id"] for r in team_games}),
+            "status":"VERIFIED_TWO_SIDED_GAME_TEAM_JOIN" if applied else "NO_VERIFIED_DRIVE_ROWS",
+            "excluded":dict(ignored)}
 
 def aggregate_team_profiles(team_games,registry,asof,retrieved):
     by=defaultdict(list)
@@ -215,7 +252,7 @@ def aggregate_team_profiles(team_games,registry,asof,retrieved):
             "drives_observed":int(n("drives")) if n("drives") else "",
             "yards_per_drive":get(vs,"drive_yards_sum","drives"),
             "plays_per_drive":get(vs,"drive_plays_sum","drives"),
-            "avg_drive_start_yards_to_goal":get(vs,"field_position_sum","field_position_n"),
+            "provider_mean_yards_to_goal_per_play":get(vs,"field_position_sum","field_position_n"),
             "source":"SDV_2026_PBP_RETROSPECTIVE","source_retrieved_utc":retrieved,
             "betting_status":"PASS_UNVALIDATED"})
     return out
@@ -273,7 +310,7 @@ def execute(games_path,registry_path,output,asof,offline_pbp=None,offline_drives
             manifest["drive_qa"]=merge_drives(team_games,read_parquet(drives,DRIVE_COLS),games)
         output.mkdir(parents=True,exist_ok=True)
         with (output/"team_game_advanced_2026.csv").open("w",newline="") as f:
-            fields=["game_id","date","team","opponent","plays_for","plays_against"]+TEAM_FIELDS
+            fields=["game_id","date","team","opponent","team_id","opponent_team_id","plays_for","plays_against"]+TEAM_FIELDS
             w=csv.DictWriter(f,fieldnames=fields,extrasaction="ignore");w.writeheader();w.writerows(team_games)
         profile=aggregate_team_profiles(team_games,registry,asof,timestamp)
         with (output/"team_profiles_advanced_2026.csv").open("w",newline="") as f:
@@ -282,7 +319,7 @@ def execute(games_path,registry_path,output,asof,offline_pbp=None,offline_drives
         manifest["teams_with_pbp"]=sum(p["games_covered"]>0 for p in profile)
         manifest["teams_with_observed_epa"]=sum(p["off_epa_per_play"]!="" for p in profile)
         manifest["completed_score_games_before_asof"]=len(games)
-        manifest["status"]="RESEARCH_PBP_IMPORTED_DRIVE_JOIN_PENDING"
+        manifest["status"]="RESEARCH_PBP_IMPORTED_DRIVE_JOIN_VERIFIED" if manifest.get("drive_qa",{}).get("drive_rows_applied",0)>0 else "RESEARCH_PBP_IMPORTED_NO_VERIFIED_DRIVES"
         manifest["safe_to_publish_picks"]=False
     except Exception as exc:
         manifest["error"]=str(exc)
