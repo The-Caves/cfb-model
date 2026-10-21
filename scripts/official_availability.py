@@ -48,9 +48,16 @@ def aliases_from_csv(file):
         if not short or not long or short in out:raise ValueError("Invalid or duplicate canonical alias")
         out[short]=long
     # Explicit safe publisher spellings; all mapped to unique registered schools.
-    for displayed,original in {"Ohio St.":"Ohio State","Penn St.":"Penn State",
-                               "Michigan St.":"Michigan State","Miss. State":"Mississippi State",
-                               "Miss St.":"Mississippi State","Ole Miss":"Ole Miss"}.items():
+    for displayed,original in {
+        "Ohio St.":"Ohio State","Penn St.":"Penn State","Michigan St.":"Michigan State",
+        "Miss. State":"Mississippi State","Miss St.":"Mississippi State",
+        "Ole Miss":"Ole Miss","Arizona St.":"Arizona State",
+        "Kansas St.":"Kansas State","K-State":"Kansas State",
+        "Oklahoma St.":"Oklahoma State","Cal":"California",
+        "Pitt":"Pittsburgh","Miami":"Miami (FL)","Miami FL":"Miami (FL)",
+        "N.C. State":"NC State","Va. Tech":"Virginia Tech",
+        "Ga. Tech":"Georgia Tech","WVU":"West Virginia",
+        "W. Virginia":"West Virginia"}.items():
         if original in out:out[displayed]=out[original]
     return out
 
