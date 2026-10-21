@@ -121,12 +121,11 @@ def matchup(g,home,away):
     def two(a,fa,b,fb):
         return None if a.get(fa) is None or b.get(fb) is None else a[fa]-b[fb]
     margin=delta("margin")
-    score_total=(sum((x["points_for"],x["points_against"])) for x in (home,away)
-                 if x["points_for"] is not None and x["points_against"] is not None)
-    totals=list(score_total)
+    totals=[x["points_for"]+x["points_against"] for x in (home,away)
+            if x["points_for"] is not None and x["points_against"] is not None]
     return {
       "score_margin_form":margin,
-      "scoring_total_form":sum(sum(t) for t in totals)/2 if len(totals)==2 else None,
+      "scoring_total_form":sum(totals)/2 if len(totals)==2 else None,
       "win_rate_form":delta("win"),
       "rest_days_diff":delta("rest"),
       "neutral_site":int(str(g["neutral"]).strip().lower()=="true"),
