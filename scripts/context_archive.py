@@ -6,6 +6,7 @@ main code branch untouched. Workflow token requires contents:write. Never log to
 import argparse,base64,datetime as dt,gzip,hashlib,json,os,urllib.error,urllib.parse,urllib.request
 from pathlib import Path
 from scripts.context_delta import snapshot_changes
+from scripts.qb_review_archive import close_qb_review
 from scripts.game_context import parse_time
 
 API="https://api.github.com"
@@ -72,7 +73,7 @@ def close_snapshot(current,observed_at):
     newer["excluded_game_kickoffs_during_collection"]=len(games)-len(newer["games"])
     return newer
 
-def write(current_path,previous_path,geo_path,manifest_path,output_path,source_watch=None):
+def write(current_path,previous_path,geo_path,manifest_path,output_path,source_watch=None,qb_review=None):
     cur=json.loads(Path(current_path).read_text())
     prior=json.loads(Path(previous_path).read_text())
     manifest=json.loads(Path(manifest_path).read_text())
@@ -105,6 +106,13 @@ def write(current_path,previous_path,geo_path,manifest_path,output_path,source_w
                 "reports_published_accepted":value.get("official_reports_accepted",0),
                 "reports_pending":value.get("pending_cards",0)}
                 for key,value in official.get("feeds",{}).items()}}
+    qb_queue=None
+    if qb_review:
+        candidate_path=Path(qb_review)
+        if not candidate_path.is_file():
+            raise ValueError("Missing required QB review queue artifact")
+        qb_queue=close_qb_review(json.loads(candidate_path.read_text()),cur)
+        summary["qb_review"]=qb_queue["summary"]
     source=None
     if source_watch and Path(source_watch).exists():
         source=json.loads(Path(source_watch).read_text())
@@ -142,6 +150,9 @@ def write(current_path,previous_path,geo_path,manifest_path,output_path,source_w
         "history/"+day+"/"+stamp+".json.gz":pack(cur),
         "deltas/"+day+"/"+stamp+".json.gz":pack(report),
     }
+    if qb_queue is not None:
+        blobs["state/qb_review_latest.json"]=encode(qb_queue)
+        blobs["qb_review/"+day+"/"+stamp+".json.gz"]=pack(qb_queue)
     if source is not None:
         blobs["state/personnel_sources_latest.json"]=encode(source)
         blobs["sources/"+day+"/"+stamp+".json.gz"]=pack(source)
@@ -172,7 +183,9 @@ if __name__=="__main__":
     p.add_argument("--output",default="data/context_delta")
     p.add_argument("--geo-cache",default="data/context_refresh/geo_cache.json")
     p.add_argument("--source-watch",default="data/context_refresh/personnel_source_watch.json")
+    p.add_argument("--qb-review",default=None)
     a=p.parse_args()
     result=restore(a.state_dir) if a.operation=="restore" else write(
-        a.context,Path(a.state_dir)/"previous.json",a.geo_cache,a.manifest,a.output,a.source_watch)
+        a.context,Path(a.state_dir)/"previous.json",a.geo_cache,a.manifest,a.output,
+        a.source_watch,a.qb_review)
     print(json.dumps(result,indent=2))
