@@ -53,6 +53,8 @@ def evaluate_folds(features,labels,forecasts,fold_metadata):
             raise ValueError("Model version is required for reproducibility")
         if parse_time(row["issued_at_utc"])>parse_time(rows[rid]["decision_asof_utc"]):
             raise ValueError("Forecast issued after decision cutoff")
+        if parse_time(row["training_data_cutoff_utc"])>parse_time(row["issued_at_utc"]):
+            raise ValueError("Model training cutoff after forecast issue")
         predictions[rid]=row
     pairs={}
     for row in features:
