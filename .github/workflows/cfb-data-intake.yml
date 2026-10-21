@@ -1,0 +1,31 @@
+name: CFB 2026 Data Intake
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 10,16,23 * * *'
+permissions:
+  contents: read
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Fetch 2026 completed games
+        run: python scripts/ingest_espn.py --start 2026-08-01 --output data
+      - name: Upload intake logs and data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-2026-data-intake
+          path: |
+            data/manifest.json
+            data/games_2026.csv
+            data/raw/
+          retention-days: 14
