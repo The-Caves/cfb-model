@@ -12,10 +12,11 @@ from scripts.game_context import parse_time
 from scripts.market_client import fetch
 from scripts.market_quotes import normalize
 from scripts.market_vault import default_path,store
+from scripts.market_preflight import estimate
 
 def capture(vault_path=None,bookmakers="fanduel",fixture_path=None,
             execute_network=False,historical_date=None,acknowledge_paid_historical=False,
-            retrieved_at_utc=None,fetcher=fetch):
+            retrieved_at_utc=None,fetcher=fetch,max_estimated_credits=3):
     if not bookmakers or any(not b or not b.replace("_","").isalnum()
                               for b in bookmakers.split(",")):
         raise ValueError("Invalid bookmaker keys")
@@ -32,6 +33,11 @@ def capture(vault_path=None,bookmakers="fanduel",fixture_path=None,
             raise ValueError("Private odds captures cannot run in public GitHub Actions")
         if historical_date and not acknowledge_paid_historical:
             raise ValueError("Paid historical snapshots require explicit acknowledgement")
+        if type(max_estimated_credits) is not int or max_estimated_credits<0:
+            raise ValueError("Max estimated credits must be a nonnegative integer")
+        expected=estimate(bookmakers=bookmakers,historical=bool(historical_date))
+        if expected["estimated_total_credits_max"]>max_estimated_credits:
+            raise ValueError("Estimated provider cost exceeds explicit credit ceiling")
         api_key=os.environ.get("ODDS_API_KEY")
         if not api_key:
             raise ValueError("Configure ODDS_API_KEY privately before fetching")
@@ -63,10 +69,12 @@ if __name__=="__main__":
     p.add_argument("--execute-network",action="store_true")
     p.add_argument("--historical-date",default=None)
     p.add_argument("--acknowledge-paid-historical",action="store_true")
+    p.add_argument("--max-estimated-credits",type=int,default=3)
     a=p.parse_args()
     report=capture(vault_path=a.vault,bookmakers=a.bookmakers,
                    fixture_path=a.offline_json,execute_network=a.execute_network,
                    historical_date=a.historical_date,
-                   acknowledge_paid_historical=a.acknowledge_paid_historical)
+                   acknowledge_paid_historical=a.acknowledge_paid_historical,
+                   max_estimated_credits=a.max_estimated_credits)
     # Only sanitized metadata is ever emitted to terminal.
     print(json.dumps(report,indent=2))
