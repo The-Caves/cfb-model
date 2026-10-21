@@ -93,10 +93,10 @@ class CrosswalkTests(unittest.TestCase):
     def test_bad_or_collision_market_aliases_are_quarantined(self):
         with tempfile.TemporaryDirectory() as t:
             p=Path(t)/"sportsbook.csv"
-            p.write_text("provider_team_name,espn_display_name\\nOhio State Buckeyes,Penn State Nittany Lions\\n")
+            p.write_text("provider_team_name,espn_display_name\nOhio State Buckeyes,Penn State Nittany Lions\n")
             with self.assertRaises(ValueError):
                 load_market_registry("data/archive/2026_team_aliases.csv",p)
-            p.write_text("provider_team_name,espn_display_name\\nFake Name,Imaginary School\\n")
+            p.write_text("provider_team_name,espn_display_name\nFake Name,Imaginary School\n")
             with self.assertRaises(ValueError):
                 load_market_registry("data/archive/2026_team_aliases.csv",p)
 
