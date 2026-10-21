@@ -29,6 +29,13 @@ class OfficialNewsCandidateTests(unittest.TestCase):
     def test_dont_make_stale_article_pregame(self):
         x=XML.replace(b"21 Oct 2026",b"01 Sep 2026")
         self.assertEqual(article_candidates(x,"NC State Wolfpack",[GAME],NOW),[])
+    def test_award_honoree_not_mistaken_for_starter_news(self):
+        xml=b"""<rss><channel><item><title>Quarterback named to weekly award list</title>
+        <link>https://gopack.com/news/2026/award.aspx</link>
+        <pubDate>Wed, 21 Oct 2026 12:00:00 GMT</pubDate>
+        <description>Football quarterback named weekly honoree.</description>
+        </item></channel></rss>"""
+        self.assertEqual(article_candidates(xml,"NC State Wolfpack",[GAME],NOW),[])
     def test_missing_dates_do_not_become_approved(self):
         x=XML.replace(b"<pubDate>Wed, 21 Oct 2026 12:00:00 GMT</pubDate>",b"")
         rows=article_candidates(x,"NC State Wolfpack",[GAME],NOW)

@@ -18,7 +18,10 @@ FEEDS={
     "Florida International Panthers":"https://fiusports.com/rss.aspx?path=football"
 }
 QB_TOPIC=re.compile(r"\b(quarterback|quarterbacks|qb|qbs|signal.caller)\b",re.I)
-START_TOPIC=re.compile(r"\b(start|starts|starter|starting|named|depth chart|availability|injur|questionable|doubtful|out)\b",re.I)
+# The word "named" alone is noisy: award lists routinely say a QB was named
+# an honoree. Specific starting language or personnel-news terms are required.
+START_TOPIC=re.compile(r"\b(start|starts|starter|starting|depth chart|availability|"
+                       r"injury|injuries|injured|questionable|doubtful|out)\b",re.I)
 TAG=re.compile(r"<[^>]{0,500}>")
 
 def clean(value,max_chars=500):
