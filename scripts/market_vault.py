@@ -188,13 +188,15 @@ def asof_quotes(path,event_id,bookmaker,market,selection,cutoff_utc,max_age_minu
         if o<=cutoff and o<parse_time(kickoff):
             found.append((o,line,price,observed,retrieved,kickoff,update))
     if not found:return {"status":"NO_OBSERVED_QUOTE","betting_status":"PASS_UNVALIDATED"}
-    best=max(found,key=lambda x:x[0])
-    if cutoff>=parse_time(best[5]):
+    if any(cutoff>=parse_time(r[5]) for r in found):
         return {"status":"GAME_ALREADY_STARTED","betting_status":"PASS_UNVALIDATED"}
+    # Historical snapshots may be backfilled days later. In a simulated live
+    # decision prefer contemporaneously RETRIEVED records; never let a later
+    # historical import displace a price the system actually saw at the time.
+    live=[r for r in found if parse_time(r[4])<=cutoff]
+    best=max(live or found,key=lambda x:x[0])
     age=(cutoff-best[0]).total_seconds()/60
-    status=("HISTORICAL_RECONSTRUCTION_NOT_LIVE"
-            if parse_time(best[4])>cutoff else
-            "OBSERVED_PRICE" if age<=max_age_minutes else "STALE_PRICE")
+    status=("OBSERVED_PRICE" if age<=max_age_minutes else "STALE_PRICE") if live else "HISTORICAL_RECONSTRUCTION_NOT_LIVE"
     return {"status":status,
             "bookmaker":bookmaker,"provider_event_id":event_id,"market":market,
             "selection":selection,"line_points":best[1],"american_odds":best[2],
