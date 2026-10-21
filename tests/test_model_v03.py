@@ -87,6 +87,44 @@ class ModelV03Tests(unittest.TestCase):
                              r["date"]<folds[0]["train_before"]))
         self.assertTrue(details)
         self.assertTrue(all(r["result_labels_only"] for r in details))
+    def test_output_feature_artifact_has_no_final_scores(self):
+        g,adv=self.fixtures()
+        import scripts.model_v03 as model
+        with tempfile.TemporaryDirectory() as t:
+            p=Path(t)
+            for name,rs in (("games.csv",g),
+                            ("adv.csv",[v for pairs in adv.values() for v in pairs.values()])):
+                with (p/name).open("w",newline="") as h:
+                    writer=csv.DictWriter(h,fieldnames=list(rs[0]))
+                    writer.writeheader();writer.writerows(rs)
+            manifest={"season":2026,"betting_status":"PASS_UNVALIDATED",
+                "historical_pregame_availability_verified":False,
+                "retrieved_at_utc":"2026-10-21T20:10:00Z","sources":{}}
+            (p/"manifest.json").write_text(json.dumps(manifest))
+            summary=model.run(p/"games.csv",p/"adv.csv",p/"manifest.json",p/"out")
+            with (p/"out"/"weekly_pregame_features.csv").open() as h:
+                pregames=list(csv.DictReader(h))
+            with (p/"out"/"weekly_postgame_labels.csv").open() as h:
+                labels=list(csv.DictReader(h))
+            self.assertEqual(len(pregames),5)
+            self.assertEqual(len(labels),5)
+            self.assertNotIn("home_score",pregames[0])
+            self.assertNotIn("away_score",pregames[0])
+            self.assertEqual(labels[-1]["home_score"],"31")
+            self.assertEqual(labels[-1]["away_score"],"28")
+            self.assertEqual(summary["betting_status"],"PASS_UNVALIDATED")
+    def test_same_day_second_game_does_not_use_first_result(self):
+        g,adv=self.fixtures()
+        later=game("6","2026-09-26","A","C",14,35)
+        g.append(later)
+        adv["6"]={"A":advanced(later,"A","C",.7),
+                  "C":advanced(later,"C","A",-.8)}
+        before=build_weekly_games(g,adv)
+        g[-2]["home_score"]="150"
+        g[-2]["away_score"]="0"
+        after=build_weekly_games(g,adv)
+        for name in ("score_margin_form","off_epa_matchup","win_rate_form"):
+            self.assertEqual(before[-1][name],after[-1][name])
     def test_real_data_manifest_lacks_historical_provenance(self):
         import scripts.model_v03 as model
         with tempfile.TemporaryDirectory() as t:
