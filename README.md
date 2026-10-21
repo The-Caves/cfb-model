@@ -27,3 +27,9 @@ python scripts/reconcile_scores.py --archive data/archive/2026_v09_scores_unveri
 - Pending: archived prior seasons with provenance, advanced 2026 play-by-play EPA, drive statistics, injury verification, weather/rest/travel, timestamped sportsbook odds and out-of-sample calibrated evaluations.
 
 Workflow: [CFB Data Intake](https://github.com/The-Caves/cfb-model/actions/workflows/cfb-data-intake.yml)
+
+## Advanced statistics integration (Step 3)
+- 2026 SportsDataverse play-by-play ingestion, game-ID and final-score checks, research-only EPA/success/explosive rates and defensive splits are available in `scripts/ingest_advanced.py`.
+- Advanced drive release is downloaded and audited; drive-rate fields are intentionally blank until verified team-ID joins are implemented.
+- Source timestamps and SHA256 are reported in the advanced manifest. Source snapshots retrieved now are not retrospective proof of historical pregame availability.
+- Advanced ingestion runs as an optional, clearly reported research stage; score ingestion continues if the advanced source is missing or inconsistent. The first live advanced run is pending verification.
