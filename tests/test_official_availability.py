@@ -29,6 +29,14 @@ class PublishedOfficialTests(unittest.TestCase):
                "2026-10-24T17:00:00Z")
         self.assertEqual(rows,[])
         self.assertEqual(qa["pending_cards"],1)
+    def test_real_acc_report_player_position_alias(self):
+        p=parse_player({"name":"ILB #0 Popo Aguirre","status":"Questionable"})
+        self.assertEqual(p["position"],"LB")
+        self.assertEqual(p["player"],"Popo Aguirre")
+        self.assertEqual(p["status"],"QUESTIONABLE")
+        p=parse_player({"name":"DB #0 Ja'Maric Morris","status":"Available"})
+        self.assertEqual(p["position"],"OTHER")
+        self.assertEqual(p["player"],"DB #0 Ja'Maric Morris")
     def test_published_with_valid_game_and_cutoff(self):
         rows,qa=extract("SEC",{"a":card()},[G],ALIASES,"2026-10-24T17:00:00Z")
         self.assertEqual(len(rows),3)
