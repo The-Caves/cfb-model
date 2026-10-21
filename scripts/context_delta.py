@@ -69,6 +69,8 @@ def snapshot_changes(previous,current,now):
             elif field=="weather_status" and x!=y:
                 add(field,x,y,"WEATHER_COVERAGE_CHANGED")
         for field,threshold in NUMERIC_THRESHOLDS.items():
+            if field in ("wind_mph","gust_mph","precip_probability_pct","temperature_f") and (a.get("weather_status")!="LIVE_FORECAST" or b.get("weather_status")!="LIVE_FORECAST"):
+                continue
             x,y=a.get(field),b.get(field)
             if not isinstance(x,(int,float)) or isinstance(x,bool):continue
             if not isinstance(y,(int,float)) or isinstance(y,bool):
