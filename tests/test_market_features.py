@@ -65,6 +65,12 @@ class MarketFeatureTests(unittest.TestCase):
         self.assertEqual(market["first_observed_reference_line"],-4.5)
         self.assertEqual(market["latest_reference_line"],-6.5)
         self.assertEqual(market["observed_line_movement_points"],-2)
+        self.assertEqual(len(market["first_observed_source_sha256"]),64)
+        self.assertEqual(len(market["latest_observed_source_sha256"]),64)
+        self.assertNotEqual(market["first_observed_source_sha256"],
+                            market["latest_observed_source_sha256"])
+        self.assertEqual(market["first_retrieved_at_utc"],"2026-10-21T17:00:00Z")
+        self.assertEqual(market["latest_retrieved_at_utc"],"2026-10-21T18:00:00Z")
     def test_never_cross_books(self):
         self.add()
         self.add(book="draftkings",spread=-10.5)
