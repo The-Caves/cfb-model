@@ -35,8 +35,8 @@ class PublishedOfficialTests(unittest.TestCase):
         self.assertEqual(p["player"],"Popo Aguirre")
         self.assertEqual(p["status"],"QUESTIONABLE")
         p=parse_player({"name":"DB #0 Ja'Maric Morris","status":"Available"})
-        self.assertEqual(p["position"],"OTHER")
-        self.assertEqual(p["player"],"DB #0 Ja'Maric Morris")
+        self.assertEqual(p["position"],"DB")
+        self.assertEqual(p["player"],"Ja'Maric Morris")
     def test_published_with_valid_game_and_cutoff(self):
         rows,qa=extract("SEC",{"a":card()},[G],ALIASES,"2026-10-24T17:00:00Z")
         self.assertEqual(len(rows),3)

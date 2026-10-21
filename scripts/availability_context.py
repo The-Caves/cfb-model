@@ -7,7 +7,7 @@ import csv,datetime as dt
 from pathlib import Path
 from scripts.game_context import parse_time
 
-POSITIONS={"QB","RB","WR","TE","OL","DL","EDGE","LB","CB","S","K","P","OTHER","TEAM"}
+POSITIONS={"QB","RB","WR","TE","OL","DL","EDGE","LB","CB","DB","S","K","P","OTHER","TEAM"}
 STATUSES={"AVAILABLE","PROBABLE","QUESTIONABLE","DOUBTFUL","OUT","SUSPENDED",
           "LIMITED","GAME_TIME_DECISION","UNKNOWN","CONFIRMED","VERIFIED"}
 KINDS={"INJURY","AVAILABILITY","QB_STARTER","TEAM_REPORT"}

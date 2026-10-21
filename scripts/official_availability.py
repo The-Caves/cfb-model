@@ -25,7 +25,7 @@ STATUS_MAP={"Out":"OUT","Out - (1st Half)":"LIMITED","Out (1st Half)":"LIMITED",
  "Questionable":"QUESTIONABLE","Doubtful":"DOUBTFUL",
  "Probable":"PROBABLE","Game Time Decision":"GAME_TIME_DECISION",
  "Available":"AVAILABLE"}
-POSITION_SET={"QB","RB","WR","TE","OL","DL","EDGE","LB","CB","S","K","P"}
+POSITION_SET={"QB","RB","WR","TE","OL","DL","EDGE","LB","CB","DB","S","K","P"}
 POSITION_ALIASES={"ILB":"LB","OLB":"LB","MLB":"LB","DE":"EDGE",
                   "DT":"DL","NT":"DL","OT":"OL","OG":"OL","C":"OL",
                   "FS":"S","SS":"S","FB":"RB"}
