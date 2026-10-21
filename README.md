@@ -37,3 +37,11 @@ Workflow: [CFB Data Intake](https://github.com/The-Caves/cfb-model/actions/workf
 ### Unified 2026 research feature store
 
 On each full intake, `scripts/combine_profiles.py` builds `data/enriched/team_profiles_2026_enriched.csv` with score-derived plus provider-observed EPA, rushing/passing, success and drive metrics, and an as-of cutoff. Team, season and as-of joins are strict. It remains `PASS_UNVALIDATED` and is not yet wired to a betting-prediction model.
+
+## Step 4: Upcoming-game context and personnel gating
+- Live ESPN future fixtures and kickoff-aware rest are extracted from completed-game and upcoming scoreboard snapshots.
+- Approximate straight-line travel uses **city-centroid** geocoding and schools with at least two verified home venue observations. Uncertain venues remain missing, not inferred.
+- Open-Meteo future forecast (temperature, wind, gusts, precipitation probability) retains capture times. No historical backfill is misrepresented as pregame weather.
+- Optional reviewed, timestamped QB starter and injury reports are ingested with strict pregame cutoffs. The initial report CSV has **no records**; injury and QB-start statuses are UNKNOWN until genuine verified sources are added.
+- Context is published with the other workflow artifacts: data/context/upcoming_game_context_2026.csv, .json, and context_manifest.json.
+- See docs/GAME_CONTEXT.md for limitations. No adjustments to projection weights or betting selections are activated by Step 4.
