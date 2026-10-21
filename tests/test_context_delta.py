@@ -26,8 +26,8 @@ class DeltaTests(unittest.TestCase):
         old=snap("2026-10-23T15:00:00Z",[record(injuries=[{"team":"H","player":"One","status":"OUT","source_url":"https://example.com"}])])
         new=snap("2026-10-23T16:00:00Z",[record()])
         changes,_,_=snapshot_changes(old,new,"2026-10-23T16:00:00Z")
-        self.assertEqual(changes[0]["kind"],"INJURY_SOURCE_NOT_PRESENT")
-        self.assertFalse(any(x["kind"]=="VERIFIED_INJURY_STATUS_CHANGE" for x in changes))
+        self.assertEqual(changes[0]["kind"],"PLAYER_REPORT_NOT_PRESENT")
+        self.assertFalse(any(x["kind"]=="VERIFIED_AVAILABILITY_STATUS_CHANGE" for x in changes))
     def test_qb_change_only_sourced(self):
         qb1={"H":{"player":"Starter One","source_url":"https://school.edu/a"}}
         qb2={"H":{"player":"Starter Two","source_url":"https://school.edu/b"}}
