@@ -176,6 +176,8 @@ def per_game_features(play_rows,games,asof,min_plays=20):
 def merge_drives(team_games,drive_rows,games):
     """Add verified two-sided team/game drive summaries, or keep metrics absent."""
     index={(r["game_id"],r["team_id"]):r for r in team_games}
+    name_index={(r["game_id"],r["team"]):r for r in team_games}
+    match_kinds=Counter()
     expected_samples=[{"game_id":r["game_id"],"team_id":r["team_id"],"team":r["team"]} for r in team_games[:6]]
     actual_samples=[]
     by_game=defaultdict(dict);ignored=Counter()
@@ -188,8 +190,18 @@ def merge_drives(team_games,drive_rows,games):
                                    "pos_team_type":type(d.get("pos_team")).__name__,
                                    "row_keys":list(d.keys())[:35]})
         row=index.get((gid,tid))
+        if row is not None:
+            match_kinds["matched_by_espn_team_id"]+=1
+        elif d.get("pos_team") in (games[gid]["home"],games[gid]["away"]):
+            # 2026 release actually stores full ESPN display names in pos_team
+            # despite upstream docs describing numeric IDs. Require exact
+            # game-scoped name and previously accepted PBP home/away team.
+            row=name_index.get((gid,d["pos_team"]))
+            if row is not None:
+                tid=row["team_id"]
+                match_kinds["matched_by_exact_game_team_name"]+=1
         if row is None:
-            ignored["unmatched_game_or_team_id"]+=1;continue
+            ignored["unmatched_game_or_team"]+=1;continue
         if tid in by_game[gid]:
             ignored["duplicate_drive_summary"]+=1
             by_game[gid][tid]=None;continue
@@ -225,7 +237,7 @@ def merge_drives(team_games,drive_rows,games):
     return {"drive_rows_applied":applied,"complete_game_pairs":paired,
             "games_with_accepted_pbp":len({r["game_id"] for r in team_games}),
             "status":"VERIFIED_TWO_SIDED_GAME_TEAM_JOIN" if applied else "NO_VERIFIED_DRIVE_ROWS",
-            "excluded":dict(ignored),
+            "excluded":dict(ignored),"match_kinds":dict(match_kinds),
             "diagnostic_expected_team_ids":expected_samples,
             "diagnostic_received_drive_ids":actual_samples}
 

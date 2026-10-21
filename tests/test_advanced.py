@@ -44,6 +44,17 @@ class AdvancedTests(unittest.TestCase):
         self.assertEqual(home["drives_observed"],10)
         self.assertEqual(home["yards_per_drive"],37)
         self.assertEqual(home["provider_mean_yards_to_goal_per_play"],62)
+
+    def test_drive_names_in_actual_2026_release(self):
+        teamrows,_=per_game_features(self.make(),self.ledger(),"2026-10-20")
+        drive_rows=[
+            {"season":2026,"game_id":77,"pos_team":"Home","drives":10,
+             "yards_per_drive":37,"plays_per_drive":6.1,"avg_field_position":62},
+            {"season":2026,"game_id":77,"pos_team":"Away","drives":8,
+             "yards_per_drive":22,"plays_per_drive":5.4,"avg_field_position":70}]
+        qa=merge_drives(teamrows,drive_rows,self.ledger())
+        self.assertEqual(qa["drive_rows_applied"],2)
+        self.assertEqual(qa["match_kinds"]["matched_by_exact_game_team_name"],2)
     def test_unmatched_drive_team_and_incomplete_pair(self):
         teamrows,_=per_game_features(self.make(),self.ledger(),"2026-10-20")
         drive_rows=[{"season":2026,"game_id":77,"pos_team":1,"drives":10,
