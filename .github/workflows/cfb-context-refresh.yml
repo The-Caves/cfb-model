@@ -77,6 +77,8 @@ jobs:
             data/context_refresh/upcoming_game_context_2026.json
             data/context_refresh/upcoming_game_context_2026.csv
             data/context_refresh/personnel_source_watch.json
+            data/context_refresh/official/official_availability_manifest.json
+            data/context_refresh/official/availability_verified_2026.csv
             data/context_delta/
           retention-days: 30
           if-no-files-found: warn
