@@ -22,3 +22,9 @@ Next gate: preserve pregame-versioned advanced snapshots across future weekly re
 - **4 — Walk-forward tests:** retrain every weekly window using strictly earlier games; collect straight-up accuracy, margin/total MAE and exploratory Brier, and preserve raw held-out retrospective comparisons for audit.
 
 **Provenance restriction:** The input Parquet was retrieved later and is mutable. A chronology-only retrospective comparison is **not** a verified historical pregame feature backtest. Any measured improvements are exploratory and may not be used as betting recommendations. The full scheduled/manual intake must run successfully on the new code before its real-data metrics can be cited. Final artifacts are kept as 30-day GitHub Actions workflow artifacts only.
+
+## Eastern calendar-date cutoff correction and full-data benchmark procedure
+
+ESPN's `date` is the local football calendar date. A Saturday 10:30 p.m. Eastern kickoff may be Sunday UTC, so `scripts/model_v03.py` now groups team histories and excludes same-day games using **ESPN's calendar date**, not the UTC date; rest calculations still use actual timezone-aware kickoff timestamps. The regression suite includes a game that crosses UTC midnight and verifies that neither same-day results nor EPA enter another same-day matchup. Separate exported pregame and postgame artifacts remain mandatory.
+
+The first full cloud intake run [39690929185](https://github.com/The-Caves/cfb-model/actions/runs/39690929185) succeeded and generated four research folds on 239 held-out games, but was run **before** the UTC-midnight correction. Its reported metrics should not be used as the definitive corrected benchmark. A full new `[run-intake]` refresh is required to verify the final research report on the updated cutoff logic.
