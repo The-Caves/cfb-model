@@ -81,6 +81,16 @@ def write(current_path,previous_path,geo_path,manifest_path,output_path,source_w
     if source_watch and Path(source_watch).exists():
         source=json.loads(Path(source_watch).read_text())
         summary["personnel_source_watch"]=source.get("sources_status",{})
+        candidate=source.get("candidate_source_changes") or []
+        qa["unreviewed_official_index_changes"]=len(candidate)
+        summary["unreviewed_official_index_changes"]=len(candidate)
+        for item in candidate:
+            changes.append({"game_id":None,"field":"official_source_index",
+                "source":item.get("source"),"source_url":item.get("url"),
+                "kind":"OFFICIAL_SOURCE_INDEX_CHANGED_UNREVIEWED",
+                "before":None,"after":"SOURCE_PAGE_CONTENT_CHANGED",
+                "current_asof_utc":cur["asof_utc"],
+                "note":"Page hash change does not establish a player injury or QB status."})
     report={"summary":summary,"changes":changes,"frozen_games":[
         {"game_id":f["game_id"],"last_known_pregame_asof_utc":f["final_pregame_snapshot_asof_utc"]}
         for f in freezes]}
