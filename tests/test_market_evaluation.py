@@ -32,6 +32,7 @@ def game(gid,decision,kickoff,known,home_result="WIN"):
              "selection_win_probability":.65 if side=="HOME" else .35,
              "issued_at_utc":decision,
              "training_data_cutoff_utc":
+                "2026-10-08T00:00:00Z" if gid=="a" else
                 "2026-10-15T00:00:00Z" if gid=="b" else
                 "2026-10-22T00:00:00Z",
              "model_version":"synthetic-research-version"})
@@ -89,6 +90,11 @@ class EvaluationTests(unittest.TestCase):
             if forecast["row_id"].startswith("b|"):
                 forecast["training_data_cutoff_utc"]="2026-10-18T00:00:00Z"
         with self.assertRaisesRegex(ValueError,"training cutoff"):
+            self.evaluate(d,l,f)
+    def test_model_training_cannot_follow_forecast_issuance(self):
+        d,l,f=sample()
+        f[0]["training_data_cutoff_utc"]="2026-10-10T21:00:00Z"
+        with self.assertRaisesRegex(ValueError,"after forecast issue"):
             self.evaluate(d,l,f)
     def test_forecast_cannot_be_issued_after_decision(self):
         d,l,f=sample()
