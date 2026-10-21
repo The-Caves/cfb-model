@@ -176,11 +176,17 @@ def per_game_features(play_rows,games,asof,min_plays=20):
 def merge_drives(team_games,drive_rows,games):
     """Add verified two-sided team/game drive summaries, or keep metrics absent."""
     index={(r["game_id"],r["team_id"]):r for r in team_games}
+    expected_samples=[{"game_id":r["game_id"],"team_id":r["team_id"],"team":r["team"]} for r in team_games[:6]]
+    actual_samples=[]
     by_game=defaultdict(dict);ignored=Counter()
     for d in drive_rows:
         gid=key(d.get("game_id"))
         if gid not in games or key(d.get("season"))!="2026":continue
         tid=key(d.get("pos_team"))
+        if len(actual_samples)<6:
+            actual_samples.append({"game_id":gid,"pos_team":str(d.get("pos_team")),
+                                   "pos_team_type":type(d.get("pos_team")).__name__,
+                                   "row_keys":list(d.keys())[:35]})
         row=index.get((gid,tid))
         if row is None:
             ignored["unmatched_game_or_team_id"]+=1;continue
@@ -219,7 +225,9 @@ def merge_drives(team_games,drive_rows,games):
     return {"drive_rows_applied":applied,"complete_game_pairs":paired,
             "games_with_accepted_pbp":len({r["game_id"] for r in team_games}),
             "status":"VERIFIED_TWO_SIDED_GAME_TEAM_JOIN" if applied else "NO_VERIFIED_DRIVE_ROWS",
-            "excluded":dict(ignored)}
+            "excluded":dict(ignored),
+            "diagnostic_expected_team_ids":expected_samples,
+            "diagnostic_received_drive_ids":actual_samples}
 
 def aggregate_team_profiles(team_games,registry,asof,retrieved):
     by=defaultdict(list)
@@ -305,8 +313,6 @@ def execute(games_path,registry_path,output,asof,offline_pbp=None,offline_drives
         manifest["pbp_qa"]=qa
         if not team_games:raise ValueError("No scoreboard-verified games in PBP release")
         if drives.exists():
-            # Until drive-team ids can be cross-validated, quarantine this feed;
-            # PBP-based drive IDs are not sufficient to infer points per drive.
             manifest["drive_qa"]=merge_drives(team_games,read_parquet(drives,DRIVE_COLS),games)
         output.mkdir(parents=True,exist_ok=True)
         with (output/"team_game_advanced_2026.csv").open("w",newline="") as f:
