@@ -997,5 +997,149 @@
     "admin1": "Alabama",
     "country_code": "US",
     "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Louisville\",\"KY\",\"USA\"]": {
+    "latitude": 38.25424,
+    "longitude": -85.75941,
+    "geonames_id": 4299276,
+    "name": "Louisville",
+    "admin1": "Kentucky",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Gainesville\",\"FL\",\"USA\"]": {
+    "latitude": 29.65163,
+    "longitude": -82.32483,
+    "geonames_id": 4156404,
+    "name": "Gainesville",
+    "admin1": "Florida",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Athens\",\"GA\",\"USA\"]": {
+    "latitude": 33.96095,
+    "longitude": -83.37794,
+    "geonames_id": 4180386,
+    "name": "Athens",
+    "admin1": "Georgia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"El Paso\",\"TX\",\"USA\"]": {
+    "latitude": 31.75872,
+    "longitude": -106.48693,
+    "geonames_id": 5520993,
+    "name": "El Paso",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Miami\",\"FL\",\"USA\"]": {
+    "latitude": 25.77427,
+    "longitude": -80.19366,
+    "geonames_id": 4164138,
+    "name": "Miami",
+    "admin1": "Florida",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Winston-Salem\",\"NC\",\"USA\"]": {
+    "latitude": 36.09986,
+    "longitude": -80.24422,
+    "geonames_id": 4499612,
+    "name": "Winston-Salem",
+    "admin1": "North Carolina",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Statesboro\",\"GA\",\"USA\"]": {
+    "latitude": 32.44879,
+    "longitude": -81.78317,
+    "geonames_id": 4224413,
+    "name": "Statesboro",
+    "admin1": "Georgia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Tallahassee\",\"FL\",\"USA\"]": {
+    "latitude": 30.43826,
+    "longitude": -84.28073,
+    "geonames_id": 4174715,
+    "name": "Tallahassee",
+    "admin1": "Florida",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Columbus\",\"OH\",\"USA\"]": {
+    "latitude": 39.96118,
+    "longitude": -82.99879,
+    "geonames_id": 4509177,
+    "name": "Columbus",
+    "admin1": "Ohio",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Fayetteville\",\"AR\",\"USA\"]": {
+    "latitude": 36.06258,
+    "longitude": -94.15743,
+    "geonames_id": 4110486,
+    "name": "Fayetteville",
+    "admin1": "Arkansas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Columbia\",\"MO\",\"USA\"]": {
+    "latitude": 38.95171,
+    "longitude": -92.33407,
+    "geonames_id": 4381982,
+    "name": "Columbia",
+    "admin1": "Missouri",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Lincoln\",\"NE\",\"USA\"]": {
+    "latitude": 40.8,
+    "longitude": -96.66696,
+    "geonames_id": 5072006,
+    "name": "Lincoln",
+    "admin1": "Nebraska",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Seattle\",\"WA\",\"USA\"]": {
+    "latitude": 47.60621,
+    "longitude": -122.33207,
+    "geonames_id": 5809844,
+    "name": "Seattle",
+    "admin1": "Washington",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Las Vegas\",\"NV\",\"USA\"]": {
+    "latitude": 36.17497,
+    "longitude": -115.13722,
+    "geonames_id": 5506956,
+    "name": "Las Vegas",
+    "admin1": "Nevada",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Fresno\",\"CA\",\"USA\"]": {
+    "latitude": 36.74773,
+    "longitude": -119.77237,
+    "geonames_id": 5350937,
+    "name": "Fresno",
+    "admin1": "California",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Corvallis\",\"OR\",\"USA\"]": {
+    "latitude": 44.56457,
+    "longitude": -123.26204,
+    "geonames_id": 5720727,
+    "name": "Corvallis",
+    "admin1": "Oregon",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
   }
 }
