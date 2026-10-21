@@ -61,8 +61,8 @@ class WeatherProvider:
         code="US" if country in ("USA","US") else "CA" if country in ("CAN","Canada") else None
         if not code or not city or not state:
             self.coords[key]=None;return None
-        url=GEO+"?"+urllib.parse.urlencode({"name":f"{city}, {state}",
-                    "count":10,"language":"en","format":"json","countryCode":code})
+        url=GEO+"?"+urllib.parse.urlencode({"name":city,
+                    "count":100,"language":"en","format":"json","countryCode":code})
         try:
             response=request_json(url)
             match=geocode_match(response.get("results") or [],city,state,country)
