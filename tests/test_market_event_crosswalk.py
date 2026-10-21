@@ -67,6 +67,7 @@ class CrosswalkTests(unittest.TestCase):
                 w.writerow(["archived_team","espn_display_name"])
                 w.writerow(["OSU","Ohio State Buckeyes"])
                 w.writerow(["OSU","Oklahoma State Cowboys"])
+                w.writerow(["OSU","Oregon State Beavers"])
             mapping,conflicts=load_registry(p)
             self.assertIn("osu",conflicts)
             self.assertNotIn("osu",mapping)
