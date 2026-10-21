@@ -44,25 +44,29 @@ def game_key(record):
 def audit(archive, live, aliases):
     if not archive or not live:
         raise ValueError("Reconciliation requires both a nonempty archive and live dataset")
-    normalized_archive = set()
+    known_archive = set()
     seen_live_ids = set()
     by_key = defaultdict(list)
+    by_pair = defaultdict(list)
     for game in live:
         gid = game.get("game_id", "")
         if not gid or gid in seen_live_ids:
             raise ValueError(f"Missing or duplicate live game ID: {gid!r}")
         seen_live_ids.add(gid)
         by_key[game_key(game)].append(game)
+        by_pair[frozenset((game["away"], game["home"]))].append(game)
+
+    def neutral(value):
+        return str(value).strip().lower() in ("true", "1", "yes")
+
     rows = []
     claimed_live_ids = set()
     for old in archive:
         oldkey = game_key(old)
-        if oldkey in normalized_archive:
+        if oldkey in known_archive:
             raise ValueError(f"Duplicate archived game: {oldkey!r}")
-        normalized_archive.add(oldkey)
-        missing_names = [x for x in (old["away"], old["home"]) if x not in aliases]
-        candidates = (by_key.get((old["date"], aliases[old["away"]], aliases[old["home"]]), [])
-                      if not missing_names else [])
+        known_archive.add(oldkey)
+        missing_names = [name for name in (old["away"], old["home"]) if name not in aliases]
         row = {
             "date": old["date"], "archive_away": old["away"], "archive_home": old["home"],
             "archive_away_score": old.get("away_score", ""),
@@ -72,27 +76,73 @@ def audit(archive, live, aliases):
         }
         if missing_names:
             row.update(status="MISSING_TEAM_ALIAS", reason="/".join(missing_names))
-        elif len(candidates) == 0:
-            row.update(status="ARCHIVE_UNMATCHED", reason="No ESPN final with identical date, home and away")
-        elif len(candidates) > 1:
-            row.update(status="AMBIGUOUS_LIVE_MATCH", reason=f"{len(candidates)} candidates")
+            rows.append(row)
+            continue
+
+        away = aliases[old["away"]]
+        home = aliases[old["home"]]
+        exact = by_key.get((old["date"], away, home), [])
+        if len(exact) > 1:
+            row.update(status="AMBIGUOUS_LIVE_MATCH", reason=f"{len(exact)} identical live matchups")
+            rows.append(row)
+            continue
+
+        matches = exact
+        relationship = "EXACT"
+        if not matches:
+            pair = by_pair[frozenset((away, home))]
+            same_sides_nearby = [game for game in pair if game["away"] == away and game["home"] == home
+                                 and abs((dt.date.fromisoformat(game["date"]) - dt.date.fromisoformat(old["date"])).days) <= 1]
+            if same_sides_nearby:
+                relationship = "DATE_SHIFT"
+                matches = same_sides_nearby
+            else:
+                reversed_nearby = [game for game in pair if game["away"] == home and game["home"] == away
+                                   and abs((dt.date.fromisoformat(game["date"]) - dt.date.fromisoformat(old["date"])).days) <= 1]
+                if reversed_nearby:
+                    relationship = "REVERSED_SIDES"
+                    matches = reversed_nearby
+        if len(matches) > 1:
+            row.update(status="AMBIGUOUS_LIVE_MATCH", reason=f"{len(matches)} {relationship} candidates")
+            rows.append(row)
+            continue
+        if not matches:
+            row.update(status="ARCHIVE_UNMATCHED", reason="No matching ESPN teams with matching sides and date ±1")
+            rows.append(row)
+            continue
+
+        found = matches[0]
+        claimed_live_ids.add(found["game_id"])
+        row.update(live_game_id=found["game_id"], live_away=found["away"],
+                   live_home=found["home"], live_away_score=found["away_score"],
+                   live_home_score=found["home_score"])
+        try:
+            archived_scores = (int(old["away_score"]), int(old["home_score"]))
+            live_scores = (int(found["away_score"]), int(found["home_score"]))
+        except (ValueError, TypeError, KeyError):
+            row.update(status="INVALID_SCORE", reason="Non-integer score")
+            rows.append(row)
+            continue
+        neutral_mismatch = neutral(old.get("neutral", False)) != neutral(found.get("neutral", False))
+        if relationship == "EXACT":
+            if archived_scores != live_scores:
+                row.update(status="SCORE_MISMATCH", reason="Same game and sides, final scores differ")
+            elif neutral_mismatch:
+                row.update(status="NEUTRAL_SITE_MISMATCH", reason="Game and scores match but archived neutral flag differs")
+            else:
+                row.update(status="SCORE_MATCH", reason="Game/date/sides/scores/neutral agree; historical as-of still unverified")
+        elif relationship == "DATE_SHIFT":
+            row.update(status="DATE_SHIFT_MATCH" if archived_scores == live_scores and not neutral_mismatch
+                       else "DATE_SHIFT_CONFLICT",
+                       reason=f"Archived local date {old['date']}; ESPN ET date {found['date']}; "
+                              f"scores_equal={archived_scores == live_scores}; neutral_equal={not neutral_mismatch}")
         else:
-            found = candidates[0]
-            row.update(live_game_id=found["game_id"], live_away=found["away"],
-                       live_home=found["home"], live_away_score=found["away_score"],
-                       live_home_score=found["home_score"])
-            try:
-                archived_scores = int(old["away_score"]), int(old["home_score"])
-                live_scores = int(found["away_score"]), int(found["home_score"])
-                if archived_scores == live_scores:
-                    row["status"] = "SCORE_MATCH"
-                    row["reason"] = "Game and final scores agree; historical as-of availability not established"
-                else:
-                    row["status"] = "SCORE_MISMATCH"
-                    row["reason"] = "Final scores disagree; archive quarantined"
-            except (ValueError, TypeError, KeyError):
-                row.update(status="INVALID_SCORE", reason="Non-integer score")
-            claimed_live_ids.add(found["game_id"])
+            # After swapping sides, team-correct scores must swap as well.
+            team_scores_agree = archived_scores == (live_scores[1], live_scores[0])
+            row.update(status="HOME_AWAY_REVERSED" if team_scores_agree and not neutral_mismatch
+                       else "HOME_AWAY_SCORE_CONFLICT",
+                       reason=f"ESPN assigns opposite teams to home/away; team_scores_equal={team_scores_agree}; "
+                              f"neutral_equal={not neutral_mismatch}; ESPN_ET_date={found['date']}")
         rows.append(row)
     for found in live:
         if found["game_id"] in claimed_live_ids:
@@ -101,16 +151,16 @@ def audit(archive, live, aliases):
                      "archive_away_score": "", "archive_home_score": "", "live_game_id": found["game_id"],
                      "live_away": found["away"], "live_home": found["home"],
                      "live_away_score": found["away_score"], "live_home_score": found["home_score"],
-                     "status": "LIVE_ONLY", "reason": "No validated corresponding archived row"})
-    counts = dict(sorted(Counter(r["status"] for r in rows).items()))
-    problem_states = ("SCORE_MISMATCH", "INVALID_SCORE", "MISSING_TEAM_ALIAS", "AMBIGUOUS_LIVE_MATCH", "ARCHIVE_UNMATCHED")
-    has_problems = any(counts.get(name, 0) for name in problem_states)
-    summary = {"archive_game_count": len(archive), "live_game_count": len(live),
-               "counts": counts, "status": "REVIEW_REQUIRED" if has_problems else "SCORES_MATCH_FOR_ARCHIVED_ROWS",
-               "archive_training_cleared": False,
-               "reason": "Historical as-of/provenance unresolved; unmatched archive excluded and advanced pregame data unavailable",
-               "audit_definition": "Exact date, away, home after explicit alias mapping; final scores compared",
-               "note": "LIVE_ONLY includes games outside the archived 138-team registry (including FCS). No matches inferred by scores alone."}
+                     "status": "LIVE_ONLY", "reason": "No matched corresponding archived row"})
+    counts = dict(sorted(Counter(row["status"] for row in rows).items()))
+    status = "SCORES_MATCH_FOR_ARCHIVED_ROWS" if (counts.get("SCORE_MATCH", 0) == len(archive)) else "REVIEW_REQUIRED"
+    summary = {
+        "archive_game_count": len(archive), "live_game_count": len(live),
+        "counts": counts, "status": status, "archive_training_cleared": False,
+        "reason": "Historical as-of/provenance unresolved; conflicting archive entries quarantined",
+        "audit_definition": "Explicit school aliases, Eastern Time kickoff date, home/away and final scores plus neutral-site flag",
+        "note": "A one-day date shift or reversed home/away is classified, never silently treated as a verified game. Live-only can include FCS."
+    }
     return rows, summary
 
 

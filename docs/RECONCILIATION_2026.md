@@ -39,3 +39,23 @@ python scripts/reconcile_scores.py \
   --aliases data/archive/2026_team_aliases.csv \
   --output data/reconciliation_snapshot
 ```
+
+## Date/venue correction identified 2026-10-21
+
+Initial 311/388 matching used the raw UTC date from the first ESPN ingestion CSV, while v0.9 archive primarily uses Eastern Time game dates. That created **76 false discrepancies** for late-night kickoffs. The revised importer preserves `kickoff_utc` and uses `America/New_York` for `date`.
+
+Re-running against the original artifact's raw kickoff timestamps (512 games) and checking neutral flags:
+
+| Classified archival row | Count |
+|---|---:|
+| Exact game/date/team/score/neutral-site agreement | 382 |
+| Exact game/date/scores but archived neutral-site flag differs | 4 |
+| One-day archive-versus-ET date discrepancy (same teams/scores) | 1 |
+| Reversed home/away with conflicting per-team scores | 1 |
+| Archived game with no identifiable ESPN pair within one day | 0 |
+| ESPN-only games beyond the archive (includes FCS) | 124 |
+
+Neutral-site discrepancies: North Carolina–TCU (Aug 29), Baylor–Auburn (Sep 5), Louisville–Ole Miss (Sep 6), Texas–Oklahoma (Oct 10).
+UTEP–Oklahoma has an archived Sep 5 date versus ESPN Eastern Sep 4; it stays flagged.
+Notre Dame–Wisconsin (Sep 6) has swapped home/away assignments and inconsistent team scores between sources; **do not reconcile automatically**.
+The archive and its personnel/odds histories remain **not cleared for model training** by this audit.

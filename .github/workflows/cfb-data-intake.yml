@@ -21,7 +21,7 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - run: python -m unittest discover -s tests -v
       - name: Reproduce archived-vs-ESPN score reconciliation from frozen snapshots
-        run: python scripts/reconcile_scores.py --archive data/archive/2026_v09_scores_unverified.csv --live data/snapshots/espn_completed_2026_asof_2026-10-21.csv --aliases data/archive/2026_team_aliases.csv --output data/reconciliation_snapshot
+        run: python scripts/reconcile_scores.py --archive data/archive/2026_v09_scores_unverified.csv --live data/snapshots/espn_completed_2026_asof_2026-10-21_eastern.csv --aliases data/archive/2026_team_aliases.csv --output data/reconciliation_snapshot
       - name: Publish deterministic audit report
         uses: actions/upload-artifact@v4
         with:
@@ -43,7 +43,7 @@ jobs:
       - name: Fetch completed 2026 games and write manifest
         run: python scripts/ingest_espn.py --start 2026-08-01 --output data
       - name: Build as-of 2026 team profiles
-        run: python scripts/build_profiles.py --games data/games_2026.csv --output data
+        run: python scripts/build_profiles.py --games data/games_2026.csv --output data --registry data/archive/2026_team_aliases.csv
       - name: Audit archived v0.9 scores against current ESPN finals
         run: python scripts/reconcile_scores.py --archive data/archive/2026_v09_scores_unverified.csv --live data/games_2026.csv --aliases data/archive/2026_team_aliases.csv --output data/reconciliation
       - name: Archive results and raw snapshots

@@ -35,7 +35,7 @@ def read_games(path,asof):
     accepted.sort(key=lambda g:(g["date"],g["game_id"],g["home"]))
     return accepted,{"input_rows":len(raw),"accepted_games":len(accepted),
         "excluded_on_or_after_asof":future,"rejected":rejected}
-def build_profiles(games,asof):
+def build_profiles(games,asof,team_registry=None):
     cutoff=dt.date.fromisoformat(asof)
     by=defaultdict(list)
     for g in games:
@@ -49,6 +49,7 @@ def build_profiles(games,asof):
                 "margin":pf-pa,"win":int(pf>pa)})
     out=[]
     for team,rows in sorted(by.items()):
+        if team_registry is not None and team not in team_registry:continue
         rows.sort(key=lambda r:r["date"]);last3=rows[-3:]
         wins=sum(x["win"] for x in rows)
         losses=sum(x["pf"]<x["pa"] for x in rows)
@@ -64,15 +65,23 @@ def build_profiles(games,asof):
             "epa_offense":"","epa_defense":"","injury_adjustment":"",
             "market_adjustment":"","betting_status":"PASS_UNVALIDATED"})
     return out
-def write_profiles(path,asof,output):
+def write_profiles(path,asof,output,registry=None):
     games,qa=read_games(path,asof)
     if not games:raise ValueError("No 2026 completed games before cutoff")
-    profiles=build_profiles(games,asof)
+    allowed=None
+    if registry is not None:
+        with Path(registry).open(newline='',encoding='utf-8-sig') as stream:
+            registry_rows=list(csv.DictReader(stream))
+        allowed={row['espn_display_name'].strip() for row in registry_rows}
+        if not allowed or len(allowed)!=len(registry_rows):raise ValueError('Empty or duplicate FBS team registry')
+    profiles=build_profiles(games,asof,allowed)
+    if not profiles:raise ValueError('No eligible teams available in score ledger')
     out=Path(output);out.mkdir(parents=True,exist_ok=True)
     with (out/"team_profiles_2026.csv").open("w",newline="") as f:
         w=csv.DictWriter(f,fieldnames=list(profiles[0]));w.writeheader();w.writerows(profiles)
     (out/"profile_manifest.json").write_text(json.dumps({
         "source":str(path),"asof_exclusive":asof,**qa,"teams_observed":len(profiles),
+        "registry":str(registry) if registry else None,"expected_teams":len(allowed) if allowed is not None else None,
         "status":"COMPLETE_WITH_WARNINGS" if qa["rejected"] else "SUCCESS",
         "advanced_fields_populated":False,"betting_status":"PASS_UNVALIDATED"},indent=2))
     return len(profiles),qa
@@ -81,6 +90,7 @@ if __name__=="__main__":
     p.add_argument("--games",default="data/games_2026.csv")
     p.add_argument("--asof",default=dt.date.today().isoformat())
     p.add_argument("--output",default="data")
-    a=p.parse_args();n,qa=write_profiles(a.games,a.asof,a.output)
+    p.add_argument("--registry",default=None)
+    a=p.parse_args();n,qa=write_profiles(a.games,a.asof,a.output,a.registry)
     print(json.dumps({"teams":n,**qa},indent=2))
     if qa["rejected"]:raise SystemExit(2)

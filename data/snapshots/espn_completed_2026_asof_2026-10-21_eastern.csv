@@ -1,0 +1,513 @@
+game_id,date,away,home,away_score,home_score,neutral,kickoff_utc
+401856766,2026-08-29,North Carolina Tar Heels,TCU Horned Frogs,15,10,True,2026-08-29T16:00:00Z
+401858201,2026-08-29,Hawai'i Rainbow Warriors,Stanford Cardinal,27,37,False,2026-08-29T23:00:00Z
+401858202,2026-08-29,NC State Wolfpack,Virginia Cavaliers,8,34,False,2026-08-29T19:30:00Z
+401862693,2026-08-29,Memphis Tigers,UNLV Rebels,27,21,False,2026-08-30T02:00:00Z
+401864494,2026-08-29,San José State Spartans,USC Trojans,26,42,False,2026-08-29T19:00:00Z
+401864570,2026-08-29,New Mexico State Aggies,Florida State Seminoles,17,34,False,2026-08-29T23:00:00Z
+401864577,2026-08-29,Jacksonville State Gamecocks,North Dakota State Bison,7,33,False,2026-08-29T21:30:00Z
+401866408,2026-08-29,Sacramento State Hornets,Eastern Michigan Eagles,17,28,False,2026-08-29T22:30:00Z
+401856663,2026-09-03,Arkansas-Pine Bluff Golden Lions,Missouri Tigers,14,54,False,2026-09-04T00:00:00Z
+401856767,2026-09-03,Bethune-Cookman Wildcats,UCF Knights,6,73,False,2026-09-03T23:00:00Z
+401856768,2026-09-03,Idaho Vandals,Utah Utes,14,66,False,2026-09-04T01:00:00Z
+401856776,2026-09-03,Colorado Buffaloes,Georgia Tech Yellow Jackets,14,13,False,2026-09-04T00:00:00Z
+401858204,2026-09-03,Akron Zips,Wake Forest Demon Deacons,16,38,False,2026-09-03T23:00:00Z
+401858422,2026-09-03,Eastern Illinois Panthers,Minnesota Golden Gophers,7,59,False,2026-09-04T00:00:00Z
+401858423,2026-09-03,Massachusetts Minutemen,Rutgers Scarlet Knights,37,21,False,2026-09-03T22:00:00Z
+401858424,2026-09-03,UAB Blazers,Illinois Fighting Illini,23,42,False,2026-09-04T01:00:00Z
+401864424,2026-09-03,Merrimack Warriors,Delaware Blue Hens,7,42,False,2026-09-03T23:00:00Z
+401864425,2026-09-03,West Georgia Wolves,Kennesaw State Owls,0,47,False,2026-09-03T23:00:00Z
+401866409,2026-09-03,UAlbany Great Danes,Buffalo Bulls,17,21,False,2026-09-03T23:00:00Z
+401856664,2026-09-04,UTEP Miners,Oklahoma Sooners,0,51,False,2026-09-05T00:00:00Z
+401856769,2026-09-04,Long Island University Sharks,Kansas Jayhawks,6,51,False,2026-09-05T00:00:00Z
+401858206,2026-09-04,Miami Hurricanes,Stanford Cardinal,45,6,False,2026-09-05T01:00:00Z
+401858429,2026-09-04,Toledo Rockets,Michigan State Spartans,20,30,False,2026-09-05T00:00:00Z
+401858435,2026-09-04,Indiana State Sycamores,Purdue Boilermakers,19,44,False,2026-09-04T23:00:00Z
+401858436,2026-09-04,Fresno State Bulldogs,USC Trojans,0,39,False,2026-09-05T01:00:00Z
+401864495,2026-09-04,San José State Spartans,Eastern Michigan Eagles,27,21,False,2026-09-04T22:30:00Z
+401866623,2026-09-04,North Carolina A&T Aggies,Georgia State Panthers,10,59,False,2026-09-04T23:00:00Z
+401856634,2026-09-05,East Carolina Pirates,Alabama Crimson Tide,10,48,False,2026-09-05T16:00:00Z
+401856635,2026-09-05,North Alabama Lions,Arkansas Razorbacks,14,31,False,2026-09-05T20:15:00Z
+401856636,2026-09-05,Baylor Bears,Auburn Tigers,16,17,True,2026-09-05T19:30:00Z
+401856637,2026-09-05,Florida Atlantic Owls,Florida Gators,21,66,False,2026-09-05T23:45:00Z
+401856658,2026-09-05,Tennessee State Tigers,Georgia Bulldogs,3,63,False,2026-09-05T19:00:00Z
+401856659,2026-09-05,Youngstown State Penguins,Kentucky Wildcats,13,45,False,2026-09-05T17:00:00Z
+401856660,2026-09-05,Clemson Tigers,LSU Tigers,10,51,False,2026-09-06T01:40:00Z
+401856662,2026-09-05,UL Monroe Warhawks,Mississippi State Bulldogs,13,62,False,2026-09-05T23:30:00Z
+401856665,2026-09-05,Kent State Golden Flashes,South Carolina Gamecocks,0,57,False,2026-09-05T16:45:00Z
+401856666,2026-09-05,Furman Paladins,Tennessee Volunteers,9,56,False,2026-09-05T19:30:00Z
+401856667,2026-09-05,Texas State Bobcats,Texas Longhorns,7,59,False,2026-09-05T19:30:00Z
+401856668,2026-09-05,Missouri State Bears,Texas A&M Aggies,0,50,False,2026-09-05T23:00:00Z
+401856669,2026-09-05,Austin Peay Governors,Vanderbilt Commodores,9,28,False,2026-09-05T23:00:00Z
+401856770,2026-09-05,Abilene Christian Wildcats,Texas Tech Red Raiders,10,33,False,2026-09-05T23:00:00Z
+401856771,2026-09-05,Nicholls Colonels,Kansas State Wildcats,3,71,False,2026-09-05T23:00:00Z
+401856772,2026-09-05,Oklahoma State Cowboys,Tulsa Golden Hurricane,10,24,False,2026-09-05T19:45:00Z
+401856773,2026-09-05,Northern Arizona Lumberjacks,Arizona Wildcats,7,35,False,2026-09-06T01:30:00Z
+401856774,2026-09-05,Morgan State Bears,Arizona State Sun Devils,7,70,False,2026-09-06T02:00:00Z
+401856775,2026-09-05,Utah Tech Trailblazers,BYU Cougars,7,63,False,2026-09-06T00:00:00Z
+401856777,2026-09-05,Boston College Eagles,Cincinnati Bearcats,15,34,False,2026-09-05T19:30:00Z
+401856778,2026-09-05,Oregon State Beavers,Houston Cougars,20,33,False,2026-09-05T16:00:00Z
+401856779,2026-09-05,Southeast Missouri State Redhawks,Iowa State Cyclones,10,38,False,2026-09-05T17:00:00Z
+401856780,2026-09-05,Coastal Carolina Chanticleers,West Virginia Mountaineers,24,31,False,2026-09-05T16:00:00Z
+401858207,2026-09-05,Miami (OH) RedHawks,Pittsburgh Panthers,14,59,False,2026-09-05T16:30:00Z
+401858208,2026-09-05,New Hampshire Wildcats,Syracuse Orange,3,66,False,2026-09-05T16:00:00Z
+401858209,2026-09-05,Tulane Green Wave,Duke Blue Devils,3,17,False,2026-09-05T19:30:00Z
+401858210,2026-09-05,UCLA Bruins,California Golden Bears,45,24,False,2026-09-06T02:30:00Z
+401858211,2026-09-05,VMI Keydets,Virginia Tech Hokies,3,73,False,2026-09-05T23:30:00Z
+401858425,2026-09-05,North Texas Mean Green,Indiana Hoosiers,16,52,False,2026-09-05T16:00:00Z
+401858426,2026-09-05,Northern Illinois Huskies,Iowa Hawkeyes,0,40,False,2026-09-05T20:15:00Z
+401858427,2026-09-05,Hampton Pirates,Maryland Terrapins,0,62,False,2026-09-06T00:00:00Z
+401858428,2026-09-05,Western Michigan Broncos,Michigan Wolverines,12,13,False,2026-09-05T23:30:00Z
+401858430,2026-09-05,Ohio Bobcats,Nebraska Cornhuskers,21,49,False,2026-09-05T16:00:00Z
+401858431,2026-09-05,South Dakota State Jackrabbits,Northwestern Wildcats,18,34,False,2026-09-06T00:00:00Z
+401858432,2026-09-05,Ball State Cardinals,Ohio State Buckeyes,3,56,False,2026-09-05T16:30:00Z
+401858433,2026-09-05,Boise State Broncos,Oregon Ducks,27,34,False,2026-09-05T19:30:00Z
+401858434,2026-09-05,Marshall Thundering Herd,Penn State Nittany Lions,0,45,False,2026-09-05T19:30:00Z
+401860878,2026-09-05,Wyoming Cowboys,Colorado State Rams,13,35,False,2026-09-05T22:00:00Z
+401860879,2026-09-05,Portland State Vikings,San Diego State Aztecs,20,53,False,2026-09-06T01:30:00Z
+401860880,2026-09-05,Idaho State Bengals,Utah State Aggies,29,17,False,2026-09-05T23:00:00Z
+401861962,2026-09-05,Lafayette Leopards,UConn Huskies,7,56,False,2026-09-05T16:00:00Z
+401862694,2026-09-05,The Citadel Bulldogs,Charlotte 49ers,43,41,False,2026-09-05T19:30:00Z
+401862695,2026-09-05,Arkansas State Red Wolves,Memphis Tigers,24,42,False,2026-09-05T23:00:00Z
+401862696,2026-09-05,Towson Tigers,Navy Midshipmen,15,42,False,2026-09-05T19:30:00Z
+401862697,2026-09-05,Houston Christian Huskies,Rice Owls,3,31,False,2026-09-05T23:00:00Z
+401862698,2026-09-05,Rhode Island Rams,Temple Owls,14,38,False,2026-09-05T18:00:00Z
+401862699,2026-09-05,Florida International Panthers,South Florida Bulls,9,19,False,2026-09-05T23:00:00Z
+401862700,2026-09-05,UT Rio Grande Valley Vaqueros,UTSA Roadrunners,16,45,False,2026-09-05T19:30:00Z
+401862701,2026-09-05,Bryant Bulldogs,Army Black Knights,3,59,False,2026-09-05T16:00:00Z
+401864432,2026-09-05,Western Kentucky Hilltoppers,Nevada Wolf Pack,14,49,False,2026-09-06T02:30:00Z
+401864496,2026-09-05,Duquesne Dukes,Air Force Falcons,0,34,False,2026-09-05T17:00:00Z
+401864497,2026-09-05,UNLV Rebels,Hawai'i Rainbow Warriors,21,6,False,2026-09-06T02:00:00Z
+401864498,2026-09-05,Central Michigan Chippewas,New Mexico Lobos,7,38,False,2026-09-06T02:00:00Z
+401864499,2026-09-05,Fordham Rams,North Dakota State Bison,0,38,False,2026-09-05T19:30:00Z
+401866410,2026-09-05,Tarleton State Texans,Bowling Green Falcons,20,13,False,2026-09-05T16:00:00Z
+401866411,2026-09-05,Mississippi Valley State Delta Devils,Sacramento State Hornets,0,52,False,2026-09-06T02:00:00Z
+401866627,2026-09-05,Maine Black Bears,App State Mountaineers,3,55,False,2026-09-05T19:30:00Z
+401867866,2026-09-05,Murray State Racers,Middle Tennessee Blue Raiders,14,38,False,2026-09-05T23:45:00Z
+401867973,2026-09-05,Norfolk State Spartans,Old Dominion Monarchs,10,31,False,2026-09-05T22:00:00Z
+401868140,2026-09-05,Eastern Kentucky Colonels,Jacksonville State Gamecocks,7,49,False,2026-09-05T23:00:00Z
+401868170,2026-09-05,Charleston Southern Buccaneers,Georgia Southern Eagles,0,31,False,2026-09-05T23:00:00Z
+401868316,2026-09-05,SE Louisiana Lions,South Alabama Jaguars,14,39,False,2026-09-05T23:00:00Z
+401868356,2026-09-05,Alcorn State Braves,Southern Miss Golden Eagles,3,49,False,2026-09-05T21:00:00Z
+401869129,2026-09-05,Northwestern State Demons,Louisiana Tech Bulldogs,6,80,False,2026-09-05T23:30:00Z
+401869142,2026-09-05,Lamar Cardinals,Louisiana Ragin' Cajuns,7,38,False,2026-09-06T00:00:00Z
+401869960,2026-09-05,Liberty Flames,James Madison Dukes,13,20,False,2026-09-05T16:00:00Z
+401870763,2026-09-05,Sam Houston Bearkats,Troy Trojans,21,24,False,2026-09-05T23:00:00Z
+401870790,2026-09-05,Mercyhurst Lakers,New Mexico State Aggies,14,51,False,2026-09-06T01:00:00Z
+401856661,2026-09-06,Louisville Cardinals,Ole Miss Rebels,38,41,True,2026-09-06T23:30:00Z
+401858437,2026-09-06,Washington State Cougars,Washington Huskies,10,24,False,2026-09-06T20:00:00Z
+401858438,2026-09-06,Wisconsin Badgers,Notre Dame Fighting Irish,13,41,True,2026-09-06T23:30:00Z
+401858212,2026-09-07,SMU Mustangs,Florida State Seminoles,27,24,False,2026-09-07T23:30:00Z
+401858213,2026-09-10,Florida A&M Rattlers,Miami Hurricanes,7,77,False,2026-09-11T00:00:00Z
+401856678,2026-09-11,Missouri Tigers,Kansas Jayhawks,38,21,False,2026-09-12T00:00:00Z
+401858214,2026-09-11,Rutgers Scarlet Knights,Boston College Eagles,21,28,False,2026-09-11T23:30:00Z
+401858215,2026-09-11,Villanova Wildcats,Louisville Cardinals,13,59,False,2026-09-11T23:00:00Z
+401858220,2026-09-11,Norfolk State Spartans,Virginia Cavaliers,3,59,False,2026-09-11T23:00:00Z
+401858222,2026-09-11,Richmond Spiders,NC State Wolfpack,0,73,False,2026-09-11T23:00:00Z
+401856670,2026-09-12,Arkansas Razorbacks,Utah Utes,10,43,False,2026-09-13T02:30:00Z
+401856671,2026-09-12,Southern Miss Golden Eagles,Auburn Tigers,8,43,False,2026-09-13T00:50:00Z
+401856672,2026-09-12,Campbell Fighting Camels,Florida Gators,3,52,False,2026-09-12T21:30:00Z
+401856673,2026-09-12,Western Kentucky Hilltoppers,Georgia Bulldogs,20,70,False,2026-09-12T16:45:00Z
+401856674,2026-09-12,Alabama Crimson Tide,Kentucky Wildcats,45,17,False,2026-09-12T19:30:00Z
+401856676,2026-09-12,Charlotte 49ers,Ole Miss Rebels,9,41,False,2026-09-12T23:45:00Z
+401856677,2026-09-12,Mississippi State Bulldogs,Minnesota Golden Gophers,38,13,False,2026-09-12T19:30:00Z
+401856679,2026-09-12,Oklahoma Sooners,Michigan Wolverines,10,17,False,2026-09-12T16:00:00Z
+401856680,2026-09-12,Towson Tigers,South Carolina Gamecocks,9,45,False,2026-09-12T23:00:00Z
+401856681,2026-09-12,Tennessee Volunteers,Georgia Tech Yellow Jackets,45,24,False,2026-09-12T23:00:00Z
+401856682,2026-09-12,Ohio State Buckeyes,Texas Longhorns,23,24,False,2026-09-12T23:30:00Z
+401856683,2026-09-12,Arizona State Sun Devils,Texas A&M Aggies,20,48,False,2026-09-12T16:00:00Z
+401856684,2026-09-12,Delaware Blue Hens,Vanderbilt Commodores,26,35,False,2026-09-12T20:15:00Z
+401856781,2026-09-12,Washington State Cougars,Kansas State Wildcats,7,34,False,2026-09-12T16:00:00Z
+401856782,2026-09-12,Oregon Ducks,Oklahoma State Cowboys,31,39,False,2026-09-12T17:30:00Z
+401856783,2026-09-12,Texas Tech Red Raiders,Oregon State Beavers,35,24,False,2026-09-12T23:30:00Z
+401856784,2026-09-12,Prairie View A&M Panthers,Baylor Bears,3,44,False,2026-09-13T00:08:00Z
+401856785,2026-09-12,Weber State Wildcats,Colorado Buffaloes,21,52,False,2026-09-12T19:30:00Z
+401856786,2026-09-12,Western Carolina Catamounts,Cincinnati Bearcats,10,62,False,2026-09-12T23:00:00Z
+401856787,2026-09-12,Southern Jaguars,Houston Cougars,6,77,False,2026-09-12T23:00:00Z
+401856788,2026-09-12,Iowa State Cyclones,Iowa Hawkeyes,13,16,False,2026-09-12T23:30:00Z
+401856789,2026-09-12,Grambling Tigers,TCU Horned Frogs,7,63,False,2026-09-13T00:00:00Z
+401856790,2026-09-12,UCF Knights,Pittsburgh Panthers,7,12,False,2026-09-12T19:30:00Z
+401856791,2026-09-12,UT Martin Skyhawks,West Virginia Mountaineers,7,52,False,2026-09-12T17:00:00Z
+401856810,2026-09-12,Arizona Wildcats,BYU Cougars,17,28,False,2026-09-12T19:30:00Z
+401858216,2026-09-12,California Golden Bears,Syracuse Orange,21,18,False,2026-09-12T19:30:00Z
+401858217,2026-09-12,Duke Blue Devils,Illinois Fighting Illini,31,27,False,2026-09-12T19:30:00Z
+401858218,2026-09-12,East Tennessee State Buccaneers,North Carolina Tar Heels,3,35,False,2026-09-12T16:00:00Z
+401858219,2026-09-12,Georgia Southern Eagles,Clemson Tigers,7,22,False,2026-09-13T01:30:00Z
+401858221,2026-09-12,Old Dominion Monarchs,Virginia Tech Hokies,21,44,False,2026-09-12T16:00:00Z
+401858223,2026-09-12,UC Davis Aggies,SMU Mustangs,10,56,False,2026-09-12T20:00:00Z
+401858224,2026-09-12,Wake Forest Demon Deacons,Purdue Boilermakers,38,36,False,2026-09-12T16:00:00Z
+401858439,2026-09-12,Howard Bison,Indiana Hoosiers,0,55,False,2026-09-12T16:00:00Z
+401858440,2026-09-12,Eastern Michigan Eagles,Michigan State Spartans,7,35,False,2026-09-12T19:30:00Z
+401858441,2026-09-12,Bowling Green Falcons,Nebraska Cornhuskers,7,56,False,2026-09-12T23:00:00Z
+401858442,2026-09-12,Penn State Nittany Lions,Temple Owls,27,9,False,2026-09-12T16:00:00Z
+401858443,2026-09-12,San Diego State Aztecs,UCLA Bruins,10,28,False,2026-09-12T23:15:00Z
+401858444,2026-09-12,Maryland Terrapins,UConn Huskies,38,14,False,2026-09-12T19:30:00Z
+401858445,2026-09-12,Louisiana Ragin' Cajuns,USC Trojans,30,49,False,2026-09-13T03:00:00Z
+401858446,2026-09-12,Utah State Aggies,Washington Huskies,14,16,False,2026-09-12T19:30:00Z
+401858447,2026-09-12,Western Illinois Leathernecks,Wisconsin Badgers,9,36,False,2026-09-12T23:15:00Z
+401859184,2026-09-12,Rice Owls,Notre Dame Fighting Irish,0,52,False,2026-09-12T19:30:00Z
+401860881,2026-09-12,Memphis Tigers,Boise State Broncos,20,38,False,2026-09-12T22:00:00Z
+401860882,2026-09-12,Southern Utah Thunderbirds,Colorado State Rams,24,58,False,2026-09-12T23:00:00Z
+401860883,2026-09-12,Sacramento State Hornets,Fresno State Bulldogs,3,49,False,2026-09-13T02:30:00Z
+401860884,2026-09-12,UTSA Roadrunners,Texas State Bobcats,31,26,False,2026-09-12T19:30:00Z
+401862702,2026-09-12,South Florida Bulls,Army Black Knights,28,24,False,2026-09-12T16:00:00Z
+401862703,2026-09-12,Navy Midshipmen,Florida Atlantic Owls,30,38,False,2026-09-12T23:30:00Z
+401862705,2026-09-12,UNLV Rebels,North Texas Mean Green,6,44,False,2026-09-12T19:45:00Z
+401862707,2026-09-12,Tulsa Golden Hurricane,Sam Houston Bearkats,23,17,False,2026-09-12T23:00:00Z
+401862708,2026-09-12,UL Monroe Warhawks,UAB Blazers,20,26,False,2026-09-12T19:30:00Z
+401864500,2026-09-12,Montana State Bobcats,Nevada Wolf Pack,20,7,False,2026-09-13T02:30:00Z
+401864502,2026-09-12,North Dakota State Bison,Air Force Falcons,38,32,False,2026-09-13T02:00:00Z
+401864503,2026-09-12,Illinois State Redbirds,Northern Illinois Huskies,28,24,False,2026-09-12T23:00:00Z
+401864504,2026-09-12,Cal Poly Mustangs,San José State Spartans,20,30,False,2026-09-13T01:00:00Z
+401864505,2026-09-12,Texas Southern Tigers,UTEP Miners,10,51,False,2026-09-13T01:00:00Z
+401864506,2026-09-12,Northern Colorado Bears,Wyoming Cowboys,13,21,False,2026-09-12T20:00:00Z
+401864571,2026-09-12,App State Mountaineers,East Carolina Pirates,27,24,False,2026-09-12T16:00:00Z
+401864575,2026-09-12,South Alabama Jaguars,Tulane Green Wave,24,28,False,2026-09-12T23:00:00Z
+401864578,2026-09-12,New Mexico State Aggies,Hawai'i Rainbow Warriors,19,29,False,2026-09-13T03:59:00Z
+401865252,2026-09-12,Mercyhurst Lakers,New Mexico Lobos,7,70,False,2026-09-12T20:00:00Z
+401866412,2026-09-12,Robert Morris Colonials,Akron Zips,10,45,False,2026-09-12T19:30:00Z
+401866413,2026-09-12,Stony Brook Seawolves,Ball State Cardinals,17,41,False,2026-09-12T18:00:00Z
+401866414,2026-09-12,Buffalo Bulls,Florida International Panthers,20,33,False,2026-09-12T22:00:00Z
+401866415,2026-09-12,Colgate Raiders,Central Michigan Chippewas,10,13,False,2026-09-12T17:00:00Z
+401866416,2026-09-12,Wofford Terriers,Kent State Golden Flashes,15,36,False,2026-09-12T16:00:00Z
+401866417,2026-09-12,Holy Cross Crusaders,Miami (OH) RedHawks,7,45,False,2026-09-12T17:00:00Z
+401866418,2026-09-12,Jacksonville State Gamecocks,Ohio Bobcats,27,29,False,2026-09-12T22:00:00Z
+401866419,2026-09-12,Central Connecticut Blue Devils,Toledo Rockets,10,63,False,2026-09-12T19:30:00Z
+401866420,2026-09-12,Sacred Heart Pioneers,Massachusetts Minutemen,10,37,False,2026-09-12T19:30:00Z
+401866421,2026-09-12,Monmouth Hawks,Western Michigan Broncos,14,49,False,2026-09-12T22:30:00Z
+401867796,2026-09-12,Louisiana Tech Bulldogs,LSU Tigers,14,45,False,2026-09-12T23:30:00Z
+401867929,2026-09-12,Wagner Seahawks,James Madison Dukes,3,87,False,2026-09-12T16:00:00Z
+401868008,2026-09-12,Fordham Rams,Coastal Carolina Chanticleers,7,45,False,2026-09-12T23:30:00Z
+401868187,2026-09-12,Gardner-Webb Runnin' Bulldogs,Liberty Flames,23,24,False,2026-09-12T16:00:00Z
+401868241,2026-09-12,West Georgia Wolves,Arkansas State Red Wolves,7,52,False,2026-09-12T23:00:00Z
+401868326,2026-09-12,Alabama State Hornets,Troy Trojans,17,34,False,2026-09-12T20:00:00Z
+401869955,2026-09-12,Georgia State Panthers,Kennesaw State Owls,31,17,False,2026-09-12T23:00:00Z
+401871045,2026-09-12,Middle Tennessee Blue Raiders,Marshall Thundering Herd,26,28,False,2026-09-12T23:00:00Z
+401871046,2026-09-12,Lindenwood Lions,Missouri State Bears,14,48,False,2026-09-12T23:00:00Z
+401858225,2026-09-17,Syracuse Orange,Pittsburgh Panthers,13,27,False,2026-09-17T23:30:00Z
+401856811,2026-09-18,Houston Cougars,Texas Tech Red Raiders,26,28,False,2026-09-19T00:00:00Z
+401858226,2026-09-18,Miami Hurricanes,Wake Forest Demon Deacons,33,20,False,2026-09-18T23:30:00Z
+401858455,2026-09-18,Portland State Vikings,Oregon Ducks,0,84,False,2026-09-19T02:30:00Z
+401856685,2026-09-19,Florida State Seminoles,Alabama Crimson Tide,36,50,False,2026-09-19T21:15:00Z
+401856686,2026-09-19,Georgia Bulldogs,Arkansas Razorbacks,45,17,False,2026-09-19T16:00:00Z
+401856687,2026-09-19,Florida Gators,Auburn Tigers,44,39,False,2026-09-19T23:00:00Z
+401856688,2026-09-19,LSU Tigers,Ole Miss Rebels,24,32,False,2026-09-19T23:30:00Z
+401856689,2026-09-19,Troy Trojans,Missouri Tigers,17,27,False,2026-09-19T23:00:00Z
+401856690,2026-09-19,New Mexico Lobos,Oklahoma Sooners,6,14,False,2026-09-19T23:30:00Z
+401856691,2026-09-19,Mississippi State Bulldogs,South Carolina Gamecocks,41,34,False,2026-09-19T21:35:00Z
+401856692,2026-09-19,Kennesaw State Owls,Tennessee Volunteers,9,42,False,2026-09-19T23:45:00Z
+401856693,2026-09-19,UTSA Roadrunners,Texas Longhorns,6,30,False,2026-09-20T00:00:00Z
+401856694,2026-09-19,Kentucky Wildcats,Texas A&M Aggies,31,21,False,2026-09-19T19:40:00Z
+401856695,2026-09-19,NC State Wolfpack,Vanderbilt Commodores,31,35,False,2026-09-19T16:45:00Z
+401856792,2026-09-19,Tulane Green Wave,Kansas State Wildcats,20,31,False,2026-09-19T16:00:00Z
+401856793,2026-09-19,Northern Illinois Huskies,Arizona Wildcats,17,42,False,2026-09-20T02:30:00Z
+401856795,2026-09-19,BYU Cougars,Colorado State Rams,41,23,False,2026-09-20T00:15:00Z
+401856796,2026-09-19,Colorado Buffaloes,Northwestern Wildcats,7,41,False,2026-09-19T23:30:00Z
+401856797,2026-09-19,Miami (OH) RedHawks,Cincinnati Bearcats,31,35,False,2026-09-19T19:30:00Z
+401856798,2026-09-19,Bowling Green Falcons,Iowa State Cyclones,7,55,False,2026-09-19T16:00:00Z
+401856799,2026-09-19,Arkansas State Red Wolves,TCU Horned Frogs,7,31,False,2026-09-20T00:00:00Z
+401856800,2026-09-19,Georgia State Panthers,UCF Knights,30,44,False,2026-09-19T23:00:00Z
+401856801,2026-09-19,Utah State Aggies,Utah Utes,0,33,False,2026-09-19T19:30:00Z
+401856802,2026-09-19,West Virginia Mountaineers,Virginia Cavaliers,38,27,True,2026-09-19T23:30:00Z
+401856803,2026-09-19,Murray State Racers,Oklahoma State Cowboys,0,59,False,2026-09-19T23:00:00Z
+401856812,2026-09-19,Arizona State Sun Devils,Kansas Jayhawks,24,17,True,2026-09-19T16:00:00Z
+401858227,2026-09-19,Maine Black Bears,Boston College Eagles,16,22,False,2026-09-19T18:00:00Z
+401858228,2026-09-19,Mercer Bears,Georgia Tech Yellow Jackets,11,44,False,2026-09-19T16:00:00Z
+401858229,2026-09-19,North Carolina Tar Heels,Clemson Tigers,20,28,False,2026-09-19T16:00:00Z
+401858230,2026-09-19,SMU Mustangs,Louisville Cardinals,31,41,False,2026-09-19T19:30:00Z
+401858231,2026-09-19,Stanford Cardinal,Duke Blue Devils,7,35,False,2026-09-19T20:00:00Z
+401858232,2026-09-19,Virginia Tech Hokies,Maryland Terrapins,35,26,False,2026-09-19T23:30:00Z
+401858233,2026-09-19,Wagner Seahawks,California Golden Bears,7,49,False,2026-09-19T19:30:00Z
+401858448,2026-09-19,Southern Illinois Salukis,Illinois Fighting Illini,10,48,False,2026-09-19T18:00:00Z
+401858449,2026-09-19,Western Kentucky Hilltoppers,Indiana Hoosiers,0,38,False,2026-09-19T20:00:00Z
+401858450,2026-09-19,UTEP Miners,Michigan Wolverines,17,52,False,2026-09-19T19:30:00Z
+401858451,2026-09-19,Akron Zips,Minnesota Golden Gophers,7,41,False,2026-09-19T16:00:00Z
+401858452,2026-09-19,North Dakota Fighting Hawks,Nebraska Cornhuskers,7,34,False,2026-09-19T23:15:00Z
+401858453,2026-09-19,Michigan State Spartans,Notre Dame Fighting Irish,10,27,False,2026-09-19T23:30:00Z
+401858454,2026-09-19,Kent State Golden Flashes,Ohio State Buckeyes,3,59,False,2026-09-19T16:00:00Z
+401858456,2026-09-19,Buffalo Bulls,Penn State Nittany Lions,13,55,False,2026-09-19T16:00:00Z
+401858457,2026-09-19,USC Trojans,Rutgers Scarlet Knights,42,35,False,2026-09-19T19:30:00Z
+401858458,2026-09-19,Purdue Boilermakers,UCLA Bruins,38,52,False,2026-09-20T03:00:00Z
+401858459,2026-09-19,Eastern Washington Eagles,Washington Huskies,16,48,False,2026-09-19T23:15:00Z
+401858460,2026-09-19,Eastern Michigan Eagles,Wisconsin Badgers,10,54,False,2026-09-19T16:30:00Z
+401858471,2026-09-19,Northern Iowa Panthers,Iowa Hawkeyes,0,55,False,2026-09-19T20:00:00Z
+401860885,2026-09-19,South Dakota Coyotes,Boise State Broncos,24,38,False,2026-09-20T02:00:00Z
+401860886,2026-09-19,Montana Grizzlies,Oregon State Beavers,17,52,False,2026-09-20T03:00:00Z
+401860887,2026-09-19,James Madison Dukes,San Diego State Aztecs,26,13,False,2026-09-20T02:00:00Z
+401860888,2026-09-19,Fresno State Bulldogs,San José State Spartans,26,10,False,2026-09-20T03:00:00Z
+401860889,2026-09-19,North Texas Mean Green,Texas State Bobcats,35,49,False,2026-09-19T16:00:00Z
+401860890,2026-09-19,Duquesne Dukes,Washington State Cougars,7,48,False,2026-09-19T19:30:00Z
+401861963,2026-09-19,UConn Huskies,Southern Miss Golden Eagles,48,20,False,2026-09-19T23:00:00Z
+401862710,2026-09-19,East Carolina Pirates,Old Dominion Monarchs,20,17,False,2026-09-19T22:00:00Z
+401862771,2026-09-19,Florida International Panthers,Florida Atlantic Owls,10,16,False,2026-09-19T22:00:00Z
+401862772,2026-09-19,UT Martin Skyhawks,Memphis Tigers,21,45,False,2026-09-19T23:00:00Z
+401862773,2026-09-19,Western Michigan Broncos,Rice Owls,28,21,False,2026-09-19T23:00:00Z
+401862774,2026-09-19,Temple Owls,Toledo Rockets,48,49,False,2026-09-19T19:00:00Z
+401862775,2026-09-19,East Texas A&M Lions,Tulsa Golden Hurricane,0,42,False,2026-09-20T00:00:00Z
+401862776,2026-09-19,UAB Blazers,Louisiana Ragin' Cajuns,14,21,False,2026-09-20T00:00:00Z
+401862777,2026-09-19,Delaware State Hornets,South Florida Bulls,17,59,False,2026-09-19T23:00:00Z
+401864443,2026-09-19,Nevada Wolf Pack,Middle Tennessee Blue Raiders,20,27,False,2026-09-19T23:00:00Z
+401864507,2026-09-19,North Dakota State Bison,Sacramento State Hornets,31,10,False,2026-09-20T02:30:00Z
+401864508,2026-09-19,Wyoming Cowboys,Central Michigan Chippewas,10,24,False,2026-09-19T17:00:00Z
+401864574,2026-09-19,Charlotte 49ers,App State Mountaineers,21,26,False,2026-09-20T01:30:00Z
+401866422,2026-09-19,Ball State Cardinals,Liberty Flames,15,51,False,2026-09-19T20:00:00Z
+401866423,2026-09-19,Ohio Bobcats,South Alabama Jaguars,36,41,False,2026-09-19T23:00:00Z
+401866424,2026-09-19,Stonehill Skyhawks,Massachusetts Minutemen,14,36,False,2026-09-19T19:30:00Z
+401867804,2026-09-19,Louisiana Tech Bulldogs,Baylor Bears,19,36,False,2026-09-19T20:00:00Z
+401868317,2026-09-19,SE Louisiana Lions,UL Monroe Warhawks,38,35,False,2026-09-19T20:30:00Z
+401869940,2026-09-19,Coastal Carolina Chanticleers,Delaware Blue Hens,14,22,False,2026-09-19T15:30:00Z
+401869948,2026-09-19,Georgia Southern Eagles,Jacksonville State Gamecocks,27,31,False,2026-09-19T23:00:00Z
+401870764,2026-09-19,Nicholls Colonels,Sam Houston Bearkats,0,59,False,2026-09-19T23:00:00Z
+401871047,2026-09-19,Marshall Thundering Herd,Missouri State Bears,30,24,False,2026-09-19T22:30:00Z
+401869941,2026-09-24,Liberty Flames,Coastal Carolina Chanticleers,34,17,False,2026-09-24T23:30:00Z
+401858234,2026-09-25,Clemson Tigers,California Golden Bears,24,10,False,2026-09-26T02:30:00Z
+401858461,2026-09-25,Northwestern Wildcats,Indiana Hoosiers,23,29,False,2026-09-26T00:00:00Z
+401858468,2026-09-25,Howard Bison,Rutgers Scarlet Knights,7,58,False,2026-09-25T23:00:00Z
+401862778,2026-09-25,Navy Midshipmen,UAB Blazers,20,24,False,2026-09-25T23:00:00Z
+401862779,2026-09-25,Army Black Knights,Temple Owls,21,17,False,2026-09-25T20:00:00Z
+401856696,2026-09-26,South Carolina Gamecocks,Alabama Crimson Tide,18,49,False,2026-09-26T23:10:00Z
+401856697,2026-09-26,Tulsa Golden Hurricane,Arkansas Razorbacks,6,34,False,2026-09-27T00:00:00Z
+401856698,2026-09-26,Vanderbilt Commodores,Auburn Tigers,15,21,False,2026-09-26T20:15:00Z
+401856699,2026-09-26,Ole Miss Rebels,Florida Gators,28,52,False,2026-09-26T19:30:00Z
+401856700,2026-09-26,Oklahoma Sooners,Georgia Bulldogs,13,41,False,2026-09-26T19:30:00Z
+401856702,2026-09-26,Texas A&M Aggies,LSU Tigers,6,35,False,2026-09-26T23:30:00Z
+401856703,2026-09-26,Missouri Tigers,Mississippi State Bulldogs,24,31,False,2026-09-26T23:45:00Z
+401856704,2026-09-26,Texas Longhorns,Tennessee Volunteers,20,17,False,2026-09-26T16:00:00Z
+401856804,2026-09-26,Arizona Wildcats,Washington State Cougars,34,24,False,2026-09-26T23:30:00Z
+401856805,2026-09-26,Sam Houston Bearkats,Texas Tech Red Raiders,14,49,False,2026-09-26T16:00:00Z
+401856806,2026-09-26,Houston Cougars,Georgia Southern Eagles,42,28,False,2026-09-26T20:00:00Z
+401856813,2026-09-26,Colorado Buffaloes,Baylor Bears,13,23,False,2026-09-26T16:00:00Z
+401856814,2026-09-26,Kansas State Wildcats,Cincinnati Bearcats,26,31,False,2026-09-26T23:00:00Z
+401856815,2026-09-26,TCU Horned Frogs,UCF Knights,13,21,False,2026-09-26T19:30:00Z
+401856816,2026-09-26,Utah Utes,Iowa State Cyclones,31,17,False,2026-09-26T19:30:00Z
+401856881,2026-09-26,Oklahoma State Cowboys,West Virginia Mountaineers,41,24,False,2026-09-26T23:00:00Z
+401858236,2026-09-26,Bucknell Bison,Pittsburgh Panthers,0,59,False,2026-09-26T16:00:00Z
+401858237,2026-09-26,Central Arkansas Bears,Florida State Seminoles,7,34,False,2026-09-26T19:00:00Z
+401858238,2026-09-26,Central Michigan Chippewas,Miami Hurricanes,3,52,False,2026-09-26T22:30:00Z
+401858239,2026-09-26,Delaware Blue Hens,Virginia Cavaliers,3,42,False,2026-09-26T22:00:00Z
+401858240,2026-09-26,Georgia Tech Yellow Jackets,Stanford Cardinal,27,34,False,2026-09-27T02:30:00Z
+401858241,2026-09-26,Missouri State Bears,SMU Mustangs,24,34,False,2026-09-27T01:00:00Z
+401858242,2026-09-26,Virginia Tech Hokies,Boston College Eagles,21,14,False,2026-09-26T16:00:00Z
+401858243,2026-09-26,Wake Forest Demon Deacons,Louisville Cardinals,30,27,False,2026-09-26T16:00:00Z
+401858244,2026-09-26,William & Mary Tribe,Duke Blue Devils,7,62,False,2026-09-26T19:30:00Z
+401858462,2026-09-26,UCLA Bruins,Maryland Terrapins,54,3,False,2026-09-26T17:30:00Z
+401858463,2026-09-26,Iowa Hawkeyes,Michigan Wolverines,20,19,False,2026-09-26T19:30:00Z
+401858464,2026-09-26,Nebraska Cornhuskers,Michigan State Spartans,31,13,False,2026-09-26T21:00:00Z
+401858465,2026-09-26,Illinois Fighting Illini,Ohio State Buckeyes,19,42,False,2026-09-26T16:00:00Z
+401858466,2026-09-26,Wisconsin Badgers,Penn State Nittany Lions,24,20,False,2026-09-26T21:00:00Z
+401858467,2026-09-26,Notre Dame Fighting Irish,Purdue Boilermakers,49,10,False,2026-09-26T18:00:00Z
+401858469,2026-09-26,Oregon Ducks,USC Trojans,41,27,False,2026-09-26T23:30:00Z
+401858470,2026-09-26,Minnesota Golden Gophers,Washington Huskies,27,24,False,2026-09-27T03:00:00Z
+401860891,2026-09-26,Rice Owls,Fresno State Bulldogs,24,38,False,2026-09-27T02:00:00Z
+401860892,2026-09-26,Incarnate Word Cardinals,Texas State Bobcats,10,63,False,2026-09-26T22:00:00Z
+401860893,2026-09-26,San Diego State Aztecs,Toledo Rockets,16,41,False,2026-09-26T16:00:00Z
+401860894,2026-09-26,Troy Trojans,Utah State Aggies,10,21,False,2026-09-26T23:30:00Z
+401860895,2026-09-26,Oregon State Beavers,UTEP Miners,33,7,False,2026-09-27T01:00:00Z
+401860896,2026-09-26,Colorado State Rams,UTSA Roadrunners,45,59,False,2026-09-26T16:00:00Z
+401860897,2026-09-26,Boise State Broncos,Western Michigan Broncos,32,7,False,2026-09-26T19:30:00Z
+401861970,2026-09-26,UConn Huskies,Miami (OH) RedHawks,21,24,False,2026-09-26T19:30:00Z
+401862780,2026-09-26,Louisiana Ragin' Cajuns,Charlotte 49ers,34,7,False,2026-09-26T22:30:00Z
+401862781,2026-09-26,North Carolina Central Eagles,East Carolina Pirates,9,42,False,2026-09-26T20:00:00Z
+401862782,2026-09-26,Florida Atlantic Owls,UL Monroe Warhawks,45,17,False,2026-09-27T00:00:00Z
+401862783,2026-09-26,Houston Christian Huskies,North Texas Mean Green,14,63,False,2026-09-26T23:30:00Z
+401862784,2026-09-26,Southern Miss Golden Eagles,Tulane Green Wave,21,24,False,2026-09-26T23:00:00Z
+401862785,2026-09-26,South Florida Bulls,Bowling Green Falcons,14,6,False,2026-09-26T21:00:00Z
+401864509,2026-09-26,Air Force Falcons,Nevada Wolf Pack,36,33,False,2026-09-27T02:30:00Z
+401864510,2026-09-26,Hawai'i Rainbow Warriors,Wyoming Cowboys,10,27,False,2026-09-26T19:00:00Z
+401864511,2026-09-26,Northern Illinois Huskies,Georgia State Panthers,14,35,False,2026-09-26T18:00:00Z
+401864512,2026-09-26,UNLV Rebels,Akron Zips,38,10,False,2026-09-26T16:00:00Z
+401864572,2026-09-26,App State Mountaineers,NC State Wolfpack,31,41,False,2026-09-26T23:30:00Z
+401864576,2026-09-26,South Alabama Jaguars,Kentucky Wildcats,21,45,False,2026-09-26T16:45:00Z
+401864579,2026-09-26,New Mexico Lobos,New Mexico State Aggies,42,18,False,2026-09-26T19:30:00Z
+401866425,2026-09-26,Ball State Cardinals,Kent State Golden Flashes,13,26,False,2026-09-26T16:00:00Z
+401866426,2026-09-26,Robert Morris Colonials,Buffalo Bulls,28,31,False,2026-09-26T19:30:00Z
+401866427,2026-09-26,Lindenwood Lions,Eastern Michigan Eagles,3,29,False,2026-09-26T17:00:00Z
+401866428,2026-09-26,Stonehill Skyhawks,Ohio Bobcats,7,35,False,2026-09-26T19:30:00Z
+401866429,2026-09-26,Massachusetts Minutemen,Sacramento State Hornets,35,6,False,2026-09-27T01:00:00Z
+401867909,2026-09-26,Long Island University Sharks,Florida International Panthers,3,20,False,2026-09-26T22:00:00Z
+401868188,2026-09-26,Gardner-Webb Runnin' Bulldogs,Marshall Thundering Herd,35,36,False,2026-09-26T19:30:00Z
+401869931,2026-09-26,Kennesaw State Owls,Arkansas State Red Wolves,14,17,False,2026-09-26T23:00:00Z
+401869961,2026-09-26,James Madison Dukes,Old Dominion Monarchs,46,20,False,2026-09-26T22:00:00Z
+401870745,2026-09-26,Mercyhurst Lakers,Western Kentucky Hilltoppers,7,52,False,2026-09-26T23:00:00Z
+401871048,2026-09-26,Middle Tennessee Blue Raiders,Jacksonville State Gamecocks,13,23,False,2026-09-26T23:00:00Z
+401862786,2026-10-01,North Texas Mean Green,Tulsa Golden Hurricane,45,44,False,2026-10-02T01:00:00Z
+401871049,2026-10-01,Western Kentucky Hilltoppers,New Mexico State Aggies,13,34,False,2026-10-02T00:00:00Z
+401858245,2026-10-02,Pittsburgh Panthers,Virginia Tech Hokies,35,33,False,2026-10-02T23:00:00Z
+401858476,2026-10-02,Penn State Nittany Lions,Northwestern Wildcats,13,34,False,2026-10-03T00:00:00Z
+401871050,2026-10-02,Liberty Flames,Delaware Blue Hens,30,14,False,2026-10-02T23:00:00Z
+401856705,2026-10-03,Vanderbilt Commodores,Georgia Bulldogs,14,38,False,2026-10-03T16:45:00Z
+401856706,2026-10-03,McNeese Cowboys,LSU Tigers,14,63,False,2026-10-03T23:45:00Z
+401856707,2026-10-03,Alabama Crimson Tide,Mississippi State Bulldogs,56,23,False,2026-10-03T16:00:00Z
+401856708,2026-10-03,Florida Gators,Missouri Tigers,17,45,False,2026-10-03T19:50:00Z
+401856709,2026-10-03,Kentucky Wildcats,South Carolina Gamecocks,35,34,False,2026-10-03T20:15:00Z
+401856710,2026-10-03,Auburn Tigers,Tennessee Volunteers,14,24,False,2026-10-03T19:30:00Z
+401856711,2026-10-03,Arkansas Razorbacks,Texas A&M Aggies,7,34,False,2026-10-03T23:00:00Z
+401856807,2026-10-03,Middle Tennessee Blue Raiders,Kansas Jayhawks,0,55,False,2026-10-03T16:00:00Z
+401856817,2026-10-03,Baylor Bears,Arizona State Sun Devils,55,19,False,2026-10-04T02:30:00Z
+401856818,2026-10-03,BYU Cougars,TCU Horned Frogs,17,10,False,2026-10-03T23:00:00Z
+401856819,2026-10-03,UCF Knights,Houston Cougars,17,27,False,2026-10-03T16:00:00Z
+401856820,2026-10-03,Cincinnati Bearcats,Arizona Wildcats,7,34,False,2026-10-04T03:00:00Z
+401856821,2026-10-03,Texas Tech Red Raiders,Colorado Buffaloes,29,7,False,2026-10-03T23:30:00Z
+401856822,2026-10-03,West Virginia Mountaineers,Iowa State Cyclones,42,45,False,2026-10-03T16:00:00Z
+401858246,2026-10-03,Boston College Eagles,SMU Mustangs,16,25,False,2026-10-03T16:00:00Z
+401858247,2026-10-03,California Golden Bears,UNLV Rebels,31,39,False,2026-10-03T19:30:00Z
+401858248,2026-10-03,Louisville Cardinals,NC State Wolfpack,28,31,False,2026-10-03T19:30:00Z
+401858249,2026-10-03,Miami Hurricanes,Clemson Tigers,41,13,False,2026-10-03T23:30:00Z
+401858250,2026-10-03,Notre Dame Fighting Irish,North Carolina Tar Heels,37,26,False,2026-10-03T16:00:00Z
+401858251,2026-10-03,Stanford Cardinal,Wake Forest Demon Deacons,3,57,False,2026-10-03T16:00:00Z
+401858252,2026-10-03,Syracuse Orange,UConn Huskies,42,41,False,2026-10-03T16:00:00Z
+401858253,2026-10-03,Virginia Cavaliers,Florida State Seminoles,7,38,False,2026-10-03T19:30:00Z
+401858472,2026-10-03,Purdue Boilermakers,Illinois Fighting Illini,24,17,False,2026-10-03T20:15:00Z
+401858473,2026-10-03,Ohio State Buckeyes,Iowa Hawkeyes,31,14,False,2026-10-03T19:30:00Z
+401858474,2026-10-03,Michigan Wolverines,Minnesota Golden Gophers,14,20,False,2026-10-03T16:00:00Z
+401858475,2026-10-03,Maryland Terrapins,Nebraska Cornhuskers,23,48,False,2026-10-03T20:00:00Z
+401858477,2026-10-03,Indiana Hoosiers,Rutgers Scarlet Knights,47,15,False,2026-10-04T00:00:00Z
+401858478,2026-10-03,Washington Huskies,USC Trojans,21,25,False,2026-10-03T23:30:00Z
+401858479,2026-10-03,Michigan State Spartans,Wisconsin Badgers,3,31,False,2026-10-03T16:30:00Z
+401860898,2026-10-03,Utah State Aggies,Boise State Broncos,18,37,False,2026-10-03T23:30:00Z
+401860899,2026-10-03,Oregon State Beavers,Colorado State Rams,56,26,False,2026-10-03T22:00:00Z
+401860900,2026-10-03,Texas State Bobcats,San Diego State Aztecs,29,31,False,2026-10-04T02:30:00Z
+401860921,2026-10-03,Fresno State Bulldogs,Washington State Cougars,26,6,False,2026-10-04T01:30:00Z
+401862787,2026-10-03,Memphis Tigers,Charlotte 49ers,59,8,False,2026-10-03T15:00:00Z
+401862788,2026-10-03,UTSA Roadrunners,Rice Owls,16,14,False,2026-10-03T23:00:00Z
+401862790,2026-10-03,Texas Southern Tigers,Florida Atlantic Owls,10,66,False,2026-10-03T22:00:00Z
+401862791,2026-10-03,Navy Midshipmen,Air Force Falcons,9,14,False,2026-10-03T16:00:00Z
+401862792,2026-10-03,Temple Owls,South Florida Bulls,17,13,False,2026-10-03T23:30:00Z
+401862793,2026-10-03,Samford Bulldogs,UAB Blazers,14,33,False,2026-10-03T19:30:00Z
+401864513,2026-10-03,San José State Spartans,Hawai'i Rainbow Warriors,20,16,False,2026-10-04T03:59:00Z
+401864514,2026-10-03,UTEP Miners,New Mexico Lobos,7,61,False,2026-10-03T20:00:00Z
+401864515,2026-10-03,Wyoming Cowboys,North Dakota State Bison,0,28,False,2026-10-03T19:30:00Z
+401866430,2026-10-03,Akron Zips,Central Michigan Chippewas,17,41,False,2026-10-03T19:30:00Z
+401866431,2026-10-03,Toledo Rockets,Ball State Cardinals,39,24,False,2026-10-03T18:00:00Z
+401866432,2026-10-03,Western Michigan Broncos,Buffalo Bulls,20,17,False,2026-10-03T17:00:00Z
+401866433,2026-10-03,Eastern Michigan Eagles,Massachusetts Minutemen,38,14,False,2026-10-03T19:30:00Z
+401866434,2026-10-03,Ohio Bobcats,Kent State Golden Flashes,13,10,False,2026-10-03T19:30:00Z
+401866477,2026-10-03,Bowling Green Falcons,Miami (OH) RedHawks,24,20,False,2026-10-03T19:30:00Z
+401869842,2026-10-03,Army Black Knights,Louisiana Tech Bulldogs,29,31,False,2026-10-03T23:30:00Z
+401869932,2026-10-03,Arkansas State Red Wolves,Louisiana Ragin' Cajuns,20,23,False,2026-10-04T00:00:00Z
+401869942,2026-10-03,Georgia Southern Eagles,Coastal Carolina Chanticleers,31,24,False,2026-10-03T23:00:00Z
+401869956,2026-10-03,Old Dominion Monarchs,Georgia State Panthers,10,42,False,2026-10-03T19:30:00Z
+401869962,2026-10-03,Marshall Thundering Herd,James Madison Dukes,17,45,False,2026-10-03T19:45:00Z
+401871089,2026-10-03,UL Monroe Warhawks,South Alabama Jaguars,35,52,False,2026-10-03T23:00:00Z
+401871090,2026-10-06,Southern Miss Golden Eagles,Troy Trojans,34,55,False,2026-10-07T00:00:00Z
+401871051,2026-10-07,Jacksonville State Gamecocks,Kennesaw State Owls,27,26,False,2026-10-07T23:00:00Z
+401871066,2026-10-07,New Mexico State Aggies,Florida International Panthers,3,22,False,2026-10-08T00:04:00Z
+401862794,2026-10-08,South Florida Bulls,UTSA Roadrunners,24,31,False,2026-10-08T23:30:00Z
+401869933,2026-10-08,South Alabama Jaguars,Arkansas State Red Wolves,56,49,False,2026-10-08T23:30:00Z
+401870766,2026-10-08,Sam Houston Bearkats,Liberty Flames,3,35,False,2026-10-08T23:00:00Z
+401871052,2026-10-08,Missouri State Bears,Western Kentucky Hilltoppers,13,34,False,2026-10-08T23:00:00Z
+401856826,2026-10-09,Iowa State Cyclones,BYU Cougars,10,24,False,2026-10-10T02:30:00Z
+401858254,2026-10-09,Florida State Seminoles,Louisville Cardinals,20,44,False,2026-10-09T23:00:00Z
+401858487,2026-10-09,Iowa Hawkeyes,Washington Huskies,41,24,False,2026-10-10T01:00:00Z
+401860922,2026-10-09,Washington State Cougars,Utah State Aggies,16,17,False,2026-10-10T01:00:00Z
+401864519,2026-10-09,Wyoming Cowboys,San José State Spartans,16,13,False,2026-10-10T01:00:00Z
+401856712,2026-10-10,Georgia Bulldogs,Alabama Crimson Tide,20,17,False,2026-10-10T23:30:00Z
+401856713,2026-10-10,Tennessee Volunteers,Arkansas Razorbacks,24,17,False,2026-10-10T20:15:00Z
+401856714,2026-10-10,South Carolina Gamecocks,Florida Gators,38,19,False,2026-10-10T16:45:00Z
+401856715,2026-10-10,LSU Tigers,Kentucky Wildcats,34,35,False,2026-10-10T23:00:00Z
+401856716,2026-10-10,Texas A&M Aggies,Missouri Tigers,6,27,False,2026-10-10T16:00:00Z
+401856717,2026-10-10,Texas Longhorns,Oklahoma Sooners,24,27,True,2026-10-10T19:30:00Z
+401856718,2026-10-10,Ole Miss Rebels,Vanderbilt Commodores,52,17,False,2026-10-10T19:30:00Z
+401856808,2026-10-10,Hawai'i Rainbow Warriors,Arizona State Sun Devils,12,30,False,2026-10-11T02:30:00Z
+401856823,2026-10-10,Arizona Wildcats,West Virginia Mountaineers,52,31,False,2026-10-10T16:00:00Z
+401856824,2026-10-10,UCF Knights,Oklahoma State Cowboys,28,42,False,2026-10-10T16:00:00Z
+401856825,2026-10-10,Houston Cougars,Kansas State Wildcats,35,16,False,2026-10-10T19:30:00Z
+401856827,2026-10-10,Kansas Jayhawks,Utah Utes,24,41,False,2026-10-11T00:00:00Z
+401858255,2026-10-10,Duke Blue Devils,Georgia Tech Yellow Jackets,25,28,False,2026-10-10T19:30:00Z
+401858256,2026-10-10,North Carolina Tar Heels,Pittsburgh Panthers,21,17,False,2026-10-10T16:00:00Z
+401858257,2026-10-10,Stanford Cardinal,Notre Dame Fighting Irish,7,58,False,2026-10-10T19:30:00Z
+401858258,2026-10-10,Syracuse Orange,Virginia Cavaliers,25,28,False,2026-10-10T23:30:00Z
+401858259,2026-10-10,Virginia Tech Hokies,California Golden Bears,20,25,False,2026-10-10T19:30:00Z
+401858260,2026-10-10,Wake Forest Demon Deacons,NC State Wolfpack,38,14,False,2026-10-10T16:00:00Z
+401858480,2026-10-10,Illinois Fighting Illini,Michigan State Spartans,38,37,False,2026-10-10T19:30:00Z
+401858481,2026-10-10,Indiana Hoosiers,Nebraska Cornhuskers,20,17,False,2026-10-10T16:00:00Z
+401858482,2026-10-10,Ball State Cardinals,Northwestern Wildcats,14,45,False,2026-10-10T16:30:00Z
+401858483,2026-10-10,Maryland Terrapins,Ohio State Buckeyes,16,45,False,2026-10-10T20:15:00Z
+401858484,2026-10-10,UCLA Bruins,Oregon Ducks,17,15,False,2026-10-10T19:30:00Z
+401858485,2026-10-10,USC Trojans,Penn State Nittany Lions,31,23,False,2026-10-10T23:30:00Z
+401858486,2026-10-10,Minnesota Golden Gophers,Purdue Boilermakers,13,41,False,2026-10-11T00:00:00Z
+401860901,2026-10-10,Boise State Broncos,Fresno State Bulldogs,38,31,False,2026-10-11T02:30:00Z
+401860902,2026-10-10,San Diego State Aztecs,Oregon State Beavers,14,66,False,2026-10-10T22:00:00Z
+401861964,2026-10-10,UConn Huskies,Temple Owls,34,20,False,2026-10-10T19:45:00Z
+401862795,2026-10-10,Tulane Green Wave,Army Black Knights,17,20,False,2026-10-10T16:00:00Z
+401862796,2026-10-10,Charlotte 49ers,North Texas Mean Green,10,50,False,2026-10-10T19:30:00Z
+401862797,2026-10-10,Rice Owls,East Carolina Pirates,12,28,False,2026-10-10T17:00:00Z
+401862798,2026-10-10,UAB Blazers,Memphis Tigers,13,38,False,2026-10-10T23:00:00Z
+401862799,2026-10-10,Tulsa Golden Hurricane,Navy Midshipmen,26,34,False,2026-10-10T19:30:00Z
+401864516,2026-10-10,Air Force Falcons,Northern Illinois Huskies,28,7,False,2026-10-10T23:30:00Z
+401864517,2026-10-10,Nevada Wolf Pack,UTEP Miners,30,13,False,2026-10-10T23:00:00Z
+401864518,2026-10-10,North Dakota State Bison,UNLV Rebels,7,13,False,2026-10-10T23:00:00Z
+401866435,2026-10-10,Eastern Michigan Eagles,Akron Zips,25,23,False,2026-10-10T19:30:00Z
+401866436,2026-10-10,Sacramento State Hornets,Bowling Green Falcons,10,38,False,2026-10-10T16:00:00Z
+401866437,2026-10-10,Buffalo Bulls,Toledo Rockets,23,8,False,2026-10-10T19:30:00Z
+401866438,2026-10-10,Central Michigan Chippewas,Ohio Bobcats,14,31,False,2026-10-10T19:30:00Z
+401866439,2026-10-10,Kent State Golden Flashes,Western Michigan Broncos,7,38,False,2026-10-10T19:30:00Z
+401866440,2026-10-10,Miami (OH) RedHawks,Massachusetts Minutemen,20,19,False,2026-10-10T18:00:00Z
+401869843,2026-10-10,Old Dominion Monarchs,App State Mountaineers,10,3,False,2026-10-10T17:00:00Z
+401869943,2026-10-10,Coastal Carolina Chanticleers,Marshall Thundering Herd,27,21,False,2026-10-10T23:00:00Z
+401869949,2026-10-10,James Madison Dukes,Georgia Southern Eagles,27,24,False,2026-10-11T00:10:00Z
+401869965,2026-10-10,Louisiana Ragin' Cajuns,Louisiana Tech Bulldogs,31,32,False,2026-10-10T23:30:00Z
+401871053,2026-10-13,Florida International Panthers,Jacksonville State Gamecocks,24,27,False,2026-10-14T00:00:00Z
+401871067,2026-10-13,Delaware Blue Hens,Middle Tennessee Blue Raiders,30,33,False,2026-10-13T23:00:00Z
+401871054,2026-10-14,Kennesaw State Owls,Missouri State Bears,21,24,False,2026-10-14T23:30:00Z
+401871068,2026-10-14,Western Kentucky Hilltoppers,Sam Houston Bearkats,16,3,False,2026-10-15T00:00:00Z
+401860923,2026-10-15,Colorado State Rams,Texas State Bobcats,27,66,False,2026-10-16T00:00:00Z
+401862800,2026-10-15,East Carolina Pirates,UAB Blazers,17,30,False,2026-10-15T23:30:00Z
+401869950,2026-10-15,Georgia Southern Eagles,Old Dominion Monarchs,23,15,False,2026-10-15T23:30:00Z
+401858493,2026-10-16,Washington Huskies,Purdue Boilermakers,38,26,False,2026-10-17T00:00:00Z
+401862801,2026-10-16,Memphis Tigers,Tulane Green Wave,17,31,False,2026-10-16T23:30:00Z
+401869844,2026-10-16,App State Mountaineers,Coastal Carolina Chanticleers,35,32,False,2026-10-17T00:00:00Z
+401856719,2026-10-17,Auburn Tigers,Georgia Bulldogs,27,24,False,2026-10-17T19:30:00Z
+401856720,2026-10-17,Mississippi State Bulldogs,LSU Tigers,0,31,False,2026-10-17T16:00:00Z
+401856721,2026-10-17,Missouri Tigers,Ole Miss Rebels,3,31,False,2026-10-17T19:30:00Z
+401856722,2026-10-17,Kentucky Wildcats,Oklahoma Sooners,21,13,False,2026-10-17T23:30:00Z
+401856723,2026-10-17,Alabama Crimson Tide,Tennessee Volunteers,10,26,False,2026-10-17T19:30:00Z
+401856724,2026-10-17,Florida Gators,Texas Longhorns,27,24,False,2026-10-17T16:00:00Z
+401856725,2026-10-17,The Citadel Bulldogs,Texas A&M Aggies,0,41,False,2026-10-17T17:00:00Z
+401856726,2026-10-17,Arkansas Razorbacks,Vanderbilt Commodores,31,21,False,2026-10-17T23:00:00Z
+401856809,2026-10-17,Notre Dame Fighting Irish,BYU Cougars,24,28,False,2026-10-17T23:30:00Z
+401856828,2026-10-17,Arizona State Sun Devils,Texas Tech Red Raiders,25,53,False,2026-10-17T19:30:00Z
+401856829,2026-10-17,Cincinnati Bearcats,West Virginia Mountaineers,42,45,False,2026-10-17T16:00:00Z
+401856830,2026-10-17,Kansas Jayhawks,Kansas State Wildcats,24,35,False,2026-10-17T16:00:00Z
+401856831,2026-10-17,Oklahoma State Cowboys,Houston Cougars,32,35,False,2026-10-17T23:30:00Z
+401856832,2026-10-17,TCU Horned Frogs,Baylor Bears,17,6,False,2026-10-17T23:00:00Z
+401856833,2026-10-17,Utah Utes,Colorado Buffaloes,27,24,False,2026-10-18T02:15:00Z
+401858261,2026-10-17,Charleston Southern Buccaneers,Clemson Tigers,0,37,False,2026-10-17T16:00:00Z
+401858262,2026-10-17,Elon Phoenix,Stanford Cardinal,7,34,False,2026-10-17T23:30:00Z
+401858263,2026-10-17,Florida State Seminoles,Miami Hurricanes,35,43,False,2026-10-17T23:00:00Z
+401858264,2026-10-17,Georgia Tech Yellow Jackets,Virginia Tech Hokies,24,34,False,2026-10-17T19:30:00Z
+401858265,2026-10-17,Louisville Cardinals,Syracuse Orange,34,26,False,2026-10-17T23:30:00Z
+401858266,2026-10-17,North Carolina Tar Heels,Duke Blue Devils,24,20,False,2026-10-17T19:30:00Z
+401858267,2026-10-17,Pittsburgh Panthers,Boston College Eagles,21,27,False,2026-10-17T16:00:00Z
+401858268,2026-10-17,Virginia Cavaliers,SMU Mustangs,13,23,False,2026-10-17T16:00:00Z
+401858269,2026-10-17,Wake Forest Demon Deacons,California Golden Bears,41,7,False,2026-10-18T02:30:00Z
+401858488,2026-10-17,Ohio State Buckeyes,Indiana Hoosiers,19,15,False,2026-10-17T16:00:00Z
+401858489,2026-10-17,Rutgers Scarlet Knights,Maryland Terrapins,37,30,False,2026-10-17T16:30:00Z
+401858490,2026-10-17,Penn State Nittany Lions,Michigan Wolverines,18,21,False,2026-10-17T19:30:00Z
+401858491,2026-10-17,Northwestern Wildcats,Michigan State Spartans,24,21,False,2026-10-17T16:00:00Z
+401858492,2026-10-17,Nebraska Cornhuskers,Oregon Ducks,14,17,False,2026-10-18T03:00:00Z
+401858494,2026-10-17,Wisconsin Badgers,UCLA Bruins,7,17,False,2026-10-17T23:30:00Z
+401860903,2026-10-17,Washington State Cougars,Oregon State Beavers,30,48,False,2026-10-17T22:00:00Z
+401860904,2026-10-17,Fresno State Bulldogs,San Diego State Aztecs,23,26,False,2026-10-18T02:30:00Z
+401862802,2026-10-17,Florida Atlantic Owls,Army Black Knights,24,56,False,2026-10-17T16:00:00Z
+401862803,2026-10-17,Charlotte 49ers,Temple Owls,38,31,False,2026-10-17T17:00:00Z
+401862804,2026-10-17,Navy Midshipmen,UTSA Roadrunners,34,38,False,2026-10-18T00:00:00Z
+401862805,2026-10-17,Tulsa Golden Hurricane,Rice Owls,38,17,False,2026-10-17T20:30:00Z
+401862806,2026-10-17,Kent State Golden Flashes,South Florida Bulls,2,29,False,2026-10-17T23:00:00Z
+401864520,2026-10-17,Nevada Wolf Pack,North Dakota State Bison,17,31,False,2026-10-17T23:00:00Z
+401864521,2026-10-17,New Mexico Lobos,Hawai'i Rainbow Warriors,21,10,False,2026-10-18T02:30:00Z
+401864522,2026-10-17,Northern Illinois Huskies,Wyoming Cowboys,23,41,False,2026-10-17T19:30:00Z
+401864523,2026-10-17,San José State Spartans,UTEP Miners,24,11,False,2026-10-18T01:00:00Z
+401864524,2026-10-17,UNLV Rebels,Air Force Falcons,31,41,False,2026-10-17T19:30:00Z
+401866441,2026-10-17,Ball State Cardinals,Bowling Green Falcons,32,31,False,2026-10-17T16:00:00Z
+401866442,2026-10-17,Massachusetts Minutemen,Buffalo Bulls,18,25,False,2026-10-17T17:00:00Z
+401866443,2026-10-17,Western Michigan Broncos,Central Michigan Chippewas,21,14,False,2026-10-17T17:30:00Z
+401866444,2026-10-17,Toledo Rockets,Eastern Michigan Eagles,34,14,False,2026-10-17T19:30:00Z
+401866445,2026-10-17,Ohio Bobcats,Sacramento State Hornets,48,7,False,2026-10-18T02:00:00Z
+401866478,2026-10-17,Akron Zips,Miami (OH) RedHawks,14,34,False,2026-10-17T19:30:00Z
+401869934,2026-10-17,Arkansas State Red Wolves,Southern Miss Golden Eagles,23,13,False,2026-10-17T23:00:00Z
+401869957,2026-10-17,Georgia State Panthers,James Madison Dukes,22,49,False,2026-10-17T16:00:00Z
+401869966,2026-10-17,Troy Trojans,Louisiana Ragin' Cajuns,6,33,False,2026-10-17T21:00:00Z
+401871091,2026-10-17,Louisiana Tech Bulldogs,UL Monroe Warhawks,24,0,False,2026-10-18T00:00:00Z
+401871055,2026-10-20,Middle Tennessee Blue Raiders,Florida International Panthers,26,23,False,2026-10-20T23:00:00Z
+401871069,2026-10-20,Missouri State Bears,Delaware Blue Hens,38,61,False,2026-10-20T23:00:00Z

@@ -4,9 +4,9 @@
 
 ## Deployed and tested
 - ESPN 2026 completed-game scoreboard intake with dated raw snapshots and QA manifest.
-- Timestamp-cutoff 2026 score-based team profiles, per-team record, scoring, last three games and opponents.
+- Timestamp-cutoff 2026 score-based team profiles for the 138-school registry, per-team record, scoring, last three games and opponents; FCS opponents still count toward their FBS opponent's games.
 - Experimental ridge score projection engine; no verified sportsbook integration.
-- Frozen 2026 archive and ESPN snapshot reconciliation. Archived games are quarantined until validated (see `docs/RECONCILIATION_2026.md`).
+- Frozen 2026 archive and **Eastern Time-corrected** ESPN snapshot reconciliation. Archive conflicts are quarantined (see `docs/RECONCILIATION_2026.md`).
 - CI on pushes and pull requests. Scheduled 3-times-daily ingestion plus manual dispatch.
 - Each intake run publishes `data/games_2026.csv`, `data/team_profiles_2026.csv`, source JSON and diagnostics as a 30-day GitHub Actions artifact.
 
@@ -15,7 +15,7 @@
 python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 python scripts/ingest_espn.py --start 2026-08-01 --output data
-python scripts/build_profiles.py --games data/games_2026.csv --output data
+python scripts/build_profiles.py --games data/games_2026.csv --output data --registry data/archive/2026_team_aliases.csv
 python scripts/reconcile_scores.py --archive data/archive/2026_v09_scores_unverified.csv --live data/games_2026.csv --aliases data/archive/2026_team_aliases.csv
 ```
 
