@@ -49,7 +49,7 @@ def probe(output):
    value=js[start:end]
    if value not in snippets:snippets.append(value)
    if len(snippets)>=220:break
-  for chunk in ["PublishScreen-B2IuFcRr.js","ArchiveScreen-D7SXP8E5.js","SummaryScreen-555q_JyU.js"]:
+  for chunk in ["PublishScreen-B2IuFcRr.js","ArchiveScreen-D7SXP8E5.js","SummaryScreen-555q_JyU.js","routing-DVB8j-yG.js"]:
    try:
     with urllib.request.urlopen(urllib.request.Request("https://app.hdintelligence.com/assets/"+chunk,headers={"User-Agent":"Mozilla/5.0"}),timeout=15) as part:
      body=part.read(3_000_000)
