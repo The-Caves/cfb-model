@@ -13,13 +13,15 @@ from scripts.availability_context import FIELDS
 
 ROOT="https://app.hdintelligence.com"
 PUBLISH_PATH="/api/get-publish-public"
-CONFERENCES={"SEC":"SEC","B10":"B10"}
+CONFERENCES={"SEC":"SEC","B10":"B10","ACC":"ACC","B12":"B12"}
 SOURCE_PAGE={
   "SEC":"https://www.secsports.com/fbreports",
-  "B10":"https://bigten.org/sports/2026/9/10/FB_Availability_Reports.aspx"}
+  "B10":"https://bigten.org/sports/2026/9/10/FB_Availability_Reports.aspx",
+  "ACC":"https://theacc.com/sports/2025/8/28/availability-reporting-football.aspx",
+  "B12":"https://big12sports.com/sports/2025/8/14/FBreporting.aspx?lv=true"}
 TIMEZONES={"CT":"America/Chicago","ET":"America/New_York",
            "MT":"America/Denver","PT":"America/Los_Angeles"}
-STATUS_MAP={"Out":"OUT","Out - (1st Half)":"LIMITED",
+STATUS_MAP={"Out":"OUT","Out - (1st Half)":"LIMITED","Out (1st Half)":"LIMITED",
  "Questionable":"QUESTIONABLE","Doubtful":"DOUBTFUL",
  "Probable":"PROBABLE","Game Time Decision":"GAME_TIME_DECISION",
  "Available":"AVAILABLE"}
