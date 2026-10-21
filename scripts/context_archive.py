@@ -58,6 +58,20 @@ def restore(folder):
 def asof_id(current):
     t=parse_time(current["asof_utc"])
     return t.strftime("%Y%m%dT%H%M%SZ")
+def close_snapshot(current,observed_at):
+    """Ensure persisted as-of is AFTER every source collection, yet BEFORE kickoff."""
+    end=parse_time(observed_at)
+    start=parse_time(current["asof_utc"])
+    if end<start:raise ValueError("Collection ended before it started")
+    newer=dict(current)
+    newer["collection_started_utc"]=current["asof_utc"]
+    newer["asof_utc"]=end.isoformat()
+    games=current.get("games")
+    if not isinstance(games,list):raise ValueError("No game list")
+    newer["games"]=[g for g in games if parse_time(g["kickoff_utc"])>end]
+    newer["excluded_game_kickoffs_during_collection"]=len(games)-len(newer["games"])
+    return newer
+
 def write(current_path,previous_path,geo_path,manifest_path,output_path,source_watch=None):
     cur=json.loads(Path(current_path).read_text())
     prior=json.loads(Path(previous_path).read_text())
@@ -71,6 +85,8 @@ def write(current_path,previous_path,geo_path,manifest_path,output_path,source_w
     issued=parse_time(cur["asof_utc"])
     if abs((dt.datetime.now(dt.timezone.utc)-issued).total_seconds())>1200:
         raise ValueError("Snapshot issue time not recent; refused")
+    cur=close_snapshot(cur,dt.datetime.now(dt.timezone.utc).isoformat())
+    issued=parse_time(cur["asof_utc"])
     if prior and parse_time(prior["asof_utc"])>=issued:
         raise ValueError("Stale or duplicate snapshot; refused")
     changes,freezes,qa=snapshot_changes(prior,cur,cur["asof_utc"])
