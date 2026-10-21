@@ -116,7 +116,8 @@ class WeatherProvider:
         return {**w,"forecast_retrieved_utc":captured,"weather_source":"OPEN_METEO_LIVE_FORECAST",
                 "weather_location_precision":"CITY_CENTROID"} if w else None
 
-def run(raw_dir,output,reports=None,horizon_days=10,now=None,geo_cache=None):
+def run(raw_dir,output,reports=None,horizon_days=10,now=None,geo_cache=None,
+        auto_official=False,alias_registry="data/archive/2026_team_aliases.csv"):
     output=Path(output);output.mkdir(parents=True,exist_ok=True)
     issued=parse_time(now) if now else dt.datetime.now(UTC)
     report={"generated_at_utc":issued.isoformat(),"season":2026,
@@ -131,6 +132,16 @@ def run(raw_dir,output,reports=None,horizon_days=10,now=None,geo_cache=None):
         upcoming,qa=load_upcoming(issued,horizon_days,output)
         report["schedule_fetch"]=qa
         source_rows=load_reports(reports)
+        if auto_official:
+            from scripts.official_availability import fetch_and_match
+            official,official_qa=fetch_and_match(upcoming,alias_registry,output/"official")
+            report["official_availability"]=official_qa
+            source_rows+=official
+            # Official publisher responses must be retrieved BEFORE our
+            # context cutoff; compare their actual capture timestamps against
+            # the updated as-of, never an earlier run-start timestamp.
+            issued=dt.datetime.now(UTC)
+            report["forecast_cutoff_utc"]=issued.isoformat()
         weather=WeatherProvider(geo_cache)
         context,metrics=build_context(upcoming,prev,issued.isoformat(),
             weather.geocode,weather.forecast,
@@ -183,8 +194,11 @@ if __name__=="__main__":
     p.add_argument("--availability-csv",default="data/manual/availability_2026.csv")
     p.add_argument("--horizon-days",type=int,default=10)
     p.add_argument("--geo-cache",default=None)
+    p.add_argument("--auto-official",action="store_true")
+    p.add_argument("--alias-registry",default="data/archive/2026_team_aliases.csv")
     args=p.parse_args()
     if not 1<=args.horizon_days<=14:raise SystemExit("horizon days must be 1..14")
     result=run(args.raw_dir,args.output,args.availability_csv,args.horizon_days,
-               geo_cache=args.geo_cache)
+               geo_cache=args.geo_cache,auto_official=args.auto_official,
+               alias_registry=args.alias_registry)
     raise SystemExit(2 if result["status"] in ("SOURCE_FETCH_FAILURE","CONTEXT_PIPELINE_FAILED") else 0)

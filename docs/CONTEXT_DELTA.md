@@ -56,3 +56,15 @@ Audit by checking `context-state` and the newest `CFB Pregame Context Delta` run
 - For future runs, the persisted `asof_utc` is the **end of source collection**, after any weather or source index requests. Fixtures that kicked off while collection ran are excluded from the saved pregame snapshot, avoiding retrospective pregame-label leakage. Earlier archived snapshots retain their original timestamps and should be interpreted accordingly.
 
 These checks establish that persistent daily/hourly infrastructure and source delta audits work. Official document-level player extraction and comprehensive availability coverage remain pending.
+
+## Automated official SEC and Big Ten player-level availability (added October 21, 2026)
+
+The collector now calls the same **public structured availability publisher** embedded on the official conference pages:
+- SEC: https://www.secsports.com/fbreports
+- Big Ten: https://bigten.org/sports/2026/9/10/FB_Availability_Reports.aspx
+
+It ingests `/api/get-publish-public` for each conference, but **not historical archived reports as if they had been known pregame**. For every publisher card, it requires: a report with non-pending publication status, non-future publication timestamp in the reported conference timezone, the exact two publisher teams matched through the 138-team school alias map to **one** ESPN game on the same local date, kickoff still in the future, both teams' player rows successfully parsed, and publication/capture timestamps before the context cutoff. A partially parsed, stale, ambiguous, or unsupported card is quarantined and explicitly identified in `official_availability_manifest.json`.
+
+When accepted, the source produces both team-level report attestations and individual `INJURY` designations with position when the official display row includes it. These are fed through the preexisting `availability_context.evaluate` and persist in timestamped context snapshots/deltas. Source capture is performed **before** the context issue cutoff; a later missing report never means a player recovered. Reports can cover only games in the conferences' official reporting programs, not all FBS teams. The current conference feed was tested while all upcoming cards displayed **Report Pending**, so no player-level claims were fabricated.
+
+**Starting QB limitation:** A QB listed `OUT` or `QUESTIONABLE` is a sourced availability signal, **not** a sourced confirmation of who starts. This feed never emits `QB_STARTER` records and no backup or replacement-value score adjustment is inferred. Confirmed game-day starting QB reports still require a separate verified official source or manually reviewed and timestamped assertion. This is automated published **availability**, not automatic starting-lineup verification. No bets are enabled (`PASS_UNVALIDATED`).
