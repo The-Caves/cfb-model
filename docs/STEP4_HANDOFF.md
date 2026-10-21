@@ -26,3 +26,11 @@ Last edited: 2026-10-21. Public repository documentation — no account or perso
 This is a limited five-school **news discovery** pilot, not national confirmed-starter coverage. Schools do not publish announcements uniformly. Absence of a headline or report is missing information, never proof that a QB is available or will start. Open-Meteo forecasts and straight-line travel estimates are prospective proxies, not hindsight-proof historical betting features. GitHub Actions scheduling can be delayed.
 
 The README and `docs/CONTEXT_DELTA.md` carry current architecture and safe continuation guidance. This handoff contains only public code paths, runbooks and research conventions.
+
+## Step 4 completion threshold and feed additions (2026-10-21)
+
+Successful [full cloud run 39651180891](https://github.com/The-Caves/cfb-model/actions/runs/39651180891) verified the new `qb_review` totals written into `context-state/state/summary.json`: 218 team-game slots across 109 upcoming games, 9 team-game slots with a fetched official athletics feed, 209 unconfigured slots, 4 team-game slots with QB availability signals, and zero confirmed QB starter records. Archived review data are available in `state/qb_review_latest.json`. This establishes actual workflow persistence, not merely code-unit-test success.
+
+The official athletics news-feed registry has been expanded from five to seven with football-specific URLs listed directly by [Texas Athletics](https://texaslonghorns.com/rss_feeds) and [North Carolina Athletics](https://goheels.com/rss_feeds). Feed download and XML parsing must be validated in GitHub Actions on the expanded code. A configured feed does not establish player availability or starting-QB certainty.
+
+**Proceed to Step 5** after a successful full refresh under the expanded registry. Step 4's operating service is source-audited and can express unknown coverage; comprehensive nationwide starter announcements and empirically validated QB replacement values remain open research dependencies, not falsely completed features. Step 5 builds timestamped historical/live market spreads, totals and prices, then checks leakage-free joined snapshots.

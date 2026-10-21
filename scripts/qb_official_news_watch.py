@@ -15,7 +15,11 @@ FEEDS={
     "Iowa State Cyclones":"https://cyclones.com/rss?path=football",
     "James Madison Dukes":"https://jmusports.com/rss?path=football",
     "Navy Midshipmen":"https://navysports.com/rss.aspx?path=football",
-    "Florida International Panthers":"https://fiusports.com/rss.aspx?path=football"
+    "Florida International Panthers":"https://fiusports.com/rss.aspx?path=football",
+    # Both additional feeds are documented by the university on its own
+    # public RSS Story Feeds directory; do not substitute fan/news sites.
+    "Texas Longhorns":"https://texaslonghorns.com/rss?path=football",
+    "North Carolina Tar Heels":"https://goheels.com/rss?path=football"
 }
 QB_TOPIC=re.compile(r"\b(quarterback|quarterbacks|qb|qbs|signal.caller)\b",re.I)
 # The word "named" alone is noisy: award lists routinely say a QB was named

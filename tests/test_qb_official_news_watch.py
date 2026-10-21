@@ -14,6 +14,11 @@ XML=b"""<?xml version="1.0"?><rss version="2.0"><channel>
 <description>Read about the defense</description></item></channel></rss>"""
 
 class OfficialNewsCandidateTests(unittest.TestCase):
+    def test_official_texas_and_north_carolina_feed_urls(self):
+        self.assertEqual(FEEDS["Texas Longhorns"],
+                         "https://texaslonghorns.com/rss?path=football")
+        self.assertEqual(FEEDS["North Carolina Tar Heels"],
+                         "https://goheels.com/rss?path=football")
     def test_articles_not_starter_confirmations(self):
         result=article_candidates(XML,"NC State Wolfpack",[GAME],NOW)
         self.assertEqual(len(result),1)

@@ -15,13 +15,13 @@ This public repository holds a reproducible 2026 college football data and model
 | Upcoming games, kickoff/rest, forecast and approximate travel | Implemented with provenance; incomplete coverage is explicit |
 | Kickoff-aware incremental context refresh, persistent deltas, freezes | Implemented; state in `context-state` branch |
 | Public official player availability | SEC, Big Ten, ACC and Big 12 implemented; latest live run succeeded with 0 misleading personnel-change alerts |
-| Official athletics QB news discovery pilot | Five public team football RSS feeds, read-only review candidates; no player/starter inference |\n| Per-game QB source coverage queue | Implemented with timestamped game/team records, review priorities, fetch health, and audited context-state persistence; full live recheck pending |
+| Official athletics QB news discovery pilot | Seven public team football RSS feeds, read-only review candidates; no player/starter inference |\n| Per-game QB source coverage queue | Implemented with timestamped game/team records, review priorities, fetch health, and audited context-state persistence; full live recheck pending |
 | Game-specific QB starter evidence gate | Implemented for explicitly reviewed official team/coach statements; **no automated nationwide confirmations** |
 | Confirmed starting QBs and replacement-value effects | Actual upcoming game coverage still **UNKNOWN** until audited source records exist; replacement weights unvalidated |
 | Timestamped opening/closing/live sportsbook markets | **Not implemented/validated** |
 | Historical as-of training features, opponent-adjusted calibrated model, SU/ATS/O-U walk-forward tests | **Not completed** |
 
-**Known cloud verification:** [PBP/drives ingestion](https://github.com/The-Caves/cfb-model/actions/runs/39544628568), [enriched profiles](https://github.com/The-Caves/cfb-model/actions/runs/39544914397), and [earlier availability refresh](https://github.com/The-Caves/cfb-model/actions/runs/39618526300). An earlier availability run reported 2 accepted ACC reports containing 458 availability designations, many ordinary AVAILABLE roster entries (**not** 458 injuries). The corrected full context run [39640130795](https://github.com/The-Caves/cfb-model/actions/runs/39640130795) and subsequent [QB news pilot run 39643068262](https://github.com/The-Caves/cfb-model/actions/runs/39643068262) succeeded with zero invented personnel status-change alerts. In the latter run, 109 upcoming games were observed, 89 had weather forecasts, and 91 had both approximate travel estimates. The five-official-feed pilot had 0 publisher errors, surfaced 1 unreviewed QB news article (an award, not a starter announcement), and made 0 confirmed-starter claims. A subsequent stricter filter was added to suppress this award noise; its live effect must be checked on the next run.
+**Known cloud verification:** [PBP/drives ingestion](https://github.com/The-Caves/cfb-model/actions/runs/39544628568), [enriched profiles](https://github.com/The-Caves/cfb-model/actions/runs/39544914397), and [earlier availability refresh](https://github.com/The-Caves/cfb-model/actions/runs/39618526300). An earlier availability run reported 2 accepted ACC reports containing 458 availability designations, many ordinary AVAILABLE roster entries (**not** 458 injuries). The corrected full context run [39640130795](https://github.com/The-Caves/cfb-model/actions/runs/39640130795) and subsequent [QB news pilot run 39643068262](https://github.com/The-Caves/cfb-model/actions/runs/39643068262) succeeded with zero invented personnel status-change alerts. In the latter run, 109 upcoming games were observed, 89 had weather forecasts, and 91 had both approximate travel estimates. The five-feed initial pilot had 0 publisher errors, surfaced 1 unreviewed QB news article (an award, not a starter announcement), and made 0 confirmed-starter claims. A subsequent stricter filter was added to suppress this award noise; its live effect must be checked on the next run.
 
 ## Development and operating workflows
 
@@ -67,7 +67,7 @@ The separate `data/manual/qb_starter_evidence_2026.csv` is intentionally header-
 
 ### Official-source QB news pilot
 
-`scripts/qb_official_news_watch.py` checks **only five explicitly verified public team athletics football RSS feeds** (NC State, Iowa State, James Madison, Navy, FIU) when those schools have upcoming games in the context slate. Headlines and excerpts mentioning both a QB term and a starter/depth/injury term are archived as `UNREVIEWED_NEWS_CANDIDATE` with source URL and publication/capture timestamps in the workflow's `qb_news_candidates.json` artifact. **No candidate is automatically promoted to a QB starter claim.** RSS feed outages are reported explicitly; this pilot does not cover other FBS schools or prove that any headline names a starter. Full reviewed starter provenance remains a separate manual evidence workflow.
+`scripts/qb_official_news_watch.py` checks **seven listed public team athletics football RSS feeds** (NC State, Iowa State, James Madison, Navy, FIU, Texas, North Carolina) when those schools have upcoming games in the context slate. Headlines and excerpts mentioning both a QB term and a starter/depth/injury term are archived as `UNREVIEWED_NEWS_CANDIDATE` with source URL and publication/capture timestamps in the workflow's `qb_news_candidates.json` artifact. **No candidate is automatically promoted to a QB starter claim.** RSS feed outages are reported explicitly; this pilot does not cover other FBS schools or prove that any headline names a starter. Full reviewed starter provenance remains a separate manual evidence workflow.
 
 ### Resuming Step 4 — source-coverage review queue
 
@@ -75,4 +75,17 @@ The scheduled context workflow now runs `scripts/qb_review_queue.py` after offic
 
 `scripts/qb_review_archive.py` enforces that queue capture preceded the final context cutoff, compares game and team identity, and refuses unsupported confirmed-starter labels or promoted news. The context archiver writes `context-state/state/qb_review_latest.json`, dated compressed `qb_review/YYYY/MM/DD/` snapshots and aggregate queue coverage in `state/summary.json`. Games that crossed kickoff during collection are removed. Unit tests passed; **verify the newest context workflow and state files before claiming live archive success.**
 
-Remaining Step 4 limitations: only five official athletics news feeds are registered, starting-QB evidence still requires manual review, four-conference official player availability is incomplete for national FBS coverage, and QB replacement-point adjustments remain untrained. Continue to Step 5 market integration only with these uncertainty flags preserved; don't confuse source-pipeline completeness with betting-model validation.
+Remaining Step 4 limitations: only seven official athletics news feeds are registered, starting-QB evidence still requires manual review, four-conference official player availability is incomplete for national FBS coverage, and QB replacement-point adjustments remain untrained. Continue to Step 5 market integration only with these uncertainty flags preserved; don't confuse source-pipeline completeness with betting-model validation.
+
+### Step 4 exit gate for beginning Step 5
+
+- [x] Game-specific rest, venue, partial forecasts and approximate travel collected and audited
+- [x] 2026 official player availability ingested conservatively with publisher and kickoff provenance
+- [x] Routine AVAILABLE listings filtered from injury/change alerts
+- [x] Official QB claim gate blocks unsupported, speculative, contradictory and post-cutoff evidence
+- [x] Two-sided per-game QB source coverage queue and snapshot persistence validated by [cloud run 39651180891](https://github.com/The-Caves/cfb-model/actions/runs/39651180891)
+- [ ] Extended official-feed registry live-smoke-tested after Texas and North Carolina additions
+- [ ] National confirmed-QB discovery: intentionally incomplete; must retain UNKNOWN by team/game
+- [ ] QB-specific scoring effects: intentionally deferred to trained, walk-forward model evaluation
+
+**Step 4 is considered infrastructure-complete with explicitly partial source coverage once the extended-feed smoke test passes.** Lack of verified starters remains a model-input uncertainty; do not block implementation of Step 5 market data, and do not fabricate starter identities or arbitrary replacement-point penalties.
