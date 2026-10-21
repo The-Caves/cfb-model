@@ -65,6 +65,16 @@ class QBReviewTests(unittest.TestCase):
         actual,qa=self.read([claim(evidence_excerpt="Quarterback Alpha appears first in a depth chart.")])
         self.assertEqual(actual,[])
         self.assertEqual(qa["reasons"][0]["reason"],"NO_EXPLICIT_PLAYER_START_STATEMENT")
+    def test_not_starting_is_not_a_confirmed_starter(self):
+        bad=["Quarterback Alpha will not start at quarterback against Away.",
+             "Quarterback Alpha could start at quarterback against Away.",
+             "Quarterback Alpha is not starting quarterback against Away.",
+             "Quarterback Alpha is expected to start at quarterback against Away."]
+        for sentence in bad:
+            with self.subTest(sentence=sentence):
+                actual,qa=self.read([claim(evidence_excerpt=sentence)])
+                self.assertEqual(actual,[])
+                self.assertEqual(qa["rejected"],1)
     def test_conflicting_claims_quarantined_not_latest_wins(self):
         actual,qa=self.read([claim(),claim(player="Quarterback Beta",
             evidence_excerpt="Quarterback Beta will start at quarterback against Away.")])

@@ -18,7 +18,18 @@ EVIDENCE_FIELDS = (
 )
 SOURCE_TYPES = {"OFFICIAL_TEAM_RELEASE", "ON_RECORD_COACH_CONFIRMATION"}
 EVIDENCE_SCOPE = "EXPLICIT_THIS_GAME"
-START_VERB = re.compile(r"\b(start|starts|starting|first snap|opening snap)\b", re.I)
+# Mechanical screening is conservative and is NOT semantic source verification.
+# Require affirmative starting language; a bare word "start" also appears in
+# negative or speculative statements ("will not start", "could start").
+AFFIRMATIVE_START = re.compile(
+    r"\b(will start|is starting|will be starting|named (?:the )?starter|"
+    r"has been named (?:the )?starter|starting quarterback|"
+    r"start at quarterback|starting at quarterback)\b", re.I)
+NEGATED_OR_UNCERTAIN = re.compile(
+    r"\b(?:will not|won't|is not|isn't|cannot|can't|could|may|might|"
+    r"not expected to|unlikely to|projected to|expected to|likely to|"
+    r"no decision on|has not been named)\s+"
+    r"(?:(?:\w+|the)\s+){0,4}(?:start|starting|starter)\b", re.I)
 
 def load_reviewed_qb_starters(path, games, issue):
     """Return safe QB_STARTER claims plus an auditable, non-sensitive manifest.
@@ -77,7 +88,8 @@ def load_reviewed_qb_starters(path, games, issue):
                 reason="INVALID_PUBLIC_SOURCE_URL"
         if not reason and (not 3<=len(player)<=100 or len(excerpt)>700
                            or player.casefold() not in excerpt.casefold()
-                           or not START_VERB.search(excerpt)):
+                           or not AFFIRMATIVE_START.search(excerpt)
+                           or NEGATED_OR_UNCERTAIN.search(excerpt)):
             reason="NO_EXPLICIT_PLAYER_START_STATEMENT"
         if reason:
             qa["reasons"].append({"row":ix,"game_id":row.get("game_id"),"reason":reason})

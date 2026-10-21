@@ -64,3 +64,5 @@ Official team news and directly attributed coach statements sometimes explicitly
 ### Public athletics news candidate pilot
 
 Five school-published football news RSS feeds are checked after a context refresh *only if those schools appear in upcoming games*: NC State (`gopack.com`), Iowa State (`cyclones.com`), James Madison (`jmusports.com`), Navy (`navysports.com`) and FIU (`fiusports.com`). These are a coverage pilot, not a nationwide source. The read-only collector `scripts/qb_official_news_watch.py` records URL-validated, topic-filtered headlines/summaries for human review in `qb_news_candidates.json`, including source failures and missing timestamps. Publication feeds may omit announcements, contain stale items, or block automated clients. **An unreviewed headline can never produce `QB_STARTER`; the approved evidence gate must be satisfied independently.**
+
+As an additional guard, the reviewed-excerpt screen rejects common negated/speculative starting language, including “will not start,” “could start,” and “expected to start.” This check is intentionally conservative and cannot replace substantive manual verification of the original official article.
