@@ -45,3 +45,14 @@ Weather forecasts are forecasts **captured at run time**, not reconstructed hist
 Workflow definition: `.github/workflows/cfb-context-refresh.yml`. Only that workflow needs the repository `contents:write` permission; it does not create pull requests or access other repositories. If branch writes are blocked by repository Actions or branch rules, GitHub will fail explicitly and **must not** report success.
 
 Audit by checking `context-state` and the newest `CFB Pregame Context Delta` run. Weather geocoding is cached between runs to reduce API calls.
+
+## Live cloud verification — 2026-10-21
+
+- [First persistent run](https://github.com/The-Caves/cfb-model/actions/runs/39551375776) created the `context-state` branch and archived 109 upcoming games, 57 forecasts, 63 games with both travel estimates, 109 with both rest intervals, and the first official SEC/Big Ten index-page hashes.
+- [Second persistent run](https://github.com/The-Caves/cfb-model/actions/runs/39551772595) loaded the prior snapshot and produced a new history entry and delta. It collected 109 games, 70 weather forecasts, 79 games with both travel estimates, and 109 with both rest intervals.
+- The second delta initially recorded 28 weather provider-coverage changes and individual missing weather fields. A subsequent regression-tested patch suppresses duplicate missing-field notifications: a forecast outage is a **source coverage event**, not a measured change to wind or temperature.
+- The Big Ten index HTML hash changed in the second run and was labeled `CHANGED_UNREVIEWED`. **This does not verify any individual player availability change.**
+- Neither run provided independently confirmed two-team injury status (0/109). No QB-starting confirmation or injury adjustment was inferred.
+- For future runs, the persisted `asof_utc` is the **end of source collection**, after any weather or source index requests. Fixtures that kicked off while collection ran are excluded from the saved pregame snapshot, avoiding retrospective pregame-label leakage. Earlier archived snapshots retain their original timestamps and should be interpreted accordingly.
+
+These checks establish that persistent daily/hourly infrastructure and source delta audits work. Official document-level player extraction and comprehensive availability coverage remain pending.
