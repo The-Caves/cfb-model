@@ -67,12 +67,13 @@ def parse_player(row):
     raw=row.get("name")
     if not isinstance(raw,str) or not raw.strip():raise ValueError("Missing player display name")
     m=re.fullmatch(r"\s*([A-Za-z/-]+)\s+(?:#\d+\s+)?(.{2,100}?)\s*",raw)
-    if m:
+    if m and m.group(1).upper().strip() in POSITION_SET:
         position=m.group(1).upper().strip()
         player=m.group(2).strip()
     else:
+        # If no known position is supplied, the first token may be the
+        # player's first name. Do not truncate it or invent a position.
         position="OTHER";player=raw.strip()
-    if position not in POSITION_SET:position="OTHER"
     if len(player)<2 or len(player)>100:raise ValueError("Invalid player name")
     label=str(row.get("status") or "").strip()
     status=STATUS_MAP.get(label)
