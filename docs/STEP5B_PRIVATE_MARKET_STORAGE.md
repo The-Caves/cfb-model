@@ -37,10 +37,19 @@ Paid historical API calls require a second acknowledgement and a precise UTC tim
 ```sh
 python -m scripts.market_capture --execute-network \
   --historical-date 2026-10-10T19:00:00Z \
-  --acknowledge-paid-historical
+  --acknowledge-paid-historical \
+  --max-estimated-credits 30
 ```
 
 **This paid call consumes provider credits if run on a subscribed account.** Historical retrieval is not automated; there is no background schedule, no API key embedded in code, and no purchase or charge is being made by the repository. Before use, review the provider's [rate and quota documentation](https://the-odds-api.com/liveapi/guides/v4/) and [historical access requirements](https://the-odds-api.com/historical-odds-data/), as well as exact FanDuel/NCAAF coverage. Feature pricing and provider response shape may change.
+
+## API-credit preflight and mandatory per-request ceiling
+
+`python -m scripts.market_preflight --bookmakers fanduel --requests 10` estimates a maximum 30 credits across ten standard live featured-market snapshots. Add `--historical` for an estimated maximum 300 credits across ten historical snapshots, using provider-published pricing assumptions. This prints estimates **without a network request**.
+
+A manually authorized network capture enforces `--max-estimated-credits 3` by default. For one FanDuel historical snapshot with moneyline, spread and total markets, the estimated request cost is 30 credits: add `--max-estimated-credits 30` *in addition* to `--acknowledge-paid-historical`. The software ceiling is preflight, not an account-level spending guarantee. Actual historical access is plan-gated and has not been connected or exercised.
+
+See [full Step 5B validation](STEP5B_VALIDATION.md) for CI proof, synthetic end-to-end checks and the real-source gate.
 
 ## Query and safety semantics
 
