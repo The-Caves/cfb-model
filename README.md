@@ -15,7 +15,7 @@ This public repository holds a reproducible 2026 college football data and model
 | Upcoming games, kickoff/rest, forecast and approximate travel | Implemented with provenance; incomplete coverage is explicit |
 | Kickoff-aware incremental context refresh, persistent deltas, freezes | Implemented; state in `context-state` branch |
 | Public official player availability | SEC, Big Ten, ACC and Big 12 import implemented; live coverage varies and final alert fix needs a fresh end-to-end check |
-| Game-specific QB starter evidence gate | Implemented for explicitly reviewed official team/coach statements; **no automated nationwide confirmations** |
+| Official athletics QB news discovery pilot | Five public team football RSS feeds, read-only review candidates; no player/starter inference |\n| Game-specific QB starter evidence gate | Implemented for explicitly reviewed official team/coach statements; **no automated nationwide confirmations** |
 | Confirmed starting QBs and replacement-value effects | Actual upcoming game coverage still **UNKNOWN** until audited source records exist; replacement weights unvalidated |
 | Timestamped opening/closing/live sportsbook markets | **Not implemented/validated** |
 | Historical as-of training features, opponent-adjusted calibrated model, SU/ATS/O-U walk-forward tests | **Not completed** |
@@ -63,3 +63,7 @@ Only publish reproducible project code, non-sensitive configuration, public-sour
 ### Starting quarterback evidence protocol
 
 The separate `data/manual/qb_starter_evidence_2026.csv` is intentionally header-only until someone reviews genuine public official game-specific claims. An entry must match the current upcoming ESPN game ID, home/away opponent, kickoff, name, official team release or on-record coach confirmation, explicit this-game starting statement, source URL, publication/capture/review timestamps before kickoff, and an APPROVED review. Statements more than 14 days before kickoff, projected starters, depth charts, competing claims and official QB availability contradictions cannot produce `confirmed_qb_starters`. `context_manifest.json` records accepted/rejected counts and reason codes; a verified evidence record does not validate model weights or override `PASS_UNVALIDATED`. The local protocol cannot independently prove a source page is authentic or unchanged; reviewers must inspect the actual source. See `docs/GAME_CONTEXT.md`.
+
+### Official-source QB news pilot
+
+`scripts/qb_official_news_watch.py` checks **only five explicitly verified public team athletics football RSS feeds** (NC State, Iowa State, James Madison, Navy, FIU) when those schools have upcoming games in the context slate. Headlines and excerpts mentioning both a QB term and a starter/depth/injury term are archived as `UNREVIEWED_NEWS_CANDIDATE` with source URL and publication/capture timestamps in the workflow's `qb_news_candidates.json` artifact. **No candidate is automatically promoted to a QB starter claim.** RSS feed outages are reported explicitly; this pilot does not cover other FBS schools or prove that any headline names a starter. Full reviewed starter provenance remains a separate manual evidence workflow.

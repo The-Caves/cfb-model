@@ -53,6 +53,12 @@ jobs:
             --output data/context_refresh \
             --horizon-days 10 \
             --auto-official
+      - name: Collect unreviewed official athletics QB news candidates (pilot)
+        if: steps.plan.outputs.run == 'true'
+        run: |
+          python -m scripts.qb_official_news_watch \
+            --context data/context_refresh/upcoming_game_context_2026.json \
+            --output data/context_refresh/qb_news_candidates.json
       - name: Check SEC and Big Ten official availability report publications
         if: steps.plan.outputs.run == 'true'
         run: python -m scripts.personnel_source_watch --previous data/context_state/previous_sources.json --output data/context_refresh/personnel_source_watch.json
@@ -77,6 +83,7 @@ jobs:
             data/context_refresh/upcoming_game_context_2026.json
             data/context_refresh/upcoming_game_context_2026.csv
             data/context_refresh/personnel_source_watch.json
+            data/context_refresh/qb_news_candidates.json
             data/context_refresh/official/official_availability_manifest.json
             data/context_refresh/official/availability_verified_2026.csv
             data/context_delta/
