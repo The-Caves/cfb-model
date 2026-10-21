@@ -20,6 +20,8 @@ def load_registry(path):
         for candidate in (r.get("archived_team"),name):
             k=norm(candidate)
             if not k:raise ValueError("Blank alias")
+            if k in conflicts:
+                continue  # Never resurrect an already ambiguous alias.
             if k in aliases and aliases[k]!=name:conflicts.add(k)
             else:aliases[k]=name
     for k in conflicts:aliases.pop(k,None)
