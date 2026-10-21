@@ -1,31 +1,47 @@
 name: CFB 2026 Data Intake
 on:
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
   schedule:
     - cron: '17 10,16,23 * * *'
 permissions:
   contents: read
 jobs:
-  ingest:
+  validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install -r requirements.txt
-      - name: Unit tests
-        run: python -m unittest discover -s tests -v
-      - name: Fetch 2026 completed games
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+  ingest:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Fetch completed 2026 games and write manifest
         run: python scripts/ingest_espn.py --start 2026-08-01 --output data
-      - name: Upload intake logs and data
+      - name: Archive results and raw snapshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cfb-2026-data-intake
+          name: cfb-2026-data-${{ github.run_id }}
           path: |
             data/manifest.json
             data/games_2026.csv
             data/raw/
-          retention-days: 14
+          if-no-files-found: warn
+          retention-days: 30
