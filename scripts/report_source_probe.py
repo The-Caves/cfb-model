@@ -51,7 +51,7 @@ def probe(output):
    if len(snippets)>=220:break
   result["embedded_viewer_bundle"]={"bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest(),
         "snippets":snippets,"api_paths":list(dict.fromkeys(re.findall(r'["\\x27](/(?:api|v[12]|public)[^"\\x27\\\\\\s]{1,170})',js)))[:120],
-        "url_strings":list(dict.fromkeys(re.findall(r'https?://[a-zA-Z0-9._~:/?#@! (out/'report_probe.json').write_text(json.dumps(result,indent=2))()*+,;=%-]{5,180}',js)))[:100]}
+        "url_strings":list(dict.fromkeys(re.findall(r'https?://[^"\\s\\x27<>]{5,180}',js)))[:100]}
  except Exception as exc:
   result["embedded_viewer_bundle"]={"error":str(exc)[:300]}
  (out/'report_probe.json').write_text(json.dumps(result,indent=2))
