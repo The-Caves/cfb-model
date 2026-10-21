@@ -48,6 +48,20 @@ class VaultTests(unittest.TestCase):
         stale=asof_quotes(self.db,"example123","fanduel","SPREAD","HOME",
                           "2026-10-22T17:01:00Z")
         self.assertEqual(stale["status"],"STALE_PRICE")
+    def test_post_kickoff_asof_is_not_a_betting_price(self):
+        store(self.db,result())
+        price=asof_quotes(self.db,"example123","fanduel","SPREAD","HOME",
+                          "2026-10-24T20:05:00Z")
+        self.assertEqual(price["status"],"GAME_ALREADY_STARTED")
+        self.assertNotIn("american_odds",price)
+    def test_retrospectively_downloaded_historical_quote_not_live(self):
+        p=normalize({"timestamp":"2026-10-21T17:00:00Z","data":fixture()},
+                    "2026-10-26T12:00:00Z",historical=True)
+        store(self.db,p)
+        price=asof_quotes(self.db,"example123","fanduel","SPREAD","HOME",
+                          "2026-10-21T17:30:00Z")
+        self.assertEqual(price["status"],"HISTORICAL_RECONSTRUCTION_NOT_LIVE")
+        self.assertFalse(price["price_executable_verified"])
     def test_future_quote_rejected_for_earlier_cutoff(self):
         store(self.db,result())
         q=asof_quotes(self.db,"example123","fanduel","SPREAD","HOME",
