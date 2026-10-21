@@ -26,6 +26,9 @@ STATUS_MAP={"Out":"OUT","Out - (1st Half)":"LIMITED","Out (1st Half)":"LIMITED",
  "Probable":"PROBABLE","Game Time Decision":"GAME_TIME_DECISION",
  "Available":"AVAILABLE"}
 POSITION_SET={"QB","RB","WR","TE","OL","DL","EDGE","LB","CB","S","K","P"}
+POSITION_ALIASES={"ILB":"LB","OLB":"LB","MLB":"LB","DE":"EDGE",
+                  "DT":"DL","NT":"DL","OT":"OL","OG":"OL","C":"OL",
+                  "FS":"S","SS":"S","FB":"RB"}
 GAME_DAY_FORMAT="%Y-%m-%d"
 def request_public(conference,timeout=25,max_bytes=30_000_000):
     payload=json.dumps({"sport":"Football","organization":conference,"conference":conference}).encode()
@@ -76,8 +79,10 @@ def parse_player(row):
     raw=row.get("name")
     if not isinstance(raw,str) or not raw.strip():raise ValueError("Missing player display name")
     m=re.fullmatch(r"\s*([A-Za-z/-]+)\s+(?:#\d+\s+)?(.{2,100}?)\s*",raw)
-    if m and m.group(1).upper().strip() in POSITION_SET:
-        position=m.group(1).upper().strip()
+    if m and (m.group(1).upper().strip() in POSITION_SET
+              or m.group(1).upper().strip() in POSITION_ALIASES):
+        prefix=m.group(1).upper().strip()
+        position=POSITION_ALIASES.get(prefix,prefix)
         player=m.group(2).strip()
     else:
         # If no known position is supplied, the first token may be the
