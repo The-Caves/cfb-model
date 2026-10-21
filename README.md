@@ -33,3 +33,7 @@ Workflow: [CFB Data Intake](https://github.com/The-Caves/cfb-model/actions/workf
 - Advanced drive release is reconciled by ESPN game ID and exact team ID/name; actual 2026 files contain team names despite numeric-ID documentation. Both sides must pass; verified games contribute drives, yards/drive, and plays/drive. Points/drive remains unavailable.
 - Source timestamps and SHA256 are reported in the advanced manifest. Source snapshots retrieved now are not retrospective proof of historical pregame availability.
 - Advanced ingestion runs as an optional, clearly reported research stage; score ingestion continues if the advanced source is missing or inconsistent. The first live advanced run is pending verification.
+
+### Unified 2026 research feature store
+
+On each full intake, `scripts/combine_profiles.py` builds `data/enriched/team_profiles_2026_enriched.csv` with score-derived plus provider-observed EPA, rushing/passing, success and drive metrics, and an as-of cutoff. Team, season and as-of joins are strict. It remains `PASS_UNVALIDATED` and is not yet wired to a betting-prediction model.

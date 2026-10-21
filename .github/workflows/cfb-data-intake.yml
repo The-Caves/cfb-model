@@ -49,6 +49,8 @@ jobs:
       - name: Ingest provider 2026 PBP and advanced-drive releases (research only)
         id: advanced
         run: python scripts/ingest_advanced.py --games data/games_2026.csv --registry data/archive/2026_team_aliases.csv --output data/advanced
+      - name: Merge scoreboard and advanced 2026 team profiles
+        run: python scripts/combine_profiles.py --scores data/team_profiles_2026.csv --advanced data/advanced/team_profiles_advanced_2026.csv --expected-teams 138 --output data/enriched
       - name: Archive results and raw snapshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -58,6 +60,7 @@ jobs:
             data/manifest.json
             data/profile_manifest.json
             data/advanced/
+            data/enriched/
             data/reconciliation/
             data/team_profiles_2026.csv
             data/games_2026.csv

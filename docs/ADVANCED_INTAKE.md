@@ -20,3 +20,7 @@ Outputs: \`data/advanced/team_game_advanced_2026.csv\`, \`team_profiles_advanced
 The ingestion is a **research feature builder**. It does not enable betting picks; all predictions remain \`PASS_UNVALIDATED\`.
 
 Next: verify source drive IDs and map to the canonical game/team IDs before adding drive efficiency, analyze play coverage by school, add historical priors and temporally correct validation, then QB status/injuries/weather/market data.
+
+## Unified team profiles
+
+`scripts/combine_profiles.py` joins the existing as-of 2026 score profile with the new advanced profile under strict equal-team, equal-season and equal-asof rules. Outputs `data/enriched/team_profiles_2026_enriched.csv` and `enriched_manifest.json` (artifact only). Legacy unpopulated score EPA placeholders are omitted; provider EPA fields are explicitly labeled. The unified file is a **research feature store**, not a trained model, and publication-time accuracy is not yet certified.
