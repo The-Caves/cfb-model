@@ -56,6 +56,8 @@ def run(out,bookmakers="fanduel",historical_date=None,provider_response=None,
     # provider_response is only used for offline tests and fixtures.
     key=os.environ.get("ODDS_API_KEY","")
     if provider_response is None:
+        if os.environ.get("GITHUB_ACTIONS","").lower()=="true":
+            raise ValueError("No private market fetching in public GitHub Actions")
         payload,usage=fetch(key,bookmakers,historical_date)
     else:payload,usage=provider_response,{}
     retrieved=retrieved_at_utc or dt.datetime.now(dt.timezone.utc).isoformat()
@@ -66,7 +68,10 @@ def run(out,bookmakers="fanduel",historical_date=None,provider_response=None,
         "provider_usage":usage,"requested_bookmakers":bookmakers.split(","),
         "quote_count":len(result["quotes"]),"quarantined_count":len(result["rejected"]),
         "note":"No event mapped to ESPN yet; no model or bet submission"}
-    target=Path(out);target.parent.mkdir(parents=True,exist_ok=True)
+    # Older export interface retained for offline tests only. Block storing
+    # potentially licensed bookmaker prices anywhere in a public checkout.
+    from scripts.market_vault import safe_path
+    target=safe_path(out,create=True)
     target.write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
     return result
 
