@@ -44,11 +44,19 @@ def probe(output):
   js=raw.decode('utf-8','replace')
   (out/'hdintelligence_bundle.js').write_text(js)
   snippets=[]
-  for match in re.finditer(r'(?i)public|availability|endpoint|report|archive|api/|axios|baseurl|fetch\\(',js):
+  for match in re.finditer(r'(?i)public|availability|endpoint|report|archive|api/|axios|baseurl|fetch',js):
    start=max(0,match.start()-120);end=min(len(js),match.end()+200)
    value=js[start:end]
    if value not in snippets:snippets.append(value)
    if len(snippets)>=220:break
+  for chunk in ["PublishScreen-B2IuFcRr.js","ArchiveScreen-D7SXP8E5.js","SummaryScreen-555q_JyU.js"]:
+   try:
+    with urllib.request.urlopen(urllib.request.Request("https://app.hdintelligence.com/assets/"+chunk,headers={"User-Agent":"Mozilla/5.0"}),timeout=15) as part:
+     body=part.read(3_000_000)
+    if len(body)>2_900_000:raise ValueError("chunk too large")
+    (out/chunk).write_bytes(body)
+   except Exception as sub_exc:
+    (out/(chunk+".error.txt")).write_text(str(sub_exc)[:250])
   result["embedded_viewer_bundle"]={"bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest(),
         "snippets":snippets,"api_paths":list(dict.fromkeys(re.findall(r'["\\x27](/(?:api|v[12]|public)[^"\\x27\\\\\\s]{1,170})',js)))[:120],
         "url_strings":list(dict.fromkeys(re.findall(r'https?://[^"\\s\\x27<>]{5,180}',js)))[:100]}
