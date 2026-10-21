@@ -15,7 +15,8 @@ This public repository holds a reproducible 2026 college football data and model
 | Upcoming games, kickoff/rest, forecast and approximate travel | Implemented with provenance; incomplete coverage is explicit |
 | Kickoff-aware incremental context refresh, persistent deltas, freezes | Implemented; state in `context-state` branch |
 | Public official player availability | SEC, Big Ten, ACC and Big 12 implemented; latest live run succeeded with 0 misleading personnel-change alerts |
-| Official athletics QB news discovery pilot | Seven public team football RSS feeds, read-only review candidates; no player/starter inference |\n| Per-game QB source coverage queue | Implemented with timestamped game/team records, review priorities, fetch health, and audited context-state persistence; full live recheck pending |
+| Official athletics QB news discovery pilot | Seven public football RSS feeds; 7/7 fetched successfully in verified full cloud run; no automatic starter inference |
+| Per-game QB source coverage queue | Implemented with timestamped game/team records, review priorities, fetch health, and cloud-verified context-state persistence |
 | Game-specific QB starter evidence gate | Implemented for explicitly reviewed official team/coach statements; **no automated nationwide confirmations** |
 | Confirmed starting QBs and replacement-value effects | Actual upcoming game coverage still **UNKNOWN** until audited source records exist; replacement weights unvalidated |
 | Timestamped opening/closing/live sportsbook markets | **Not implemented/validated** |
@@ -73,7 +74,7 @@ The separate `data/manual/qb_starter_evidence_2026.csv` is intentionally header-
 
 The scheduled context workflow now runs `scripts/qb_review_queue.py` after official-news collection. Each upcoming team-game slot carries a source coverage state (`FETCHED`, `FETCH_FAILED`, `NOT_CONFIGURED` or unknown), a separately supported starter status, public QB availability signals, and unreviewed news candidate links. The generated `qb_review_queue.json` is included in Actions artifacts. It does **not** perform nationwide starter confirmation, and a fetched feed is not proof that a player is starting.
 
-`scripts/qb_review_archive.py` enforces that queue capture preceded the final context cutoff, compares game and team identity, and refuses unsupported confirmed-starter labels or promoted news. The context archiver writes `context-state/state/qb_review_latest.json`, dated compressed `qb_review/YYYY/MM/DD/` snapshots and aggregate queue coverage in `state/summary.json`. Games that crossed kickoff during collection are removed. Unit tests passed; **verify the newest context workflow and state files before claiming live archive success.**
+`scripts/qb_review_archive.py` enforces that queue capture preceded the final context cutoff, compares game and team identity, and refuses unsupported confirmed-starter labels or promoted news. The context archiver writes `context-state/state/qb_review_latest.json`, dated compressed `qb_review/YYYY/MM/DD/` snapshots and aggregate queue coverage in `state/summary.json`. Games that crossed kickoff during collection are removed. Unit tests and complete context-state archive writes passed in [run 39657256288](https://github.com/The-Caves/cfb-model/actions/runs/39657256288).
 
 Remaining Step 4 limitations: only seven official athletics news feeds are registered, starting-QB evidence still requires manual review, four-conference official player availability is incomplete for national FBS coverage, and QB replacement-point adjustments remain untrained. Continue to Step 5 market integration only with these uncertainty flags preserved; don't confuse source-pipeline completeness with betting-model validation.
 
@@ -84,8 +85,12 @@ Remaining Step 4 limitations: only seven official athletics news feeds are regis
 - [x] Routine AVAILABLE listings filtered from injury/change alerts
 - [x] Official QB claim gate blocks unsupported, speculative, contradictory and post-cutoff evidence
 - [x] Two-sided per-game QB source coverage queue and snapshot persistence validated by [cloud run 39651180891](https://github.com/The-Caves/cfb-model/actions/runs/39651180891)
-- [ ] Extended official-feed registry live-smoke-tested after Texas and North Carolina additions
+- [x] Expanded seven-school RSS registry live-tested with 7/7 fetched and zero provider errors ([run 39657256288](https://github.com/The-Caves/cfb-model/actions/runs/39657256288))
 - [ ] National confirmed-QB discovery: intentionally incomplete; must retain UNKNOWN by team/game
 - [ ] QB-specific scoring effects: intentionally deferred to trained, walk-forward model evaluation
 
-**Step 4 is considered infrastructure-complete with explicitly partial source coverage once the extended-feed smoke test passes.** Lack of verified starters remains a model-input uncertainty; do not block implementation of Step 5 market data, and do not fabricate starter identities or arbitrary replacement-point penalties.
+**Step 4 infrastructure is now verified complete with explicitly partial source coverage.** Lack of verified starters remains a model-input uncertainty; do not block implementation of Step 5 market data, and do not fabricate starter identities or arbitrary replacement-point penalties.
+
+### Current handoff to Step 5
+
+Step 4's dated [exit verification](docs/STEP4_EXIT_VERIFIED.md) confirms that seven official school feeds were retrieved in live Actions run 39657256288, and that its saved QB review queue contains 218 team-game slots (13 with fetched sources, 205 not configured), four with published QB availability signals and zero independently confirmed starters. Missing data stays `UNKNOWN` and betting output stays `PASS_UNVALIDATED`. The market-source requirements and leakage safeguards for the next stage are in [Step 5 market readiness](docs/STEP5_MARKET_READINESS.md). This repository includes no private personal information or secret credentials.
