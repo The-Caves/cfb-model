@@ -32,8 +32,12 @@ class MarketFeatureTests(unittest.TestCase):
         self.vault=Path(d.name)/"market.sqlite3"
     def add(self,at="2026-10-21T17:00:00Z",spread=-4.5,book="fanduel",
             markets=("spreads","totals","h2h"),retrieved=None,
-            home=HOME,away=AWAY,eid="event-x"):
+            home=HOME,away=AWAY,eid="event-x",no_update=False,
+            publisher_update=None):
         source=fake(at,spread,home,away,book,markets,eid)
+        for market in source[0]["bookmakers"][0]["markets"]:
+            if no_update:market.pop("last_update",None)
+            elif publisher_update:market["last_update"]=publisher_update
         if retrieved and retrieved!=at:
             parsed=normalize({"timestamp":at,"data":source},retrieved,
                              historical=True,allowed_books={book})
@@ -105,13 +109,23 @@ class MarketFeatureTests(unittest.TestCase):
         self.assertEqual(r["events"],[])
         self.assertEqual(r["qa"]["exclusions"]["game_started"],6)
     def test_missing_pub_timestamp_cannot_be_fresh(self):
-        self.add()
-        # Older client support can store bookmaker quotes with no pub timestamp,
-        # which must never be declared fresh by the feature board.
-        with __import__("scripts.market_vault",fromlist=["connect"]).connect(self.vault) as db:
-            # Quote table is append-only; inserted sample must be from source
-            # fixture with no last_update, tested in a separate test below.
-            pass
+        self.add(no_update=True)
+        r=self.board()
+        market=r["events"][0]["markets"]["SPREAD"]
+        self.assertEqual(market["status"],"STALE_OR_UNTIMED_PRICE")
+        self.assertIsNone(market["source_update_age_minutes"])
+        self.assertFalse(r["events"][0]["all_three_markets_recent"])
+    def test_old_source_update_timestamp_not_fresh_even_with_recent_capture(self):
+        self.add(publisher_update="2026-10-21T10:00:00Z")
+        market=self.board()["events"][0]["markets"]["SPREAD"]
+        self.assertEqual(market["status"],"STALE_OR_UNTIMED_PRICE")
+        self.assertGreater(market["source_update_age_minutes"],180)
+    def test_conflicting_same_timestamp_quotes_do_not_create_movement(self):
+        self.add(spread=-4.5)
+        self.add(spread=-7.5)
+        r=self.board()
+        self.assertEqual(r["events"],[])
+        self.assertEqual(r["qa"]["exclusions"]["contradictory_same_time_prices"],3)
     def test_implied_probability(self):
         self.assertAlmostEqual(raw_implied(-110),.52380952,places=7)
         self.assertAlmostEqual(raw_implied(150),.4,places=7)
