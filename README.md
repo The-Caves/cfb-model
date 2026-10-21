@@ -1,58 +1,60 @@
-# 2026 College Football Prediction Model — Development
+# College Football Prediction Model (2026 season)
 
-**Status:** experimental research; no validated betting recommendations. All unvalidated predictions are explicitly `PASS_UNVALIDATED`.
+**Project status: Research / not validated for betting.** Predictions must remain `PASS_UNVALIDATED` until timestamp-safe walk-forward evaluation demonstrates credible performance. Successful code tests or ingestion jobs do **not** establish prediction accuracy.
 
-## Deployed and tested
-- ESPN 2026 completed-game scoreboard intake with dated raw snapshots and QA manifest.
-- Timestamp-cutoff 2026 score-based team profiles for the 138-school registry, per-team record, scoring, last three games and opponents; FCS opponents still count toward their FBS opponent's games.
-- Experimental ridge score projection engine; no verified sportsbook integration.
-- Frozen 2026 archive and **Eastern Time-corrected** ESPN snapshot reconciliation. Archive conflicts are quarantined (see `docs/RECONCILIATION_2026.md`).
-- CI on pushes and pull requests. Scheduled 3-times-daily ingestion plus manual dispatch.
-- Each intake run publishes `data/games_2026.csv`, `data/team_profiles_2026.csv`, source JSON and diagnostics as a 30-day GitHub Actions artifact.
+This public repository holds a reproducible 2026 college football data and model-development pipeline. It ingests scoreboard results and play-by-play features, archives audited pregame context, and will eventually evaluate straight-up (SU), against-the-spread (ATS) and totals (O/U) forecasts. Do not report subjective picks as generated model outputs.
 
-## Commands
+## Implementation status — updated October 21, 2026
+
+| Component | Status / evidence |
+| --- | --- |
+| ESPN 2026 completed results, raw snapshots and QA | Implemented and tested; 138-team FBS registry |
+| Historical 2026 v0.9 score reconciliation | Implemented; disputed rows quarantined (see `docs/RECONCILIATION_2026.md`) |
+| SportsDataverse 2026 PBP, EPA and advanced drive joins | Cloud-verified: 510 accepted games, 1,020 team-game and drive sides in a prior run |
+| Unified 2026 enriched profiles | Cloud-verified: 138 schools and roughly 44 fields per profile in a prior run |
+| Upcoming games, kickoff/rest, forecast and approximate travel | Implemented with provenance; incomplete coverage is explicit |
+| Kickoff-aware incremental context refresh, persistent deltas, freezes | Implemented; state in `context-state` branch |
+| Public official player availability | SEC, Big Ten, ACC and Big 12 import implemented; live coverage varies and final alert fix needs a fresh end-to-end check |
+| Confirmed starting QBs and replacement-value effects | **Not validated**; availability of a QB does not establish the starter |
+| Timestamped opening/closing/live sportsbook markets | **Not implemented/validated** |
+| Historical as-of training features, opponent-adjusted calibrated model, SU/ATS/O-U walk-forward tests | **Not completed** |
+
+**Known cloud verification:** [PBP/drives ingestion](https://github.com/The-Caves/cfb-model/actions/runs/39544628568), [enriched profiles](https://github.com/The-Caves/cfb-model/actions/runs/39544914397), and [earlier availability refresh](https://github.com/The-Caves/cfb-model/actions/runs/39618526300). The availability run is from an **older** code revision and reported 2 accepted ACC reports containing 458 availability designations, many ordinary AVAILABLE roster entries. That number is **not an injury count**. Confirm the newer alert-filtering patch in a live run before describing it as operationally verified.
+
+## Development and operating workflows
+
+- [CFB Data Intake](https://github.com/The-Caves/cfb-model/actions/workflows/cfb-data-intake.yml): scheduled three times daily, manual dispatch, and push/PR validation. ESPN results, advanced ingestion, research feature store and artifacts with checksums/manifests.
+- [CFB Pregame Context Delta](https://github.com/The-Caves/cfb-model/actions/workflows/cfb-context-refresh.yml): hourly GitHub Actions eligibility gate; three baseline refreshes/day, three-hourly inside 48h of kickoff and hourly inside 12h. Saves context, source health, material deltas and pre-kickoff observations to [`context-state`](https://github.com/The-Caves/cfb-model/tree/context-state).
+- Diagnostic public-report workflows: `.github/workflows/cfb-report-probe.yml` and `.github/workflows/cfb-api-probe.yml`.
+
+The pregame collector uses ESPN upcoming schedule/results, Open-Meteo weather, approximate **city-centroid straight-line miles** (not actual team travel), and `scripts/official_availability.py` for verified public conference publisher cards. Only published, two-team/game-matched, source-timestamped, pre-kickoff records can be accepted. A missing or pending report is **UNKNOWN**, never proof of a healthy player. Official `AVAILABILITY` does **not** establish an injury diagnosis, and does not identify a backup QB starter. Report provenance and failures are preserved.
+
+Data collected or revised retrospectively must **not** be used as though available at the original pregame decision time. Freezes preserve the last observed pregame snapshot, not any postgame source. Workflow scheduling is not automatic model retraining or phone notifications.
+
+## Resume development / public project handoff
+
+1. Inspect current `main` HEAD, recent Actions results and `context-state/state/summary.json`; do not rely on stale documentation as proof of current run results.
+2. Finish Step 4: verify the corrected availability deltas on a **real live context refresh**, examine `official_availability_manifest.json`, check that routine AVAILABLE roster rows do not create false personnel alerts, and preserve warnings for missing publisher coverage.
+3. Develop independently sourced **starting-QB confirmation** with player/team/game identity, trustworthy source URL, publication/capture timestamps and pregame cutoff. Never infer the replacement QB from an OUT availability designation or previous box score.
+4. Then integrate provenance-bearing historical and live sportsbook lines, earlier-season training priors and a complete opponent-adjusted prediction engine.
+5. Evaluate chronological out-of-sample SU, ATS and O/U forecasts with true historical as-of sources, market baselines, calibration and ablations. Only graduate beyond `PASS_UNVALIDATED` on verified results.
+
+**Model priorities:** opponent-adjusted offensive/defensive EPA, passing/rushing efficiency, QB play versus pressure, special teams, drive efficiency, explosives/volatility, red zone/4th down, pace, luck, garbage time, weather, rest/travel, injuries, dated market odds and line movement. Use recency and prior seasons only with leakage-free controls; previous research used a 28-point blowout cap, which must be independently validated rather than assumed optimal.
+
+**Key source files:** `scripts/ingest_espn.py`, `scripts/ingest_advanced.py`, `scripts/build_profiles.py`, `scripts/combine_profiles.py`, `scripts/ingest_game_context.py`, `scripts/official_availability.py`, `scripts/availability_context.py`, `scripts/context_delta.py`, `scripts/context_archive.py`, `scripts/predict.py`. More detail: [advanced data](docs/ADVANCED_INTAKE.md), [reconciliation](docs/RECONCILIATION_2026.md), [game context](docs/GAME_CONTEXT.md), and [context deltas](docs/CONTEXT_DELTA.md).
+
+## Local validation
+
 ```sh
 python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 python scripts/ingest_espn.py --start 2026-08-01 --output data
 python scripts/build_profiles.py --games data/games_2026.csv --output data --registry data/archive/2026_team_aliases.csv
-python scripts/reconcile_scores.py --archive data/archive/2026_v09_scores_unverified.csv --live data/games_2026.csv --aliases data/archive/2026_team_aliases.csv
 ```
 
-## Limitations and next steps
-- Score data alone cannot prove opponent-adjusted EPA, quarterback response to pressure, special teams or injury availability. Those fields are explicitly empty.
-- The archived **2026 score ledger** is now committed with explicit team-name mapping and audit automation. The complete v0.9 research code and prior-season historical training sets are **not yet deployed**.
-- The v0.9 local archive contains retrospective 2026 score data for 388 games and 138 score-derived profiles but flags incomplete independent score verification, ESPN/sportsdataverse downloads and lack of prospective odds/injury coverage.
-- A game ledger fetched today is not evidence that *pregame* lines or injury status were historically observable. Walk-forward backtests must strictly cut off at each historical kickoff.
-- Pending: archived prior seasons with provenance, advanced 2026 play-by-play EPA, drive statistics, injury verification, weather/rest/travel, timestamped sportsbook odds and out-of-sample calibrated evaluations.
+A complete ingestion run requires external networks and is best verified in GitHub Actions. Full outputs are commonly **workflow artifacts**, not files committed to `main`. Logs and data manifests should be checked rather than inferring successful ingestion from a green unit-test badge.
 
-Workflow: [CFB Data Intake](https://github.com/The-Caves/cfb-model/actions/workflows/cfb-data-intake.yml)
+## Public-repository safety
 
-## Advanced statistics integration (Step 3)
-- 2026 SportsDataverse play-by-play ingestion, game-ID and final-score checks, research-only EPA/success/explosive rates and defensive splits are available in `scripts/ingest_advanced.py`.
-- Advanced drive release is reconciled by ESPN game ID and exact team ID/name; actual 2026 files contain team names despite numeric-ID documentation. Both sides must pass; verified games contribute drives, yards/drive, and plays/drive. Points/drive remains unavailable.
-- Source timestamps and SHA256 are reported in the advanced manifest. Source snapshots retrieved now are not retrospective proof of historical pregame availability.
-- Advanced ingestion runs as an optional, clearly reported research stage; score ingestion continues if the advanced source is missing or inconsistent. The first live advanced run is pending verification.
+Only publish reproducible project code, non-sensitive configuration, public-source citations, validated metrics, tests and generic operational documentation. **Do not commit access tokens, API keys, personal contact information, private messages/conversation transcripts, passwords, unpublished privileged data, or user-specific account details.** Use GitHub Actions secrets for any future credentials; never print credentials in logs. Public player-availability reports are **not** private medical records. Avoid inferring medical conditions from roster status.
 
-### Unified 2026 research feature store
-
-On each full intake, `scripts/combine_profiles.py` builds `data/enriched/team_profiles_2026_enriched.csv` with score-derived plus provider-observed EPA, rushing/passing, success and drive metrics, and an as-of cutoff. Team, season and as-of joins are strict. It remains `PASS_UNVALIDATED` and is not yet wired to a betting-prediction model.
-
-## Step 4: Upcoming-game context and personnel gating
-- Live ESPN future fixtures and kickoff-aware rest are extracted from completed-game and upcoming scoreboard snapshots.
-- Approximate straight-line travel uses **city-centroid** geocoding and schools with at least two verified home venue observations. Uncertain venues remain missing, not inferred.
-- Open-Meteo future forecast (temperature, wind, gusts, precipitation probability) retains capture times. No historical backfill is misrepresented as pregame weather.
-- Optional reviewed, timestamped QB starter and injury reports are ingested with strict pregame cutoffs. The initial report CSV has **no records**; injury and QB-start statuses are UNKNOWN until genuine verified sources are added.
-- Context is published with the other workflow artifacts: data/context/upcoming_game_context_2026.csv, .json, and context_manifest.json.
-- See docs/GAME_CONTEXT.md for limitations. No adjustments to projection weights or betting selections are activated by Step 4.
-
-### Verified Step 4 first live run (2026-10-21)
-109 upcoming games parsed; 109 with both rest intervals, 38 with forecast, 34 with both approximate travel distances, and **zero** with independently reviewed two-team player availability. Provider SSL failures and time-budget skips are recorded in `context_manifest.json`. Step 4 source collection is operational but **partially covered**, and no prediction feature weights have been switched on.
-
-## Daily delta refresh (Step 4)
-
-The separate [CFB Pregame Context Delta](https://github.com/The-Caves/cfb-model/actions/workflows/cfb-context-refresh.yml) workflow schedules three baseline pregame context refreshes daily, then increases to every three hours within 48 hours of kickoff and hourly in the final 12 hours. Timestamped context, material deltas, official SEC/Big Ten availability source-page hashes and kickoff-frozen snapshots are preserved on the `context-state` branch. It is **not yet a verified automatic player-injury feed**: missing sourced QB and injury reports remain UNKNOWN. Predictions are still PASS_UNVALIDATED. More: `docs/CONTEXT_DELTA.md`.
-
-## Official SEC/Big Ten player availability source
-
-The scheduled context refresh now ingests **published, game-matched player availability designations** directly from the SEC and Big Ten official embedded public report publisher. Pending, stale, mismatched or unparseable reports remain unknown. Player rows and report publication/capture dates are archived as research snapshots. Confirmed starting QBs are **not** supplied by those availability reports, so starting QB confirmations and injury-adjustment weights remain unavailable until independently validated. See `docs/CONTEXT_DELTA.md`.

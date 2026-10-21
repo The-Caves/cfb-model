@@ -89,8 +89,12 @@ def snapshot_changes(previous,current,now):
             x,y=oldinj.get((team,player)),newinj.get((team,player))
             if x==y:continue
             if x is None and y=="AVAILABLE":
-                # Large official full-roster cards may list 100+ players as
-                # Available. Do not misrepresent those as injury alerts.
+                # Initial full-roster Available rows are not personnel alerts.
+                continue
+            if x=="AVAILABLE" and y is None:
+                # An ordinary Available roster row disappearing from a feed
+                # is not a status change or evidence of injury/recovery.
+                # Team-level coverage changes are handled separately.
                 continue
             add("player_availability."+str(team)+"."+str(player),x,y,
                 "VERIFIED_AVAILABILITY_STATUS_CHANGE" if x and y else

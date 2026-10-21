@@ -49,4 +49,26 @@ class DeltaTests(unittest.TestCase):
         new=snap("2026-10-23T16:00:00Z",[])
         changes,frozen,_=snapshot_changes(old,new,"2026-10-23T16:00:00Z")
         self.assertEqual((changes,frozen),([],[]))
+    def test_available_roster_entry_disappearing_does_not_alert(self):
+        old=snap("2026-10-23T15:00:00Z",[record(injuries=[
+            {"team":"H","player":"Routine Listed Player","status":"AVAILABLE","source_url":"https://school.edu/report"}])])
+        new=snap("2026-10-23T16:00:00Z",[record()])
+        changes,_,qa=snapshot_changes(old,new,"2026-10-23T16:00:00Z")
+        self.assertEqual(changes,[])
+        self.assertEqual(qa["personnel_changes"],0)
+    def test_available_player_becoming_out_is_a_status_change(self):
+        old=snap("2026-10-23T15:00:00Z",[record(injuries=[
+            {"team":"H","player":"Player One","status":"AVAILABLE","source_url":"https://school.edu/report"}])])
+        new=snap("2026-10-23T16:00:00Z",[record(injuries=[
+            {"team":"H","player":"Player One","status":"OUT","source_url":"https://school.edu/report"}])])
+        changes,_,qa=snapshot_changes(old,new,"2026-10-23T16:00:00Z")
+        self.assertEqual([x["kind"] for x in changes],["VERIFIED_AVAILABILITY_STATUS_CHANGE"])
+        self.assertEqual(qa["personnel_changes"],1)
+    def test_unavailable_player_disappearing_keeps_source_gap(self):
+        old=snap("2026-10-23T15:00:00Z",[record(injuries=[
+            {"team":"H","player":"Player One","status":"OUT","source_url":"https://school.edu/report"}])])
+        new=snap("2026-10-23T16:00:00Z",[record()])
+        changes,_,_=snapshot_changes(old,new,"2026-10-23T16:00:00Z")
+        self.assertEqual([x["kind"] for x in changes],["PLAYER_REPORT_NOT_PRESENT"])
+
 if __name__=="__main__":unittest.main()
