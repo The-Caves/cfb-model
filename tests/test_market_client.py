@@ -20,6 +20,13 @@ class ProviderTests(unittest.TestCase):
         u=build_query("secret_test_value",historical_date="2026-10-20T16:00:00Z")
         self.assertIn("/historical/sports/americanfootball_ncaaf/odds",u)
         self.assertIn("date=2026-10-20T16%3A00%3A00Z",u)
+    def test_raw_market_export_forbidden_in_public_repository(self):
+        from scripts.market_vault import ROOT
+        target=ROOT/"data"/"fanduel_private_market_test.json"
+        self.assertFalse(target.exists())
+        with self.assertRaises(ValueError):
+            run(target,provider_response=DATA,retrieved_at_utc="2026-10-21T17:00:00Z")
+        self.assertFalse(target.exists())
     def test_missing_key_blocks_network(self):
         with self.assertRaises(ValueError):
             build_query("")
