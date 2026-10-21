@@ -6,7 +6,7 @@
 
 `scripts/market_features.py:market_board` reads an existing **private** SQLite vault produced by `scripts/market_capture.py`. It prepares bookmaker-specific game-market features at a requested decision timestamp. It does **not** retrieve odds itself, authenticate live FanDuel prices, calculate matchup probabilities, or recommend wagers. It makes **no network requests**.
 
-The result is keyed by vetted ESPN game ID plus provider event ID and bookmaker. Each eligible market (MONEYLINE, SPREAD, TOTAL) includes:
+The result is keyed by vetted ESPN game ID plus provider event ID and bookmaker. First/latest observation hashes and retrieval times retain an auditable link to the exact private source snapshots. Each eligible market (MONEYLINE, SPREAD, TOTAL) includes:
 
 - The **first recorded eligible** and latest eligible source timestamps (not proof of an authentic sportsbook opening or closing line).
 - Reference **home-side spread** or **over-side total** movement, in points, within one bookmaker and market only.
@@ -38,7 +38,7 @@ aliases, conflicts = load_market_registry(
 )
 board = market_board(
     vault_path="/private/market_quotes.sqlite3",
-    espn_context=historically_valid_espm_context,
+    espn_context=historically_valid_espn_context,
     aliases=aliases,
     conflicts=conflicts,
     decision_utc="2026-10-21T19:00:00Z",
@@ -48,7 +48,7 @@ board = market_board(
 # Do NOT save it to public GitHub, a public Actions artifact, or a log.
 ```
 
-`historically_valid_espm_context` in this example is a caller-supplied dictionary (replace with a genuinely timestamped context snapshot); this example is illustrative and does not suggest a real provider connection.
+`historically_valid_espn_context` in this example is a caller-supplied dictionary (replace with a genuinely timestamped context snapshot); this example is illustrative and does not suggest a real provider connection.
 
 A public GitHub CI test constructs an **ephemeral, synthetic** private vault and asserts correct point-in-time matching, vig math, movement, source-update staleness, conflicting market pairs, post-kickoff rejection, cross-book isolation and backfill handling. The test data are invented, not real sportsbook prices.
 
