@@ -7,7 +7,7 @@ import datetime as dt,json,urllib.request,urllib.error,hashlib
 from pathlib import Path
 
 ROOT="https://app.hdintelligence.com"
-CONFS={"SEC":"SEC","B10":"B10"}
+CONFS={"SEC":"SEC","B10":"B10","ACC":"ACC","B12":"B12"}
 ENDPOINTS=("/api/public-load","/api/get-publish-public","/api/get-archive-public")
 def call(path,body):
     payload=json.dumps(body).encode()
