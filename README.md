@@ -94,3 +94,9 @@ Remaining Step 4 limitations: only seven official athletics news feeds are regis
 ### Current handoff to Step 5
 
 Step 4's dated [exit verification](docs/STEP4_EXIT_VERIFIED.md) confirms that seven official school feeds were retrieved in live Actions run 39657256288, and that its saved QB review queue contains 218 team-game slots (13 with fetched sources, 205 not configured), four with published QB availability signals and zero independently confirmed starters. Missing data stays `UNKNOWN` and betting output stays `PASS_UNVALIDATED`. The market-source requirements and leakage safeguards for the next stage are in [Step 5 market readiness](docs/STEP5_MARKET_READINESS.md). This repository includes no private personal information or secret credentials.
+
+### Step 5 started — FanDuel-first market data (October 21, 2026)
+
+**FanDuel is the default book**, but quote records retain an explicit bookmaker ID for future comparisons. See [Step 5 FanDuel market plan](docs/STEP5_FANDUEL_MARKET_PLAN.md) for opening vs first-seen prices, same-book line movements, decision-time fresh quotes, implied probabilities and parlay correlation limitations. [Step 5 market readiness](docs/STEP5_MARKET_READINESS.md) retains event identity, evidence and walk-forward requirements.
+
+Implemented research-only code: `scripts/market_quotes.py` normalizes NCAAF moneyline, spread and total quotes from The Odds API v4; `scripts/market_client.py` optionally fetches `fanduel` using an environment-held `ODDS_API_KEY` and quarantines unsafe input. CI tests cover book-specific quote parsing, historical timestamp checks, first-observed movement and masked provider errors. **No API key is connected, no actual market snapshots are being collected, no historical FanDuel coverage has been authenticated and no scheduled betting-market polling has been activated.** The current prediction model remains `PASS_UNVALIDATED`.
