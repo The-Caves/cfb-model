@@ -1,4 +1,10 @@
 __pycache__/
 *.pyc
 .venv/
-data/
+data/raw/
+data/games_2026.csv
+data/manifest.json
+data/profile_manifest.json
+data/team_profiles_2026.csv
+data/reconciliation/
+data/reconciliation_snapshot/

@@ -1,0 +1,389 @@
+date,away,home,away_score,home_score,neutral,qa,source_url,source_class
+2026-08-29,Hawaii,Stanford,27,37,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-08-29,Jacksonville State,North Dakota State,7,33,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-08-29,Memphis,UNLV,27,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-08-29,NC State,Virginia,8,34,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-08-29,New Mexico State,Florida State,17,34,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-08-29,North Carolina,TCU,15,10,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-08-29,Sacramento State,Eastern Michigan,17,28,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-08-29,San Jose State,USC,26,42,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-03,Akron,Wake Forest,16,38,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-03,Colorado,Georgia Tech,14,13,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-03,UAB,Illinois,23,42,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-03,UMass,Rutgers,37,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-04,Fresno State,USC,0,39,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-04,Miami (FL),Stanford,45,6,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-04,San Jose State,Eastern Michigan,27,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-04,Toledo,Michigan State,20,30,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Arkansas State,Memphis,24,42,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Ball State,Ohio State,3,56,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Baylor,Auburn,16,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Boise State,Oregon,27,34,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Boston College,Cincinnati,15,34,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Central Michigan,New Mexico,7,38,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Clemson,LSU,10,51,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Coastal Carolina,West Virginia,24,31,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,East Carolina,Alabama,10,48,False,SCORE_CROSSCHECKED_POSTGAME,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,FIU,USF,9,19,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Florida Atlantic,Florida,21,66,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Kent State,South Carolina,0,57,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Liberty,James Madison,13,20,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Louisiana-Monroe,Mississippi State,13,62,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Marshall,Penn State,0,45,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Miami (OH),Pittsburgh,14,59,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Missouri State,Texas A&M,0,50,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,North Texas,Indiana,16,52,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Northern Illinois,Iowa,0,40,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Ohio,Nebraska,21,49,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Oklahoma State,Tulsa,10,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Oregon State,Houston,20,33,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Sam Houston,Troy,21,24,False,SCORE_CROSSCHECKED_POSTGAME,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Texas State,Texas,7,59,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Tulane,Duke,3,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,UCLA,California,45,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,UNLV,Hawaii,21,6,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,UTEP,Oklahoma,0,51,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Western Kentucky,Nevada,14,49,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Western Michigan,Michigan,12,13,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-05,Wyoming,Colorado State,13,35,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-06,Louisville,Ole Miss,38,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-06,Notre Dame,Wisconsin,13,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-06,Washington State,Washington,10,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-07,SMU,Florida State,27,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-1,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-11,Missouri,Kansas,38,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-11,Rutgers,Boston College,21,28,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Alabama,Kentucky,45,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Appalachian State,East Carolina,27,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Arizona,BYU,17,28,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Arizona State,Texas A&M,20,48,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Arkansas,Utah,10,43,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Bowling Green,Nebraska,7,56,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Buffalo,FIU,20,33,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,California,Syracuse,21,18,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Charlotte,Ole Miss,9,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Delaware,Vanderbilt,26,35,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Duke,Illinois,31,27,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Eastern Michigan,Michigan State,7,35,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Georgia Southern,Clemson,7,22,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Georgia State,Kennesaw State,31,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Iowa State,Iowa,13,16,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Jacksonville State,Ohio,27,29,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Louisiana,USC,30,49,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Louisiana Tech,LSU,14,45,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Louisiana-Monroe,UAB,20,26,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Maryland,UConn,38,14,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Memphis,Boise State,20,38,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Middle Tennessee,Marshall,26,28,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Mississippi State,Minnesota,38,13,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Navy,Florida Atlantic,30,38,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,New Mexico State,Hawaii,19,29,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,North Dakota State,Air Force,38,32,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Ohio State,Texas,23,24,False,SCORE_CROSSCHECKED_POSTGAME,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Oklahoma,Michigan,10,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Old Dominion,Virginia Tech,21,44,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Oregon,Oklahoma State,31,39,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Penn State,Temple,27,9,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Rice,Notre Dame,0,52,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Sacramento State,Fresno State,3,49,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,San Diego State,UCLA,10,28,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,South Alabama,Tulane,24,28,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Southern Miss,Auburn,8,43,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Tennessee,Georgia Tech,45,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Texas Tech,Oregon State,35,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Tulsa,Sam Houston,23,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,UCF,Pittsburgh,7,12,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,UNLV,North Texas,6,44,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,USF,Army,28,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,UTSA,Texas State,31,26,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Utah State,Washington,14,16,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Wake Forest,Purdue,38,36,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Washington State,Kansas State,7,34,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-12,Western Kentucky,Georgia,20,70,False,SCORE_ONLY_UNVERIFIED_ASOF,https://fantasyhq.co/cfb-hq/schedule/2026/week-2,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-17,Syracuse,Pittsburgh,13,27,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-18,Houston,Texas Tech,26,28,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-18,Miami (FL),Wake Forest,33,20,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Akron,Minnesota,7,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Arizona State,Kansas,24,17,True,SCORE_ONLY_UNVERIFIED_ASOF_NEUTRAL_SITE,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Arkansas State,TCU,7,31,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,BYU,Colorado State,41,23,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Ball State,Liberty,15,51,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Bowling Green,Iowa State,7,55,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Buffalo,Penn State,13,55,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Charlotte,Appalachian State,21,26,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Coastal Carolina,Delaware,14,22,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Colorado,Northwestern,7,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,East Carolina,Old Dominion,20,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Eastern Michigan,Wisconsin,10,54,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,FIU,Florida Atlantic,10,16,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Florida,Auburn,44,39,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Florida State,Alabama,36,50,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Fresno State,San Jose State,26,10,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Georgia,Arkansas,45,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Georgia Southern,Jacksonville State,27,31,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Georgia State,UCF,30,44,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,James Madison,San Diego State,26,13,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Kennesaw State,Tennessee,9,42,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Kent State,Ohio State,3,59,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Kentucky,Texas A&M,31,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,LSU,Ole Miss,24,32,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Louisiana Tech,Baylor,19,36,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Marshall,Missouri State,30,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Miami (OH),Cincinnati,31,35,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Michigan State,Notre Dame,10,27,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Mississippi State,South Carolina,41,34,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,NC State,Vanderbilt,31,35,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Nevada,Middle Tennessee,20,27,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,New Mexico,Oklahoma,6,14,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,North Carolina,Clemson,20,28,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,North Dakota State,Sacramento State,31,10,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,North Texas,Texas State,35,49,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Northern Illinois,Arizona,17,42,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Ohio,South Alabama,36,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Purdue,UCLA,38,52,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,SMU,Louisville,31,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Stanford,Duke,7,35,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Temple,Toledo,48,49,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Troy,Missouri,17,27,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Tulane,Kansas State,20,31,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,UAB,Louisiana,14,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,UConn,Southern Miss,48,20,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,USC,Rutgers,42,35,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,UTEP,Michigan,17,52,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,UTSA,Texas,6,30,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Utah State,Utah,0,33,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Virginia Tech,Maryland,35,26,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,West Virginia,Virginia,38,27,True,SCORE_ONLY_UNVERIFIED_ASOF_NEUTRAL_SITE,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Western Kentucky,Indiana,0,38,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Western Michigan,Rice,28,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-19,Wyoming,Central Michigan,10,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-24,Liberty,Coastal Carolina,34,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-25,Army,Temple,21,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-25,Clemson,California,24,10,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-25,Navy,UAB,20,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-25,Northwestern,Indiana,23,29,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Air Force,Nevada,36,33,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Appalachian State,NC State,31,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Arizona,Washington State,34,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Ball State,Kent State,13,26,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Boise State,Western Michigan,32,7,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Central Michigan,Miami (FL),3,52,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Colorado,Baylor,13,23,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Colorado State,UTSA,45,59,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Delaware,Virginia,3,42,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Florida Atlantic,Louisiana-Monroe,45,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Georgia Tech,Stanford,27,34,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Hawaii,Wyoming,10,27,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Houston,Georgia Southern,42,28,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Illinois,Ohio State,19,42,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Iowa,Michigan,20,19,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,James Madison,Old Dominion,46,20,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Kansas State,Cincinnati,26,31,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Kennesaw State,Arkansas State,14,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Louisiana,Charlotte,34,7,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Middle Tennessee,Jacksonville State,13,23,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Minnesota,Washington,27,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Missouri,Mississippi State,24,31,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Missouri State,SMU,24,34,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Nebraska,Michigan State,31,13,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,New Mexico,New Mexico State,42,18,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Northern Illinois,Georgia State,14,35,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Notre Dame,Purdue,49,10,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Oklahoma,Georgia,13,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Oklahoma State,West Virginia,41,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Ole Miss,Florida,28,52,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Oregon,USC,41,27,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Oregon State,UTEP,33,7,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Rice,Fresno State,24,38,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Sam Houston,Texas Tech,14,49,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,San Diego State,Toledo,16,41,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,South Alabama,Kentucky,21,45,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,South Carolina,Alabama,18,49,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Southern Miss,Tulane,21,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,TCU,UCF,13,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Texas,Tennessee,20,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Texas A&M,LSU,6,35,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Troy,Utah State,10,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Tulsa,Arkansas,6,34,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,UCLA,Maryland,54,3,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,UConn,Miami (OH),21,24,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,UMass,Sacramento State,35,6,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,UNLV,Akron,38,10,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,USF,Bowling Green,14,6,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Utah,Iowa State,31,17,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Vanderbilt,Auburn,15,21,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Virginia Tech,Boston College,21,14,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Wake Forest,Louisville,30,27,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-09-26,Wisconsin,Penn State,24,20,False,SCORE_ONLY_UNVERIFIED_ASOF,https://www.collegefootballschedule.net/college-football-scores/week-4,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-01,North Texas,Tulsa,45,44,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-01,Western Kentucky,New Mexico State,13,34,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-02,Liberty,Delaware,30,14,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-02,Penn State,Northwestern,13,34,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-02,Pittsburgh,Virginia Tech,35,33,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Akron,Central Michigan,17,41,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Alabama,Mississippi State,56,23,False,SCORE_CROSSCHECKED_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Arkansas,Texas A&M,7,34,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Arkansas State,Louisiana,20,23,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Army,Louisiana Tech,29,31,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Auburn,Tennessee,14,24,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,BYU,TCU,17,10,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Baylor,Arizona State,55,19,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Boston College,SMU,16,25,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Bowling Green,Miami (OH),24,20,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,California,UNLV,31,39,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Cincinnati,Arizona,7,34,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Eastern Michigan,UMass,38,14,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Florida,Missouri,17,45,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Fresno State,Washington State,26,6,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Georgia Southern,Coastal Carolina,31,24,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Indiana,Rutgers,47,15,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Kentucky,South Carolina,35,34,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Louisiana-Monroe,South Alabama,35,52,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Louisville,NC State,28,31,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Marshall,James Madison,17,45,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Maryland,Nebraska,23,48,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Memphis,Charlotte,59,8,False,SCORE_CROSSCHECKED_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Miami (FL),Clemson,41,13,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Michigan,Minnesota,14,20,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Michigan State,Wisconsin,3,31,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Middle Tennessee,Kansas,0,55,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Navy,Air Force,9,14,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Notre Dame,North Carolina,37,26,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Ohio,Kent State,13,10,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Ohio State,Iowa,31,14,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Old Dominion,Georgia State,10,42,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Oregon State,Colorado State,56,26,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Purdue,Illinois,24,17,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,San Jose State,Hawaii,20,16,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Stanford,Wake Forest,3,57,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Syracuse,UConn,42,41,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Temple,USF,17,13,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Texas State,San Diego State,29,31,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Texas Tech,Colorado,29,7,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Toledo,Ball State,39,24,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,UCF,Houston,17,27,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,UTEP,New Mexico,7,61,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,UTSA,Rice,16,14,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Utah State,Boise State,18,37,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Vanderbilt,Georgia,14,38,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Virginia,Florida State,7,38,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Washington,USC,21,25,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,West Virginia,Iowa State,42,45,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Western Michigan,Buffalo,20,17,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-03,Wyoming,North Dakota State,0,28,False,SCORE_ONLY_RETROSPECTIVE,https://boxscorereskin-on3-studio-team.vercel.app/college/football/schedule/?filter=fbs&phase=week-5,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-06,Southern Miss,Troy,34,55,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-07,Jacksonville State,Kennesaw State,27,26,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-07,New Mexico State,FIU,3,22,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-08,Missouri State,Western Kentucky,13,34,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-08,Sam Houston,Liberty,3,35,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-08,South Alabama,Arkansas State,56,49,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-08,USF,UTSA,24,31,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-09,Florida State,Louisville,20,44,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-09,Iowa,Washington,41,24,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-09,Iowa State,BYU,10,24,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-09,Washington State,Utah State,16,17,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-09,Wyoming,San Jose State,16,13,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Air Force,Northern Illinois,28,7,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Arizona,West Virginia,52,31,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Ball State,Northwestern,14,45,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Boise State,Fresno State,38,31,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Buffalo,Toledo,23,8,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Central Michigan,Ohio,14,31,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Charlotte,North Texas,10,50,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Coastal Carolina,Marshall,27,21,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Duke,Georgia Tech,25,28,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Eastern Michigan,Akron,25,23,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Georgia,Alabama,20,17,False,SCORE_CROSSCHECKED_RETROSPECTIVE,https://apnews.com/article/6dc99f989d120192335450be5a4be48d,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Hawaii,Arizona State,12,30,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Houston,Kansas State,35,16,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Illinois,Michigan State,38,37,False,SCORE_CROSSCHECKED_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Indiana,Nebraska,20,17,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,James Madison,Georgia Southern,27,24,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Kansas,Utah,24,41,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Kent State,Western Michigan,7,38,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,LSU,Kentucky,34,35,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Louisiana,Louisiana Tech,31,32,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Maryland,Ohio State,16,45,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Miami (OH),UMass,20,19,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Minnesota,Purdue,13,41,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Nevada,UTEP,30,13,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,North Carolina,Pittsburgh,21,17,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,North Dakota State,UNLV,7,13,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Old Dominion,Appalachian State,10,3,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Ole Miss,Vanderbilt,52,17,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Rice,East Carolina,12,28,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Sacramento State,Bowling Green,10,38,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,San Diego State,Oregon State,14,66,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,South Carolina,Florida,38,19,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Stanford,Notre Dame,7,58,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Syracuse,Virginia,25,28,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Tennessee,Arkansas,24,17,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Texas,Oklahoma,24,27,False,SCORE_CROSSCHECKED_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Texas A&M,Missouri,6,27,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Tulane,Army,17,20,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Tulsa,Navy,26,34,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,UAB,Memphis,13,38,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,UCF,Oklahoma State,28,42,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,UCLA,Oregon,17,15,False,SCORE_CROSSCHECKED_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,UConn,Temple,34,20,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,USC,Penn State,31,23,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Virginia Tech,California,20,25,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-10,Wake Forest,NC State,38,14,False,SCORE_ONLY_RETROSPECTIVE,https://www.collegefootballschedule.net/college-football-scores/week-6,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-13,Delaware,Middle Tennessee,30,33,False,SCORE_CONFIRMED_RETROSPECTIVE,https://www.cbssports.com/college-football/schedule/MEC/2026/regular/7/,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-13,FIU,Jacksonville State,24,27,False,SCORE_CONFIRMED_RETROSPECTIVE,https://www.underdogdynasty.com/conference-usa/46864/weekday-cusa-2026-week-7-recap-jax-state-27-fiu-24-garrison-rippa-caden-creel,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-14,Kennesaw State,Missouri State,21,24,False,SCORE_VERIFIED_OFFICIAL_RETROSPECTIVE,https://missouristatebears.com/news/2026/10/14/football-bears-walk-off-kennesaw-state-in-cusa-home-opener,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-14,Western Kentucky,Sam Houston,16,3,False,SCORE_CONFIRMED_RETROSPECTIVE,https://www.underdogdynasty.com/conference-usa/46911/defensive-domination-wku-collects-first-road-win-at-sam-houston-16-3,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-15,Colorado State,Texas State,27,66,False,SCORE_CONFIRMED_RETROSPECTIVE,https://www.cbssports.com/college-football/schedule/MEC/2026/regular/7/,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-15,East Carolina,UAB,17,30,False,SCORE_VERIFIED_OT_RETROSPECTIVE,https://www.underdogdynasty.com/american-conference/46930/uab-blazers-east-carolina-ecu-pirates-30-17-overtime-pick-six-delvon-gulley-2026,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-15,Georgia Southern,Old Dominion,23,15,False,SCORE_VERIFIED_OFFICIAL_RETROSPECTIVE,https://gseagles.com/news/2026/10/15/football-helton-defense-leas-eagles-to-big-road-win-at-odu,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-16,Appalachian State,Coastal Carolina,35,32,False,FINAL_OFFICIAL_ATHLETICS_RETRIEVED_OCT17,https://appstatesports.com/sports/football/stats/2026/coastal-carolina/boxscore/9918,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-16,Memphis,Tulane,17,31,False,FINAL_OFFICIAL_ATHLETICS_RETRIEVED_OCT17,https://tulanegreenwave.com/news/2026/10/16/football-forces-six-turnovers-in-31-17-conference-victory-over-memphis,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-16,Washington,Purdue,38,26,False,FINAL_OFFICIAL_ATHLETICS_RETRIEVED_OCT17,https://gohuskies.com/news/2026/10/16/football-uw-secures-38-26-win-at-purdue,BASE_HISTORICAL_SCORE_LEDGER
+2026-10-17,Akron,Miami (OH),14,34,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Alabama,Tennessee,10,26,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Arizona State,Texas Tech,25,53,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Arkansas,Vanderbilt,31,21,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Arkansas State,Southern Miss,23,13,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Auburn,Georgia,27,24,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Ball State,Bowling Green,32,31,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Charlotte,Temple,38,31,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Cincinnati,West Virginia,42,45,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Florida,Texas,27,24,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Florida Atlantic,Army,24,56,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Florida State,Miami (FL),35,43,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Fresno State,San Diego State,23,26,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Georgia State,James Madison,22,49,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Georgia Tech,Virginia Tech,24,34,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Kansas,Kansas State,24,35,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Kent State,USF,2,29,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Kentucky,Oklahoma,21,13,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Louisiana Tech,Louisiana-Monroe,24,0,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Louisville,Syracuse,34,26,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Mississippi State,LSU,0,31,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Missouri,Ole Miss,3,31,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Navy,UTSA,34,38,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Nebraska,Oregon,14,17,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Nevada,North Dakota State,17,31,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,New Mexico,Hawaii,21,10,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,North Carolina,Duke,24,20,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Northern Illinois,Wyoming,23,41,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Northwestern,Michigan State,24,21,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Notre Dame,BYU,24,28,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Ohio,Sacramento State,48,7,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Ohio State,Indiana,19,15,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Oklahoma State,Houston,32,35,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Penn State,Michigan,18,21,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Pittsburgh,Boston College,21,27,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Rutgers,Maryland,37,30,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,San Jose State,UTEP,24,11,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,TCU,Baylor,17,6,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Toledo,Eastern Michigan,34,14,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Troy,Louisiana,6,33,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Tulsa,Rice,38,17,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,UMass,Buffalo,18,25,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,UNLV,Air Force,31,41,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Utah,Colorado,27,24,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Virginia,SMU,13,23,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Wake Forest,California,41,7,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Washington State,Oregon State,30,48,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Western Michigan,Central Michigan,21,14,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
+2026-10-17,Wisconsin,UCLA,7,17,False,RETROSPECTIVE_OCT17_SCORE_AUDIT_NOT_ASOF_ARCHIVED,LOCAL_CFB_2026_Oct17_Expanded_Market_Audit.csv,RETROSPECTIVE_POSTGAME_RESULT
