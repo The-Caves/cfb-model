@@ -76,3 +76,9 @@ When accepted, the source produces both team-level report attestations and indiv
 ### Terminology safeguard: official availability is not necessarily an injury
 
 The SEC and Big Ten reports are **availability designations**, not medical injury diagnoses. New structured records are marked `kind=AVAILABILITY` and carry `signal_kind=AVAILABILITY`, with explicit `qb_availability_reports` for QB signals. The backwards-compatible `injury_reports` field still contains those designations, but must not be interpreted as proof of an injury diagnosis. A QB availability report does not name the replacement starter. Actual starters remain unknown without independent pregame verification.
+
+## Game-level QB review coverage and immutable archive
+
+The scheduled context collector now produces a two-team-per-upcoming-game `qb_review_queue.json` using `scripts/qb_review_queue.py`. It records independent starter confirmation status, official quarterback availability, an unreviewed news candidate list, and per-team feed fetch health (fetched, failed, not configured, unknown). These are source/research signals, not model predictions. Routine absence of information is explicitly UNKNOWN.
+
+`scripts/qb_review_archive.py` checks source timing, kickoff, two-team game coverage, and the original context's supported starter claims before any archive write. `scripts/context_archive.py` saves the queue alongside pregame snapshots in `context-state/state/qb_review_latest.json` and `qb_review/YYYY/MM/DD/<UTC>.json.gz`. Records for games that started during collection are dropped; contradictions block publication rather than silently imply good health or known QB identities. The summary includes aggregate QB review-coverage counts. CI checks validate the code; confirm a completed full scheduled/manual Actions refresh, not just CI, before claiming the archived output is live.

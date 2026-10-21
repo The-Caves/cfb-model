@@ -15,7 +15,8 @@ This public repository holds a reproducible 2026 college football data and model
 | Upcoming games, kickoff/rest, forecast and approximate travel | Implemented with provenance; incomplete coverage is explicit |
 | Kickoff-aware incremental context refresh, persistent deltas, freezes | Implemented; state in `context-state` branch |
 | Public official player availability | SEC, Big Ten, ACC and Big 12 implemented; latest live run succeeded with 0 misleading personnel-change alerts |
-| Official athletics QB news discovery pilot | Five public team football RSS feeds, read-only review candidates; no player/starter inference |\n| Game-specific QB starter evidence gate | Implemented for explicitly reviewed official team/coach statements; **no automated nationwide confirmations** |
+| Official athletics QB news discovery pilot | Five public team football RSS feeds, read-only review candidates; no player/starter inference |\n| Per-game QB source coverage queue | Implemented with timestamped game/team records, review priorities, fetch health, and audited context-state persistence; full live recheck pending |
+| Game-specific QB starter evidence gate | Implemented for explicitly reviewed official team/coach statements; **no automated nationwide confirmations** |
 | Confirmed starting QBs and replacement-value effects | Actual upcoming game coverage still **UNKNOWN** until audited source records exist; replacement weights unvalidated |
 | Timestamped opening/closing/live sportsbook markets | **Not implemented/validated** |
 | Historical as-of training features, opponent-adjusted calibrated model, SU/ATS/O-U walk-forward tests | **Not completed** |
@@ -67,3 +68,11 @@ The separate `data/manual/qb_starter_evidence_2026.csv` is intentionally header-
 ### Official-source QB news pilot
 
 `scripts/qb_official_news_watch.py` checks **only five explicitly verified public team athletics football RSS feeds** (NC State, Iowa State, James Madison, Navy, FIU) when those schools have upcoming games in the context slate. Headlines and excerpts mentioning both a QB term and a starter/depth/injury term are archived as `UNREVIEWED_NEWS_CANDIDATE` with source URL and publication/capture timestamps in the workflow's `qb_news_candidates.json` artifact. **No candidate is automatically promoted to a QB starter claim.** RSS feed outages are reported explicitly; this pilot does not cover other FBS schools or prove that any headline names a starter. Full reviewed starter provenance remains a separate manual evidence workflow.
+
+### Resuming Step 4 — source-coverage review queue
+
+The scheduled context workflow now runs `scripts/qb_review_queue.py` after official-news collection. Each upcoming team-game slot carries a source coverage state (`FETCHED`, `FETCH_FAILED`, `NOT_CONFIGURED` or unknown), a separately supported starter status, public QB availability signals, and unreviewed news candidate links. The generated `qb_review_queue.json` is included in Actions artifacts. It does **not** perform nationwide starter confirmation, and a fetched feed is not proof that a player is starting.
+
+`scripts/qb_review_archive.py` enforces that queue capture preceded the final context cutoff, compares game and team identity, and refuses unsupported confirmed-starter labels or promoted news. The context archiver writes `context-state/state/qb_review_latest.json`, dated compressed `qb_review/YYYY/MM/DD/` snapshots and aggregate queue coverage in `state/summary.json`. Games that crossed kickoff during collection are removed. Unit tests passed; **verify the newest context workflow and state files before claiming live archive success.**
+
+Remaining Step 4 limitations: only five official athletics news feeds are registered, starting-QB evidence still requires manual review, four-conference official player availability is incomplete for national FBS coverage, and QB replacement-point adjustments remain untrained. Continue to Step 5 market integration only with these uncertainty flags preserved; don't confuse source-pipeline completeness with betting-model validation.
