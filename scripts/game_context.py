@@ -156,7 +156,10 @@ def build_context(upcoming,completed,issued_at,geolocate,forecast,personnel_for_
                 "weather_status":weather_status,**wx,
                 "injury_report_status":injury["coverage_status"],
                 "verified_qb_starters":injury["confirmed_qb_starters"],
-                "injury_reports":injury["injuries"],"personnel_warnings":injury["warnings"],
+                "injury_reports":injury["injuries"],"availability_reports":injury["injuries"],
+                "qb_availability_reports":[x for x in injury["injuries"] if x["position"]=="QB"],
+                "qb_starters_confirmed_count":len(injury["confirmed_qb_starters"]),
+                "personnel_warnings":injury["warnings"],
                 "forecast_issue_utc":issued.isoformat().replace("+00:00","Z"),
                 "safe_for_betting":False,"betting_status":"PASS_UNVALIDATED"}
         for side in ("away","home"):

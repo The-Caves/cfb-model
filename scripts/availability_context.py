@@ -10,7 +10,7 @@ from scripts.game_context import parse_time
 POSITIONS={"QB","RB","WR","TE","OL","DL","EDGE","LB","CB","S","K","P","OTHER","TEAM"}
 STATUSES={"AVAILABLE","PROBABLE","QUESTIONABLE","DOUBTFUL","OUT","SUSPENDED",
           "LIMITED","GAME_TIME_DECISION","UNKNOWN","CONFIRMED","VERIFIED"}
-KINDS={"INJURY","QB_STARTER","TEAM_REPORT"}
+KINDS={"INJURY","AVAILABILITY","QB_STARTER","TEAM_REPORT"}
 FIELDS=["season","game_id","team","kind","player","position","status",
         "kickoff_utc","published_at_utc","captured_at_utc","source_url","reviewed_by"]
 
@@ -53,7 +53,7 @@ def evaluate(game,issue,records,attestation_age_hours=30):
         if kind=="QB_STARTER" and not (
            r["position"]=="QB" and r["status"]=="CONFIRMED"):
             issues.append("record "+str(idx)+": unconfirmed QB starter");continue
-        if kind=="INJURY" and r["status"] in ("CONFIRMED","VERIFIED"):
+        if kind in ("INJURY","AVAILABILITY") and r["status"] in ("CONFIRMED","VERIFIED"):
             issues.append("record "+str(idx)+": incompatible injury status");continue
         valid.append({**r,"_published":pub,"_captured":capture})
     coverage={};injuries=[];starters={}
@@ -63,11 +63,11 @@ def evaluate(game,issue,records,attestation_age_hours=30):
         coverage[team]="VERIFIED_REPORT_REVIEWED" if attest else "UNKNOWN"
         injury_by_player={}
         for r in valid:
-            if r["team"]==team and r["kind"]=="INJURY":
+            if r["team"]==team and r["kind"] in ("INJURY","AVAILABILITY"):
                 before=injury_by_player.get(r["player"])
                 if before is None or (r["_captured"],r["_published"])>(before["_captured"],before["_published"]):
                     injury_by_player[r["player"]]=r
-        injuries.extend({"team":team,"player":r["player"],"position":r["position"],
+        injuries.extend({"team":team,"player":r["player"],"position":r["position"],"signal_kind":r["kind"],
                          "status":r["status"],"published_at_utc":r["published_at_utc"],
                          "captured_at_utc":r["captured_at_utc"],"source_url":r["source_url"]}
                         for r in injury_by_player.values())

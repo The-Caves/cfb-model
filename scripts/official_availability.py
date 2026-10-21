@@ -154,13 +154,13 @@ def extract(conference,feed,games,aliases,captured):
                  "reviewed_by":"AUTOMATED_OFFICIAL_PUBLISHER_STRUCTURED"}
             records.append({**base,"kind":"TEAM_REPORT","player":"ALL","position":"TEAM","status":"VERIFIED"})
             for p in players:
-                records.append({**base,"kind":"INJURY","player":p["player"],
+                records.append({**base,"kind":"AVAILABILITY","player":p["player"],
                                 "position":p["position"],"status":p["status"]})
         report["publication_status"]="ACCEPTED_VERIFIED_OFFICIAL_REPORT"
         report["player_rows"]=sum(len(players) for _,players in parsed)
         report["published_utc"]=t
     meta["official_reports_accepted"]=sum(x.get("publication_status")=="ACCEPTED_VERIFIED_OFFICIAL_REPORT" for x in meta["report_cards"])
-    meta["player_records"]=sum(x["kind"]=="INJURY" for x in records)
+    meta["player_records"]=sum(x["kind"]=="AVAILABILITY" for x in records)
     meta["pending_cards"]=sum(x.get("publication_status")=="REPORT_PENDING" for x in meta["report_cards"])
     return records,meta
 

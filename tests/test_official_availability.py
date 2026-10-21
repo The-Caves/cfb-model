@@ -27,6 +27,7 @@ class PublishedOfficialTests(unittest.TestCase):
         self.assertEqual(len(rows),3)
         self.assertEqual(qa["official_reports_accepted"],1)
         self.assertEqual(sum(x["kind"]=="TEAM_REPORT" for x in rows),2)
+        self.assertEqual(sum(x["kind"]=="AVAILABILITY" for x in rows),1)
         self.assertFalse(any(x["kind"]=="QB_STARTER" for x in rows))
     def test_report_published_in_future_is_rejected(self):
         rows,qa=extract("SEC",{"a":card(clock="13:00:00")},[G],ALIASES,
