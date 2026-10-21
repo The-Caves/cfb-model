@@ -31,7 +31,8 @@ def normalize(payload, retrieved_at_utc, historical=False, allowed_books=None):
     """
     downloaded=utc(retrieved_at_utc)
     if historical:
-        if not isinstance(payload,dict) or not isinstance(payload.get("data"),list):
+        if (not isinstance(payload,dict) or not isinstance(payload.get("data"),list)
+            or not isinstance(payload.get("timestamp"),str) or not payload["timestamp"]):
             raise ValueError("Historical response requires timestamped data envelope")
         observed=utc(payload["timestamp"])
         events=payload["data"]
