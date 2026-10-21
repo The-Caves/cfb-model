@@ -130,8 +130,12 @@ def run(raw_dir,output,reports=None,horizon_days=10,now=None):
             "geocode_and_forecast_max_processing_seconds":160}
         report["source_report_rows"]=len(source_rows)
         report["status"]="SOURCE_FETCH_FAILURE" if qa["errors"] else (
-            "CONTEXT_RESEARCH_READY_WITH_UNVERIFIED_PERSONNEL" if context
-            else "NO_UPCOMING_GAMES")
+            "NO_UPCOMING_GAMES" if not context else
+            "CONTEXT_RESEARCH_PARTIAL_COVERAGE" if (
+                weather.skipped_due_budget>0 or
+                metrics["forecast_available"]+metrics["indoor"]<metrics["upcoming_games"] or
+                metrics["personnel_verified_both_teams"]<metrics["upcoming_games"]
+            ) else "CONTEXT_RESEARCH_READY")
         report["game_records"]=len(context)
         report["safe_for_betting"]=False
         (output/"upcoming_game_context_2026.json").write_text(json.dumps({

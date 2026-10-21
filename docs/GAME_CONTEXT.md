@@ -22,3 +22,21 @@ All output remains PASS_UNVALIDATED and safe_for_betting=false.
 Run: python scripts/ingest_game_context.py --raw-dir data/raw --availability-csv data/manual/availability_2026.csv --output data/context --horizon-days 10
 
 Sources: https://open-meteo.com/en/docs/geocoding-api ; https://open-meteo.com/en/docs .
+
+## First live run — October 21, 2026
+
+GitHub Actions run: https://github.com/The-Caves/cfb-model/actions/runs/39547645209
+(Commit `2fd099b`; date and forecast availability change on each scheduled run.)
+
+- 11/11 upcoming schedule dates fetched with no ESPN schedule errors
+- **109 upcoming game records** generated
+- Both teams' recent rest intervals: 109 games
+- Exact geocoded venue locations: 54 games
+- Weather forecast available: 38 games; four indoor games need no outdoor forecast
+- Both teams' geographic travel proxy available: 34 games
+- Verified player availability/starting quarterback coverage: **0 games** (CSV schema empty)
+- Geocoding requests: 76; forecast requests: 33
+- Geocoder SSL timeouts: 12 logged; provider time budget skipped 76 additional location/forecast lookups
+- Status: `CONTEXT_RESEARCH_PARTIAL_COVERAGE`; safe_for_betting: false
+
+These are explicitly **partial** coverage results. The collector is operating, but neither weather nor travel coverage nor verified national personnel status is complete. Next engineering priorities: reliable venue coordinates / geocoding cache and a timestamped official injury-QB source process. Do not enable personnel or weather-based predictive adjustments until their reliability and walk-forward value are validated.

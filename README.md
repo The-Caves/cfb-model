@@ -45,3 +45,6 @@ On each full intake, `scripts/combine_profiles.py` builds `data/enriched/team_pr
 - Optional reviewed, timestamped QB starter and injury reports are ingested with strict pregame cutoffs. The initial report CSV has **no records**; injury and QB-start statuses are UNKNOWN until genuine verified sources are added.
 - Context is published with the other workflow artifacts: data/context/upcoming_game_context_2026.csv, .json, and context_manifest.json.
 - See docs/GAME_CONTEXT.md for limitations. No adjustments to projection weights or betting selections are activated by Step 4.
+
+### Verified Step 4 first live run (2026-10-21)
+109 upcoming games parsed; 109 with both rest intervals, 38 with forecast, 34 with both approximate travel distances, and **zero** with independently reviewed two-team player availability. Provider SSL failures and time-budget skips are recorded in `context_manifest.json`. Step 4 source collection is operational but **partially covered**, and no prediction feature weights have been switched on.
