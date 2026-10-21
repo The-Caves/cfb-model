@@ -16,6 +16,12 @@ class DeltaTests(unittest.TestCase):
         new=snap(t,[record(wind=16)])
         changes,_,_=snapshot_changes(old,new,t)
         self.assertEqual([x["kind"] for x in changes],["SIGNIFICANT_NUMERIC_FORECAST_CHANGE"])
+    def test_weather_source_outage_is_one_coverage_event(self):
+        old=snap("2026-10-23T15:00:00Z",[dict(record(),gust_mph=20,temperature_f=70,precip_probability_pct=30)])
+        new=snap("2026-10-23T16:00:00Z",[dict(record(),weather_status="UNAVAILABLE_FORECAST",wind_mph=None,gust_mph=None,temperature_f=None,precip_probability_pct=None)])
+        changes,_,_=snapshot_changes(old,new,"2026-10-23T16:00:00Z")
+        self.assertEqual(len(changes),1)
+        self.assertEqual(changes[0]["kind"],"WEATHER_COVERAGE_CHANGED")
     def test_missing_report_not_player_recovered(self):
         old=snap("2026-10-23T15:00:00Z",[record(injuries=[{"team":"H","player":"One","status":"OUT","source_url":"https://example.com"}])])
         new=snap("2026-10-23T16:00:00Z",[record()])
