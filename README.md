@@ -1,25 +1,27 @@
-# CFB Model (2026)
+# 2026 College Football Prediction Model — Development
 
-## Deployment
-Experimental score-only CFB model and scheduled ingestion, maintained through GitHub commits.
+**Status:** experimental research; no validated betting recommendations. All unvalidated predictions are explicitly `PASS_UNVALIDATED`.
 
-- **Continuous integration:** tests run on pushes and pull requests.
-- **Data collection:** ESPN public scoreboard fetch runs on manual dispatch and three times daily (10:17, 16:17, 23:17 UTC).
-- **Audit trail:** raw dated ESPN responses, completed game CSV and manifest are uploaded as 30-day GitHub Actions artifacts.
-- **No secrets required** for public ESPN scoreboard endpoint.
-- **Data completeness is not guaranteed:** the provider may omit games or change schemas; ingest fails visibly if downloads error or produce zero completed games.
-- **Betting predictions are disabled:** score-only baseline has not been validated with prospective market odds, comprehensive QB/injury data, opponent-adjusted play-by-play EPA or walk-forward testing. Outputs carry PASS_UNVALIDATED.
+## Deployed and tested
+- ESPN 2026 completed-game scoreboard intake with dated raw snapshots and QA manifest.
+- Timestamp-cutoff 2026 score-based team profiles, per-team record, scoring, last three games and opponents.
+- Experimental ridge score projection engine; no verified sportsbook integration.
+- CI on pushes and pull requests. Scheduled 3-times-daily ingestion plus manual dispatch.
+- Each intake run publishes `data/games_2026.csv`, `data/team_profiles_2026.csv`, source JSON and diagnostics as a 30-day GitHub Actions artifact.
 
 ## Commands
 ```sh
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 python scripts/ingest_espn.py --start 2026-08-01 --output data
-python scripts/predict.py --games data/games_2026.csv --away "Ohio State Buckeyes" --home "Michigan Wolverines" --asof 2026-10-20
+python scripts/build_profiles.py --games data/games_2026.csv --output data
 ```
 
-## Operations
-Open [Actions](https://github.com/The-Caves/cfb-model/actions/workflows/cfb-data-intake.yml) and select **Run workflow** to collect the first dataset. Inspect the `cfb-2026-data-<run_id>` artifact and `manifest.json`; only `SUCCESS` means all requested daily calls returned without errors. GitHub Actions scheduled jobs can be delayed or disabled by repository settings.
+## Limitations and next steps
+- Score data alone cannot prove opponent-adjusted EPA, quarterback response to pressure, special teams or injury availability. Those fields are explicitly empty.
+- 2025 historical training seasons and complete v0.9 archived research modules are not deployed in this repository yet.
+- The v0.9 local archive contains retrospective 2026 score data for 388 games and 138 score-derived profiles but flags incomplete independent score verification, ESPN/sportsdataverse downloads and lack of prospective odds/injury coverage.
+- A game ledger fetched today is not evidence that *pregame* lines or injury status were historically observable. Walk-forward backtests must strictly cut off at each historical kickoff.
+- Pending: archived prior seasons with provenance, advanced 2026 play-by-play EPA, drive statistics, injury verification, weather/rest/travel, timestamped sportsbook odds and out-of-sample calibrated evaluations.
 
-## Next work
-The existing v0.9 research ZIP contains richer intake components and retrospective data but has **not** yet been migrated to this repository. The deployed model is an initial research baseline. Prioritize timestamped advanced play-by-play, verified injuries and odds, and strictly prospective evaluation before releasing any picks.
+Workflow: [CFB Data Intake](https://github.com/The-Caves/cfb-model/actions/workflows/cfb-data-intake.yml)
