@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 22
     env:
-      GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -30,7 +30,7 @@ jobs:
       - name: Determine refresh frequency from time to kickoff
         id: plan
         env:
-          FORCE_RUN: \${{ github.event_name != 'schedule' }}
+          FORCE_RUN: ${{ github.event_name != 'schedule' }}
         run: |
           if [ "$FORCE_RUN" = "true" ]; then
             python -m scripts.context_refresh_plan --force
@@ -69,7 +69,7 @@ jobs:
         if: always() && steps.plan.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: cfb-context-delta-\${{ github.run_id }}
+          name: cfb-context-delta-${{ github.run_id }}
           path: |
             data/context_refresh_plan.json
             data/context_refresh/context_manifest.json
