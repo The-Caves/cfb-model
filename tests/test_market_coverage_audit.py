@@ -48,7 +48,9 @@ class CoverageAuditTests(unittest.TestCase):
     def test_retroactive_espn_context_does_not_pass(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/"aliases.csv";registry(p)
-            historical={"timestamp":"2026-10-20T12:00:00Z","data":provider()}
+            old_quotes=provider()
+            old_quotes[0]["bookmakers"][0]["last_update"]="2026-10-20T11:50:00Z"
+            historical={"timestamp":"2026-10-20T12:00:00Z","data":old_quotes}
             report=audit(historical,{"asof_utc":"2026-10-21T16:00:00Z","games":[GAME]},
                          p,"2026-10-21T17:00:00Z",historical=True)
             self.assertEqual(report["provider_event_coverage"]["matched"],0)
