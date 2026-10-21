@@ -265,13 +265,19 @@ def run(games_path,advanced_path,manifest_path,output,start_date="2026-09-26"):
     features=build_weekly_games(games,advanced)
     folds,details=validate(features,start_date=start_date)
     out=Path(output);out.mkdir(parents=True,exist_ok=True)
-    with (out/"weekly_features.csv").open("w",newline="") as stream:
-        fields=["game_id","date","kickoff_utc","home","away","home_score",
-                "away_score","home_games_prior","away_games_prior",
-                "advanced_row_available","feature_evidence_status",
-                "betting_status"]+FEATURES
-        writer=csv.DictWriter(stream,fieldnames=fields);writer.writeheader()
-        writer.writerows(features)
+    # Export pregame inputs and postgame outcomes as SEPARATE artifacts.
+    # Internal training receives score labels but the feature CSV never does.
+    base=["game_id","date","kickoff_utc","home","away",
+          "home_games_prior","away_games_prior",
+          "advanced_row_available","feature_evidence_status","betting_status"]
+    with (out/"weekly_pregame_features.csv").open("w",newline="") as stream:
+        writer=csv.DictWriter(stream,fieldnames=base+FEATURES,extrasaction="ignore")
+        writer.writeheader();writer.writerows(features)
+    with (out/"weekly_postgame_labels.csv").open("w",newline="") as stream:
+        writer=csv.DictWriter(stream,fieldnames=[
+            "game_id","date","kickoff_utc","home_score","away_score"])
+        writer.writeheader()
+        writer.writerows({k:r[k] for k in writer.fieldnames} for r in features)
     summary={"status":"RETROSPECTIVE_RESEARCH_ONLY","season":2026,
         "model_version":"v0.3-candidate","betting_status":"PASS_UNVALIDATED",
         "safe_for_betting":False,
