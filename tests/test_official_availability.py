@@ -1,7 +1,7 @@
 import unittest,datetime as dt,tempfile,csv
 from pathlib import Path
 from scripts.official_availability import (eligible_report,parse_player,extract,
-  fetch_and_match,published_timestamp)
+  fetch_and_match,published_timestamp,CONFERENCES,SOURCE_PAGE)
 G={"game_id":"99","date_et":"2026-10-24","home":"Alabama Crimson Tide",
    "away":"Auburn Tigers","kickoff_utc":"2026-10-24T20:00:00Z"}
 ALIASES={"Alabama":"Alabama Crimson Tide","Auburn":"Auburn Tigers"}
@@ -17,6 +17,9 @@ class PublishedOfficialTests(unittest.TestCase):
         p=parse_player({"name":"QB #12 Sample Quarterback","status":"Out"})
         self.assertEqual((p["position"],p["status"]),("QB","OUT"))
         self.assertEqual(p["player"],"Sample Quarterback")
+    def test_major_conference_official_sources_registered(self):
+        self.assertEqual(set(CONFERENCES),{"SEC","B10","ACC","B12"})
+        self.assertEqual(set(SOURCE_PAGE),set(CONFERENCES))
     def test_name_without_known_position_is_not_truncated(self):
         p=parse_player({"name":"AK Dear","status":"Questionable"})
         self.assertEqual(p["player"],"AK Dear")
