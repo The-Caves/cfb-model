@@ -46,6 +46,10 @@ jobs:
         run: python scripts/build_profiles.py --games data/games_2026.csv --output data --registry data/archive/2026_team_aliases.csv
       - name: Audit archived v0.9 scores against current ESPN finals
         run: python scripts/reconcile_scores.py --archive data/archive/2026_v09_scores_unverified.csv --live data/games_2026.csv --aliases data/archive/2026_team_aliases.csv --output data/reconciliation
+      - name: Ingest provider 2026 PBP and advanced-drive releases (research only)
+        id: advanced
+        continue-on-error: true
+        run: python scripts/ingest_advanced.py --games data/games_2026.csv --registry data/archive/2026_team_aliases.csv --output data/advanced
       - name: Archive results and raw snapshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -54,6 +58,7 @@ jobs:
           path: |
             data/manifest.json
             data/profile_manifest.json
+            data/advanced/
             data/reconciliation/
             data/team_profiles_2026.csv
             data/games_2026.csv
