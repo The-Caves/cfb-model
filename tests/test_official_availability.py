@@ -17,6 +17,10 @@ class PublishedOfficialTests(unittest.TestCase):
         p=parse_player({"name":"QB #12 Sample Quarterback","status":"Out"})
         self.assertEqual((p["position"],p["status"]),("QB","OUT"))
         self.assertEqual(p["player"],"Sample Quarterback")
+    def test_name_without_known_position_is_not_truncated(self):
+        p=parse_player({"name":"AK Dear","status":"Questionable"})
+        self.assertEqual(p["player"],"AK Dear")
+        self.assertEqual(p["position"],"OTHER")
     def test_pending_does_not_attest(self):
         rows,qa=extract("SEC",{"a":card(status="Report Pending")},[G],ALIASES,
                "2026-10-24T17:00:00Z")
