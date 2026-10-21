@@ -87,6 +87,7 @@ def game_stats(g,team,adv):
           "drive_yards":rate(p,"drive_yards_sum","drives"),
           "pass_rate":rate(p,"pass_plays","scrimmage_plays")}
     return {"team":team,"opponent":opp,"kickoff":timestamp(g["kickoff_utc"]),
+            "game_date":g["date"],
             "game_id":g["game_id"],"points_for":pf,"points_against":pa,
             "margin":max(-28,min(28,pf-pa)),"win":int(pf>pa),
             **advanced}
@@ -98,11 +99,14 @@ def weighted(history,field,min_count=1):
     if len(terms)<min_count:return None
     return sum(a*w for a,w in terms)/sum(w for _,w in terms)
 
-def summarize(history,now):
-    prior=[r for r in history if r["kickoff"].date()<now.date()]
+def summarize(history,now,cutoff_date):
+    # Scoreboard game_date is the Eastern football calendar day; a Saturday
+    # 10 PM ET kickoff may be Sunday UTC. Do not let two Saturday games leak.
+    prior=[r for r in history if dt.date.fromisoformat(r["game_date"])<cutoff_date]
     if len(prior)!=len(history):
-        raise ValueError("Current-day or future result entered weekly features")
-    rest=min(21,max(0,(now-max(r["kickoff"] for r in prior)).days)) if prior else None
+        raise ValueError("Same-calendar-date or future result entered weekly features")
+    rest=(min(21,max(0,(now-max(r["kickoff"] for r in prior)).total_seconds()/86400))
+          if prior else None)
     ret={"games":len(prior),"rest":rest}
     for k in ("points_for","points_against","margin","win","epa_off",
               "epa_def","epa_pass","epa_rush","success","explosive_pass",
@@ -148,8 +152,10 @@ def build_weekly_games(games,advanced):
         # All same-date matchups use yesterday's history, regardless of kickoff.
         pending=[]
         for g in group:
-            home=summarize(histories[g["home"]],kickoff)
-            away=summarize(histories[g["away"]],kickoff)
+            actual_kickoff=timestamp(g["kickoff_utc"])
+            cutoff_date=dt.date.fromisoformat(g["date"])
+            home=summarize(histories[g["home"]],actual_kickoff,cutoff_date)
+            away=summarize(histories[g["away"]],actual_kickoff,cutoff_date)
             features=matchup(g,home,away)
             row={"game_id":g["game_id"],"date":g["date"],
                  "kickoff_utc":g["kickoff_utc"],"home":g["home"],"away":g["away"],
@@ -162,7 +168,8 @@ def build_weekly_games(games,advanced):
             pending.append(g)
         # Opponent adjustment for a past game's EPA uses each opponent's
         # defense/offense observed BEFORE that game; no current-game stats.
-        pregame={team:summarize(histories[team],kickoff)
+        pregame={team:summarize(histories[team],timestamp(g["kickoff_utc"]),
+                  dt.date.fromisoformat(g["date"]))
                  for g in pending for team in (g["home"],g["away"])}
         for g in pending:
             for team,opp in ((g["home"],g["away"]),(g["away"],g["home"])):
@@ -177,7 +184,7 @@ def build_weekly_games(games,advanced):
 
 def group_by_date(games):
     groups=defaultdict(list)
-    for g in games:groups[timestamp(g["kickoff_utc"]).date()].append(g)
+    for g in games:groups[dt.date.fromisoformat(g["date"])].append(g)
     for day in sorted(groups):yield timestamp(day.isoformat()+"T00:00:00Z"),groups[day]
 
 def matrix(rows,fields,means=None,stds=None):
