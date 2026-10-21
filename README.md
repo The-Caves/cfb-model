@@ -48,3 +48,7 @@ On each full intake, `scripts/combine_profiles.py` builds `data/enriched/team_pr
 
 ### Verified Step 4 first live run (2026-10-21)
 109 upcoming games parsed; 109 with both rest intervals, 38 with forecast, 34 with both approximate travel distances, and **zero** with independently reviewed two-team player availability. Provider SSL failures and time-budget skips are recorded in `context_manifest.json`. Step 4 source collection is operational but **partially covered**, and no prediction feature weights have been switched on.
+
+## Daily delta refresh (Step 4)
+
+The separate [CFB Pregame Context Delta](https://github.com/The-Caves/cfb-model/actions/workflows/cfb-context-refresh.yml) workflow schedules three baseline pregame context refreshes daily, then increases to every three hours within 48 hours of kickoff and hourly in the final 12 hours. Timestamped context, material deltas, official SEC/Big Ten availability source-page hashes and kickoff-frozen snapshots are preserved on the `context-state` branch. It is **not yet a verified automatic player-injury feed**: missing sourced QB and injury reports remain UNKNOWN. Predictions are still PASS_UNVALIDATED. More: `docs/CONTEXT_DELTA.md`.

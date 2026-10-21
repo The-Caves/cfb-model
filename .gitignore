@@ -11,3 +11,8 @@ data/reconciliation_snapshot/
 data/advanced/
 data/enriched/
 data/context/
+data/context_refresh/
+data/context_delta/
+data/context_state/
+data/current_scoreboard/
+data/context_refresh_plan.json

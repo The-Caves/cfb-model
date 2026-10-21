@@ -51,14 +51,26 @@ def load_upcoming(issue,days,out):
                                   "errors":errors}
 
 class WeatherProvider:
-    def __init__(self):
+    def __init__(self,geo_cache=None):
         self.coords={};self.forecasts={};self.errors=[];self.forecast_requests=0
+        self.persisted_coords={}
+        if geo_cache and Path(geo_cache).is_file():
+            try:
+                self.persisted_coords=json.loads(Path(geo_cache).read_text())
+                if not isinstance(self.persisted_coords,dict):raise ValueError("Invalid geo cache")
+            except (ValueError,TypeError,json.JSONDecodeError):
+                self.persisted_coords={}
         self.geocode_requests=0
         self.deadline_monotonic=time.monotonic()+160
         self.skipped_due_budget=0
     def geocode(self,city,state,country):
         key=(city,state,country)
         if key in self.coords:return self.coords[key]
+        cache_key=json.dumps(key,separators=(",",":"))
+        cached=self.persisted_coords.get(cache_key)
+        if isinstance(cached,dict) and cached.get("precision")=="CITY_CENTROID_NOT_STADIUM_COORDINATE":
+            self.coords[key]=cached
+            return cached
         if time.monotonic()>=self.deadline_monotonic:
             self.skipped_due_budget+=1
             self.coords[key]=None
@@ -76,6 +88,7 @@ class WeatherProvider:
             match=None;self.errors.append({"location":str(key),"provider":"geocoding",
                                            "error":str(exc)[:160]})
         self.coords[key]=match
+        if match is not None:self.persisted_coords[cache_key]=match
         return match
     def forecast(self,geo,kickoff):
         ident=(geo["latitude"],geo["longitude"])
@@ -103,7 +116,7 @@ class WeatherProvider:
         return {**w,"forecast_retrieved_utc":captured,"weather_source":"OPEN_METEO_LIVE_FORECAST",
                 "weather_location_precision":"CITY_CENTROID"} if w else None
 
-def run(raw_dir,output,reports=None,horizon_days=10,now=None):
+def run(raw_dir,output,reports=None,horizon_days=10,now=None,geo_cache=None):
     output=Path(output);output.mkdir(parents=True,exist_ok=True)
     issued=parse_time(now) if now else dt.datetime.now(UTC)
     report={"generated_at_utc":issued.isoformat(),"season":2026,
@@ -118,7 +131,7 @@ def run(raw_dir,output,reports=None,horizon_days=10,now=None):
         upcoming,qa=load_upcoming(issued,horizon_days,output)
         report["schedule_fetch"]=qa
         source_rows=load_reports(reports)
-        weather=WeatherProvider()
+        weather=WeatherProvider(geo_cache)
         context,metrics=build_context(upcoming,prev,issued.isoformat(),
             weather.geocode,weather.forecast,
             lambda game,when:evaluate(game,when,source_rows))
@@ -129,6 +142,8 @@ def run(raw_dir,output,reports=None,horizon_days=10,now=None):
             "skipped_due_time_budget":weather.skipped_due_budget,
             "geocode_and_forecast_max_processing_seconds":160}
         report["source_report_rows"]=len(source_rows)
+        (output/"geo_cache.json").write_text(json.dumps(weather.persisted_coords,indent=2)+"\n")
+        report["weather_provider"]["persistent_geocoded_cities"]=len(weather.persisted_coords)
         report["status"]="SOURCE_FETCH_FAILURE" if qa["errors"] else (
             "NO_UPCOMING_GAMES" if not context else
             "CONTEXT_RESEARCH_PARTIAL_COVERAGE" if (
@@ -167,7 +182,9 @@ if __name__=="__main__":
     p.add_argument("--output",default="data/context")
     p.add_argument("--availability-csv",default="data/manual/availability_2026.csv")
     p.add_argument("--horizon-days",type=int,default=10)
+    p.add_argument("--geo-cache",default=None)
     args=p.parse_args()
     if not 1<=args.horizon_days<=14:raise SystemExit("horizon days must be 1..14")
-    result=run(args.raw_dir,args.output,args.availability_csv,args.horizon_days)
+    result=run(args.raw_dir,args.output,args.availability_csv,args.horizon_days,
+               geo_cache=args.geo_cache)
     raise SystemExit(2 if result["status"] in ("SOURCE_FETCH_FAILURE","CONTEXT_PIPELINE_FAILED") else 0)

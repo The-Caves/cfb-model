@@ -1,0 +1,81 @@
+name: CFB Pregame Context Delta
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+permissions:
+  contents: write
+concurrency:
+  group: cfb-context-state
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: github.event_name != 'push' || contains(github.event.head_commit.message, '[run-context]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    env:
+      GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install research dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Validate code before reading or changing state
+        run: python -m unittest discover -s tests -v
+      - name: Determine refresh frequency from time to kickoff
+        id: plan
+        env:
+          FORCE_RUN: \${{ github.event_name != 'schedule' }}
+        run: |
+          if [ "$FORCE_RUN" = "true" ]; then
+            python -m scripts.context_refresh_plan --force
+          else
+            python -m scripts.context_refresh_plan
+          fi
+      - name: Restore most recent timestamped snapshot and venue cache
+        if: steps.plan.outputs.run == 'true'
+        run: python -m scripts.context_archive restore --state-dir data/context_state
+      - name: Refresh observed completed 2026 games for rest/home-venue support
+        if: steps.plan.outputs.run == 'true'
+        run: python scripts/ingest_espn.py --start 2026-08-01 --output data/current_scoreboard
+      - name: Fetch next slate weather, rest, approximate travel and validated report CSV
+        if: steps.plan.outputs.run == 'true'
+        run: |
+          python -m scripts.ingest_game_context \
+            --raw-dir data/current_scoreboard/raw \
+            --availability-csv data/manual/availability_2026.csv \
+            --geo-cache data/context_state/geocache.json \
+            --output data/context_refresh \
+            --horizon-days 10
+      - name: Check SEC and Big Ten official availability report publications
+        if: steps.plan.outputs.run == 'true'
+        run: python -m scripts.personnel_source_watch --previous data/context_state/previous_sources.json --output data/context_refresh/personnel_source_watch.json
+      - name: Persist new snapshot, material deltas and kickoff freezes
+        if: steps.plan.outputs.run == 'true'
+        run: |
+          python -m scripts.context_archive save \
+            --state-dir data/context_state \
+            --context data/context_refresh/upcoming_game_context_2026.json \
+            --geo-cache data/context_refresh/geo_cache.json \
+            --manifest data/context_refresh/context_manifest.json \
+            --source-watch data/context_refresh/personnel_source_watch.json \
+            --output data/context_delta
+      - name: Archive compact refreshed context and deltas
+        if: always() && steps.plan.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-context-delta-\${{ github.run_id }}
+          path: |
+            data/context_refresh_plan.json
+            data/context_refresh/context_manifest.json
+            data/context_refresh/upcoming_game_context_2026.json
+            data/context_refresh/upcoming_game_context_2026.csv
+            data/context_refresh/personnel_source_watch.json
+            data/context_delta/
+          retention-days: 30
+          if-no-files-found: warn
