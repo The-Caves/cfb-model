@@ -50,6 +50,10 @@ def summarize_market(earliest,latest,market,cutoff,max_age):
         "status":"RECENT_OBSERVED_NOT_EXECUTABLE" if fresh else "STALE_OR_UNTIMED_PRICE",
         "market":market,"first_observed_at_utc":earliest["observed_at_utc"],
         "latest_observed_at_utc":latest["observed_at_utc"],
+        "first_observed_source_sha256":earliest["sides"][SIDES[market][0]]["source_snapshot_sha256"],
+        "latest_observed_source_sha256":latest["sides"][SIDES[market][0]]["source_snapshot_sha256"],
+        "first_retrieved_at_utc":earliest["sides"][SIDES[market][0]]["retrieved_at_utc"],
+        "latest_retrieved_at_utc":latest["sides"][SIDES[market][0]]["retrieved_at_utc"],
         "quote_age_minutes":age,"source_update_age_minutes":publication_age,
         "first_observed_reference_line":initial_line,
         "latest_reference_line":latest_line,
@@ -85,8 +89,9 @@ def market_board(vault_path,espn_context,aliases,decision_utc,bookmaker="fanduel
     try:
         db.row_factory=__import__("sqlite3").Row
         records=[dict(q) for q in db.execute(
-            "SELECT q.* FROM quotes q WHERE q.bookmaker=? "
-            "ORDER BY q.observed_at_utc",(bookmaker,))]
+            "SELECT q.*, s.source_snapshot_sha256 FROM quotes q "
+            "JOIN snapshots s ON q.snapshot_id=s.snapshot_id "
+            "WHERE q.bookmaker=? ORDER BY q.observed_at_utc",(bookmaker,))]
     finally:db.close()
 
     qa=defaultdict(int)
