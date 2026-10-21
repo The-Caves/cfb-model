@@ -826,5 +826,176 @@
     "admin1": "North Carolina",
     "country_code": "US",
     "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Memphis\",\"TN\",\"USA\"]": {
+    "latitude": 35.14953,
+    "longitude": -90.04898,
+    "geonames_id": 4641239,
+    "name": "Memphis",
+    "admin1": "Tennessee",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Raleigh\",\"NC\",\"USA\"]": {
+    "latitude": 35.7721,
+    "longitude": -78.63861,
+    "geonames_id": 4487042,
+    "name": "Raleigh",
+    "admin1": "North Carolina",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Akron\",\"OH\",\"USA\"]": {
+    "latitude": 41.08144,
+    "longitude": -81.51901,
+    "geonames_id": 5145476,
+    "name": "Akron",
+    "admin1": "Ohio",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Knoxville\",\"TN\",\"USA\"]": {
+    "latitude": 35.96064,
+    "longitude": -83.92074,
+    "geonames_id": 4634946,
+    "name": "Knoxville",
+    "admin1": "Tennessee",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Dekalb\",\"IL\",\"USA\"]": {
+    "latitude": 41.92947,
+    "longitude": -88.75036,
+    "geonames_id": 4889553,
+    "name": "DeKalb",
+    "admin1": "Illinois",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Troy\",\"AL\",\"USA\"]": {
+    "latitude": 31.80877,
+    "longitude": -85.96995,
+    "geonames_id": 4094163,
+    "name": "Troy",
+    "admin1": "Alabama",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"San Diego\",\"CA\",\"USA\"]": {
+    "latitude": 32.71571,
+    "longitude": -117.16472,
+    "geonames_id": 5391811,
+    "name": "San Diego",
+    "admin1": "California",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Syracuse\",\"NY\",\"USA\"]": {
+    "latitude": 43.04812,
+    "longitude": -76.14742,
+    "geonames_id": 5140405,
+    "name": "Syracuse",
+    "admin1": "New York",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"University Park\",\"PA\",\"USA\"]": {
+    "latitude": 40.80201,
+    "longitude": -77.85639,
+    "geonames_id": 5216774,
+    "name": "University Park",
+    "admin1": "Pennsylvania",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"West Lafayette\",\"IN\",\"USA\"]": {
+    "latitude": 40.42587,
+    "longitude": -86.90807,
+    "geonames_id": 4928096,
+    "name": "West Lafayette",
+    "admin1": "Indiana",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"College Park\",\"MD\",\"USA\"]": {
+    "latitude": 38.98067,
+    "longitude": -76.93692,
+    "geonames_id": 4351977,
+    "name": "College Park",
+    "admin1": "Maryland",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Foxborough\",\"MA\",\"USA\"]": {
+    "latitude": 42.06538,
+    "longitude": -71.24783,
+    "geonames_id": 4937222,
+    "name": "Foxborough",
+    "admin1": "Massachusetts",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Notre Dame\",\"IN\",\"USA\"]": {
+    "latitude": 41.70019,
+    "longitude": -86.23793,
+    "geonames_id": 8469294,
+    "name": "Notre Dame",
+    "admin1": "Indiana",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Tampa\",\"FL\",\"USA\"]": {
+    "latitude": 27.94752,
+    "longitude": -82.45843,
+    "geonames_id": 4174757,
+    "name": "Tampa",
+    "admin1": "Florida",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Birmingham\",\"AL\",\"USA\"]": {
+    "latitude": 33.52066,
+    "longitude": -86.80249,
+    "geonames_id": 4049979,
+    "name": "Birmingham",
+    "admin1": "Alabama",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Huntington\",\"WV\",\"USA\"]": {
+    "latitude": 38.41925,
+    "longitude": -82.44515,
+    "geonames_id": 4809537,
+    "name": "Huntington",
+    "admin1": "West Virginia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Conway\",\"SC\",\"USA\"]": {
+    "latitude": 33.836,
+    "longitude": -79.04781,
+    "geonames_id": 4575461,
+    "name": "Conway",
+    "admin1": "South Carolina",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Philadelphia\",\"PA\",\"USA\"]": {
+    "latitude": 39.95238,
+    "longitude": -75.16362,
+    "geonames_id": 4560349,
+    "name": "Philadelphia",
+    "admin1": "Pennsylvania",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Mobile\",\"AL\",\"USA\"]": {
+    "latitude": 30.69436,
+    "longitude": -88.04305,
+    "geonames_id": 4076598,
+    "name": "Mobile",
+    "admin1": "Alabama",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
   }
 }
