@@ -120,12 +120,15 @@ class MarketFeatureTests(unittest.TestCase):
         market=self.board()["events"][0]["markets"]["SPREAD"]
         self.assertEqual(market["status"],"STALE_OR_UNTIMED_PRICE")
         self.assertGreater(market["source_update_age_minutes"],180)
-    def test_conflicting_same_timestamp_quotes_do_not_create_movement(self):
+    def test_conflicting_same_timestamp_spread_quarantined_independently(self):
         self.add(spread=-4.5)
         self.add(spread=-7.5)
         r=self.board()
-        self.assertEqual(r["events"],[])
-        self.assertEqual(r["qa"]["exclusions"]["contradictory_same_time_prices"],3)
+        self.assertEqual(r["qa"]["matched_events"],1)
+        self.assertEqual(r["events"][0]["missing_markets"],["SPREAD"])
+        self.assertNotIn("SPREAD",r["events"][0]["markets"])
+        self.assertFalse(r["events"][0]["all_three_markets_recent"])
+        self.assertEqual(r["qa"]["exclusions"]["contradictory_same_time_prices"],1)
     def test_implied_probability(self):
         self.assertAlmostEqual(raw_implied(-110),.52380952,places=7)
         self.assertAlmostEqual(raw_implied(150),.4,places=7)
