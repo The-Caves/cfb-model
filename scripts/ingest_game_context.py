@@ -35,7 +35,7 @@ def load_upcoming(issue,days,out):
         url=ESPN+"?"+urllib.parse.urlencode({"dates":day.strftime("%Y%m%d"),
                                              "groups":80,"limit":500})
         try:
-            payload=request_json(url)
+            payload=request_json(url,timeout=10)
             if not isinstance(payload.get("events"),list):raise ValueError("Missing events")
             fetched+=1
             (raw/(str(day)+".json")).write_text(json.dumps({
@@ -54,9 +54,15 @@ class WeatherProvider:
     def __init__(self):
         self.coords={};self.forecasts={};self.errors=[];self.forecast_requests=0
         self.geocode_requests=0
+        self.deadline_monotonic=time.monotonic()+160
+        self.skipped_due_budget=0
     def geocode(self,city,state,country):
         key=(city,state,country)
         if key in self.coords:return self.coords[key]
+        if time.monotonic()>=self.deadline_monotonic:
+            self.skipped_due_budget+=1
+            self.coords[key]=None
+            return None
         self.geocode_requests+=1
         code="US" if country in ("USA","US") else "CA" if country in ("CAN","Canada") else None
         if not code or not city or not state:
@@ -64,7 +70,7 @@ class WeatherProvider:
         url=GEO+"?"+urllib.parse.urlencode({"name":city,
                     "count":100,"language":"en","format":"json","countryCode":code})
         try:
-            response=request_json(url)
+            response=request_json(url,timeout=8)
             match=geocode_match(response.get("results") or [],city,state,country)
         except Exception as exc:
             match=None;self.errors.append({"location":str(key),"provider":"geocoding",
@@ -74,13 +80,17 @@ class WeatherProvider:
     def forecast(self,geo,kickoff):
         ident=(geo["latitude"],geo["longitude"])
         if ident not in self.forecasts:
+            if time.monotonic()>=self.deadline_monotonic:
+                self.skipped_due_budget+=1
+                self.forecasts[ident]=None
+                return None
             url=WX+"?"+urllib.parse.urlencode({
                 "latitude":geo["latitude"],"longitude":geo["longitude"],
                 "hourly":HOURLY,"temperature_unit":"fahrenheit","wind_speed_unit":"mph",
                 "precipitation_unit":"mm","timezone":"UTC","forecast_days":16})
             self.forecast_requests+=1
             try:
-                payload=request_json(url,timeout=35)
+                payload=request_json(url,timeout=10)
                 self.forecasts[ident]=(payload,dt.datetime.now(UTC).isoformat())
             except Exception as exc:
                 self.errors.append({"location":str(ident),"provider":"forecast",
@@ -115,7 +125,9 @@ def run(raw_dir,output,reports=None,horizon_days=10,now=None):
         report["coverage"]=metrics
         report["weather_provider"]={"geocode_requests":weather.geocode_requests,
             "forecast_requests":weather.forecast_requests,
-            "errors":weather.errors}
+            "errors":weather.errors,
+            "skipped_due_time_budget":weather.skipped_due_budget,
+            "geocode_and_forecast_max_processing_seconds":160}
         report["source_report_rows"]=len(source_rows)
         report["status"]="SOURCE_FETCH_FAILURE" if qa["errors"] else (
             "CONTEXT_RESEARCH_READY_WITH_UNVERIFIED_PERSONNEL" if context
