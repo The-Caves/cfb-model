@@ -2,7 +2,7 @@ import csv
 import tempfile
 import unittest
 from pathlib import Path
-from scripts.market_event_crosswalk import load_registry,crosswalk
+from scripts.market_event_crosswalk import load_registry,load_market_registry,crosswalk
 
 AT="2026-10-21T16:00:00Z"
 OBS="2026-10-21T17:00:00Z"
@@ -77,6 +77,29 @@ class CrosswalkTests(unittest.TestCase):
         self.assertEqual(aliases["ohiostate"],"Ohio State Buckeyes")
         self.assertEqual(aliases["pennstate"],"Penn State Nittany Lions")
         self.assertNotIn("ohiostate",conflicts)
+    def test_real_source_aliases_from_public_october_sample(self):
+        aliases,conflicts=load_market_registry(
+            Path("data/archive/2026_team_aliases.csv"),
+            Path("data/archive/2026_market_provider_aliases.csv"))
+        for source,target in [
+            ("Sam Houston State Bearkats","Sam Houston Bearkats"),
+            ("Appalachian State Mountaineers","App State Mountaineers"),
+            ("UMass Minutemen","Massachusetts Minutemen")
+        ]:
+            self.assertEqual(aliases[source.lower().replace(" ","")],target)
+        self.assertNotIn("umassminutemen",conflicts)
+        self.assertNotIn("unknownuniversity",aliases)
+
+    def test_bad_or_collision_market_aliases_are_quarantined(self):
+        with tempfile.TemporaryDirectory() as t:
+            p=Path(t)/"sportsbook.csv"
+            p.write_text("provider_team_name,espn_display_name\\nOhio State Buckeyes,Penn State Nittany Lions\\n")
+            with self.assertRaises(ValueError):
+                load_market_registry("data/archive/2026_team_aliases.csv",p)
+            p.write_text("provider_team_name,espn_display_name\\nFake Name,Imaginary School\\n")
+            with self.assertRaises(ValueError):
+                load_market_registry("data/archive/2026_team_aliases.csv",p)
+
     def test_no_espn_asof_rejected(self):
         with self.assertRaises((KeyError,ValueError)):
             crosswalk(bundle([quote()]),{"games":[GAME]},ALIASES)

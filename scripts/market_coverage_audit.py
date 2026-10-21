@@ -8,11 +8,12 @@ import json
 from collections import Counter
 from pathlib import Path
 from scripts.market_quotes import normalize
-from scripts.market_event_crosswalk import load_registry,crosswalk
+from scripts.market_event_crosswalk import load_registry,load_market_registry,crosswalk
 
 def audit(provider_payload,espn_context,registry_path,retrieved_at_utc,
-          historical=False,bookmakers=("fanduel",)):
-    aliases,conflicts=load_registry(registry_path)
+          historical=False,bookmakers=("fanduel",),market_alias_path=None):
+    aliases,conflicts=(load_market_registry(registry_path,market_alias_path)
+                       if market_alias_path else load_registry(registry_path))
     normalized=normalize(provider_payload,retrieved_at_utc,historical=historical,
                          allowed_books=set(bookmakers))
     result=crosswalk(normalized,espn_context,aliases,conflicts)
@@ -50,10 +51,10 @@ def audit(provider_payload,espn_context,registry_path,retrieved_at_utc,
     return result_meta
 
 def run(provider_path,espn_path,registry_path,output_path,retrieved_at_utc,
-        historical=False,bookmakers=("fanduel",)):
+        historical=False,bookmakers=("fanduel",),market_alias_path=None):
     provider=json.loads(Path(provider_path).read_text(encoding="utf-8"))
     espn=json.loads(Path(espn_path).read_text(encoding="utf-8"))
-    report=audit(provider,espn,registry_path,retrieved_at_utc,historical,bookmakers)
+    report=audit(provider,espn,registry_path,retrieved_at_utc,historical,bookmakers,market_alias_path)
     out=Path(output_path)
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
@@ -65,6 +66,7 @@ if __name__=="__main__":
     p.add_argument("--provider-payload",required=True)
     p.add_argument("--espn-context",required=True)
     p.add_argument("--alias-registry",default="data/archive/2026_team_aliases.csv")
+    p.add_argument("--market-aliases",default="data/archive/2026_market_provider_aliases.csv")
     p.add_argument("--retrieved-at-utc",required=True)
     p.add_argument("--historical",action="store_true")
     p.add_argument("--bookmakers",default="fanduel")
@@ -73,4 +75,4 @@ if __name__=="__main__":
     books=tuple(x.strip() for x in a.bookmakers.split(","))
     if not all(books):raise SystemExit("Invalid bookmaker selection")
     run(a.provider_payload,a.espn_context,a.alias_registry,a.output,
-        a.retrieved_at_utc,a.historical,books)
+        a.retrieved_at_utc,a.historical,books,a.market_aliases)

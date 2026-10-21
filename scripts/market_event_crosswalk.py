@@ -27,6 +27,29 @@ def load_registry(path):
     for k in conflicts:aliases.pop(k,None)
     return aliases,conflicts
 
+def load_market_registry(registry_path,provider_alias_path):
+    """Merge explicit observed sportsbook-name variants, never fuzzy aliases.
+
+    Supplemental aliases must target a canonical, already registered ESPN
+    school. Any collision is rejected rather than overwriting a team.
+    """
+    aliases,conflicts=load_registry(registry_path)
+    canonical=set(aliases.values())
+    with Path(provider_alias_path).open(newline="",encoding="utf-8-sig") as handle:
+        reader=csv.DictReader(handle)
+        if not {"provider_team_name","espn_display_name"}.issubset(reader.fieldnames or []):
+            raise ValueError("Invalid sportsbook aliases schema")
+        for row in reader:
+            name=(row.get("provider_team_name") or "").strip()
+            target=(row.get("espn_display_name") or "").strip()
+            k=norm(name)
+            if not k or target not in canonical:
+                raise ValueError("Unknown canonical school or blank sportsbook alias")
+            if k in conflicts or (k in aliases and aliases[k]!=target):
+                raise ValueError("Ambiguous sportsbook alias; refuse override")
+            aliases[k]=target
+    return aliases,conflicts
+
 def crosswalk(quote_bundle,espn_context,aliases,conflicts=(),max_minutes=15):
     """Only exact registered team aliases, direction, kickoff and as-of snapshots."""
     if not 0<=max_minutes<=60:raise ValueError("Invalid kickoff tolerance")
