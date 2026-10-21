@@ -1,0 +1,26 @@
+name: CFB Official Availability Publisher Probe
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-probe:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[probe-reports]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fetch official report page and embedded publisher metadata
+        run: python -m scripts.report_source_probe
+      - name: Save source responses for parser development
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: availability-source-probe-${{ github.run_id }}
+          path: data/availability_probe/
+          retention-days: 7
