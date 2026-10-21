@@ -78,6 +78,7 @@ jobs:
             --geo-cache data/context_refresh/geo_cache.json \
             --manifest data/context_refresh/context_manifest.json \
             --source-watch data/context_refresh/personnel_source_watch.json \
+            --qb-review data/context_refresh/qb_review_queue.json \
             --output data/context_delta
       - name: Archive compact refreshed context and deltas
         if: always() && steps.plan.outputs.run == 'true'
