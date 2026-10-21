@@ -41,6 +41,36 @@ class ManualCaptureTests(unittest.TestCase):
                 capture(vault_path=self.vault,execute_network=True,
                         historical_date="2026-10-20T12:00:00Z",
                         fetcher=lambda *a,**kw: (_ for _ in ()).throw(AssertionError("network called")))
+    def test_live_request_credit_ceiling_blocks_before_network(self):
+        with patch.dict(os.environ,{"ODDS_API_KEY":"private_fake_token","GITHUB_ACTIONS":""}):
+            with self.assertRaisesRegex(ValueError,"credit ceiling"):
+                capture(vault_path=self.vault,execute_network=True,
+                        max_estimated_credits=2,
+                        fetcher=lambda *a,**kw: (_ for _ in ()).throw(AssertionError("network called")))
+        self.assertFalse(self.vault.exists())
+    def test_historical_request_requires_explicit_credit_ceiling(self):
+        with patch.dict(os.environ,{"ODDS_API_KEY":"private_fake_token","GITHUB_ACTIONS":""}):
+            with self.assertRaisesRegex(ValueError,"credit ceiling"):
+                capture(vault_path=self.vault,execute_network=True,
+                        historical_date="2026-10-21T17:00:00Z",
+                        acknowledge_paid_historical=True,
+                        fetcher=lambda *a,**kw: (_ for _ in ()).throw(AssertionError("network called")))
+        self.assertFalse(self.vault.exists())
+    def test_historical_limit_may_be_raised_consciously_for_one_request(self):
+        test_data=json.loads(json.dumps(DATA))
+        test_data[0]["bookmakers"][0]["last_update"]="2026-10-21T16:55:00Z"
+        called=[]
+        def fake_fetch(key,books,when):
+            called.append(when)
+            return {"timestamp":"2026-10-21T17:00:00Z","data":test_data},{"x-requests-last":30}
+        with patch.dict(os.environ,{"ODDS_API_KEY":"private_fake_token","GITHUB_ACTIONS":""}):
+            report=capture(vault_path=self.vault,execute_network=True,
+                  historical_date="2026-10-21T17:00:00Z",
+                  acknowledge_paid_historical=True,max_estimated_credits=30,
+                  retrieved_at_utc="2026-10-26T12:00:00Z",fetcher=fake_fetch)
+        self.assertEqual(len(called),1)
+        self.assertEqual(report["credits_last"],30)
+        self.assertEqual(report["quotes_added"],2)
     def test_public_actions_cannot_capture_real_provider(self):
         with patch.dict(os.environ,{"GITHUB_ACTIONS":"true","ODDS_API_KEY":"private_fake_token"}):
             with self.assertRaisesRegex(ValueError,"public GitHub Actions"):
