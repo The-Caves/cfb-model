@@ -51,6 +51,13 @@ jobs:
         run: python scripts/ingest_advanced.py --games data/games_2026.csv --registry data/archive/2026_team_aliases.csv --output data/advanced
       - name: Merge scoreboard and advanced 2026 team profiles
         run: python scripts/combine_profiles.py --scores data/team_profiles_2026.csv --advanced data/advanced/team_profiles_advanced_2026.csv --expected-teams 138 --output data/enriched
+      - name: Fit and compare retrospective 2026 advanced model v0.3 (NOT betting validated)
+        run: |
+          python -m scripts.model_v03 \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --manifest data/advanced/advanced_manifest.json \
+            --output data/model_v03
       - name: Collect timestamped upcoming schedules, rest, travel proxies, weather and reviewed personnel
         run: python -m scripts.ingest_game_context --raw-dir data/raw --availability-csv data/manual/availability_2026.csv --output data/context --horizon-days 10 --auto-official
       - name: Archive results and raw snapshots
@@ -65,6 +72,7 @@ jobs:
             data/advanced/team_game_advanced_2026.csv
             data/advanced/team_profiles_advanced_2026.csv
             data/enriched/
+            data/model_v03/
             data/context/
             data/reconciliation/
             data/team_profiles_2026.csv
