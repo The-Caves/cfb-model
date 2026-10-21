@@ -125,6 +125,29 @@ class ModelV03Tests(unittest.TestCase):
         after=build_weekly_games(g,adv)
         for name in ("score_margin_form","off_epa_matchup","win_rate_form"):
             self.assertEqual(before[-1][name],after[-1][name])
+    def test_espn_calendar_day_prevents_late_night_utc_leak(self):
+        first=game("10","2026-09-05","A","B",28,17)
+        first["kickoff_utc"]="2026-09-06T02:30:00Z" # Sat 10:30 PM Eastern
+        other=game("11","2026-09-05","C","A",20,16)
+        other["kickoff_utc"]="2026-09-05T19:00:00Z"
+        next_day=game("12","2026-09-06","A","D",35,21)
+        next_day["kickoff_utc"]="2026-09-06T18:00:00Z"
+        gs=[first,other,next_day]
+        adv={}
+        for x in gs:
+            adv[x["game_id"]]={team:advanced(x,team,opp,.2) for team,opp in (
+                (x["home"],x["away"]),(x["away"],x["home"]))}
+        rows=build_weekly_games(gs,adv)
+        # Two games on the same ESPN calendar date share empty pregame history.
+        self.assertEqual(rows[0]["home_games_prior"],0)
+        self.assertEqual(rows[1]["away_games_prior"],0)
+        # The next Eastern day can use Saturday's games, even when one
+        # late Saturday kickoff falls on Sunday in UTC.
+        self.assertEqual(rows[2]["home_games_prior"],2)
+        original=rows[1]["score_margin_form"]
+        first["home_score"]="100"
+        revised=build_weekly_games(gs,adv)
+        self.assertEqual(original,revised[1]["score_margin_form"])
     def test_real_data_manifest_lacks_historical_provenance(self):
         import scripts.model_v03 as model
         with tempfile.TemporaryDirectory() as t:
