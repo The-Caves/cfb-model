@@ -189,8 +189,13 @@ def asof_quotes(path,event_id,bookmaker,market,selection,cutoff_utc,max_age_minu
             found.append((o,line,price,observed,retrieved,kickoff,update))
     if not found:return {"status":"NO_OBSERVED_QUOTE","betting_status":"PASS_UNVALIDATED"}
     best=max(found,key=lambda x:x[0])
+    if cutoff>=parse_time(best[5]):
+        return {"status":"GAME_ALREADY_STARTED","betting_status":"PASS_UNVALIDATED"}
     age=(cutoff-best[0]).total_seconds()/60
-    return {"status":"OBSERVED_PRICE" if age<=max_age_minutes else "STALE_PRICE",
+    status=("HISTORICAL_RECONSTRUCTION_NOT_LIVE"
+            if parse_time(best[4])>cutoff else
+            "OBSERVED_PRICE" if age<=max_age_minutes else "STALE_PRICE")
+    return {"status":status,
             "bookmaker":bookmaker,"provider_event_id":event_id,"market":market,
             "selection":selection,"line_points":best[1],"american_odds":best[2],
             "observed_at_utc":best[3],"retrieved_at_utc":best[4],
