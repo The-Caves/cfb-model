@@ -1,0 +1,830 @@
+{
+  "[\"Huntsville\",\"TX\",\"USA\"]": {
+    "latitude": 30.72353,
+    "longitude": -95.55078,
+    "geonames_id": 4699540,
+    "name": "Huntsville",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Las Cruces\",\"NM\",\"USA\"]": {
+    "latitude": 32.31232,
+    "longitude": -106.77834,
+    "geonames_id": 5475352,
+    "name": "Las Cruces",
+    "admin1": "New Mexico",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Boone\",\"NC\",\"USA\"]": {
+    "latitude": 36.21679,
+    "longitude": -81.67455,
+    "geonames_id": 4456703,
+    "name": "Boone",
+    "admin1": "North Carolina",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Harrisonburg\",\"VA\",\"USA\"]": {
+    "latitude": 38.44957,
+    "longitude": -78.86892,
+    "geonames_id": 4763231,
+    "name": "Harrisonburg",
+    "admin1": "Virginia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Kennesaw\",\"GA\",\"USA\"]": {
+    "latitude": 34.02343,
+    "longitude": -84.61549,
+    "geonames_id": 4203696,
+    "name": "Kennesaw",
+    "admin1": "Georgia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Lynchburg\",\"VA\",\"USA\"]": {
+    "latitude": 37.41375,
+    "longitude": -79.14225,
+    "geonames_id": 4771075,
+    "name": "Lynchburg",
+    "admin1": "Virginia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Charlottesville\",\"VA\",\"USA\"]": {
+    "latitude": 38.02931,
+    "longitude": -78.47668,
+    "geonames_id": 4752031,
+    "name": "Charlottesville",
+    "admin1": "Virginia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Durham\",\"NC\",\"USA\"]": {
+    "latitude": 35.99403,
+    "longitude": -78.89862,
+    "geonames_id": 4464368,
+    "name": "Durham",
+    "admin1": "North Carolina",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"East Hartford\",\"CT\",\"USA\"]": {
+    "latitude": 41.78232,
+    "longitude": -72.61203,
+    "geonames_id": 4833403,
+    "name": "East Hartford",
+    "admin1": "Connecticut",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Amherst\",\"MA\",\"USA\"]": {
+    "latitude": 42.36723,
+    "longitude": -72.51852,
+    "geonames_id": 4929022,
+    "name": "Amherst",
+    "admin1": "Massachusetts",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Tulsa\",\"OK\",\"USA\"]": {
+    "latitude": 36.15398,
+    "longitude": -95.99277,
+    "geonames_id": 4553433,
+    "name": "Tulsa",
+    "admin1": "Oklahoma",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Laramie\",\"WY\",\"USA\"]": {
+    "latitude": 41.31137,
+    "longitude": -105.5911,
+    "geonames_id": 5830062,
+    "name": "Laramie",
+    "admin1": "Wyoming",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Stanford\",\"CA\",\"USA\"]": {
+    "latitude": 37.42411,
+    "longitude": -122.16608,
+    "geonames_id": 5398563,
+    "name": "Stanford",
+    "admin1": "California",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Auburn\",\"AL\",\"USA\"]": {
+    "latitude": 32.60986,
+    "longitude": -85.48078,
+    "geonames_id": 4830796,
+    "name": "Auburn",
+    "admin1": "Alabama",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Baton Rouge\",\"LA\",\"USA\"]": {
+    "latitude": 30.44332,
+    "longitude": -91.18747,
+    "geonames_id": 4315588,
+    "name": "Baton Rouge",
+    "admin1": "Louisiana",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Cincinnati\",\"OH\",\"USA\"]": {
+    "latitude": 39.12711,
+    "longitude": -84.51439,
+    "geonames_id": 4508722,
+    "name": "Cincinnati",
+    "admin1": "Ohio",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Lubbock\",\"TX\",\"USA\"]": {
+    "latitude": 33.57786,
+    "longitude": -101.85517,
+    "geonames_id": 5525577,
+    "name": "Lubbock",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Fort Worth\",\"TX\",\"USA\"]": {
+    "latitude": 32.72541,
+    "longitude": -97.32085,
+    "geonames_id": 4691930,
+    "name": "Fort Worth",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Morgantown\",\"WV\",\"USA\"]": {
+    "latitude": 39.62953,
+    "longitude": -79.9559,
+    "geonames_id": 4815352,
+    "name": "Morgantown",
+    "admin1": "West Virginia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Dallas\",\"TX\",\"USA\"]": {
+    "latitude": 32.78306,
+    "longitude": -96.80667,
+    "geonames_id": 4684888,
+    "name": "Dallas",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Berkeley\",\"CA\",\"USA\"]": {
+    "latitude": 37.87159,
+    "longitude": -122.27275,
+    "geonames_id": 5327684,
+    "name": "Berkeley",
+    "admin1": "California",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Pittsburgh\",\"PA\",\"USA\"]": {
+    "latitude": 40.44062,
+    "longitude": -79.99589,
+    "geonames_id": 5206379,
+    "name": "Pittsburgh",
+    "admin1": "Pennsylvania",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Ann Arbor\",\"MI\",\"USA\"]": {
+    "latitude": 42.27756,
+    "longitude": -83.74088,
+    "geonames_id": 4984247,
+    "name": "Ann Arbor",
+    "admin1": "Michigan",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Bloomington\",\"IN\",\"USA\"]": {
+    "latitude": 39.16533,
+    "longitude": -86.52639,
+    "geonames_id": 4254679,
+    "name": "Bloomington",
+    "admin1": "Indiana",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Evanston\",\"IL\",\"USA\"]": {
+    "latitude": 42.04114,
+    "longitude": -87.69006,
+    "geonames_id": 4891382,
+    "name": "Evanston",
+    "admin1": "Illinois",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Piscataway\",\"NJ\",\"USA\"]": {
+    "latitude": 40.49927,
+    "longitude": -74.39904,
+    "geonames_id": 5102713,
+    "name": "Piscataway",
+    "admin1": "New Jersey",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Boca Raton\",\"FL\",\"USA\"]": {
+    "latitude": 26.35869,
+    "longitude": -80.0831,
+    "geonames_id": 4148411,
+    "name": "Boca Raton",
+    "admin1": "Florida",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Houston\",\"TX\",\"USA\"]": {
+    "latitude": 29.76328,
+    "longitude": -95.36327,
+    "geonames_id": 4699066,
+    "name": "Houston",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Toledo\",\"OH\",\"USA\"]": {
+    "latitude": 41.66394,
+    "longitude": -83.55521,
+    "geonames_id": 5174035,
+    "name": "Toledo",
+    "admin1": "Ohio",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Kalamazoo\",\"MI\",\"USA\"]": {
+    "latitude": 42.29171,
+    "longitude": -85.58723,
+    "geonames_id": 4997787,
+    "name": "Kalamazoo",
+    "admin1": "Michigan",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Lawrence\",\"KS\",\"USA\"]": {
+    "latitude": 38.97167,
+    "longitude": -95.23525,
+    "geonames_id": 4274277,
+    "name": "Lawrence",
+    "admin1": "Kansas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Waco\",\"TX\",\"USA\"]": {
+    "latitude": 31.54933,
+    "longitude": -97.14667,
+    "geonames_id": 4739526,
+    "name": "Waco",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Kent\",\"OH\",\"USA\"]": {
+    "latitude": 41.15367,
+    "longitude": -81.35789,
+    "geonames_id": 5159537,
+    "name": "Kent",
+    "admin1": "Ohio",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Mount Pleasant\",\"MI\",\"USA\"]": {
+    "latitude": 43.59781,
+    "longitude": -84.76751,
+    "geonames_id": 5002714,
+    "name": "Mount Pleasant",
+    "admin1": "Michigan",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Oxford\",\"OH\",\"USA\"]": {
+    "latitude": 39.507,
+    "longitude": -84.74523,
+    "geonames_id": 4520760,
+    "name": "Oxford",
+    "admin1": "Ohio",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Champaign\",\"IL\",\"USA\"]": {
+    "latitude": 40.11642,
+    "longitude": -88.24338,
+    "geonames_id": 4887158,
+    "name": "Champaign",
+    "admin1": "Illinois",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Eugene\",\"OR\",\"USA\"]": {
+    "latitude": 44.05207,
+    "longitude": -123.08675,
+    "geonames_id": 5725846,
+    "name": "Eugene",
+    "admin1": "Oregon",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Tuscaloosa\",\"AL\",\"USA\"]": {
+    "latitude": 33.20984,
+    "longitude": -87.56917,
+    "geonames_id": 4094455,
+    "name": "Tuscaloosa",
+    "admin1": "Alabama",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"College Station\",\"TX\",\"USA\"]": {
+    "latitude": 30.62798,
+    "longitude": -96.33441,
+    "geonames_id": 4682464,
+    "name": "College Station",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Starkville\",\"MS\",\"USA\"]": {
+    "latitude": 33.45049,
+    "longitude": -88.81961,
+    "geonames_id": 4447161,
+    "name": "Starkville",
+    "admin1": "Mississippi",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Norman\",\"OK\",\"USA\"]": {
+    "latitude": 35.22257,
+    "longitude": -97.43948,
+    "geonames_id": 4543762,
+    "name": "Norman",
+    "admin1": "Oklahoma",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Columbia\",\"SC\",\"USA\"]": {
+    "latitude": 34.00071,
+    "longitude": -81.03481,
+    "geonames_id": 4575352,
+    "name": "Columbia",
+    "admin1": "South Carolina",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Orlando\",\"FL\",\"USA\"]": {
+    "latitude": 28.53834,
+    "longitude": -81.37924,
+    "geonames_id": 4167147,
+    "name": "Orlando",
+    "admin1": "Florida",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Provo\",\"UT\",\"USA\"]": {
+    "latitude": 40.23384,
+    "longitude": -111.65853,
+    "geonames_id": 5780026,
+    "name": "Provo",
+    "admin1": "Utah",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Atlanta\",\"GA\",\"USA\"]": {
+    "latitude": 33.749,
+    "longitude": -84.38798,
+    "geonames_id": 4180439,
+    "name": "Atlanta",
+    "admin1": "Georgia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Minneapolis\",\"MN\",\"USA\"]": {
+    "latitude": 44.97997,
+    "longitude": -93.26384,
+    "geonames_id": 5037649,
+    "name": "Minneapolis",
+    "admin1": "Minnesota",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Iowa City\",\"IA\",\"USA\"]": {
+    "latitude": 41.66113,
+    "longitude": -91.53017,
+    "geonames_id": 4862034,
+    "name": "Iowa City",
+    "admin1": "Iowa",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Pasadena\",\"CA\",\"USA\"]": {
+    "latitude": 34.14778,
+    "longitude": -118.14452,
+    "geonames_id": 5381396,
+    "name": "Pasadena",
+    "admin1": "California",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"East Lansing\",\"MI\",\"USA\"]": {
+    "latitude": 42.73698,
+    "longitude": -84.48387,
+    "geonames_id": 4991640,
+    "name": "East Lansing",
+    "admin1": "Michigan",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Annapolis\",\"MD\",\"USA\"]": {
+    "latitude": 38.97859,
+    "longitude": -76.49184,
+    "geonames_id": 4347242,
+    "name": "Annapolis",
+    "admin1": "Maryland",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Honolulu\",\"HI\",\"USA\"]": {
+    "latitude": 21.30694,
+    "longitude": -157.85834,
+    "geonames_id": 5856195,
+    "name": "Honolulu",
+    "admin1": "Hawaii",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Muncie\",\"IN\",\"USA\"]": {
+    "latitude": 40.19338,
+    "longitude": -85.38636,
+    "geonames_id": 4924006,
+    "name": "Muncie",
+    "admin1": "Indiana",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Sacramento\",\"CA\",\"USA\"]": {
+    "latitude": 38.58157,
+    "longitude": -121.4944,
+    "geonames_id": 5389489,
+    "name": "Sacramento",
+    "admin1": "California",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Buffalo\",\"NY\",\"USA\"]": {
+    "latitude": 42.88645,
+    "longitude": -78.87837,
+    "geonames_id": 5110629,
+    "name": "Buffalo",
+    "admin1": "New York",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Bowling Green\",\"OH\",\"USA\"]": {
+    "latitude": 41.37477,
+    "longitude": -83.65132,
+    "geonames_id": 5147968,
+    "name": "Bowling Green",
+    "admin1": "Ohio",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Tempe\",\"AZ\",\"USA\"]": {
+    "latitude": 33.41477,
+    "longitude": -111.90931,
+    "geonames_id": 5317058,
+    "name": "Tempe",
+    "admin1": "Arizona",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Manhattan\",\"KS\",\"USA\"]": {
+    "latitude": 39.18361,
+    "longitude": -96.57167,
+    "geonames_id": 4274994,
+    "name": "Manhattan",
+    "admin1": "Kansas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Athens\",\"OH\",\"USA\"]": {
+    "latitude": 39.32924,
+    "longitude": -82.10126,
+    "geonames_id": 4505542,
+    "name": "Athens",
+    "admin1": "Ohio",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Ypsilanti\",\"MI\",\"USA\"]": {
+    "latitude": 42.24115,
+    "longitude": -83.61299,
+    "geonames_id": 5015688,
+    "name": "Ypsilanti",
+    "admin1": "Michigan",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Reno\",\"NV\",\"USA\"]": {
+    "latitude": 39.52963,
+    "longitude": -119.8138,
+    "geonames_id": 5511077,
+    "name": "Reno",
+    "admin1": "Nevada",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"San Jose\",\"CA\",\"USA\"]": {
+    "latitude": 37.33939,
+    "longitude": -121.89496,
+    "geonames_id": 5392171,
+    "name": "San Jose",
+    "admin1": "California",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Hattiesburg\",\"MS\",\"USA\"]": {
+    "latitude": 31.32712,
+    "longitude": -89.29034,
+    "geonames_id": 4429295,
+    "name": "Hattiesburg",
+    "admin1": "Mississippi",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Lafayette\",\"LA\",\"USA\"]": {
+    "latitude": 30.22409,
+    "longitude": -92.01984,
+    "geonames_id": 4330145,
+    "name": "Lafayette",
+    "admin1": "Louisiana",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Ruston\",\"LA\",\"USA\"]": {
+    "latitude": 32.52321,
+    "longitude": -92.63793,
+    "geonames_id": 4339348,
+    "name": "Ruston",
+    "admin1": "Louisiana",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Norfolk\",\"VA\",\"USA\"]": {
+    "latitude": 36.84681,
+    "longitude": -76.28522,
+    "geonames_id": 4776222,
+    "name": "Norfolk",
+    "admin1": "Virginia",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Pullman\",\"WA\",\"USA\"]": {
+    "latitude": 46.73127,
+    "longitude": -117.17962,
+    "geonames_id": 5807540,
+    "name": "Pullman",
+    "admin1": "Washington",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Boise\",\"ID\",\"USA\"]": {
+    "latitude": 43.6135,
+    "longitude": -116.20345,
+    "geonames_id": 5586437,
+    "name": "Boise",
+    "admin1": "Idaho",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Fort Collins\",\"CO\",\"USA\"]": {
+    "latitude": 40.58526,
+    "longitude": -105.08442,
+    "geonames_id": 5577147,
+    "name": "Fort Collins",
+    "admin1": "Colorado",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Stillwater\",\"OK\",\"USA\"]": {
+    "latitude": 36.11561,
+    "longitude": -97.05837,
+    "geonames_id": 4552215,
+    "name": "Stillwater",
+    "admin1": "Oklahoma",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Boulder\",\"CO\",\"USA\"]": {
+    "latitude": 40.01499,
+    "longitude": -105.27055,
+    "geonames_id": 5574991,
+    "name": "Boulder",
+    "admin1": "Colorado",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Clemson\",\"SC\",\"USA\"]": {
+    "latitude": 34.68344,
+    "longitude": -82.83737,
+    "geonames_id": 4574989,
+    "name": "Clemson",
+    "admin1": "South Carolina",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Jonesboro\",\"AR\",\"USA\"]": {
+    "latitude": 35.8423,
+    "longitude": -90.70428,
+    "geonames_id": 4116834,
+    "name": "Jonesboro",
+    "admin1": "Arkansas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Lexington\",\"KY\",\"USA\"]": {
+    "latitude": 37.98869,
+    "longitude": -84.47772,
+    "geonames_id": 4297983,
+    "name": "Lexington",
+    "admin1": "Kentucky",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Nashville\",\"TN\",\"USA\"]": {
+    "latitude": 36.16589,
+    "longitude": -86.78444,
+    "geonames_id": 4644585,
+    "name": "Nashville",
+    "admin1": "Tennessee",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Austin\",\"TX\",\"USA\"]": {
+    "latitude": 30.26715,
+    "longitude": -97.74306,
+    "geonames_id": 4671654,
+    "name": "Austin",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Tucson\",\"AZ\",\"USA\"]": {
+    "latitude": 32.22174,
+    "longitude": -110.92648,
+    "geonames_id": 5318313,
+    "name": "Tucson",
+    "admin1": "Arizona",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Ames\",\"IA\",\"USA\"]": {
+    "latitude": 42.03471,
+    "longitude": -93.61994,
+    "geonames_id": 4846834,
+    "name": "Ames",
+    "admin1": "Iowa",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Madison\",\"WI\",\"USA\"]": {
+    "latitude": 43.07305,
+    "longitude": -89.40123,
+    "geonames_id": 5261457,
+    "name": "Madison",
+    "admin1": "Wisconsin",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Los Angeles\",\"CA\",\"USA\"]": {
+    "latitude": 34.05223,
+    "longitude": -118.24368,
+    "geonames_id": 5368361,
+    "name": "Los Angeles",
+    "admin1": "California",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"San Marcos\",\"TX\",\"USA\"]": {
+    "latitude": 29.88327,
+    "longitude": -97.94139,
+    "geonames_id": 4726491,
+    "name": "San Marcos",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Logan\",\"UT\",\"USA\"]": {
+    "latitude": 41.73549,
+    "longitude": -111.83439,
+    "geonames_id": 5777544,
+    "name": "Logan",
+    "admin1": "Utah",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"New Orleans\",\"LA\",\"USA\"]": {
+    "latitude": 29.95465,
+    "longitude": -90.07507,
+    "geonames_id": 4335045,
+    "name": "New Orleans",
+    "admin1": "Louisiana",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"San Antonio\",\"TX\",\"USA\"]": {
+    "latitude": 29.42412,
+    "longitude": -98.49363,
+    "geonames_id": 4726206,
+    "name": "San Antonio",
+    "admin1": "Texas",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Albuquerque\",\"NM\",\"USA\"]": {
+    "latitude": 35.08449,
+    "longitude": -106.65114,
+    "geonames_id": 5454711,
+    "name": "Albuquerque",
+    "admin1": "New Mexico",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Fargo\",\"ND\",\"USA\"]": {
+    "latitude": 46.87719,
+    "longitude": -96.7898,
+    "geonames_id": 5059163,
+    "name": "Fargo",
+    "admin1": "North Dakota",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Salt Lake City\",\"UT\",\"USA\"]": {
+    "latitude": 40.76078,
+    "longitude": -111.89105,
+    "geonames_id": 5780993,
+    "name": "Salt Lake City",
+    "admin1": "Utah",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Bowling Green\",\"KY\",\"USA\"]": {
+    "latitude": 36.99032,
+    "longitude": -86.4436,
+    "geonames_id": 4285268,
+    "name": "Bowling Green",
+    "admin1": "Kentucky",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Newark\",\"DE\",\"USA\"]": {
+    "latitude": 39.68372,
+    "longitude": -75.74966,
+    "geonames_id": 4143861,
+    "name": "Newark",
+    "admin1": "Delaware",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Springfield\",\"MO\",\"USA\"]": {
+    "latitude": 37.21533,
+    "longitude": -93.29824,
+    "geonames_id": 4409896,
+    "name": "Springfield",
+    "admin1": "Missouri",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Murfreesboro\",\"TN\",\"USA\"]": {
+    "latitude": 35.84562,
+    "longitude": -86.39027,
+    "geonames_id": 4644312,
+    "name": "Murfreesboro",
+    "admin1": "Tennessee",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Jacksonville\",\"AL\",\"USA\"]": {
+    "latitude": 33.81382,
+    "longitude": -85.7613,
+    "geonames_id": 4069553,
+    "name": "Jacksonville",
+    "admin1": "Alabama",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Charlotte\",\"NC\",\"USA\"]": {
+    "latitude": 35.22709,
+    "longitude": -80.84313,
+    "geonames_id": 4460243,
+    "name": "Charlotte",
+    "admin1": "North Carolina",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  }
+}
