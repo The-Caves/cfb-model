@@ -51,7 +51,7 @@ jobs:
             --availability-csv data/manual/availability_2026.csv \
             --geo-cache data/context_state/geocache.json \
             --output data/context_refresh \
-            --horizon-days 10
+            --horizon-days 10 \
             --auto-official
       - name: Check SEC and Big Ten official availability report publications
         if: steps.plan.outputs.run == 'true'
