@@ -8,6 +8,7 @@ from pathlib import Path
 from scripts.game_context import (ET,UTC,build_context,extract_game,geocode_match,
                                   load_archived_events,parse_forecast,parse_time)
 from scripts.availability_context import evaluate,load_reports
+from scripts.qb_starter_review import load_reviewed_qb_starters
 
 ESPN="https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
 GEO="https://geocoding-api.open-meteo.com/v1/search"
@@ -117,7 +118,8 @@ class WeatherProvider:
                 "weather_location_precision":"CITY_CENTROID"} if w else None
 
 def run(raw_dir,output,reports=None,horizon_days=10,now=None,geo_cache=None,
-        auto_official=False,alias_registry="data/archive/2026_team_aliases.csv"):
+        auto_official=False,alias_registry="data/archive/2026_team_aliases.csv",
+        qb_evidence_csv="data/manual/qb_starter_evidence_2026.csv"):
     output=Path(output);output.mkdir(parents=True,exist_ok=True)
     issued=parse_time(now) if now else dt.datetime.now(UTC)
     report={"generated_at_utc":issued.isoformat(),"season":2026,
@@ -142,6 +144,9 @@ def run(raw_dir,output,reports=None,horizon_days=10,now=None,geo_cache=None,
             # the updated as-of, never an earlier run-start timestamp.
             issued=dt.datetime.now(UTC)
             report["forecast_cutoff_utc"]=issued.isoformat()
+        qb_claims,qb_qa=load_reviewed_qb_starters(qb_evidence_csv,upcoming,issued)
+        report["qb_starter_evidence"]=qb_qa
+        source_rows+=qb_claims
         weather=WeatherProvider(geo_cache)
         context,metrics=build_context(upcoming,prev,issued.isoformat(),
             weather.geocode,weather.forecast,
@@ -196,9 +201,10 @@ if __name__=="__main__":
     p.add_argument("--geo-cache",default=None)
     p.add_argument("--auto-official",action="store_true")
     p.add_argument("--alias-registry",default="data/archive/2026_team_aliases.csv")
+    p.add_argument("--qb-evidence-csv",default="data/manual/qb_starter_evidence_2026.csv")
     args=p.parse_args()
     if not 1<=args.horizon_days<=14:raise SystemExit("horizon days must be 1..14")
     result=run(args.raw_dir,args.output,args.availability_csv,args.horizon_days,
                geo_cache=args.geo_cache,auto_official=args.auto_official,
-               alias_registry=args.alias_registry)
+               alias_registry=args.alias_registry,qb_evidence_csv=args.qb_evidence_csv)
     raise SystemExit(2 if result["status"] in ("SOURCE_FETCH_FAILURE","CONTEXT_PIPELINE_FAILED") else 0)

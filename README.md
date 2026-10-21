@@ -15,7 +15,8 @@ This public repository holds a reproducible 2026 college football data and model
 | Upcoming games, kickoff/rest, forecast and approximate travel | Implemented with provenance; incomplete coverage is explicit |
 | Kickoff-aware incremental context refresh, persistent deltas, freezes | Implemented; state in `context-state` branch |
 | Public official player availability | SEC, Big Ten, ACC and Big 12 import implemented; live coverage varies and final alert fix needs a fresh end-to-end check |
-| Confirmed starting QBs and replacement-value effects | **Not validated**; availability of a QB does not establish the starter |
+| Game-specific QB starter evidence gate | Implemented for explicitly reviewed official team/coach statements; **no automated nationwide confirmations** |
+| Confirmed starting QBs and replacement-value effects | Actual upcoming game coverage still **UNKNOWN** until audited source records exist; replacement weights unvalidated |
 | Timestamped opening/closing/live sportsbook markets | **Not implemented/validated** |
 | Historical as-of training features, opponent-adjusted calibrated model, SU/ATS/O-U walk-forward tests | **Not completed** |
 
@@ -35,7 +36,7 @@ Data collected or revised retrospectively must **not** be used as though availab
 
 1. Inspect current `main` HEAD, recent Actions results and `context-state/state/summary.json`; do not rely on stale documentation as proof of current run results.
 2. Finish Step 4: verify the corrected availability deltas on a **real live context refresh**, examine `official_availability_manifest.json`, check that routine AVAILABLE roster rows do not create false personnel alerts, and preserve warnings for missing publisher coverage.
-3. Develop independently sourced **starting-QB confirmation** with player/team/game identity, trustworthy source URL, publication/capture timestamps and pregame cutoff. Never infer the replacement QB from an OUT availability designation or previous box score.
+3. Populate independently reviewed game-specific starting-QB evidence through `data/manual/qb_starter_evidence_2026.csv`, including opponent, exact player, official-source statement, evidence scope, publication/capture/review timestamps. `scripts/qb_starter_review.py` gates these claims and quarantines contradictions; **no automated nationwide starter discovery/confirmation exists yet**. Do not infer a starter from an OUT designation, depth chart or previous box score.
 4. Then integrate provenance-bearing historical and live sportsbook lines, earlier-season training priors and a complete opponent-adjusted prediction engine.
 5. Evaluate chronological out-of-sample SU, ATS and O/U forecasts with true historical as-of sources, market baselines, calibration and ablations. Only graduate beyond `PASS_UNVALIDATED` on verified results.
 
@@ -58,3 +59,7 @@ A complete ingestion run requires external networks and is best verified in GitH
 
 Only publish reproducible project code, non-sensitive configuration, public-source citations, validated metrics, tests and generic operational documentation. **Do not commit access tokens, API keys, personal contact information, private messages/conversation transcripts, passwords, unpublished privileged data, or user-specific account details.** Use GitHub Actions secrets for any future credentials; never print credentials in logs. Public player-availability reports are **not** private medical records. Avoid inferring medical conditions from roster status.
 
+
+### Starting quarterback evidence protocol
+
+The separate `data/manual/qb_starter_evidence_2026.csv` is intentionally header-only until someone reviews genuine public official game-specific claims. An entry must match the current upcoming ESPN game ID, home/away opponent, kickoff, name, official team release or on-record coach confirmation, explicit this-game starting statement, source URL, publication/capture/review timestamps before kickoff, and an APPROVED review. Statements more than 14 days before kickoff, projected starters, depth charts, competing claims and official QB availability contradictions cannot produce `confirmed_qb_starters`. `context_manifest.json` records accepted/rejected counts and reason codes; a verified evidence record does not validate model weights or override `PASS_UNVALIDATED`. The local protocol cannot independently prove a source page is authentic or unchanged; reviewers must inspect the actual source. See `docs/GAME_CONTEXT.md`.

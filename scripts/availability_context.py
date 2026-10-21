@@ -51,8 +51,20 @@ def evaluate(game,issue,records,attestation_age_hours=30):
            r["player"]=="ALL" and r["position"]=="TEAM" and r["status"]=="VERIFIED"):
             issues.append("record "+str(idx)+": invalid team-wide attestation");continue
         if kind=="QB_STARTER" and not (
-           r["position"]=="QB" and r["status"]=="CONFIRMED"):
-            issues.append("record "+str(idx)+": unconfirmed QB starter");continue
+           r["position"]=="QB" and r["status"]=="CONFIRMED"
+           and r.get("evidence_scope")=="EXPLICIT_THIS_GAME"
+           and r.get("source_type") in ("OFFICIAL_TEAM_RELEASE","ON_RECORD_COACH_CONFIRMATION")
+           and r.get("review_status")=="APPROVED"
+           and r.get("opponent")== (game["away"] if r["team"]==game["home"] else game["home"])
+           and (r.get("evidence_excerpt") or "").strip()
+           and (r.get("reviewed_at_utc") or "").strip()):
+            issues.append("record "+str(idx)+": QB source not explicitly game-reviewed");continue
+        if kind=="QB_STARTER":
+            try: reviewer_time=parse_time(r["reviewed_at_utc"])
+            except (ValueError,TypeError):
+                issues.append("record "+str(idx)+": bad QB review timestamp");continue
+            if not capture<=reviewer_time<=issued:
+                issues.append("record "+str(idx)+": QB review outside as-of window");continue
         if kind in ("INJURY","AVAILABILITY") and r["status"] in ("CONFIRMED","VERIFIED"):
             issues.append("record "+str(idx)+": incompatible injury status");continue
         valid.append({**r,"_published":pub,"_captured":capture})
@@ -75,11 +87,24 @@ def evaluate(game,issue,records,attestation_age_hours=30):
         if qbs:
             latest=max(r["_captured"] for r in qbs)
             candidates={r["player"] for r in qbs if r["_captured"]==latest}
-            if len(candidates)==1:
+            # Contradictions from any accepted source must not be silently
+            # promoted into a confirmed starter, regardless of capture order.
+            all_names={r["player"].casefold() for r in qbs}
+            conflict_statuses={"OUT","SUSPENDED","DOUBTFUL","LIMITED"}
+            unavailable={r["player"].casefold():r["status"] for r in injury_by_player.values()
+                         if r["position"]=="QB" and r["status"] in conflict_statuses}
+            if len(all_names)>1:
+                issues.append(team+": conflicting QB-starter claims")
+            elif any(qb in unavailable for qb in all_names):
+                issues.append(team+": starter claim conflicts with latest official QB availability")
+            elif len(candidates)==1:
                 q=next(r for r in qbs if r["_captured"]==latest)
                 starters[team]={"player":q["player"],"published_at_utc":q["published_at_utc"],
-                                "captured_at_utc":q["captured_at_utc"],"source_url":q["source_url"]}
-            else:issues.append(team+": conflicting QB-starter claims")
+                                "captured_at_utc":q["captured_at_utc"],"source_url":q["source_url"],
+                                "evidence_scope":q["evidence_scope"],"source_type":q["source_type"],
+                                "reviewed_at_utc":q["reviewed_at_utc"]}
+            else:
+                issues.append(team+": conflicting QB-starter claims")
     both=all(coverage[t]=="VERIFIED_REPORT_REVIEWED" for t in teams)
     return {"coverage_status":"BOTH_TEAMS_VERIFIED" if both else
                "PARTIAL" if any(x=="VERIFIED_REPORT_REVIEWED" for x in coverage.values()) else "UNKNOWN",
