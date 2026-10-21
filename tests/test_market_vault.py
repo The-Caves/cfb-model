@@ -62,6 +62,26 @@ class VaultTests(unittest.TestCase):
                           "2026-10-21T17:30:00Z")
         self.assertEqual(price["status"],"HISTORICAL_RECONSTRUCTION_NOT_LIVE")
         self.assertFalse(price["price_executable_verified"])
+    def test_later_historical_backfill_cannot_replace_real_live_price(self):
+        store(self.db,result("2026-10-21T17:00:00Z",-4.5))
+        backfill=normalize({"timestamp":"2026-10-21T18:00:00Z",
+                            "data":fixture("2026-10-21T18:00:00Z",-6.5)},
+                           "2026-10-26T12:00:00Z",historical=True)
+        store(self.db,backfill)
+        live=asof_quotes(self.db,"example123","fanduel","SPREAD","HOME",
+                         "2026-10-21T19:00:00Z")
+        self.assertEqual(live["status"],"OBSERVED_PRICE")
+        self.assertEqual(live["line_points"],-4.5)
+        self.assertEqual(live["observed_at_utc"],"2026-10-21T17:00:00Z")
+    def test_historical_lookup_after_backfill_retains_research_flag(self):
+        historical=normalize({"timestamp":"2026-10-21T18:00:00Z",
+                              "data":fixture("2026-10-21T18:00:00Z",-6.5)},
+                             "2026-10-26T12:00:00Z",historical=True)
+        store(self.db,historical)
+        price=asof_quotes(self.db,"example123","fanduel","SPREAD","HOME",
+                          "2026-10-21T19:00:00Z")
+        self.assertEqual(price["status"],"HISTORICAL_RECONSTRUCTION_NOT_LIVE")
+        self.assertEqual(price["line_points"],-6.5)
     def test_future_quote_rejected_for_earlier_cutoff(self):
         store(self.db,result())
         q=asof_quotes(self.db,"example123","fanduel","SPREAD","HOME",
