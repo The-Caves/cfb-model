@@ -16,3 +16,17 @@ data/context_delta/
 data/context_state/
 data/current_scoreboard/
 data/context_refresh_plan.json
+
+# Nonpublic sportsbook market data and credentials (defense in depth)
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+data/market/
+data/markets/
+data/odds/
+data/odds_raw/
+data/market_quotes/
+.env
+.env.*
+!.env.example
