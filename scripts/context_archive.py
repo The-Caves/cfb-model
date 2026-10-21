@@ -93,6 +93,18 @@ def write(current_path,previous_path,geo_path,manifest_path,output_path,source_w
     summary={"asof_utc":cur["asof_utc"],"run_id":os.environ.get("GITHUB_RUN_ID"),
              "status":manifest["status"],"games_collected":len(cur["games"]),
              "delta":qa,"safe_for_betting":False,"latest_context_ref":"state/latest.json.gz"}
+    official=manifest.get("official_availability")
+    if isinstance(official,dict):
+        summary["verified_official_availability"]={
+            "reports":official.get("official_game_reports",0),
+            "designations":official.get("player_designations",0),
+            "source_errors":official.get("errors",0),
+            "conferences":{key:{
+                "publisher_snapshot_sha256":value.get("sha256"),
+                "fetched_at_utc":value.get("fetched_at_utc"),
+                "reports_published_accepted":value.get("official_reports_accepted",0),
+                "reports_pending":value.get("pending_cards",0)}
+                for key,value in official.get("feeds",{}).items()}}
     source=None
     if source_watch and Path(source_watch).exists():
         source=json.loads(Path(source_watch).read_text())
