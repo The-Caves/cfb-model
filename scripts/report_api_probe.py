@@ -16,9 +16,9 @@ def call(path,body):
         "Origin":ROOT,"User-Agent":"CFB-Research-PublicReport/0.1"})
     try:
         with urllib.request.urlopen(req,timeout=20) as resp:
-            raw=resp.read(5_000_001)
+            raw=resp.read(25_000_001)
             status=resp.status
-        if len(raw)>5_000_000:raise ValueError("Response too large")
+        if len(raw)>25_000_000:raise ValueError("Response too large")
         try:return {"status":status,"data":json.loads(raw),"sha256":hashlib.sha256(raw).hexdigest()}
         except json.JSONDecodeError:return {"status":status,"non_json_preview":raw[:100].decode(errors="replace")}
     except urllib.error.HTTPError as e:
@@ -35,7 +35,21 @@ def run(out):
                   "sport":"Football","organization":source,"conference":conf}
             result=call(path,body)
             name=conf+"_"+path.split("/")[-1]
-            (out/(name+".json")).write_text(json.dumps(result,indent=2))
+            # Keep diagnostics compact and avoid storing embedded logos or image blobs.
+            safe=json.loads(json.dumps(result))
+            if isinstance(safe.get("data"),dict):
+                for value in safe["data"].values():
+                    if not isinstance(value,dict):continue
+                    for image_key in list(value):
+                        if "image" in image_key.lower() or "logo" in image_key.lower():
+                            value[image_key]="[omitted image]"
+                    for game in value.get("games",[]):
+                        for row in game.get("rows",[]):
+                            for image_key in list(row):
+                                if "image" in image_key.lower() or "logo" in image_key.lower():
+                                    row[image_key]="[omitted image]"
+                        if "teamImage" in game:game["teamImage"]="[omitted image]"
+            (out/(name+".json")).write_text(json.dumps(safe,indent=2))
             data=result.get("data")
             summary={"status":result.get("status"),"error":result.get("error"),
               "sha256":result.get("sha256"),"type":type(data).__name__}
