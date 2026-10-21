@@ -159,7 +159,7 @@ def extract(conference,feed,games,aliases,captured):
         report["publication_status"]="ACCEPTED_VERIFIED_OFFICIAL_REPORT"
         report["player_rows"]=sum(len(players) for _,players in parsed)
         report["published_utc"]=t
-    meta["official_reports_accepted"]=sum(x["publication_status"]=="ACCEPTED_VERIFIED_OFFICIAL_REPORT" for x in meta["report_cards"])
+    meta["official_reports_accepted"]=sum(x.get("publication_status")=="ACCEPTED_VERIFIED_OFFICIAL_REPORT" for x in meta["report_cards"])
     meta["player_records"]=sum(x["kind"]=="INJURY" for x in records)
     meta["pending_cards"]=sum(x.get("publication_status")=="REPORT_PENDING" for x in meta["report_cards"])
     return records,meta
