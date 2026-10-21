@@ -88,9 +88,13 @@ def snapshot_changes(previous,current,now):
         for team,player in sorted(set(oldinj)|set(newinj)):
             x,y=oldinj.get((team,player)),newinj.get((team,player))
             if x==y:continue
-            add("injury."+str(team)+"."+str(player),x,y,
-                "VERIFIED_INJURY_STATUS_CHANGE" if x and y else
-                "NEW_VERIFIED_INJURY_CLAIM" if y else "INJURY_SOURCE_NOT_PRESENT")
+            if x is None and y=="AVAILABLE":
+                # Large official full-roster cards may list 100+ players as
+                # Available. Do not misrepresent those as injury alerts.
+                continue
+            add("player_availability."+str(team)+"."+str(player),x,y,
+                "VERIFIED_AVAILABILITY_STATUS_CHANGE" if x and y else
+                "NEW_RESTRICTED_AVAILABILITY" if y else "PLAYER_REPORT_NOT_PRESENT")
     for gid,b in sorted(new.items()):
         if gid not in old and parse_time(b["kickoff_utc"])>issue:
             changes.append({"game_id":gid,"home":b.get("home"),"away":b.get("away"),
@@ -102,5 +106,5 @@ def snapshot_changes(previous,current,now):
                             "changed_games":len(changed_games),"delta_events":len(changes),
                             "frozen_games":len(frozen),"personnel_changes":sum(
                                 x["kind"] in ("CONFIRMED_QB_CHANGE","NEW_VERIFIED_QB",
-                                  "VERIFIED_INJURY_STATUS_CHANGE","NEW_VERIFIED_INJURY_CLAIM")
+                                  "VERIFIED_AVAILABILITY_STATUS_CHANGE","NEW_RESTRICTED_AVAILABILITY")
                                 for x in changes)}
