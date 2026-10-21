@@ -56,7 +56,7 @@ class MarketSettlementTests(unittest.TestCase):
         result=self.settle()
         self.assertEqual(len(result["features"]),6)
         self.assertEqual(len(result["postgame_labels"]),6)
-        lookup={(x["market"],x["selection"]):x["settlement"]
+        lookup={(f["market"],f["selection"]):x["settlement"]
                 for x in result["postgame_labels"]
                 for f in result["features"] if f["row_id"]==x["row_id"]}
         self.assertEqual(lookup[("MONEYLINE","HOME")],"WIN")
