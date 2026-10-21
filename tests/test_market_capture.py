@@ -31,12 +31,12 @@ class ManualCaptureTests(unittest.TestCase):
             capture(vault_path=self.vault)
         self.assertFalse(self.vault.exists())
     def test_no_key_never_calls_network(self):
-        with patch.dict(os.environ,{"ODDS_API_KEY":""},clear=False):
+        with patch.dict(os.environ,{"ODDS_API_KEY":"","GITHUB_ACTIONS":""},clear=False):
             with self.assertRaisesRegex(ValueError,"ODDS_API_KEY"):
                 capture(vault_path=self.vault,execute_network=True)
         self.assertFalse(self.vault.exists())
     def test_paid_historical_requires_extra_ack(self):
-        with patch.dict(os.environ,{"ODDS_API_KEY":"private_fake_token"},clear=False):
+        with patch.dict(os.environ,{"ODDS_API_KEY":"private_fake_token","GITHUB_ACTIONS":""},clear=False):
             with self.assertRaisesRegex(ValueError,"acknowledgement"):
                 capture(vault_path=self.vault,execute_network=True,
                         historical_date="2026-10-20T12:00:00Z",
