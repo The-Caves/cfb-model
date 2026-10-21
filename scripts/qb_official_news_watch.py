@@ -87,20 +87,23 @@ def run(context_file,output_file,reader=fetch_rss,now=None):
     captured=parse_time(now or dt.datetime.now(dt.timezone.utc).isoformat()).isoformat()
     qa={"status":"OFFICIAL_NEWS_REVIEW_ONLY","asof_utc":captured,
         "feeds_configured":len(FEEDS),"feeds_read":0,"feeds_skipped_no_upcoming_game":0,
-        "feeds_failed":0,"errors":[],"candidate_count":0,
+        "feeds_failed":0,"errors":[],"candidate_count":0,"feed_status":{},
         "confirmed_qb_starter_count":0}
     out=[]
     for team,url in FEEDS.items():
         if not any(team in (g.get("home"),g.get("away")) and
                    parse_time(g["kickoff_utc"])>parse_time(captured) for g in games):
             qa["feeds_skipped_no_upcoming_game"]+=1
+            qa["feed_status"][team]="NOT_SCHEDULED"
             continue
         try:
             payload=reader(url)
             records=article_candidates(payload,team,games,captured)
             out.extend(records);qa["feeds_read"]+=1
+            qa["feed_status"][team]="FETCHED"
         except (OSError,ValueError,ET.ParseError,KeyError) as exc:
             qa["feeds_failed"]+=1
+            qa["feed_status"][team]="FETCH_FAILED"
             qa["errors"].append({"team":team,"reason":type(exc).__name__,"detail":str(exc)[:120]})
     qa["candidate_count"]=len(out)
     result={"manifest":qa,"candidates":out,
