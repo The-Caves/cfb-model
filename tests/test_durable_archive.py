@@ -1,5 +1,5 @@
 """S3 tests use only a mocked client; never send AWS requests from CI."""
-import datetime as dt,json,tempfile,unittest
+import base64,datetime as dt,hashlib,json,tempfile,unittest
 from pathlib import Path
 from io import BytesIO
 from scripts.weekly_profiles import canonical
@@ -46,6 +46,9 @@ class FakeS3:
         self.calls.append("put")
         if kw["IfNoneMatch"]!="*" or kw["ObjectLockMode"]!="COMPLIANCE":
             raise ValueError("Unsafe upload")
+        if kw.get("ChecksumAlgorithm")!="SHA256" or kw.get("ChecksumSHA256")!=(
+            base64.b64encode(hashlib.sha256(kw["Body"]).digest()).decode("ascii")):
+            raise ValueError("Missing required S3 Object Lock upload checksum")
         self.content=kw["Body"];self.req=kw
         return {"VersionId":None if self.no_version else "v1"}
     def head_object(self,**kw):

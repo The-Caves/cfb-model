@@ -29,3 +29,5 @@ Public workflow receipts intentionally **redact the S3 bucket, object key and ob
 ## Repository code-validation checkpoint
 
 GitHub Actions validation completed **285 passing tests** on commit `8a13672d3ad9fb52d329c2e243bd467e94c3c4eb`. All S3 calls in this validation were mocked. No AWS bucket was created, contacted or charged by the tests. The opt-in full workflow still must confirm it takes the correct configuration path before deployment is considered finished. Actual durable storage requires an externally configured, private Object-Lock-enabled bucket and restricted OIDC role.
+
+AWS S3's `PutObject` API requires a `Content-MD5` or SDK checksum-algorithm header when specifying Object Lock retention. The uploader sets both `ChecksumAlgorithm=SHA256` and the matching Base64 `ChecksumSHA256` of the original bytes, in addition to the post-upload private versioned readback. [AWS Boto3 reference](https://docs.aws.amazon.com/boto3/latest/reference/services/s3/client/put_object.html).

@@ -3,7 +3,7 @@
 The object is not considered durable until versioning, lock, private bucket
 policy, SSE, retention, remote bytes and SHA-256 have been verified.
 """
-import argparse,datetime as dt,hashlib,json,os,re
+import argparse,base64,datetime as dt,hashlib,json,os,re
 from pathlib import Path
 from scripts.model_v03 import timestamp
 from scripts.weekly_profiles import canonical
@@ -104,6 +104,8 @@ def archive_file(path,s3,bucket,region,run_id,now=None,days=MIN_DAYS):
     result=s3.put_object(
         Bucket=bucket,Key=key,Body=data,ContentType="application/json",
         ServerSideEncryption="AES256",IfNoneMatch="*",
+        ChecksumAlgorithm="SHA256",
+        ChecksumSHA256=base64.b64encode(hashlib.sha256(data).digest()).decode("ascii"),
         ObjectLockMode="COMPLIANCE",ObjectLockRetainUntilDate=expires,
         Metadata={"sha256":checksum,"run-id":rec["run_id"]})
     vid=result.get("VersionId")
