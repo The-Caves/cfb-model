@@ -52,7 +52,7 @@ class Tests(unittest.TestCase):
     def test_queue_cannot_promote_unreviewed_news(self):
         snap=observe(ctx(),queue("VERIFIED_SOURCE","Quarterback A"),NOW)
         self.assertEqual(snap["summary"]["confirmed_reviewed"],0)
-        self.assertIn("QUEUE_DISAGREES_WITH_REVIEWED_SOURCE",snap["rows"][1]["evidence_conflicts"])
+        self.assertIn("QUEUE_DISAGREES_WITH_REVIEWED_SOURCE",next(r for r in snap["rows"] if r["team"]=="Texas Longhorns")["evidence_conflicts"])
     def test_availability_conflict_quarantines_claim(self):
         g=copy.deepcopy(GAME)
         g["verified_qb_starters"]={"Texas Longhorns":claim()}
@@ -63,7 +63,7 @@ class Tests(unittest.TestCase):
              "source_url":"https://school.edu/out"}]
         snap=observe(ctx(g),queue("VERIFIED_SOURCE","Quarterback A"),NOW)
         self.assertEqual(snap["summary"]["confirmed_reviewed"],0)
-        self.assertIn("CONFIRMED_STARTER_AVAILABILITY_CONFLICT",snap["rows"][1]["evidence_conflicts"])
+        self.assertIn("CONFIRMED_STARTER_AVAILABILITY_CONFLICT",next(r for r in snap["rows"] if r["team"]=="Texas Longhorns")["evidence_conflicts"])
     def test_after_kickoff_slot_not_backfilled(self):
         g=copy.deepcopy(GAME)
         g["kickoff_utc"]="2026-10-22T09:00:00Z"
