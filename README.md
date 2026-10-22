@@ -16,7 +16,7 @@ This public repository holds a reproducible 2026 college football data and model
 | Kickoff-aware incremental context refresh, persistent deltas, freezes | Implemented; state in `context-state` branch |
 | Public official player availability | SEC, Big Ten, ACC and Big 12 implemented; latest live run succeeded with 0 misleading personnel-change alerts |
 | Official athletics QB news discovery pilot | Seven public football RSS feeds; 7/7 fetched successfully in verified full cloud run; no automatic starter inference |
-| v0.4 Step 3B per-game player-availability history | Implemented: timestamp-safe game/team reports, quarantine, unknown-by-default player status, context-state snapshots (see `docs/V04_INJURY_HISTORY.md`); pending live workflow verification |
+| v0.4 Step 3B per-game player-availability history | **Live-verified October 22, 2026**: 311 tests passed; 216 game/team slots, 18 verified team reports and 198 UNKNOWN coverage slots; [successful Context Delta run](https://github.com/The-Caves/cfb-model/actions/runs/39737668280). Research only; see `docs/V04_INJURY_HISTORY.md`. |
 | Per-game QB source coverage queue | Implemented with timestamped game/team records, review priorities, fetch health, and cloud-verified context-state persistence |
 | Game-specific QB starter evidence gate | Implemented for explicitly reviewed official team/coach statements; **no automated nationwide confirmations** |
 | Confirmed starting QBs and replacement-value effects | Actual upcoming game coverage still **UNKNOWN** until audited source records exist; replacement weights unvalidated |

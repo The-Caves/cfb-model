@@ -58,6 +58,8 @@ class InjuryHistoryTests(unittest.TestCase):
         self.assertEqual(snap["summary"]["reported_player_designations"], 0)
         self.assertEqual(snap["summary"]["quarantined_source_rows"], 1)
         self.assertNotIn('"reported_status": "OUT"', json.dumps(snap["rows"]))
+        self.assertNotIn("Player One", json.dumps(snap["rows"]))
+        self.assertEqual(snap["rows"][0]["quarantined_evidence"][0]["player"], "")
 
     def test_late_postobservation_or_postkickoff_source_rejected(self):
         snap = observe(context([signal(published="2026-10-25T01:00:00Z",

@@ -84,10 +84,10 @@ def _slot(game, team, opponent, when, context_asof):
             pub = _time(raw["published_at_utc"])
             capture = _time(raw["captured_at_utc"])
         except (KeyError, ValueError, TypeError, OverflowError):
-            record["quarantined_evidence"].append(_reason(raw, "INVALID_SOURCE_TIME"))
+            record["quarantined_evidence"].append({"player": "", "reason": "INVALID_SOURCE_TIME"})
             continue
         if not (pub <= capture <= context_asof <= when < kickoff):
-            record["quarantined_evidence"].append(_reason(raw, "SOURCE_OUTSIDE_ASOF_WINDOW"))
+            record["quarantined_evidence"].append({"player": "", "reason": "SOURCE_OUTSIDE_ASOF_WINDOW"})
             continue
         item = {"player": player.strip(), "position": position,
                 "signal_kind": kind, "reported_status": reported,
