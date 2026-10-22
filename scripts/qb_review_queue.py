@@ -93,7 +93,9 @@ def run(context_path,news_path,output_path,review_csv=None):
     result=build_queue(context,news,dt.datetime.now(dt.timezone.utc).isoformat())
     path=Path(output_path);path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(result,indent=2)+"\n")
-    if review_csv is not None:\n        export_review_csv(result,review_csv)\n    print(json.dumps(result["summary"]))
+    if review_csv is not None:
+        export_review_csv(result,review_csv)
+    print(json.dumps(result["summary"]))
     return result
 
 if __name__=="__main__":
@@ -101,5 +103,6 @@ if __name__=="__main__":
     p.add_argument("--context",required=True)
     p.add_argument("--news",required=True)
     p.add_argument("--output",required=True)
+    p.add_argument("--review-csv")
     a=p.parse_args()
-    run(a.context,a.news,a.output)
+    run(a.context,a.news,a.output,a.review_csv)
