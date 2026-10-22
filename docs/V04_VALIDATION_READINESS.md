@@ -35,3 +35,7 @@ October 22, 2026: the existing archive has 108 observed upcoming game profiles, 
 ## Next operational checkpoint
 
 Verify that both workflows pass the full suite and that a live 3F JSON report says insufficient paired evidence without promoting a model. After observed games settle, rerun controlled, fully paired SU/margin/totals research ablations; add market ATS/O-U only with truly dated predecision odds.
+
+## Live verification — October 22, 2026
+
+[Full GitHub Data Intake run 39805986887](https://github.com/The-Caves/cfb-model/actions/runs/39805986887) **succeeded**, including Step 3D append-only archival, Step 3E observed dataset loader, and Step 3F preregistered readiness report. The full validation suite reported **359 unit tests passed**. The Step 3F live output reported `policy_eligible_games=49`, `valid_paired_games=0`, `research_ready=false`, and `PASS_UNVALIDATED`. Sample/fold size, matched personnel variants, reviewed QB/report coverage, historical PBP publication evidence, authenticated market odds, and statistical significance remained blocked. No betting picks, model promotions, new AWS configuration, or paid storage were introduced. The workflow uploaded research artifacts `cfb-2026-data-39805986887` and `cfb-2026-snapshot-audit-39805986887`.
