@@ -146,6 +146,27 @@ def matchup(g,home,away):
       "epa_coverage_form":delta("epa_coverage")
     }
 
+def advance_completed_day(histories, group, advanced):
+    """Share the same pregame and opponent-adjusted history updater with v0.4.
+
+    All games on one ESPN Eastern football date use history from earlier dates.
+    """
+    prior={}
+    for g in group:
+        cutoff=dt.date.fromisoformat(g["date"])
+        for team in (g["home"],g["away"]):
+            prior[(g["game_id"],team)]=summarize(
+                histories[team],timestamp(g["kickoff_utc"]),cutoff)
+    for g in group:
+        for team,opp in ((g["home"],g["away"]),(g["away"],g["home"])):
+            r=game_stats(g,team,advanced)
+            other=prior[(g["game_id"],opp)]
+            r["epa_off_adj"]=(r["epa_off"]-other["epa_def"]
+                if r.get("epa_off") is not None and other["epa_def"] is not None else None)
+            r["epa_def_adj"]=(r["epa_def"]-other["epa_off"]
+                if r.get("epa_def") is not None and other["epa_off"] is not None else None)
+            histories[team].append(r)
+
 def build_weekly_games(games,advanced):
     histories=defaultdict(list);output=[]
     for kickoff,group in group_by_date(games):
@@ -166,20 +187,7 @@ def build_weekly_games(games,advanced):
                  "betting_status":"PASS_UNVALIDATED",**features}
             output.append(row)
             pending.append(g)
-        # Opponent adjustment for a past game's EPA uses each opponent's
-        # defense/offense observed BEFORE that game; no current-game stats.
-        pregame={team:summarize(histories[team],timestamp(g["kickoff_utc"]),
-                  dt.date.fromisoformat(g["date"]))
-                 for g in pending for team in (g["home"],g["away"])}
-        for g in pending:
-            for team,opp in ((g["home"],g["away"]),(g["away"],g["home"])):
-                r=game_stats(g,team,advanced)
-                other=pregame[opp]
-                r["epa_off_adj"]=(r["epa_off"]-other["epa_def"]
-                    if r.get("epa_off") is not None and other["epa_def"] is not None else None)
-                r["epa_def_adj"]=(r["epa_def"]-other["epa_off"]
-                    if r.get("epa_def") is not None and other["epa_off"] is not None else None)
-                histories[team].append(r)
+        advance_completed_day(histories,pending,advanced)
     return output
 
 def group_by_date(games):

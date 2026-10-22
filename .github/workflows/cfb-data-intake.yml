@@ -51,6 +51,15 @@ jobs:
         run: python scripts/ingest_advanced.py --games data/games_2026.csv --registry data/archive/2026_team_aliases.csv --output data/advanced
       - name: Merge scoreboard and advanced 2026 team profiles
         run: python scripts/combine_profiles.py --scores data/team_profiles_2026.csv --advanced data/advanced/team_profiles_advanced_2026.csv --expected-teams 138 --output data/enriched
+      - name: Build checksummed retrospective weekly profiles (v0.4 step 1)
+        run: |
+          python -m scripts.weekly_profiles \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --manifest data/advanced/advanced_manifest.json \
+            --registry data/archive/2026_team_aliases.csv \
+            --through-date "$(date -u +%F)" \
+            --output data/weekly_profiles
       - name: Fit and compare retrospective 2026 advanced model v0.3 (NOT betting validated)
         run: |
           python -m scripts.model_v03 \
@@ -73,6 +82,7 @@ jobs:
             data/advanced/team_profiles_advanced_2026.csv
             data/enriched/
             data/model_v03/
+            data/weekly_profiles/
             data/context/
             data/reconciliation/
             data/team_profiles_2026.csv
