@@ -69,6 +69,17 @@ jobs:
             --output data/model_v03
       - name: Collect timestamped upcoming schedules, rest, travel proxies, weather and reviewed personnel
         run: python -m scripts.ingest_game_context --raw-dir data/raw --availability-csv data/manual/availability_2026.csv --output data/context --horizon-days 10 --auto-official
+      - name: Freeze observed pregame research evidence (v0.4 Step 2)
+        run: |
+          python -m scripts.pregame_evidence \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --advanced-manifest data/advanced/advanced_manifest.json \
+            --score-manifest data/manifest.json \
+            --context data/context/upcoming_game_context_2026.json \
+            --registry data/archive/2026_team_aliases.csv \
+            --output data/pregame_evidence \
+            --run-id "${{ github.run_id }}"
       - name: Archive results and raw snapshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -83,6 +94,7 @@ jobs:
             data/enriched/
             data/model_v03/
             data/weekly_profiles/
+            data/pregame_evidence/
             data/context/
             data/reconciliation/
             data/team_profiles_2026.csv

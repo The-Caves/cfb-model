@@ -1,0 +1,7 @@
+# v0.4 Step 2: actual pregame capture-time evidence
+
+The scripts/pregame_evidence.py module runs only after current ESPN, SportsDataverse and upcoming matchup ingestion. For each FBS game with a future kickoff, it reconstructs the team profiles from games completed on earlier Eastern football calendar dates, and freezes the profiles plus their observed capture time, ESPN game identity, kickoff time, SHA-256 hashes of source files, original provider PBP digest and collection timestamps.
+
+The get_asof_feature gate refuses an observation captured after the requested historical decision time or one used at/after kickoff, rejects future source retrieval timestamps, and checks the profile checksum. Missing, noncanonical and already-started games are quarantined. Each workflow run writes one capture-<run-id>.json using exclusive-create file mode. The public repo contains code and tests, not source data.
+
+**Status: PASS_UNVALIDATED.** A future game's captured profile now records what our workflow actually knew at collection time, but this does not verify old provider publication dates or the authenticity of data retrospectively revised before our capture. Archives currently live in GitHub Actions artifacts retained 30 days; durable immutable storage and independent validation of the workflow receipt are still required. Historical September profiles reconstructed in October must NEVER be upgraded to verified pregame observations. No real FanDuel prices or QB/injury replacement adjustments are included.

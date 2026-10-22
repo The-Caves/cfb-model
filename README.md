@@ -165,3 +165,7 @@ All four *research-code* steps are connected through `scripts/model_v03.py`: 202
 ### v0.4 Step 1 — historical profile archive
 
 Added scripts/weekly_profiles.py, producing one deterministic, checksummed research profile file for every 2026 game date and weekly Saturday anchor, for all 138 FBS teams. Profiles are built using only earlier football calendar dates and share the same opponent-adjusted history updater with v0.3; changing October results cannot change a September reconstruction. The capture manifest tracks provider retrieval and source checksums; conflicting writes are rejected. The data intake workflow archives outputs as temporary artifacts. See [Step 1 profile method](docs/V04_FROZEN_WEEKLY_PROFILES.md). **These are retrospectively reconstructed, not authentic historic source snapshots, and PASS_UNVALIDATED still applies.**
+
+### v0.4 Step 2 — observed pregame capture gate
+
+scripts/pregame_evidence.py now captures upcoming games' FBS profiles at a real workflow observation time, with source retrieval timestamps, ESPN IDs, kickoff UTC, and source/profile hashes. The get_asof_feature gate refuses any future observation or post-kickoff game in a past decision. Output is stored in 30-day workflow artifacts; see [source-time evidence](docs/V04_SOURCE_TIME_EVIDENCE.md). This is an observed present-day capture, NOT authentication of retrospectively revised earlier source data or durable long-term archiving. PASS_UNVALIDATED remains mandatory.
