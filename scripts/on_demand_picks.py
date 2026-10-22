@@ -58,7 +58,7 @@ def choose(record, requests, now=None):
     if not out:raise ValueError("No requested matchups")
     return {"status":"ARCHIVED_PROSPECTIVE_RESEARCH_REPORT",
             "forecast_observed_utc":record["forecast_observed_utc"],
-            "model":record["model_training"]["model"],
+            "model":record["model_training"].get("model"),
             "betting_status":"PASS_UNVALIDATED",
             "warning":"Existing archived research forecast, not a new model fit; no verified market odds, no betting validation",
             "games":out}
