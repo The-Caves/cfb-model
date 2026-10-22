@@ -102,8 +102,9 @@ def _check_report(quality, eval_report, rows, labels):
     if not isinstance(quality,dict) or quality.get("status") != "STEP3E_AUDITED_OBSERVED_DATASET_RESEARCH_ONLY" or (
         quality.get("betting_status") != "PASS_UNVALIDATED"):
         raise ValueError("Step 3E quality report not authenticated")
-    if not isinstance(eval_report,dict) or eval_report.get("status") != "OBSERVED_PERSONNEL_ABLATION_RESEARCH_ONLY" or (
-        eval_report.get("betting_status") != "PASS_UNVALIDATED") or
+    if (not isinstance(eval_report,dict) or
+        eval_report.get("status") != "OBSERVED_PERSONNEL_ABLATION_RESEARCH_ONLY" or
+        eval_report.get("betting_status") != "PASS_UNVALIDATED" or
         eval_report.get("model_promoted") is not False):
         raise ValueError("Not a valid research-only evaluation report")
     q=quality.get("quality")
