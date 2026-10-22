@@ -173,6 +173,55 @@ class Forecast3GTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,"GitHub run"):
                     archive(r)
 
+    def test_accepts_real_espn_scoreboard_manifest_format(self):
+        # ingest_espn.py does not put a season key in its manifest.
+        # Its fixed 2026 request start/date timezone identify this intake.
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            score=root/"manifest.json"
+            adv=root/"advanced.json"
+            score.write_text(json.dumps({
+                "status":"SUCCESS","failures":[],
+                "requested_start":"2026-08-01",
+                "requested_end":"2026-10-22",
+                "scoreboard_date_timezone":"America/New_York",
+                "retrieved_at_utc":"2026-10-22T09:45:00Z"}))
+            adv.write_text(json.dumps({
+                "status":"RESEARCH_PBP_IMPORTED_VERIFIED_SCORE_MATCH",
+                "season":2026,
+                "historical_pregame_availability_verified":False,
+                "retrieved_at_utc":"2026-10-22T09:46:00Z"}))
+            fake=[{
+                "game_id":"1","kickoff_utc":"2026-10-01T20:00:00Z",
+                "home_score":"21","away_score":"14",
+                "date":"2026-10-01","home":"Home School",
+                "away":"Away School","neutral":"False"}]
+            with patch("scripts.personnel_forecast.load_inputs",
+                       return_value=(fake,{},{})):
+                games,advanced,_,_=_check_training(
+                    "games.csv","advanced.csv",adv,score,
+                    {"captured_at_utc":CAP})
+            self.assertEqual(games[0]["game_id"],"1")
+
+    def test_future_source_manifest_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            score=root/"manifest.json"
+            adv=root/"advanced.json"
+            score.write_text(json.dumps({
+                "status":"SUCCESS","failures":[],
+                "requested_start":"2026-08-01",
+                "scoreboard_date_timezone":"America/New_York",
+                "retrieved_at_utc":"2026-10-22T10:01:00Z"}))
+            adv.write_text(json.dumps({
+                "status":"RESEARCH_PBP_IMPORTED_VERIFIED_SCORE_MATCH",
+                "season":2026,
+                "historical_pregame_availability_verified":False,
+                "retrieved_at_utc":"2026-10-22T09:46:00Z"}))
+            with self.assertRaisesRegex(ValueError,"not available"):
+                _check_training("games.csv","advanced.csv",adv,score,
+                                {"captured_at_utc":CAP})
+
     def test_no_paid_market_call_or_actual_lines_in_artifact(self):
         r=predicted()
         payload=json.dumps(r)

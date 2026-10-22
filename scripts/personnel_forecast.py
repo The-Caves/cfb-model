@@ -42,7 +42,9 @@ def _check_training(games_csv,advanced_csv,advanced_manifest,score_manifest,cap)
     adv=json.loads(Path(advanced_manifest).read_text())
     cutoff=t(cap["captured_at_utc"])
     if (manifest.get("status")!="SUCCESS" or manifest.get("failures") or
-        manifest.get("season")!=2026 or adv.get("season")!=2026 or
+        manifest.get("requested_start")!="2026-08-01" or
+        manifest.get("scoreboard_date_timezone")!="America/New_York" or
+        adv.get("season")!=2026 or
         adv.get("historical_pregame_availability_verified") is not False or
         not str(adv.get("status","")).startswith("RESEARCH_PBP_IMPORTED")):
         raise ValueError("Unverified 2026 scoreboard/advanced source")
