@@ -56,4 +56,5 @@ class GameContextTests(unittest.TestCase):
         self.assertEqual(qa["both_rest_available"],1)
         self.assertEqual(qa["personnel_verified_both_teams"],0)
         self.assertFalse(rows[0]["safe_for_betting"])
+        self.assertEqual(rows[0]["injury_coverage_by_team"],{"A":"UNKNOWN","B":"UNKNOWN"})
 if __name__=="__main__":unittest.main()

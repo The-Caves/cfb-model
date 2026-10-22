@@ -36,6 +36,12 @@ class PersonnelTests(unittest.TestCase):
         p=evaluate(GAME,ISSUE,rows)
         self.assertEqual(p["injuries"][0]["signal_kind"],"AVAILABILITY")
         self.assertEqual(p["confirmed_qb_starters"],{})
+    def test_conflicting_same_publication_availability_is_quarantined(self):
+        rows=[report("Home",kind="AVAILABILITY",player="Quarterback Alpha",status="OUT"),
+              report("Home",kind="AVAILABILITY",player="Quarterback Alpha",status="AVAILABLE")]
+        outcome=evaluate(GAME,ISSUE,rows)
+        self.assertEqual(outcome["injuries"],[])
+        self.assertTrue(any("contradictory availability" in w for w in outcome["warnings"]))
     def test_qb_only_if_sourced_confirmed(self):
         rows=[report("Home","QB_STARTER","Quarterback Alpha","QB","CONFIRMED")]
         p=evaluate(GAME,ISSUE,rows)

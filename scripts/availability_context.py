@@ -74,11 +74,18 @@ def evaluate(game,issue,records,attestation_age_hours=30):
                 and (issued-r["_captured"]).total_seconds()<=attestation_age_hours*3600]
         coverage[team]="VERIFIED_REPORT_REVIEWED" if attest else "UNKNOWN"
         injury_by_player={}
+        conflicted=set()
         for r in valid:
             if r["team"]==team and r["kind"] in ("INJURY","AVAILABILITY"):
                 before=injury_by_player.get(r["player"])
-                if before is None or (r["_captured"],r["_published"])>(before["_captured"],before["_published"]):
+                if (before is not None and before["_published"]==r["_published"]
+                    and (before["status"],before["position"])!=(r["status"],r["position"])):
+                    conflicted.add(r["player"])
+                if before is None or (r["_published"],r["_captured"])>(before["_published"],before["_captured"]):
                     injury_by_player[r["player"]]=r
+        for player in conflicted:
+            injury_by_player.pop(player,None)
+            issues.append(team+": contradictory availability designations for "+player)
         injuries.extend({"team":team,"player":r["player"],"position":r["position"],"signal_kind":r["kind"],
                          "status":r["status"],"published_at_utc":r["published_at_utc"],
                          "captured_at_utc":r["captured_at_utc"],"source_url":r["source_url"]}

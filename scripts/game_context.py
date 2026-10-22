@@ -155,6 +155,8 @@ def build_context(upcoming,completed,issued_at,geolocate,forecast,personnel_for_
                 "venue_indoor":g["indoor"],"venue_location_quality":geo["precision"] if geo else "UNKNOWN",
                 "weather_status":weather_status,**wx,
                 "injury_report_status":injury["coverage_status"],
+                "injury_coverage_by_team":{team:(injury.get("coverage_by_team") or {}).get(team,"UNKNOWN")
+                                           for team in (g["home"],g["away"])},
                 "verified_qb_starters":injury["confirmed_qb_starters"],
                 "injury_reports":injury["injuries"],"availability_reports":injury["injuries"],
                 "qb_availability_reports":[x for x in injury["injuries"] if x["position"]=="QB"],

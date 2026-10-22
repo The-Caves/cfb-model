@@ -73,6 +73,12 @@ jobs:
             --context data/context_refresh/upcoming_game_context_2026.json \
             --queue data/context_refresh/qb_review_queue.json \
             --output data/context_refresh/qb_history.json
+      - name: Build timestamped two-team injury and availability history
+        if: steps.plan.outputs.run == 'true'
+        run: |
+          python -m scripts.injury_history \
+            --context data/context_refresh/upcoming_game_context_2026.json \
+            --output data/context_refresh/injury_history.json
       - name: Check SEC and Big Ten official availability report publications
         if: steps.plan.outputs.run == 'true'
         run: python -m scripts.personnel_source_watch --previous data/context_state/previous_sources.json --output data/context_refresh/personnel_source_watch.json
@@ -87,6 +93,7 @@ jobs:
             --source-watch data/context_refresh/personnel_source_watch.json \
             --qb-review data/context_refresh/qb_review_queue.json \
             --qb-history data/context_refresh/qb_history.json \
+            --injury-history data/context_refresh/injury_history.json \
             --output data/context_delta
       - name: Archive compact refreshed context and deltas
         if: always() && steps.plan.outputs.run == 'true'
@@ -102,6 +109,7 @@ jobs:
             data/context_refresh/qb_news_candidates.json
             data/context_refresh/qb_review_queue.json
             data/context_refresh/qb_history.json
+            data/context_refresh/injury_history.json
             data/context_refresh/official/official_availability_manifest.json
             data/context_refresh/official/availability_verified_2026.csv
             data/context_delta/
