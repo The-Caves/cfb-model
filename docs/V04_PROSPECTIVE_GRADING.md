@@ -27,3 +27,7 @@ python -m scripts.personnel_forecast_grade --output data/step3g-observed-grades.
 ```
 
 Files: `scripts/personnel_forecast_grade.py`, `tests/test_personnel_forecast_grade.py`, updated `.github/workflows/cfb-data-intake.yml` and `.github/workflows/cfb-outcome-settlement.yml`.
+
+## Live verification — October 22, 2026
+
+[GitHub Observed Final Settlement run 39816552090](https://github.com/The-Caves/cfb-model/actions/runs/39816552090) succeeded. The full Python test suite ran **389 tests** with no failures. The Step 3G.1 grade command completed successfully and reported **one archived forecast run, zero indexed final games, zero frozen graded games, zero newly graded games, and `no_new_grade_write=true`**. This is the correct real-data checkpoint: no forecast was re-created after kickoff and no empty GitHub grade commit was added. All market ATS/O-U grades remain unavailable; `PASS_UNVALIDATED` remains enforced.
