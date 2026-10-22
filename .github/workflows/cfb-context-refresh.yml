@@ -65,7 +65,8 @@ jobs:
           python -m scripts.qb_review_queue \
             --context data/context_refresh/upcoming_game_context_2026.json \
             --news data/context_refresh/qb_news_candidates.json \
-            --output data/context_refresh/qb_review_queue.json
+            --output data/context_refresh/qb_review_queue.json \\
+            --review-csv data/context_refresh/qb_review_queue.csv
       - name: Build timestamped two-team QB history without starter inference
         if: steps.plan.outputs.run == 'true'
         run: |
@@ -115,6 +116,7 @@ jobs:
             data/context_refresh/personnel_source_watch.json
             data/context_refresh/qb_news_candidates.json
             data/context_refresh/qb_review_queue.json
+            data/context_refresh/qb_review_queue.csv
             data/context_refresh/qb_history.json
             data/context_refresh/injury_history.json
             data/context_refresh/personnel_coverage_audit.json

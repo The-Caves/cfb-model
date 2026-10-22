@@ -1,5 +1,5 @@
 """Build a research-only review queue for upcoming college-football QB sources."""
-import argparse, datetime as dt, json
+import argparse, csv, datetime as dt, json
 from pathlib import Path
 from scripts.game_context import parse_time
 from scripts.qb_official_news_watch import FEEDS
@@ -64,13 +64,36 @@ def build_queue(context, news, now):
             "rows":rows,"summary":summarize(rows),"safe_for_betting":False,
             "betting_status":"PASS_UNVALIDATED"}
 
-def run(context_path,news_path,output_path):
+def export_review_csv(queue, path):
+    """Human-readable game-specific triage; never claims a starter."""
+    fields=("game_id","kickoff_utc","team","opponent","starter_status",
+            "starter_player","review_priority","feed_status",
+            "candidate_count","source_urls","qb_availability_flags")
+    rows=[]
+    for r in queue["rows"]:
+        rows.append({
+            **{k:r.get(k) for k in fields if k not in ("source_urls","qb_availability_flags")},
+            "source_urls":" | ".join(sorted({str(a["source_url"]) for a in r["news_candidates"]
+                                               if a.get("source_url")})),
+            "qb_availability_flags":" | ".join(sorted(
+                str(a.get("player",""))+":"+str(a.get("status",""))
+                for a in r["qb_availability"]))})
+    dest=Path(path)
+    dest.parent.mkdir(parents=True,exist_ok=True)
+    with dest.open("w",newline="",encoding="utf-8") as f:
+        writer=csv.DictWriter(f,fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    return len(rows)
+
+
+def run(context_path,news_path,output_path,review_csv=None):
     context=json.loads(Path(context_path).read_text())
     news=json.loads(Path(news_path).read_text())
     result=build_queue(context,news,dt.datetime.now(dt.timezone.utc).isoformat())
     path=Path(output_path);path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(result,indent=2)+"\n")
-    print(json.dumps(result["summary"]))
+    if review_csv is not None:\n        export_review_csv(result,review_csv)\n    print(json.dumps(result["summary"]))
     return result
 
 if __name__=="__main__":
