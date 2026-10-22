@@ -8,7 +8,7 @@ STATUS = "STEP3H_PERSONNEL_COVERAGE_RESEARCH_ONLY"
 VERIFIED = "VERIFIED_REPORT_REVIEWED"
 
 def audit(context):
-    if context.get("betting_status") != "PASS_UNVALIDATED":
+    if context.get("betting_status", "PASS_UNVALIDATED") != "PASS_UNVALIDATED" or context.get("safe_for_betting") is True:
         raise ValueError("Untrusted context")
     issue = parse_time(context["asof_utc"])
     capture = parse_time(context["captured_at_utc"])
