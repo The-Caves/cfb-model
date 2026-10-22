@@ -199,6 +199,10 @@ def audit(index, outcomes, bundles, labels_by_path, evaluation_asof_utc):
                                 summary["home"], summary["away"])
         if true_selected is None or frozen != true_selected:
             raise ValueError("Outcome has non-policy or revised pregame selection")
+        # First authenticate the archived outcome bytes against the frozen
+        # digest. Only then compare authenticated evidence to its index.
+        # This distinguishes an altered evidence record from a corrupted index.
+        available = _check_label(path, label, summary, frozen, now)
         for field in ("game_id","home","away","kickoff_utc","home_score",
                       "away_score","outcome_known_at_utc"):
             if field == "kickoff_utc":
@@ -206,7 +210,6 @@ def audit(index, outcomes, bundles, labels_by_path, evaluation_asof_utc):
                     raise ValueError("Final index kickoff mismatch")
             elif str(summary[field]) != str(label[field]):
                 raise ValueError("Postgame indexed score/identity mismatch")
-        available = _check_label(path, label, summary, frozen, now)
         if not available or at(frozen["captured_at_utc"]) > now or (
             at(bundles[frozen["path"]]["archived_at_utc"]) > now):
             delayed_labels += 1
