@@ -54,6 +54,12 @@ jobs:
         run: |
           python -m scripts.personnel_archive_dataset \
             --output "data/settlement_scores/step3e-${{ github.run_id }}"
+      - name: Check prospective model-validation readiness (Step 3F)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.personnel_validation_readiness \
+            --dataset-dir "data/settlement_scores/step3e-${{ github.run_id }}" \
+            --output "data/settlement_scores/step3e-${{ github.run_id }}/step3f-readiness.json"
       - name: Preserve postgame settlement audit
         if: always() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@v4

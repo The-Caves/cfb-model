@@ -106,6 +106,11 @@ jobs:
         run: |
           python -m scripts.personnel_archive_dataset \
             --output "data/pregame_evidence/step3e-${{ github.run_id }}"
+      - name: Freeze Step 3F preregistered research-readiness diagnostics
+        run: |
+          python -m scripts.personnel_validation_readiness \
+            --dataset-dir "data/pregame_evidence/step3e-${{ github.run_id }}" \
+            --output "data/pregame_evidence/step3e-${{ github.run_id }}/step3f-readiness.json"
       - name: Configure private S3 compliance archive credentials (optional)
         if: ${{ vars.CFB_ARCHIVE_BUCKET != '' && vars.CFB_ARCHIVE_REGION != '' && vars.CFB_ARCHIVE_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4

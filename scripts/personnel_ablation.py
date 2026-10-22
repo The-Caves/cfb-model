@@ -168,9 +168,15 @@ def ablate(captures, labels, evaluation_asof_utc, start_date="2026-09-26",
             train = [r for gid, r in selected.items() if
                      parse_time(r["kickoff_utc"]) < boundary and finals[gid]["_known"] < boundary]
             test = [r for r in selected.values() if inside(r, beginning, end)]
+            # Frozen ESPN memberships are essential to prove chronological
+            # train/test disjointness; aggregate game counts alone cannot.
+            membership = {
+                "train_game_ids": sorted(str(r["game_id"]) for r in train),
+                "test_game_ids": sorted(str(r["game_id"]) for r in test)}
             if len(train) < min_train_games or len(test) < min_test_games:
                 folds.append({"train_before_utc": boundary.isoformat(),
                               "train_games": len(train), "test_games": len(test),
+                              **membership,
                               "status": "INSUFFICIENT_OBSERVED_TRAINING_OR_TEST",
                               "models": {}})
                 continue
@@ -191,6 +197,7 @@ def ablate(captures, labels, evaluation_asof_utc, start_date="2026-09-26",
                 attempted[name+"_folds"] += 1
             folds.append({"train_before_utc": boundary.isoformat(),
                           "train_games": len(train), "test_games": len(test),
+                          **membership,
                           "status": "RESEARCH_FOLD_EVALUATED", "models": outcomes})
     aggregates = {name: _finish(v) for name, v in total.items()}
     baseline = aggregates["profile_baseline"]
