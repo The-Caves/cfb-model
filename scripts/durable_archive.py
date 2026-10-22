@@ -120,10 +120,24 @@ def archive_file(path,s3,bucket,region,run_id,now=None,days=MIN_DAYS):
             "safe_for_betting":False,"betting_status":"PASS_UNVALIDATED"}
 
 def save_receipt(receipt,path):
-    if receipt.get("status")!=STATUS:
+    """Write a public-safe audit summary, never private bucket/key/version IDs.
+
+    The true object path is derived inside the authorized AWS account from
+    the known run ID, while version IDs remain discoverable inside private S3.
+    """
+    if receipt.get("status")!=STATUS or not (
+        receipt.get("remote_sha256_readback_verified") and
+        receipt.get("remote_compliance_retention_verified")):
         raise ValueError("An unverified archive cannot issue a receipt")
+    public_keys=("status","backend","run_id","sha256",
+                 "capture_observed_at_utc","archive_verified_at_utc",
+                 "retain_until_utc","remote_sha256_readback_verified",
+                 "remote_compliance_retention_verified",
+                 "historical_publication_times_verified",
+                 "safe_for_betting","betting_status")
+    safe={k:receipt[k] for k in public_keys}
     dest=Path(path);dest.parent.mkdir(parents=True,exist_ok=True)
-    with dest.open("xb") as stream:stream.write(canonical(receipt))
+    with dest.open("xb") as stream:stream.write(canonical(safe))
 
 def main():
     p=argparse.ArgumentParser()

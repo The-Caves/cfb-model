@@ -78,6 +78,11 @@ class Tests(unittest.TestCase):
         target=self.path.parent/"receipt.json"
         save_receipt(receipt,target)
         with self.assertRaises(FileExistsError):save_receipt(receipt,target)
+        written=target.read_text()
+        self.assertNotIn(BUCKET,written)
+        self.assertNotIn("version_id",written)
+        self.assertNotIn("key",written)
+        self.assertIn(receipt["sha256"],written)
     def test_versioning_disabled_fails_closed(self):
         self.s3.version=False
         with self.assertRaisesRegex(ValueError,"versioning"):self.go()
