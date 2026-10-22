@@ -1,0 +1,32 @@
+name: CFB On-Demand Model Picks
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/manual/model_picks_request.txt'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  picks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Read frozen model forecast and report requested games
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -m scripts.on_demand_picks --request data/manual/model_picks_request.txt --output data/manual/model_picks_result.json
+          cat data/manual/model_picks_result.md
+          cat data/manual/model_picks_result.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: requested-model-picks-${{ github.run_id }}
+          path: data/manual/model_picks_result.*
+          if-no-files-found: warn
