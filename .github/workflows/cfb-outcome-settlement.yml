@@ -49,6 +49,11 @@ jobs:
             --games data/settlement_scores/games_2026.csv \
             --manifest data/settlement_scores/manifest.json \
             --output "data/settlement_scores/settlement-${{ github.run_id }}.json"
+      - name: Audit archived pregame-to-final dataset and walk-forward readiness (Step 3E)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.personnel_archive_dataset \
+            --output "data/settlement_scores/step3e-${{ github.run_id }}"
       - name: Preserve postgame settlement audit
         if: always() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@v4
@@ -57,5 +62,6 @@ jobs:
           path: |
             data/settlement_scores/manifest.json
             data/settlement_scores/settlement-*.json
+            data/settlement_scores/step3e-*/
           retention-days: 30
           if-no-files-found: warn

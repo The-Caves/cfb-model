@@ -102,6 +102,10 @@ jobs:
             --games data/games_2026.csv \
             --manifest data/manifest.json \
             --output "data/pregame_evidence/step3d-archive-${{ github.run_id }}.json"
+      - name: Verify dataset integrity and personnel ablation readiness (Step 3E)
+        run: |
+          python -m scripts.personnel_archive_dataset \
+            --output "data/pregame_evidence/step3e-${{ github.run_id }}"
       - name: Configure private S3 compliance archive credentials (optional)
         if: ${{ vars.CFB_ARCHIVE_BUCKET != '' && vars.CFB_ARCHIVE_REGION != '' && vars.CFB_ARCHIVE_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4
