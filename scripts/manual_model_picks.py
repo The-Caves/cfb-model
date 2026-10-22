@@ -6,7 +6,21 @@ from scripts.personnel_forecast import verify
 
 def select(record, requested):
     verify(record)
+    import re
     tokens=[x.strip() for x in requested.splitlines() if x.strip()]
+    # GitHub workflow_dispatch may flatten multiline input into a single space-separated string.
+    # Recover boundaries using the scheduled games in the frozen forecast, not guessed team names.
+    if len(tokens)==1 and tokens[0] not in {str(g["game_id"]) for g in record["games"]}:
+        raw=tokens[0]
+        candidates=[]
+        for g in record["games"]:
+            for separator in (" at "," vs "):
+                phrase=f'{g["away"]}{separator}{g["home"]}'
+                for m in re.finditer(re.escape(phrase),raw,re.IGNORECASE):
+                    candidates.append((m.start(),m.end(),phrase))
+        candidates.sort()
+        if candidates and " ".join(x[2] for x in candidates).casefold()==raw.casefold():
+            tokens=[x[2] for x in candidates]
     if not tokens or len(tokens)>30:
         raise ValueError("Enter between 1 and 30 matchups")
     output=[]
