@@ -31,7 +31,9 @@ def select(record, requested):
                  key in (f'{g["away"]} at {g["home"]}'.casefold(),
                          f'{g["away"]} vs {g["home"]}'.casefold())]
         if len(matches)!=1:
-            raise ValueError(f"Matchup {token!r} matched {len(matches)} games; use exact team names or ESPN game ID")
+            output.append({"requested_matchup":token,"status":"NOT_IN_CURRENT_PREGAME_FORECAST",
+                           "reason":"No unique exact matchup in this forecast. Check team aliases and whether kickoff already passed."})
+            continue
         g=matches[0]
         if g["game_id"] in {r["game_id"] for r in output}:
             raise ValueError("Duplicate selected game")
@@ -64,6 +66,9 @@ def run(forecast,requested,out):
            "| Game | Winner | Away score | Home score | Home margin | Total | Home win probability |",
            "|---|---|---:|---:|---:|---:|---:|"]
     for g in report["games"]:
+        if g.get("status")=="NOT_IN_CURRENT_PREGAME_FORECAST":
+            lines.append(f'| {g["requested_matchup"]} | UNAVAILABLE | — | — | — | — | — |')
+            continue
         fmt=lambda v:"PASS" if v is None else str(round(v,2))
         lines.append(f'| {g["away"]} at {g["home"]} | {g["pick"] or "PASS"} | '
                      f'{fmt(g["away_points"])} | {fmt(g["home_points"])} | '
