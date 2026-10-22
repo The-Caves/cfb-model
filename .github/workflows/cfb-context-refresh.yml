@@ -80,6 +80,12 @@ jobs:
           python -m scripts.injury_history \
             --context data/context_refresh/upcoming_game_context_2026.json \
             --output data/context_refresh/injury_history.json
+      - name: Export injury and availability evidence review queue
+        if: steps.plan.outputs.run == 'true'
+        run: |
+          python -m scripts.injury_review_export \\
+            --snapshot data/context_refresh/injury_history.json \\
+            --output data/context_refresh/injury_review_queue.csv
       - name: Audit two-team verified QB and injury coverage (Step 3H)
         if: steps.plan.outputs.run == 'true'
         run: |
@@ -119,6 +125,7 @@ jobs:
             data/context_refresh/qb_review_queue.csv
             data/context_refresh/qb_history.json
             data/context_refresh/injury_history.json
+            data/context_refresh/injury_review_queue.csv
             data/context_refresh/personnel_coverage_audit.json
             data/context_refresh/official/official_availability_manifest.json
             data/context_refresh/official/availability_verified_2026.csv
