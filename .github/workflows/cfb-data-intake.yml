@@ -111,6 +111,15 @@ jobs:
           python -m scripts.personnel_validation_readiness \
             --dataset-dir "data/pregame_evidence/step3e-${{ github.run_id }}" \
             --output "data/pregame_evidence/step3e-${{ github.run_id }}/step3f-readiness.json"
+      - name: Freeze genuine 2026 prospective baseline research forecasts (Step 3G)
+        run: |
+          python -m scripts.personnel_forecast \
+            --joined "data/pregame_evidence/personnel-joined-${{ github.run_id }}.json" \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --advanced-manifest data/advanced/advanced_manifest.json \
+            --score-manifest data/manifest.json \
+            --output "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json"
       - name: Configure private S3 compliance archive credentials (optional)
         if: ${{ vars.CFB_ARCHIVE_BUCKET != '' && vars.CFB_ARCHIVE_REGION != '' && vars.CFB_ARCHIVE_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4
