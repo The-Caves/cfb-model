@@ -24,6 +24,9 @@ MIN_BOTH_TEAM_REPORT_COVERAGE = 0.60
 MIN_VERIFIED_QB_SLOTS = 0.25
 MAX_ALL_FEATURE_NULL_RATE = 0.50
 POLICY = "LATEST_OBSERVED_24_TO_72_HOURS_PREKICKOFF"
+# The 3C evaluator and 3D archive use distinct names for the same fixed
+# 24-to-72h latest-observed policy. Require the evaluator's exact label.
+ABLATION_POLICY = "LATEST_CAPTURE_24_TO_72_HOURS_BEFORE_KICKOFF"
 VALUES = set(FEATURE_FIELDS)
 
 
@@ -131,7 +134,7 @@ def _check_report(quality, eval_report, rows, labels):
     if any(name not in VALUES or not _zero_or_pos_int(count) or count>eligible
            for name,count in missing.items()):
         raise ValueError("Invalid pregame null feature audit")
-    if eval_report.get("game_selection_policy") != POLICY:
+    if eval_report.get("game_selection_policy") != ABLATION_POLICY:
         raise ValueError("Unregistered prediction observation policy")
     if quality.get("evaluation_gate",{}).get("model_ready_for_promotion") is not False or (
         quality["evaluation_gate"].get("model_promoted") is not False):

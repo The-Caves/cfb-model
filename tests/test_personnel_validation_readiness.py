@@ -11,7 +11,7 @@ from pathlib import Path
 
 from scripts.personnel_features import FEATURE_FIELDS
 from scripts.personnel_validation_readiness import (
-    STATUS, POLICY, _check_features, _validate_folds, assess, run)
+    STATUS, POLICY, ABLATION_POLICY, _check_features, _validate_folds, assess, run)
 
 EVAL="2026-11-20T00:00:00Z"
 SOURCE="https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
@@ -91,7 +91,7 @@ def fixture(empty=True):
         "status":"OBSERVED_PERSONNEL_ABLATION_RESEARCH_ONLY",
         "betting_status":"PASS_UNVALIDATED",
         "model_promoted":False,
-        "game_selection_policy":POLICY,
+        "game_selection_policy":ABLATION_POLICY,
         "folds":folds,
         "aggregates":{name:({"games":60} if not empty else None)
                       for name in VARIANTS},
