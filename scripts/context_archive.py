@@ -7,6 +7,7 @@ import argparse,base64,datetime as dt,gzip,hashlib,json,os,urllib.error,urllib.p
 from pathlib import Path
 from scripts.context_delta import snapshot_changes
 from scripts.qb_review_archive import close_qb_review
+from scripts.qb_history import verify_observation as verify_qb_history
 from scripts.game_context import parse_time
 
 API="https://api.github.com"
@@ -73,7 +74,7 @@ def close_snapshot(current,observed_at):
     newer["excluded_game_kickoffs_during_collection"]=len(games)-len(newer["games"])
     return newer
 
-def write(current_path,previous_path,geo_path,manifest_path,output_path,source_watch=None,qb_review=None):
+def write(current_path,previous_path,geo_path,manifest_path,output_path,source_watch=None,qb_review=None,qb_history=None):
     cur=json.loads(Path(current_path).read_text())
     prior=json.loads(Path(previous_path).read_text())
     manifest=json.loads(Path(manifest_path).read_text())
@@ -113,6 +114,13 @@ def write(current_path,previous_path,geo_path,manifest_path,output_path,source_w
             raise ValueError("Missing required QB review queue artifact")
         qb_queue=close_qb_review(json.loads(candidate_path.read_text()),cur)
         summary["qb_review"]=qb_queue["summary"]
+    qb_history_record=None
+    if qb_history:
+        qb_history_record=json.loads(Path(qb_history).read_text())
+        verify_qb_history(qb_history_record)
+        if parse_time(qb_history_record["observed_at_utc"])>issued:
+            raise ValueError("QB history captured after persistent archive as-of")
+        summary["qb_history"]=qb_history_record["summary"]
     source=None
     if source_watch and Path(source_watch).exists():
         source=json.loads(Path(source_watch).read_text())
@@ -153,6 +161,9 @@ def write(current_path,previous_path,geo_path,manifest_path,output_path,source_w
     if qb_queue is not None:
         blobs["state/qb_review_latest.json"]=encode(qb_queue)
         blobs["qb_review/"+day+"/"+stamp+".json.gz"]=pack(qb_queue)
+    if qb_history_record is not None:
+        blobs["state/qb_history_latest.json"]=encode(qb_history_record)
+        blobs["qb_history/"+day+"/"+stamp+".json.gz"]=pack(qb_history_record)
     if source is not None:
         blobs["state/personnel_sources_latest.json"]=encode(source)
         blobs["sources/"+day+"/"+stamp+".json.gz"]=pack(source)
@@ -184,8 +195,9 @@ if __name__=="__main__":
     p.add_argument("--geo-cache",default="data/context_refresh/geo_cache.json")
     p.add_argument("--source-watch",default="data/context_refresh/personnel_source_watch.json")
     p.add_argument("--qb-review",default=None)
+    p.add_argument("--qb-history",default=None)
     a=p.parse_args()
     result=restore(a.state_dir) if a.operation=="restore" else write(
         a.context,Path(a.state_dir)/"previous.json",a.geo_cache,a.manifest,a.output,
-        a.source_watch,a.qb_review)
+        a.source_watch,a.qb_review,a.qb_history)
     print(json.dumps(result,indent=2))
