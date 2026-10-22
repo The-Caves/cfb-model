@@ -273,7 +273,8 @@ def _commit_material(material, run_id):
     import base64
     for path, content in material.items():
         if path not in (INDEX, OUTCOMES, ROOT+"/summary.json",
-                        ROOT+"/forecast_index.json"):
+                        ROOT+"/forecast_index.json",
+                        ROOT+"/forecast_grades_index.json"):
             prior = store.get_blob_file(path)
             if prior is not None and prior != content:
                 raise ValueError("Immutable archive collision")

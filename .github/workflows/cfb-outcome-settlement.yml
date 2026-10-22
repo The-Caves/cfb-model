@@ -60,6 +60,11 @@ jobs:
           python -m scripts.personnel_validation_readiness \
             --dataset-dir "data/settlement_scores/step3e-${{ github.run_id }}" \
             --output "data/settlement_scores/step3e-${{ github.run_id }}/step3f-readiness.json"
+      - name: Grade genuinely observed prospective forecasts (Step 3G.1)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.personnel_forecast_grade \
+            --output "data/settlement_scores/step3g-grading-${{ github.run_id }}.json"
       - name: Preserve postgame settlement audit
         if: always() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@v4
@@ -68,6 +73,7 @@ jobs:
           path: |
             data/settlement_scores/manifest.json
             data/settlement_scores/settlement-*.json
+            data/settlement_scores/step3g-grading-*.json
             data/settlement_scores/step3e-*/
           retention-days: 30
           if-no-files-found: warn
