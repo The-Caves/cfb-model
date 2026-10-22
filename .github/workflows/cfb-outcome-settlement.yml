@@ -65,6 +65,13 @@ jobs:
         run: |
           python -m scripts.personnel_forecast_grade \
             --output "data/settlement_scores/step3g-grading-${{ github.run_id }}.json"
+      - name: Consolidated model finish-line and graded performance audit
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.model_finishline \
+            --readiness "data/settlement_scores/step3e-${{ github.run_id }}/step3f-readiness.json" \
+            --grading "data/settlement_scores/step3g-grading-${{ github.run_id }}.json" \
+            --output "data/settlement_scores/model-finishline-${{ github.run_id }}.json"
       - name: Preserve postgame settlement audit
         if: always() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@v4
@@ -74,6 +81,7 @@ jobs:
             data/settlement_scores/manifest.json
             data/settlement_scores/settlement-*.json
             data/settlement_scores/step3g-grading-*.json
+            data/settlement_scores/model-finishline-*.json
             data/settlement_scores/step3e-*/
           retention-days: 30
           if-no-files-found: warn

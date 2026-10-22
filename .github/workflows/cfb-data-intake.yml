@@ -124,30 +124,15 @@ jobs:
         run: |
           python -m scripts.personnel_forecast_grade \
             --output "data/pregame_evidence/step3g-grading-${{ github.run_id }}.json"
-      - name: Configure private S3 compliance archive credentials (optional)
-        if: ${{ vars.CFB_ARCHIVE_BUCKET != '' && vars.CFB_ARCHIVE_REGION != '' && vars.CFB_ARCHIVE_ROLE_ARN != '' }}
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.CFB_ARCHIVE_ROLE_ARN }}
-          aws-region: ${{ vars.CFB_ARCHIVE_REGION }}
-      - name: Verify private S3 retention and read back capture (optional)
-        if: ${{ vars.CFB_ARCHIVE_BUCKET != '' && vars.CFB_ARCHIVE_REGION != '' && vars.CFB_ARCHIVE_ROLE_ARN != '' }}
-        env:
-          ARCHIVE_BUCKET: ${{ vars.CFB_ARCHIVE_BUCKET }}
-          ARCHIVE_REGION: ${{ vars.CFB_ARCHIVE_REGION }}
+      - name: Consolidated model finish-line and graded performance audit
         run: |
-          python -m pip install 'boto3>=1.34,<2'
-          python -m scripts.durable_archive \
-            --capture "data/pregame_evidence/capture-${{ github.run_id }}.json" \
-            --receipt "data/pregame_evidence/durable-receipt-${{ github.run_id }}.json" \
-            --bucket "$ARCHIVE_BUCKET" \
-            --region "$ARCHIVE_REGION" \
-            --run-id "${{ github.run_id }}" \
-            --retention-days 365
-      - name: Report durable archive not configured
-        if: ${{ vars.CFB_ARCHIVE_BUCKET == '' || vars.CFB_ARCHIVE_REGION == '' || vars.CFB_ARCHIVE_ROLE_ARN == '' }}
-        run: |
-          echo "Durable archive NOT CONFIGURED; only the 30-day GitHub Actions artifact is present." >> "$GITHUB_STEP_SUMMARY"
+          python -m scripts.model_finishline \
+            --readiness "data/pregame_evidence/step3e-${{ github.run_id }}/step3f-readiness.json" \
+            --grading "data/pregame_evidence/step3g-grading-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/model-finishline-${{ github.run_id }}.json" \
+            --context data/context/upcoming_game_context_2026.json
+      - name: Confirm GitHub-only research storage
+        run: echo "GitHub Actions and context-state are the configured research storage; no AWS credentials or paid archive calls." >> "$GITHUB_STEP_SUMMARY"
       - name: Archive results and raw snapshots
         if: always()
         uses: actions/upload-artifact@v4
