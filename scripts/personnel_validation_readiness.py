@@ -174,7 +174,7 @@ def _validate_folds(evaluation, games, labels, asof):
             train_ids!=sorted(set(train_ids)) or test_ids!=sorted(set(test_ids)) or
             len(train_ids)!=train or len(test_ids)!=test or
             set(train_ids)&set(test_ids)):
-            raise ValueError("Missing, duplicate or overlapping per-fold game IDs")
+            raise ValueError("Missing, duplicate or overlapping per-fold game IDs or membership")
         beginning=cutoff.date()
         ending=beginning+dt.timedelta(days=7)
         prior=sorted(gid for gid,r in by_game.items()
