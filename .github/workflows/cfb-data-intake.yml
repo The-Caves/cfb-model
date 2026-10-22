@@ -126,15 +126,18 @@ jobs:
             --score-manifest data/manifest.json \
             --output "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json"
       - name: Publish requested matchup predictions
-        if: github.event_name == 'workflow_dispatch' && inputs.games != ''
+        if: (github.event_name == 'workflow_dispatch' && inputs.games != '') || (github.event_name == 'push' && contains(github.event.head_commit.message, '[run-intake]'))
         env:
           REQUESTED_GAMES: ${{ inputs.games }}
         run: |
-          python -m scripts.manual_model_picks \
-            --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" \
-            --requested "$REQUESTED_GAMES" \
-            --output data/pregame_evidence/requested-model-picks.json
-          cat data/pregame_evidence/requested-model-picks.md >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$REQUESTED_GAMES" ]; then
+            python -m scripts.manual_model_picks --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" --requested "$REQUESTED_GAMES" --output data/pregame_evidence/requested-model-picks.json
+          elif [ -s data/manual/model_picks_request.txt ]; then
+            python -m scripts.manual_model_picks --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" --requested "$(cat data/manual/model_picks_request.txt)" --output data/pregame_evidence/requested-model-picks.json
+          fi
+          if [ -f data/pregame_evidence/requested-model-picks.md ]; then
+            cat data/pregame_evidence/requested-model-picks.md >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Grade previously frozen prospective research against observed finals (Step 3G.1)
         run: |
           python -m scripts.personnel_forecast_grade \
