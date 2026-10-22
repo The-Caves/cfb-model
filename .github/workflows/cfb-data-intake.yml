@@ -32,10 +32,15 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[run-intake]'))
     needs: validate
     runs-on: ubuntu-latest
+    concurrency:
+      group: cfb-context-state
+      cancel-in-progress: false
     permissions:
-      contents: read
+      contents: write
       id-token: write
     timeout-minutes: 35
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -89,6 +94,14 @@ jobs:
             --capture "data/pregame_evidence/capture-${{ github.run_id }}.json" \
             --context data/context/upcoming_game_context_2026.json \
             --output data/pregame_evidence
+      - name: Persist observed pregame context and link completed results (Step 3D)
+        run: |
+          python -m scripts.personnel_results_archive \
+            --capture "data/pregame_evidence/capture-${{ github.run_id }}.json" \
+            --personnel "data/pregame_evidence/personnel-joined-${{ github.run_id }}.json" \
+            --games data/games_2026.csv \
+            --manifest data/manifest.json \
+            --output "data/pregame_evidence/step3d-archive-${{ github.run_id }}.json"
       - name: Configure private S3 compliance archive credentials (optional)
         if: ${{ vars.CFB_ARCHIVE_BUCKET != '' && vars.CFB_ARCHIVE_REGION != '' && vars.CFB_ARCHIVE_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4
