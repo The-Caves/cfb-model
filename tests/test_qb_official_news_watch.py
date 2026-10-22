@@ -54,6 +54,7 @@ class OfficialNewsCandidateTests(unittest.TestCase):
             result=run(inp,out,reader=fail,now=NOW)
             self.assertEqual(result["manifest"]["feeds_skipped_no_upcoming_game"],len(FEEDS))
             self.assertEqual(result["candidates"],[])
+            self.assertEqual(result["manifest"]["unconfigured_upcoming_team_slots"],0)
     def test_fetch_failure_reports_error_and_does_not_invent_qb(self):
         with tempfile.TemporaryDirectory() as d:
             inp=Path(d)/"context.json";out=Path(d)/"out.json"
@@ -63,4 +64,7 @@ class OfficialNewsCandidateTests(unittest.TestCase):
             self.assertEqual(result["manifest"]["feeds_failed"],1)
             self.assertEqual(result["manifest"]["confirmed_qb_starter_count"],0)
             self.assertTrue(out.is_file())
+            self.assertEqual(result["manifest"]["unconfigured_upcoming_team_slots"],1)
+            self.assertEqual(result["manifest"]["unconfigured_unique_teams"],1)
+            self.assertEqual(result["manifest"]["feed_expansion_backlog"][0]["team"],"Virginia Cavaliers")
 if __name__=="__main__":unittest.main()

@@ -110,6 +110,23 @@ def run(context_file,output_file,reader=fetch_rss,now=None):
             qa["feed_status"][team]="FETCH_FAILED"
             qa["errors"].append({"team":team,"reason":type(exc).__name__,"detail":str(exc)[:120]})
     qa["candidate_count"]=len(out)
+    upcoming_slots=[]
+    for game in games:
+        if parse_time(game["kickoff_utc"])<=parse_time(captured):
+            continue
+        for team,opponent in ((game["home"],game["away"]),(game["away"],game["home"])):
+            upcoming_slots.append({"game_id":str(game["game_id"]),"team":team,
+                                   "opponent":opponent,"kickoff_utc":game["kickoff_utc"],
+                                   "feed_status":qa["feed_status"].get(team,"NOT_CONFIGURED")})
+    qa["upcoming_team_slots"]=len(upcoming_slots)
+    qa["unconfigured_upcoming_team_slots"]=sum(
+        r["feed_status"]=="NOT_CONFIGURED" for r in upcoming_slots)
+    qa["unconfigured_unique_teams"]=len({
+        r["team"] for r in upcoming_slots if r["feed_status"]=="NOT_CONFIGURED"})
+    # Discovery backlog only: never invent an official RSS endpoint.
+    qa["feed_expansion_backlog"]=sorted(
+        [r for r in upcoming_slots if r["feed_status"]=="NOT_CONFIGURED"],
+        key=lambda r:(r["kickoff_utc"],r["team"]))[:100]
     result={"manifest":qa,"candidates":out,
             "safe_for_betting":False,"betting_status":"PASS_UNVALIDATED"}
     output_file=Path(output_file);output_file.parent.mkdir(parents=True,exist_ok=True)
