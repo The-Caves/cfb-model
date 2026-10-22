@@ -7,7 +7,7 @@ from scripts.game_context import parse_time
 STATUS = "STEP3H_PERSONNEL_COVERAGE_RESEARCH_ONLY"
 VERIFIED = "VERIFIED_REPORT_REVIEWED"
 
-def audit(context):
+def audit(context, review_queue=None):
     if context.get("betting_status", "PASS_UNVALIDATED") != "PASS_UNVALIDATED" or context.get("safe_for_betting") is True:
         raise ValueError("Untrusted context")
     issue = parse_time(context["asof_utc"])
@@ -17,6 +17,19 @@ def audit(context):
     games = context.get("games")
     if not isinstance(games, list):
         raise ValueError("Missing game records")
+    queue_by_key = {}
+    if review_queue is not None:
+        if (review_queue.get("status") != "QB_REVIEW_RESEARCH_ONLY"
+                or review_queue.get("betting_status") != "PASS_UNVALIDATED"
+                or review_queue.get("safe_for_betting") is True):
+            raise ValueError("Untrusted QB review queue")
+        if parse_time(review_queue["asof_utc"]) < issue:
+            raise ValueError("QB review queue predates context cutoff")
+        for entry in review_queue.get("rows", []):
+            key = (str(entry["game_id"]), entry["team"])
+            if key in queue_by_key:
+                raise ValueError("Duplicate QB review queue entry")
+            queue_by_key[key] = entry
     rows = []
     seen = set()
     for game in games:
@@ -46,7 +59,16 @@ def audit(context):
                          ("published_at_utc", "captured_at_utc", "reviewed_at_utc")]
                 if not times[0] <= times[1] <= times[2] <= issue:
                     raise ValueError("QB source after cutoff")
+            queued = queue_by_key.get((gid, team))
+            if queued is not None and queued.get("opponent") != (teams[1] if team == teams[0] else teams[0]):
+                raise ValueError("QB review queue opponent mismatch")
+            candidates = queued.get("candidate_count", 0) if queued else 0
+            if not isinstance(candidates, int) or candidates < 0:
+                raise ValueError("Invalid candidate count")
             slots.append({"team": team, "report_status": status,
+                          "qb_review_priority": queued.get("review_priority") if queued else "UNKNOWN_NEEDS_SOURCE",
+                          "official_news_candidates": candidates,
+                          "official_feed_status": queued.get("feed_status") if queued else "UNKNOWN",
                           "qb_status": "REVIEWED_STARTER" if qb else "UNKNOWN",
                           "qb_player": qb["player"] if qb else None,
                           "report_missing": status != VERIFIED,
@@ -68,11 +90,20 @@ def audit(context):
                         "qb_coverage_fraction": round(reviewed/n, 5) if n else None,
                         "both_reports_games": sum(r["complete_reports"] for r in rows),
                         "both_qbs_games": sum(r["complete_qb_review"] for r in rows)},
+            "review_queue_summary": {
+                "unverified_qb_with_official_news_candidates": sum(
+                    s["qb_missing"] and s["official_news_candidates"] > 0 for s in slots),
+                "qb_slots_with_no_official_feed": sum(
+                    s["qb_missing"] and s["official_feed_status"] == "NOT_CONFIGURED" for s in slots),
+                "qb_slots_with_failed_official_feed": sum(
+                    s["qb_missing"] and s["official_feed_status"] == "FETCH_FAILED" for s in slots),
+                "missing_report_team_slots": sum(s["report_missing"] for s in slots),
+                "missing_qb_team_slots": sum(s["qb_missing"] for s in slots)},
             "games": rows, "missing_information_means": "UNKNOWN_NOT_HEALTHY",
             "safe_for_betting": False, "betting_status": "PASS_UNVALIDATED"}
 
-def run(source, output):
-    result = audit(json.loads(Path(source).read_text()))
+def run(source, output, queue_path=None):
+    result = audit(json.loads(Path(source).read_text()), json.loads(Path(queue_path).read_text()) if queue_path else None)
     path = Path(output)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("x", encoding="utf-8") as f:
@@ -85,5 +116,6 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--context", required=True)
     p.add_argument("--output", required=True)
+    p.add_argument("--review-queue")
     a = p.parse_args()
-    run(a.context, a.output)
+    run(a.context, a.output, a.review_queue)

@@ -39,3 +39,25 @@ class CoverageTests(unittest.TestCase):
         c["games"].append(copy.deepcopy(c["games"][0]))
         with self.assertRaises(ValueError):
             audit(c)
+
+class ReviewQueueIntegrationTests(unittest.TestCase):
+    def queue(self):
+        return {"status":"QB_REVIEW_RESEARCH_ONLY","betting_status":"PASS_UNVALIDATED",
+                "asof_utc":"2026-10-22T12:00:00Z",
+                "rows":[{"game_id":"1","team":"B","opponent":"A",
+                         "candidate_count":2,"feed_status":"FETCHED",
+                         "review_priority":"REVIEW_NEWS_CANDIDATE"}]}
+    def test_news_candidate_does_not_confirm_starter(self):
+        result=audit(C,self.queue())
+        self.assertEqual(result["review_queue_summary"]["unverified_qb_with_official_news_candidates"],1)
+        self.assertEqual(result["summary"]["reviewed_qb_slots"],1)
+        self.assertEqual(result["games"][0]["teams"][1]["qb_status"],"UNKNOWN")
+    def test_wrong_opponent_fails(self):
+        q=self.queue();q["rows"][0]["opponent"]="Wrong"
+        with self.assertRaises(ValueError):audit(C,q)
+    def test_future_context_queue_fails(self):
+        q=self.queue();q["asof_utc"]="2026-10-22T11:00:00Z"
+        with self.assertRaises(ValueError):audit(C,q)
+    def test_duplicate_queue_fails(self):
+        q=self.queue();q["rows"].append(copy.deepcopy(q["rows"][0]))
+        with self.assertRaises(ValueError):audit(C,q)

@@ -84,6 +84,7 @@ jobs:
         run: |
           python -m scripts.personnel_coverage_audit \
             --context data/context_refresh/upcoming_game_context_2026.json \
+            --review-queue data/context_refresh/qb_review_queue.json \
             --output data/context_refresh/personnel_coverage_audit.json
       - name: Check SEC and Big Ten official availability report publications
         if: steps.plan.outputs.run == 'true'
