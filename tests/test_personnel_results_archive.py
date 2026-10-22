@@ -6,7 +6,7 @@ import unittest
 
 from scripts.personnel_results_archive import (
     _choose, _empty_index, _observe_index, _valid_manifest, _finals,
-    _fresh_capture, plan, POLICY, STATUS)
+    _fresh_capture, _link_observed_finals, plan, POLICY, STATUS)
 from scripts.personnel_features import join_capture
 from scripts.pregame_evidence import sha
 from scripts.weekly_profiles import canonical
@@ -187,6 +187,41 @@ class ResultsArchiveTests(unittest.TestCase):
             scoreboard=manifest("2026-10-25T02:00:00Z"))
         self.assertEqual(labels,[])
         self.assertEqual(summary["pending"]["missing_24_to_72_hour_capture"],1)
+
+
+    def test_settlement_only_links_previous_pregame_without_new_capture(self):
+        capture,joined=fixture()
+        _,original_index,_,_,_=compose(capture,joined)
+        frozen=json.loads(json.dumps(original_index))
+        known=dt.datetime(2026,10,25,2,tzinfo=dt.timezone.utc)
+        finals=_finals([final()],known)
+        out,labels,counts=_link_observed_finals(
+            original_index,_empty_index(),finals,known,
+            "d"*64,known+dt.timedelta(minutes=1))
+        self.assertEqual(original_index,frozen)
+        self.assertEqual(len(labels),1)
+        self.assertEqual(out["games"]["101"]["home_score"],28)
+        self.assertEqual(out["games"]["101"]["selected_pregame"]["path"],
+                         original_index["games"]["101"][0]["path"])
+        self.assertEqual(labels[0][1]["source_scoreboard_sha256"],"d"*64)
+        self.assertEqual(labels[0][1]["betting_status"],"PASS_UNVALIDATED")
+        again,none,pending=_link_observed_finals(
+            original_index,out,finals,known,
+            "d"*64,known+dt.timedelta(minutes=5))
+        self.assertFalse(none)
+        self.assertEqual(pending["already_archived"],1)
+
+    def test_settlement_only_does_not_turn_future_games_into_labels(self):
+        cap,j=fixture()
+        _,idx,_,_,_=compose(cap,j)
+        now=dt.datetime(2026,10,22,20,1,tzinfo=dt.timezone.utc)
+        with self.assertRaises(ValueError):
+            _finals([final()],now)
+        outcomes,labels,pending=_link_observed_finals(
+            idx,_empty_index(),{},now,"e"*64,now)
+        self.assertFalse(labels)
+        self.assertEqual(pending["no_observed_final_yet"],1)
+        self.assertFalse(outcomes["games"])
 
 
 if __name__ == "__main__":

@@ -25,3 +25,9 @@ Team profiles include underlying retrospective PBP files that are not authentica
 ## Next: accumulation and evaluation
 
 Once numerous distinct postgame finals have a 24–72h original observed pregame capture, load indexed outcomes and selected pregame bundles as a verified input pair for `scripts/personnel_ablation.py`. Require chronology-safe label availability, sufficient matched test sets, no split overlap, and train-only standardization/regularization. Report sample size, missingness and baseline/ablation performance. Only then consider promoting a version, and keep source-provenance caveats intact.
+
+## Final-game safety: settlement without future games
+
+The daily [CFB 2026 Observed Final Settlement](../.github/workflows/cfb-outcome-settlement.yml) workflow independently fetches recently completed ESPN games and invokes `scripts.personnel_results_archive --settle-only`. It reads archived, **previously observed** pregame indexes and creates separate final records when an eligible observation exists. No new synthetic pregame capture is produced. This handles final weekends and January 2027 postseason games when Data Intake may have no upcoming eligible FBS matchups left.
+
+The job shares the `cfb-context-state` serialization group with Data Intake and Context Delta. It is active during the 2026 season and January 2027 (with an explicit calendar gate to prevent requests in other seasons). It skips Git branch writes entirely when there are no newly linkable finals. A 28-day scoreboard lookback reduces repeat requests; any skipped older final must be handled with a deliberate, validated longer lookback. In-flight score data stays separate from earlier pregame captures.

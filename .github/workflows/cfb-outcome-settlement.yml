@@ -1,0 +1,61 @@
+name: CFB 2026 Observed Final Settlement
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '37 10 * 1,8-12 *'
+permissions:
+  contents: write
+concurrency:
+  group: cfb-context-state
+  cancel-in-progress: false
+jobs:
+  settle:
+    if: github.event_name != 'push' || contains(github.event.head_commit.message, '[run-settle]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Validate chronology and archive safeguards
+        run: python -m unittest discover -s tests -v
+      - name: Gate strictly to the 2026 football season
+        id: gate
+        run: |
+          YM="$(date -u +%Y%m)"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" || "$YM" =~ ^2026(08|09|10|11|12)$ || "$YM" == "202701" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Outside 2026 CFB season; skip external data requests." >> "$GITHUB_STEP_SUMMARY"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Fetch freshly observed completed ESPN games from last 28 days
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          START="$(date -u -d '28 days ago' +%F)"
+          python scripts/ingest_espn.py --start "$START" --output data/settlement_scores
+      - name: Link only existing pregame captures to observed finals (no new pregame input)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.personnel_results_archive \
+            --settle-only \
+            --games data/settlement_scores/games_2026.csv \
+            --manifest data/settlement_scores/manifest.json \
+            --output "data/settlement_scores/settlement-${{ github.run_id }}.json"
+      - name: Preserve postgame settlement audit
+        if: always() && steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-2026-postgame-settlement-${{ github.run_id }}
+          path: |
+            data/settlement_scores/manifest.json
+            data/settlement_scores/settlement-*.json
+          retention-days: 30
+          if-no-files-found: warn

@@ -166,23 +166,14 @@ def _choose(rows, kickoff, home=None, away=None):
     return max(eligible, key=lambda r:_time(r["captured_at_utc"]))
 
 
-def plan(capture, joined, index, outcome_index, games, scoreboard_manifest,
-         now_utc, run_id, source_sha256):
-    """Pure planning; never use final results to select future pregame inputs."""
-    now = _time(now_utc)
-    cgames, jgames = _fresh_capture(capture, joined, now, run_id)
-    retrieved = _valid_manifest(scoreboard_manifest, now)
-    finals = _finals(games, retrieved)
+def _link_observed_finals(index, outcome_index, finals, retrieved, source_sha256, now):
+    """Only link previously observed time-valid game data to later final scores."""
     _valid_index(index, "pregame")
     _valid_index(outcome_index, "outcome")
-    date = _time(capture["captured_at_utc"]).strftime("%Y/%m/%d")
-    archive_file = ROOT + "/pregame/" + date + "/run-" + str(run_id) + ".json.gz"
-    candidates = {gid: (g, jgames[gid]) for gid,g in cgames.items()}
-    next_index, added = _observe_index(index, candidates, archive_file, capture["captured_at_utc"])
     next_outcomes = json.loads(json.dumps(outcome_index))
     created = []
     pending = Counter()
-    for gid, observations in sorted(next_index["games"].items()):
+    for gid, observations in sorted(index["games"].items()):
         final = finals.get(gid)
         if final is None:
             pending["no_observed_final_yet"] += 1
@@ -227,6 +218,24 @@ def plan(capture, joined, index, outcome_index, games, scoreboard_manifest,
             "selected_pregame":match,"outcome_known_at_utc":retrieved.isoformat(),
             "archive_path": outcome_path,"record_sha256":digest(record)}
         created.append((outcome_path, record))
+    return next_outcomes, created, pending
+
+
+def plan(capture, joined, index, outcome_index, games, scoreboard_manifest,
+         now_utc, run_id, source_sha256):
+    """Pure planning; never use final results to select future pregame inputs."""
+    now = _time(now_utc)
+    cgames, jgames = _fresh_capture(capture, joined, now, run_id)
+    retrieved = _valid_manifest(scoreboard_manifest, now)
+    finals = _finals(games, retrieved)
+    _valid_index(index, "pregame")
+    _valid_index(outcome_index, "outcome")
+    date = _time(capture["captured_at_utc"]).strftime("%Y/%m/%d")
+    archive_file = ROOT + "/pregame/" + date + "/run-" + str(run_id) + ".json.gz"
+    candidates = {gid: (g, jgames[gid]) for gid,g in cgames.items()}
+    next_index, added = _observe_index(index, candidates, archive_file, capture["captured_at_utc"])
+    next_outcomes, created, pending = _link_observed_finals(
+        next_index, outcome_index, finals, retrieved, source_sha256, now)
     bundle = {
         "status": "OBSERVED_PREGAME_ARCHIVE_BUNDLE",
         "season": 2026, "run_id": str(run_id),
@@ -256,6 +265,33 @@ def _read_json(path):
     return json.loads(blob) if blob is not None else _empty_index()
 
 
+def _commit_material(material, run_id):
+    repo = store.repo_path()
+    parent = store.branch_head()
+    commit = store.api("GET",repo+"/git/commits/"+parent)
+    entries = []
+    import base64
+    for path, content in material.items():
+        if path not in (INDEX, OUTCOMES, ROOT+"/summary.json"):
+            prior = store.get_blob_file(path)
+            if prior is not None and prior != content:
+                raise ValueError("Immutable archive collision")
+        blob = store.api("POST",repo+"/git/blobs",{
+            "content":base64.b64encode(content).decode(),"encoding":"base64"})
+        entries.append({"path":path,"mode":"100644","type":"blob","sha":blob["sha"]})
+    tree = store.api("POST",repo+"/git/trees",{
+        "base_tree":commit["tree"]["sha"],"tree":entries})
+    new = store.api("POST",repo+"/git/commits",{
+        "message":"Save as-of pregame and observed finals, run "+run_id,
+        "tree":tree["sha"],"parents":[parent]})
+    store.api("PATCH",repo+"/git/refs/heads/"+store.BRANCH,{
+        "sha":new["sha"],"force":False})
+    for path, expected in material.items():
+        if store.get_blob_file(path) != expected:
+            raise ValueError("Persistent GitHub archive readback mismatch: " + path)
+    return new["sha"]
+
+
 def run(capture_path, personnel_path, score_csv, manifest_path, output):
     capture = json.loads(Path(capture_path).read_text())
     joined = json.loads(Path(personnel_path).read_text())
@@ -279,34 +315,8 @@ def run(capture_path, personnel_path, score_csv, manifest_path, output):
         ROOT+"/summary.json": store.encode(summary)}
     for path, label in labels:
         material[path] = store.pack(label)
-    # Mutable indexes are updated atomically; only date-stamped evidence paths
-    # are append-only. The shared workflow concurrency group serializes writers.
-    def write_new():
-        repo = store.repo_path()
-        parent = store.branch_head()
-        commit = store.api("GET",repo+"/git/commits/"+parent)
-        entries = []
-        import base64
-        for path, content in material.items():
-            if path not in (INDEX, OUTCOMES, ROOT+"/summary.json"):
-                prior = store.get_blob_file(path)
-                if prior is not None and prior != content:
-                    raise ValueError("Immutable archive collision")
-            blob = store.api("POST",repo+"/git/blobs",{
-                "content":base64.b64encode(content).decode(),"encoding":"base64"})
-            entries.append({"path":path,"mode":"100644","type":"blob","sha":blob["sha"]})
-        tree = store.api("POST",repo+"/git/trees",{
-            "base_tree":commit["tree"]["sha"],"tree":entries})
-        new = store.api("POST",repo+"/git/commits",{
-            "message":"Save as-of pregame and observed finals, run "+run_id,
-            "tree":tree["sha"],"parents":[parent]})
-        store.api("PATCH",repo+"/git/refs/heads/"+store.BRANCH,{
-            "sha":new["sha"],"force":False})
-        return new["sha"]
-    summary["archive_commit_sha"] = write_new()
-    for path, expected in material.items():
-        if store.get_blob_file(path) != expected:
-            raise ValueError("Persistent GitHub archive readback mismatch: " + path)
+    # Branch update and byte-for-byte verification are shared by both workflows.
+    summary["archive_commit_sha"] = _commit_material(material, run_id)
     p = Path(output);p.parent.mkdir(parents=True,exist_ok=True)
     with p.open("x",encoding="utf-8") as f:
         f.write(json.dumps(summary,indent=2)+"\n")
@@ -314,12 +324,63 @@ def run(capture_path, personnel_path, score_csv, manifest_path, output):
     return summary
 
 
+
+def settle_only(score_csv, manifest_path, output):
+    """Archive new final labels without needing any upcoming pregame game."""
+    manifest = json.loads(Path(manifest_path).read_text())
+    blob = Path(score_csv).read_bytes()
+    scores = list(csv.DictReader(blob.decode("utf-8-sig").splitlines()))
+    now = dt.datetime.now(dt.timezone.utc)
+    retrieved = _valid_manifest(manifest, now)
+    finals = _finals(scores, retrieved)
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    if not str(run_id).isdigit() or store.branch_head() is None:
+        raise ValueError("Observed run and context-state branch are required")
+    index = _read_json(INDEX)
+    outcomes = _read_json(OUTCOMES)
+    next_outcomes, labels, pending = _link_observed_finals(
+        index, outcomes, finals, retrieved, _hash(blob), now)
+    summary = {
+        "status": STATUS, "run_id": str(run_id),
+        "archived_at_utc": now.isoformat(), "settlement_only": True,
+        "new_pregame_game_slots": 0, "distinct_games_observed": len(index["games"]),
+        "newly_linked_final_games": len(labels),
+        "cumulative_linked_final_games": len(next_outcomes["games"]),
+        "pending": dict(pending), "external_immutability_verified": False,
+        "scoreboard_publication_time_verified": False,
+        "historical_publication_times_verified": False,
+        "model_promoted": False, "safe_for_betting": False,
+        "betting_status": "PASS_UNVALIDATED"}
+    if labels:
+        material = {OUTCOMES: store.encode(next_outcomes),
+                    ROOT+"/summary.json": store.encode(summary)}
+        for path, label in labels:
+            material[path] = store.pack(label)
+        summary["archive_commit_sha"] = _commit_material(material, run_id)
+    else:
+        summary["write_skipped_no_new_finals"] = True
+    p = Path(output)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("x",encoding="utf-8") as handle:
+        handle.write(json.dumps(summary,indent=2)+"\n")
+    print(json.dumps(summary,indent=2))
+    return summary
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--capture",required=True)
-    p.add_argument("--personnel",required=True)
+    p.add_argument("--capture")
+    p.add_argument("--personnel")
     p.add_argument("--games",required=True)
     p.add_argument("--manifest",required=True)
     p.add_argument("--output",required=True)
+    p.add_argument("--settle-only",action="store_true")
     a = p.parse_args()
-    run(a.capture,a.personnel,a.games,a.manifest,a.output)
+    if a.settle_only:
+        if a.capture or a.personnel:
+            p.error("--settle-only must not use a pregame capture")
+        settle_only(a.games,a.manifest,a.output)
+    else:
+        if not a.capture or not a.personnel:
+            p.error("Normal archive mode requires --capture and --personnel")
+        run(a.capture,a.personnel,a.games,a.manifest,a.output)
