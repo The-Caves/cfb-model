@@ -83,6 +83,12 @@ jobs:
             --registry data/archive/2026_team_aliases.csv \
             --output data/pregame_evidence \
             --run-id "${{ github.run_id }}"
+      - name: Join observed pregame QB and availability with team profiles (Step 3C)
+        run: |
+          python -m scripts.personnel_capture \
+            --capture "data/pregame_evidence/capture-${{ github.run_id }}.json" \
+            --context data/context/upcoming_game_context_2026.json \
+            --output data/pregame_evidence
       - name: Configure private S3 compliance archive credentials (optional)
         if: ${{ vars.CFB_ARCHIVE_BUCKET != '' && vars.CFB_ARCHIVE_REGION != '' && vars.CFB_ARCHIVE_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4
