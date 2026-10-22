@@ -4,6 +4,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      games:
+        description: 'Optional exact Away at Home matchups or ESPN game IDs, one per line'
+        required: false
+        type: string
   schedule:
     - cron: '17 10,16,23 * * *'
 permissions:
@@ -120,6 +125,16 @@ jobs:
             --advanced-manifest data/advanced/advanced_manifest.json \
             --score-manifest data/manifest.json \
             --output "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json"
+      - name: Publish requested matchup predictions
+        if: github.event_name == 'workflow_dispatch' && inputs.games != ''
+        env:
+          REQUESTED_GAMES: ${{ inputs.games }}
+        run: |
+          python -m scripts.manual_model_picks \
+            --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" \
+            --requested "$REQUESTED_GAMES" \
+            --output data/pregame_evidence/requested-model-picks.json
+          cat data/pregame_evidence/requested-model-picks.md >> "$GITHUB_STEP_SUMMARY"
       - name: Grade previously frozen prospective research against observed finals (Step 3G.1)
         run: |
           python -m scripts.personnel_forecast_grade \
