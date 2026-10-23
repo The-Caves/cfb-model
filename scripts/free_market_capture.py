@@ -6,6 +6,7 @@ line, closing line, or publication time. Source is ESPN's scoreboard API.
 import argparse
 import datetime as dt
 import json
+import math
 import urllib.request
 from pathlib import Path
 from scripts.game_context import parse_time
@@ -43,8 +44,18 @@ def normalize(payload, retrieved_at_utc):
                 if not provider_name:
                     quarantined.append({"game_id":gid,"reason":"MISSING_PROVIDER"})
                     continue
-                # ESPN spread is commonly an unsigned favorite handicap.
-                # It is NOT necessarily the signed home-team spread.
+                # ESPN spread magnitude is unsigned; only explicit favorite flags
+                # establish which side receives the negative handicap.
+                signed=None
+                if type(spread) in (int,float) and math.isfinite(spread) and 0<abs(spread)<80:
+                    h=offer.get("homeTeamOdds") or {}
+                    a=offer.get("awayTeamOdds") or {}
+                    hf=h.get("favorite") if isinstance(h,dict) else None
+                    af=a.get("favorite") if isinstance(a,dict) else None
+                    if type(hf) is bool and type(af) is bool and hf!=af:
+                        signed=-abs(spread) if hf else abs(spread)
+                if type(total) in (int,float) and not math.isfinite(total):
+                    total=None
                 rows.append({
                     "game_id":gid,"home":home,"away":away,
                     "kickoff_utc":kickoff.isoformat(),
@@ -53,8 +64,8 @@ def normalize(payload, retrieved_at_utc):
                     "provider":provider_name,
                     "raw_spread":spread if type(spread) in (int,float) else None,
                     "raw_total":total if type(total) in (int,float) else None,
-                    "spread_semantics":"UNVERIFIED_DO_NOT_GRADE_ATS",
-                    "market_home_spread":None,
+                    "spread_semantics":"EXPLICIT_FAVORITE_FLAGS" if signed is not None else "UNVERIFIED_DO_NOT_GRADE_ATS",
+                    "market_home_spread":signed,
                     "total_points":total if type(total) in (int,float) and 0<total<150 else None,
                     "source_publication_time_verified":False
                 })
