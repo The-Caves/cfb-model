@@ -69,6 +69,8 @@ jobs:
           path: data/free_market/
           if-no-files-found: error
           retention-days: 30
+      - name: Persist immutable free market snapshots beyond artifact expiry
+        run: python -m scripts.free_market_archive --market-dir data/free_market
       - name: Build as-of 2026 team profiles
         run: python scripts/build_profiles.py --games data/games_2026.csv --output data --registry data/archive/2026_team_aliases.csv
       - name: Audit archived v0.9 scores against current ESPN finals
