@@ -80,6 +80,12 @@ jobs:
             --advanced data/advanced/team_game_advanced_2026.csv \
             --manifest data/advanced/advanced_manifest.json \
             --output data/model_v03
+      - name: Compare 2026 model features across chronological test weeks (research only)
+        run: |
+          python -m scripts.feature_consistency_audit \
+            --features data/model_v03/weekly_pregame_features.csv \
+            --labels data/model_v03/weekly_postgame_labels.csv \
+            --output data/model_v03/feature_consistency
       - name: Audit retrospective backtest evidence for milestones 3-6
         run: |
           python -m scripts.backtest_evidence_gate \
