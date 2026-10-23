@@ -264,6 +264,12 @@ jobs:
         run: |
           python -m scripts.free_market_final_match \
             --output "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json"
+      - name: Diagnose unique frozen games awaiting verified final settlement
+        run: |
+          python -m scripts.free_market_settlement_diagnostic \
+            --matches "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json" \
+            --games data/games_2026.csv \
+            --output "data/pregame_evidence/market-settlement-diagnostic-${{ github.run_id }}.json"
       - name: Grade verified ATS and over-under selections (research only)
         run: |
           python -m scripts.free_market_final_grade \
