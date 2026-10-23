@@ -83,8 +83,8 @@ jobs:
       - name: Export injury and availability evidence review queue
         if: steps.plan.outputs.run == 'true'
         run: |
-          python -m scripts.injury_review_export \\
-            --snapshot data/context_refresh/injury_history.json \\
+          python -m scripts.injury_review_export \
+            --snapshot data/context_refresh/injury_history.json \
             --output data/context_refresh/injury_review_queue.csv
       - name: Audit two-team verified QB and injury coverage (Step 3H)
         if: steps.plan.outputs.run == 'true'
