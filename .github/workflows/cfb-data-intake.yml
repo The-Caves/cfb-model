@@ -213,6 +213,19 @@ jobs:
           path: data/site_preview/dashboard.json
           if-no-files-found: error
           retention-days: 30
+      - name: Compare frozen forecast with pre-decision free market snapshots
+        run: |
+          python -m scripts.free_market_compare \
+            --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" \
+            --market-dir data/free_market \
+            --output "data/pregame_evidence/free-market-comparison-${{ github.run_id }}.json"
+      - name: Upload free market model comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-market-comparison-${{ github.run_id }}
+          path: data/pregame_evidence/free-market-comparison-*.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Audit verified starting-QB readiness for frozen forecast
         run: |
           python -m scripts.qb_readiness_gate \
