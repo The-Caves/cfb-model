@@ -55,6 +55,20 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - name: Fetch completed 2026 games and write manifest
         run: python scripts/ingest_espn.py --start 2026-08-01 --output data
+      - name: Capture free ESPN market observations for upcoming dates
+        run: |
+          mkdir -p data/free_market
+          for offset in 0 1 2 3; do
+            day="$(date -u -d "+$offset day" +%F)"
+            python -m scripts.free_market_capture --date "$day" --output "data/free_market/espn-${day}-${{ github.run_id }}.json"
+          done
+      - name: Archive free market snapshots without inventing sportsbook spreads
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-free-market-${{ github.run_id }}
+          path: data/free_market/
+          if-no-files-found: error
+          retention-days: 30
       - name: Build as-of 2026 team profiles
         run: python scripts/build_profiles.py --games data/games_2026.csv --output data --registry data/archive/2026_team_aliases.csv
       - name: Audit archived v0.9 scores against current ESPN finals
