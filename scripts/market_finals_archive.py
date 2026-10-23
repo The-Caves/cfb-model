@@ -57,6 +57,21 @@ def plan(index,games,manifest,score_bytes,now):
 def run(games_path,manifest_path,output):
     raw=Path(games_path).read_bytes()
     games=list(csv.DictReader(raw.decode("utf-8-sig").splitlines()))
+    # Only persist results for already frozen research comparisons.
+    from scripts.free_market_comparison_archive import INDEX as COMPARISONS,validate
+    comparison_raw=store.get_blob_file(COMPARISONS)
+    if comparison_raw is None:raise ValueError("Missing frozen market index")
+    comparisons=json.loads(comparison_raw)
+    if comparisons.get("status")!="RESEARCH_ONLY":raise ValueError("Invalid market index")
+    eligible=set()
+    for entry in comparisons["runs"]:
+        blob=store.get_blob_file(entry["path"])
+        if blob is None:raise ValueError("Missing frozen comparison board")
+        board=store.unpack(blob);validate(board)
+        if hashlib.sha256(store.encode(board)).hexdigest()!=entry["sha256"]:
+            raise ValueError("Frozen comparison checksum mismatch")
+        eligible.update(str(row["game_id"]) for row in board["rows"])
+    games=[g for g in games if str(g["game_id"]) in eligible]
     manifest=json.loads(Path(manifest_path).read_text())
     blob=store.get_blob_file(INDEX)
     index=json.loads(blob) if blob else empty()
