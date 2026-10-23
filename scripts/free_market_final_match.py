@@ -61,7 +61,7 @@ def match(boards, outcome_index, finals, asof):
                     status="FINAL_NOT_YET_OBSERVED"
                 else:
                     status="MATCHED_VERIFIED_FINAL"
-                    result.update({"final_archive_path":meta["archive_path"],
+                    result.update({"final_archive_path":meta["path"],
                         "final_record_sha256":meta["sha256"],
                         "final_observed_at_utc":f["observed_at_utc"],
                         "home_score":f["home_score"],"away_score":f["away_score"]})
