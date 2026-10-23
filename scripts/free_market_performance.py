@@ -74,8 +74,8 @@ def report(matches,grades,su_records=None):
             "selection":r["ats_selection"] if market=="ats" else r["total_selection"],
             "grade":actual,"baseline_grade":base,"baseline_policy":base_label})
     su=list(su_records or [])
-    if any(x not in (True,False) for x in su):raise ValueError("Invalid SU grade")
-    su_stats=stats(["WIN" if x else "LOSS" for x in su])
+    if any(x is not None and (type(x) is not int or x not in (0,1)) for x in su):\n        raise ValueError("Invalid SU grade")
+    su_stats=stats(["WIN" if x else "LOSS" for x in su if x is not None])
     return {"status":"CUMULATIVE_PROSPECTIVE_PERFORMANCE_RESEARCH_ONLY",
         "asof_utc":grades["asof_utc"],
         "selection_policy":"EARLIEST_FROZEN_FORECAST_PER_GAME_AND_MARKET",
@@ -102,7 +102,7 @@ def su_archive():
     for gid in sorted(index["games"]):
         record=records[index["games"][gid]["path"]]
         v=record.get("su_correct")
-        if type(v) is not bool:raise ValueError("Invalid archived SU grade")
+        if v is not None and (type(v) is not int or v not in (0,1)):\n            raise ValueError("Invalid archived SU grade")
         values.append(v)
     return values
 
