@@ -263,6 +263,12 @@ jobs:
           python -m scripts.free_market_final_grade \
             --matches "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json" \
             --output "data/pregame_evidence/free-market-final-grades-${{ github.run_id }}.json"
+      - name: Report cumulative deduplicated prospective SU ATS and totals performance
+        run: |
+          python -m scripts.free_market_performance \
+            --matches "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json" \
+            --grades "data/pregame_evidence/free-market-final-grades-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/free-market-performance-${{ github.run_id }}.json"
       - name: Consolidated model finish-line and graded performance audit
         run: |
           python -m scripts.model_finishline \
