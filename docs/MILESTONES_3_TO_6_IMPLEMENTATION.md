@@ -62,3 +62,7 @@ python -m scripts.multifactor_walkforward \
 ## Validation checkpoint
 
 The final full intake must pass the new observed weather, replacement and multifactor steps. A passing unit suite alone does not close this check.
+
+## October 22 game settlement check
+
+Request a fresh completed-game scoreboard ingestion and official settlement. Same-day captures remain excluded from the 24–72-hour official label policy; separate exploratory evaluation must never rewrite that policy.
