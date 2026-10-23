@@ -14,7 +14,7 @@ def assess(record):
     games=[]
     for g in record["games"]:
         count=g["reported_qb_coverage"]
-        if not isinstance(count,int) or not 0<=count<=2:
+        if type(count) is not int or not 0<=count<=2:
             raise ValueError("Invalid reviewed QB evidence count")
         verified=count==2
         games.append({"game_id":g["game_id"],"home":g["home"],"away":g["away"],
