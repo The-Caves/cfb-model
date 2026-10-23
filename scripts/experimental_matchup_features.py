@@ -110,7 +110,7 @@ def evaluate(rows,start="2026-09-26",min_training=90):
                                 "su_correct":int((margin>0)==(actual>0)),
                                 "margin_abs_error":abs(margin-actual),
                                 "total_abs_error":abs(total-g["home_score"]-g["away_score"]),
-                                "brier":(prob-int(actual>0))**2})
+                                "brier":(probability-int(actual>0))**2})
             fold["variants"][name]=metrics(records)
             all_predictions[name].extend(records)
         weeks.append(fold)
