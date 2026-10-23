@@ -8,3 +8,6 @@
 - Full v0.9 model: **not yet migrated**.
 - Advanced EPA / injuries / timestamped market odds: **not imported or verified**.
 - Betting picks: **disabled / PASS_UNVALIDATED**.
+
+## 2026-10-22 QB milestone verification
+- Triggered a full intake to exercise official QB news discovery, review queue, and coverage acceptance against live upcoming games. Results must be inspected before marking Milestone 1 complete.
