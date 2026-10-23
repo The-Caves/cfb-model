@@ -254,6 +254,10 @@ jobs:
         run: |
           python -m scripts.personnel_forecast_grade \
             --output "data/pregame_evidence/step3g-grading-${{ github.run_id }}.json"
+      - name: Match frozen market comparisons to independently verified final scores
+        run: |
+          python -m scripts.free_market_final_match \
+            --output "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json"
       - name: Consolidated model finish-line and graded performance audit
         run: |
           python -m scripts.model_finishline \
