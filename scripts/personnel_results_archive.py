@@ -288,9 +288,14 @@ def _commit_material(material, run_id):
         "tree":tree["sha"],"parents":[parent]})
     store.api("PATCH",repo+"/git/refs/heads/"+store.BRANCH,{
         "sha":new["sha"],"force":False})
+    # Verify the exact committed Git blob SHAs, not the eventually consistent
+    # contents API on a moving branch (which can temporarily return old bytes).
+    committed = {entry["path"]: entry["sha"] for entry in entries}
     for path, expected in material.items():
-        if store.get_blob_file(path) != expected:
-            raise ValueError("Persistent GitHub archive readback mismatch: " + path)
+        blob = store.api("GET", repo+"/git/blobs/"+committed[path])
+        if not blob or blob.get("encoding") != "base64" or (
+                base64.b64decode(blob["content"]) != expected):
+            raise ValueError("Persistent GitHub archive blob readback mismatch: " + path)
     return new["sha"]
 
 
