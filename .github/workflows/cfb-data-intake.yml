@@ -86,6 +86,13 @@ jobs:
             --features data/model_v03/weekly_pregame_features.csv \
             --labels data/model_v03/weekly_postgame_labels.csv \
             --output data/model_v03/feature_consistency
+      - name: Test four prioritized matchup feature groups without model promotion
+        run: |
+          python -m scripts.experimental_matchup_features \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --manifest data/advanced/advanced_manifest.json \
+            --output data/model_v03/matchup_experiments
       - name: Audit retrospective backtest evidence for milestones 3-6
         run: |
           python -m scripts.backtest_evidence_gate \
