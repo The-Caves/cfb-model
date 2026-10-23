@@ -58,3 +58,7 @@ python -m scripts.multifactor_walkforward \
 ```
 
 **Acceptance:** Passing tests proves the mechanics work, not that sufficient verified historical evidence exists or that the model beats market prices. Keep `PASS_UNVALIDATED`, compare only matched held-out games, and never report synthetic fixtures as actual bets.
+
+## Validation checkpoint
+
+The final full intake must pass the new observed weather, replacement and multifactor steps. A passing unit suite alone does not close this check.
