@@ -137,7 +137,8 @@ def run(games,advanced,manifest,output):
         writer=csv.DictWriter(f,fieldnames=list(next(iter(preds.values()))[0]))
         writer.writeheader()
         for records in preds.values():writer.writerows(records)
-    # The experiment is research-only and never promotes the candidate.\n    print(json.dumps({"status":report["status"],"weeks":len(report["weekly"]),
+    # The experiment is research-only and never promotes the candidate.
+    print(json.dumps({"status":report["status"],"weeks":len(report["weekly"]),
                       "baseline":report["overall"]["baseline_v03"],
                       "candidates":report["overall"],"unavailable":UNAVAILABLE}))
     return report
