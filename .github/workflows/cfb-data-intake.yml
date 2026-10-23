@@ -254,6 +254,12 @@ jobs:
         run: |
           python -m scripts.personnel_forecast_grade \
             --output "data/pregame_evidence/step3g-grading-${{ github.run_id }}.json"
+      - name: Archive independently verified completed game scores for market settlement
+        run: |
+          python -m scripts.market_finals_archive \
+            --games data/games_2026.csv \
+            --manifest data/manifest.json \
+            --output "data/pregame_evidence/market-finals-${{ github.run_id }}.json"
       - name: Match frozen market comparisons to independently verified final scores
         run: |
           python -m scripts.free_market_final_match \
