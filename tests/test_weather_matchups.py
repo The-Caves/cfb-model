@@ -31,6 +31,20 @@ class WeatherMatchupTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _interaction(dict(wx, weather_status="LIVE_FORECAST"), JOINED_GAME)
 
+    def test_actual_context_writer_omits_optional_status(self):
+        joined = {"run_id": "1", "captured_at_utc": "2026-10-23T10:00:00Z",
+                  "games": [dict(JOINED_GAME, game_id="1", home="Home", away="Away",
+                                 kickoff_utc="2026-10-24T16:00:00Z")]}
+        ctx = {"asof_utc": "2026-10-23T09:00:00Z",
+               "captured_at_utc": "2026-10-23T09:01:00Z",
+               "games": [dict(WEATHER, game_id="1", home="Home", away="Away",
+                              kickoff_utc="2026-10-24T16:00:00Z",
+                              forecast_issue_utc="2026-10-23T09:00:00Z")]}
+        with patch("scripts.weather_matchups.verify_joined", return_value=None):
+            report = build(joined, ctx)
+        self.assertEqual(report["summary"]["games"], 1)
+        self.assertFalse(report["safe_for_betting"])
+
     def test_rejects_future_forecast_and_wrong_game(self):
         joined = {"run_id": "1", "captured_at_utc": "2026-10-23T10:00:00Z",
                   "games": [dict(JOINED_GAME, game_id="1", home="Home", away="Away",
