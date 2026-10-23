@@ -7,24 +7,35 @@ from collections import Counter
 from pathlib import Path
 from scripts import context_archive as store
 from scripts.free_market_comparison_archive import INDEX as MARKET_INDEX,validate as verify_board
-from scripts.personnel_results_archive import OUTCOMES,_valid_index
-from scripts.personnel_archive_dataset import _check_label,safe_path
+from scripts.market_finals_archive import INDEX as FINAL_INDEX,verify as verify_final_index
 from scripts.game_context import parse_time
 
 def match(boards, outcome_index, finals, asof):
-    _valid_index(outcome_index,"outcome")
+    verify_final_index(outcome_index)
     cutoff=parse_time(asof)
-    if set(finals)!={x["archive_path"] for x in outcome_index["games"].values()}:
-        raise ValueError("Final archive set differs from verified index")
+    if set(finals)!={x["path"] for x in outcome_index["games"].values()}:
+        raise ValueError("Final archive set differs from independent index")
     for gid,meta in outcome_index["games"].items():
-        path=meta["archive_path"];safe_path(path,False)
-        final=finals[path]
-        if str(final["game_id"])!=str(gid):raise ValueError("Final game ID mismatch")
+        final=finals[meta["path"]]
+        if (final.get("status")!="OBSERVED_INDEPENDENT_MARKET_FINAL" or
+            final.get("season")!=2026 or final.get("safe_for_betting") is not False or
+            final.get("betting_status")!="PASS_UNVALIDATED" or
+            str(final.get("game_id"))!=str(gid)):
+            raise ValueError("Invalid independently observed final")
+        if hashlib.sha256(store.encode(final)).hexdigest()!=meta["sha256"]:
+            raise ValueError("Independent final checksum mismatch")
         for k in ("home","away","home_score","away_score"):
-            if str(final[k])!=str(meta[k]):raise ValueError("Final index identity/score mismatch")
+            if final[k]!=meta[k]:raise ValueError("Final index identity/score mismatch")
         if parse_time(final["kickoff_utc"])!=parse_time(meta["kickoff_utc"]):
             raise ValueError("Final kickoff/index mismatch")
-        _check_label(path,final,meta,meta["selected_pregame"],cutoff)
+        kickoff=parse_time(final["kickoff_utc"])
+        known=parse_time(final["outcome_known_at_utc"])
+        observed=parse_time(final["observed_at_utc"])
+        if not kickoff<known<=observed or observed>cutoff:
+            raise ValueError("Invalid final chronology")
+        if (len(final.get("scoreboard_sha256",""))!=64 or
+            final.get("source_url")!="https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"):
+            raise ValueError("Unverifiable final provenance")
     rows=[];counts=Counter()
     for run_id,board in sorted(boards.items()):
         verify_board(board)
@@ -41,7 +52,7 @@ def match(boards, outcome_index, finals, asof):
             if meta is None:
                 status="AWAITING_VERIFIED_FINAL"
             else:
-                f=finals[meta["archive_path"]]
+                f=finals[meta["path"]]
                 if (f["home"],f["away"])!=(r["home"],r["away"]):
                     status="IDENTITY_MISMATCH"
                 elif parse_time(f["kickoff_utc"])!=parse_time(r["kickoff_utc"]):
@@ -51,7 +62,7 @@ def match(boards, outcome_index, finals, asof):
                 else:
                     status="MATCHED_VERIFIED_FINAL"
                     result.update({"final_archive_path":meta["archive_path"],
-                        "final_record_sha256":meta["record_sha256"],
+                        "final_record_sha256":meta["sha256"],
                         "final_observed_at_utc":f["observed_at_utc"],
                         "home_score":f["home_score"],"away_score":f["away_score"]})
             result["status"]=status;counts[status]+=1;rows.append(result)
@@ -80,14 +91,14 @@ def read_and_match():
             "matched_provider_games","ats_comparable","totals_comparable")}:
             raise ValueError("Archived comparison counts mismatch")
         boards[rid]=board
-    raw=store.get_blob_file(OUTCOMES)
-    if raw is None:raise ValueError("Missing observed final index")
-    outcomes=json.loads(raw);_valid_index(outcomes,"outcome")
+    raw=store.get_blob_file(FINAL_INDEX)
+    if raw is None:raise ValueError("Missing independent observed final index")
+    outcomes=json.loads(raw);verify_final_index(outcomes)
     finals={}
     for item in outcomes["games"].values():
-        path=item["archive_path"];safe_path(path,False)
+        path=item["path"]
         blob=store.get_blob_file(path)
-        if blob is None:raise ValueError("Missing observed final")
+        if blob is None:raise ValueError("Missing independent observed final")
         finals[path]=store.unpack(blob)
     return match(boards,outcomes,finals,dt.datetime.now(dt.timezone.utc).isoformat())
 
