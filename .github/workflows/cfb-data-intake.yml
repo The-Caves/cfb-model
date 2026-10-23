@@ -221,6 +221,10 @@ jobs:
             --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" \
             --market-dir data/free_market \
             --output "data/pregame_evidence/free-market-comparison-${{ github.run_id }}.json"
+      - name: Archive frozen market comparisons for future verified settlement
+        run: |
+          python -m scripts.free_market_comparison_archive \
+            --comparison "data/pregame_evidence/free-market-comparison-${{ github.run_id }}.json"
       - name: Upload free market model comparison
         uses: actions/upload-artifact@v4
         with:
