@@ -153,6 +153,13 @@ jobs:
         run: |
           python -m scripts.personnel_archive_dataset \
             --output "data/pregame_evidence/step3e-${{ github.run_id }}"
+      - name: Run observed chronological multifactor research backtest
+        run: |
+          python -m scripts.multifactor_walkforward \
+            --dataset "data/pregame_evidence/step3e-${{ github.run_id }}" \
+            --weather "data/pregame_evidence/weather-matchups-${{ github.run_id }}.json" \
+            --replacement "data/pregame_evidence/replacement-counts-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/multifactor-walkforward-${{ github.run_id }}.json"
       - name: Freeze Step 3F preregistered research-readiness diagnostics
         run: |
           python -m scripts.personnel_validation_readiness \
