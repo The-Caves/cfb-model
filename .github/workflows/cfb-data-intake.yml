@@ -269,6 +269,13 @@ jobs:
             --matches "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json" \
             --grades "data/pregame_evidence/free-market-final-grades-${{ github.run_id }}.json" \
             --output "data/pregame_evidence/free-market-performance-${{ github.run_id }}.json"
+      - name: Audit full frozen-market-to-final lifecycle and cumulative performance
+        run: |
+          python -m scripts.free_market_acceptance \
+            --matches "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json" \
+            --grades "data/pregame_evidence/free-market-final-grades-${{ github.run_id }}.json" \
+            --performance "data/pregame_evidence/free-market-performance-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/free-market-acceptance-${{ github.run_id }}.json"
       - name: Consolidated model finish-line and graded performance audit
         run: |
           python -m scripts.model_finishline \
