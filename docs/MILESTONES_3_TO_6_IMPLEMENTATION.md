@@ -66,3 +66,7 @@ The final full intake must pass the new observed weather, replacement and multif
 ## October 22 game settlement check
 
 Request a fresh completed-game scoreboard ingestion and official settlement. Same-day captures remain excluded from the 24–72-hour official label policy; separate exploratory evaluation must never rewrite that policy.
+
+## Previous-weeks research rerun
+
+Re-run the 2026 retrospective weekly walk-forward comparison against freshly retrieved completed-game results. Do not label the retrospective EPA release as authenticated historical pregame evidence.
