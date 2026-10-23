@@ -82,6 +82,28 @@ jobs:
             --output data/model_v03
       - name: Collect timestamped upcoming schedules, rest, travel proxies, weather and reviewed personnel
         run: python -m scripts.ingest_game_context --raw-dir data/raw --availability-csv data/manual/availability_2026.csv --output data/context --horizon-days 10 --auto-official
+      - name: Discover official QB news candidates and build review queue
+        run: |
+          python -m scripts.qb_official_news_watch \
+            --context data/context/upcoming_game_context_2026.json \
+            --output data/context/qb-official-news.json
+          python -m scripts.qb_review_queue \
+            --context data/context/upcoming_game_context_2026.json \
+            --news data/context/qb-official-news.json \
+            --output data/context/qb-review-queue.json \
+            --review-csv data/context/qb-review-queue.csv
+      - name: Audit actual verified QB and injury-report coverage
+        run: |
+          python -m scripts.personnel_coverage_audit \
+            --context data/context/upcoming_game_context_2026.json \
+            --review-queue data/context/qb-review-queue.json \
+            --output data/context/qb-coverage-audit.json
+          python -m scripts.qb_milestone_acceptance \
+            --news data/context/qb-official-news.json \
+            --queue data/context/qb-review-queue.json \
+            --coverage data/context/qb-coverage-audit.json \
+            --output data/context/qb-milestone-acceptance.json
+          cat data/context/qb-milestone-acceptance.json >> "$GITHUB_STEP_SUMMARY"
       - name: Freeze observed pregame research evidence (v0.4 Step 2)
         run: |
           python -m scripts.pregame_evidence \
