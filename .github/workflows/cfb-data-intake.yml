@@ -187,6 +187,18 @@ jobs:
             --advanced-manifest data/advanced/advanced_manifest.json \
             --score-manifest data/manifest.json \
             --output "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json"
+      - name: Export frozen research projections for private dashboard preview
+        run: |
+          python -m scripts.site_forecast_export \
+            --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" \
+            --output data/site_preview/dashboard.json
+      - name: Archive dashboard preview (not a public deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-site-preview-${{ github.run_id }}
+          path: data/site_preview/dashboard.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Audit verified starting-QB readiness for frozen forecast
         run: |
           python -m scripts.qb_readiness_gate \
