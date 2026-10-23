@@ -56,6 +56,8 @@ class IndependentFinalTests(unittest.TestCase):
     def test_stale_scoreboard_rejected(self):
         with self.assertRaises(ValueError):
             plan(empty(),[self.score],self.manifest,b"source","2026-10-26T01:00:00+00:00")
+    def test_empty_index_is_valid(self):
+        self.assertEqual(self.check(empty(),{})["summary"]["AWAITING_VERIFIED_FINAL"],1)
     def test_future_score_rejected(self):
         self.score["kickoff_utc"]="2026-10-26T20:00:00+00:00"
         with self.assertRaises(ValueError):self.archive()
