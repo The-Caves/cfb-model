@@ -131,6 +131,16 @@ jobs:
             --capture "data/pregame_evidence/capture-${{ github.run_id }}.json" \
             --context data/context/upcoming_game_context_2026.json \
             --output data/pregame_evidence
+      - name: Freeze observed weather-style and replacement-count matchup features
+        run: |
+          python -m scripts.weather_matchups \
+            --joined "data/pregame_evidence/personnel-joined-${{ github.run_id }}.json" \
+            --context data/context/upcoming_game_context_2026.json \
+            --output "data/pregame_evidence/weather-matchups-${{ github.run_id }}.json"
+          python -m scripts.personnel_replacement_capture \
+            --joined "data/pregame_evidence/personnel-joined-${{ github.run_id }}.json" \
+            --context data/context/upcoming_game_context_2026.json \
+            --output "data/pregame_evidence/replacement-counts-${{ github.run_id }}.json"
       - name: Persist observed pregame context and link completed results (Step 3D)
         run: |
           python -m scripts.personnel_results_archive \
