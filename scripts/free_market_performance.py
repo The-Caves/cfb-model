@@ -103,7 +103,8 @@ def su_archive():
     for gid in sorted(index["games"]):
         record=records[index["games"][gid]["path"]]
         v=record.get("su_correct")
-        if v is not None and (type(v) is not int or v not in (0,1)):\n            raise ValueError("Invalid archived SU grade")
+        if v is not None and (type(v) is not int or v not in (0,1)):
+            raise ValueError("Invalid archived SU grade")
         values.append(v)
     return values
 
