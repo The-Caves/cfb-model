@@ -83,7 +83,7 @@ def run(games_path,manifest_path,output):
     result={"status":STATUS,"new_verified_finals":len(new),
             "total_verified_finals":len(updated["games"]),
             "conflicts":pending,"safe_for_betting":False,"betting_status":"PASS_UNVALIDATED"}
-    if new:
+    if new or blob is None:
         material={INDEX:store.encode(updated)}
         material.update({path:store.pack(rec) for path,rec in new})
         result["archive_commit_sha"]=_commit_material(material,os.environ.get("GITHUB_RUN_ID",""))
