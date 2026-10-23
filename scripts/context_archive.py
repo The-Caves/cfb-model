@@ -38,8 +38,17 @@ def get_blob_file(file,branch=BRANCH):
     path=repo_path()+"/contents/"+urllib.parse.quote(file,safe="/")+"?ref="+branch
     data=api("GET",path)
     if data is None:return None
-    if data.get("encoding")!="base64":raise ValueError("Unexpected content encoding")
-    return base64.b64decode(data["content"])
+    if data.get("encoding")=="base64":
+        return base64.b64decode(data["content"])
+    # GitHub's Contents API omits inline base64 for large files (>1 MB).
+    # Read the immutable Git blob by SHA instead of treating it as corruption.
+    sha=data.get("sha")
+    if not isinstance(sha,str) or len(sha)!=40:
+        raise ValueError("Unexpected content encoding without valid Git blob SHA")
+    blob=api("GET",repo_path()+"/git/blobs/"+sha)
+    if not blob or blob.get("encoding")!="base64":
+        raise ValueError("Unexpected Git blob encoding")
+    return base64.b64decode(blob["content"])
 def encode(data):return json.dumps(data,sort_keys=True,separators=(",",":"),default=str).encode()
 def pack(data):return gzip.compress(encode(data),mtime=0)
 def unpack(data):return json.loads(gzip.decompress(data))
