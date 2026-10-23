@@ -104,6 +104,11 @@ jobs:
             --coverage data/context/qb-coverage-audit.json \
             --output data/context/qb-milestone-acceptance.json
           cat data/context/qb-milestone-acceptance.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Audit injury source readiness by time to kickoff
+        run: |
+          python -m scripts.injury_source_readiness \
+            --context data/context/upcoming_game_context_2026.json \
+            --output data/context/injury-source-readiness.json
       - name: Freeze observed pregame research evidence (v0.4 Step 2)
         run: |
           python -m scripts.pregame_evidence \
