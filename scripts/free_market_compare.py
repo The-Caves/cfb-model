@@ -18,7 +18,7 @@ def compare(forecast, snapshots):
             if g is None or (q["home"],q["away"])!=(g["home"],g["away"]):
                 continue
             observed=parse_time(q["retrieved_at_utc"])
-            if observed>=parse_time(g["kickoff_utc"]) or observed<parse_time(g["forecast_observed_utc"]):
+            if observed>=parse_time(g["kickoff_utc"]) or observed>parse_time(g["forecast_observed_utc"]):
                 continue
             if q.get("source")!="ESPN_SCOREBOARD" or not q.get("provider"):
                 continue
