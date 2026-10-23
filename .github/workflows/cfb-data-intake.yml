@@ -258,6 +258,11 @@ jobs:
         run: |
           python -m scripts.free_market_final_match \
             --output "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json"
+      - name: Grade verified ATS and over-under selections (research only)
+        run: |
+          python -m scripts.free_market_final_grade \
+            --matches "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/free-market-final-grades-${{ github.run_id }}.json"
       - name: Consolidated model finish-line and graded performance audit
         run: |
           python -m scripts.model_finishline \
