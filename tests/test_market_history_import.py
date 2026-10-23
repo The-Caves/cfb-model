@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from scripts.market_history_import import ingest
-from scripts.market_vault import audit, latest_quote
+from scripts.market_vault import audit
 
 DATA = {"timestamp": "2026-10-21T17:00:00Z", "data": [
     {"id": "event-1", "sport_key": "americanfootball_ncaaf",
