@@ -54,14 +54,19 @@ def choose(record, requests, now=None):
                     "home_margin":m,"total":p["predicted_total_points"],
                     "research_home_win_probability":p["research_home_win_probability"],
                     "qb_coverage":g["reported_qb_coverage"],
-                    "team_report_coverage":g["verified_team_report_coverage"]})
+                    "team_report_coverage":g["verified_team_report_coverage"],
+                    "qb_status":"VERIFIED_BOTH_TEAMS" if g["reported_qb_coverage"]==2 else "QB_CONFIRMATION_INCOMPLETE",
+                    "injury_status":"VERIFIED_BOTH_TEAMS" if g["verified_team_report_coverage"]==2 else "INJURY_REPORT_COVERAGE_INCOMPLETE",
+                    "personnel_risk":"HIGH" if g["reported_qb_coverage"]<2 or g["verified_team_report_coverage"]<2 else "LOW"})
     if not out:raise ValueError("No requested matchups")
     return {"status":"ARCHIVED_PROSPECTIVE_RESEARCH_REPORT",
             "forecast_observed_utc":record["forecast_observed_utc"],
             "model":record["model_training"].get("model"),
             "betting_status":"PASS_UNVALIDATED",
             "warning":"Existing archived research forecast, not a new model fit; no verified market odds, no betting validation",
-            "games":out}
+            "games":out,"personnel_coverage":{"requested_games":len(out),
+            "both_qbs_verified":sum(g.get("qb_status")=="VERIFIED_BOTH_TEAMS" for g in out),
+            "both_reports_verified":sum(g.get("injury_status")=="VERIFIED_BOTH_TEAMS" for g in out)}}
 
 def main():
     p=argparse.ArgumentParser()
@@ -80,8 +85,8 @@ def main():
     path.write_text(json.dumps(report,indent=2)+"\n")
     lines=["# On-demand CFB model research report","",
            "Forecast originally captured: "+report["forecast_observed_utc"],"",
-           "| Requested game | Status | Winner | Away points | Home points | Home margin | Total |",
-           "|---|---|---|---:|---:|---:|---:|"]
+           "| Requested game | Status | Winner | Away points | Home points | Home margin | Total | QB evidence | Injury reports |",
+           "|---|---|---|---:|---:|---:|---:|---|---|"]
     for g in report["games"]:
         fmt=lambda v: "—" if v is None else str(round(v,2))
         lines.append("| "+g["requested"]+" | "+g["status"]+" | "+
@@ -89,7 +94,7 @@ def main():
                      fmt(g.get("predicted_away_points"))+" | "+
                      fmt(g.get("predicted_home_points"))+" | "+
                      fmt(g.get("home_margin"))+" | "+
-                     fmt(g.get("total"))+" |")
+                     fmt(g.get("total"))+" | "+str(g.get("qb_status","—"))+" | "+str(g.get("injury_status","—"))+" |")
     lines.extend(["","Unvalidated research projections. No sportsbook spreads or totals were ingested."])
     path.with_suffix(".md").write_text("\n".join(lines)+"\n")
     print(json.dumps({"status":report["status"],"games":len(report["games"])}))
