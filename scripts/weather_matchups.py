@@ -71,7 +71,7 @@ def _interaction(context_game, joined_game):
 
 def build(joined, context):
     verify_joined(joined)
-    if context.get("safe_for_betting") is True or context.get("betting_status") != "PASS_UNVALIDATED":
+    if context.get("safe_for_betting") is True or context.get("betting_status", "PASS_UNVALIDATED") != "PASS_UNVALIDATED":
         raise ValueError("Untrusted weather context")
     asof = parse_time(context["asof_utc"])
     capture = parse_time(context["captured_at_utc"])
