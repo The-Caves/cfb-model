@@ -54,6 +54,26 @@ class PublishedOfficialTests(unittest.TestCase):
                         "2026-10-24T17:00:00Z")
         self.assertEqual(rows,[])
         self.assertEqual(qa["report_cards"][0]["game_match"],"NO_UNIQUE_ESPN_GAME_MATCH")
+    def test_exempt_admin_status_not_player_availability(self):
+        # Live SEC/Big12 reports may include publisher Exempt rows. This is
+        # neither AVAILABLE nor OUT, so it must be excluded from player claims.
+        body=card(rows=[{"name":"QB #10 Player Exempt","status":"Exempt"},
+                        {"name":"QB #12 Player One","status":"Questionable"}])
+        rows,qa=extract("SEC",{"a":body},[G],ALIASES,
+                        "2026-10-24T17:00:00Z")
+        self.assertEqual(qa["official_reports_accepted"],1)
+        self.assertEqual(qa["report_cards"][0]["excluded_exempt_rows"],1)
+        actual=[r for r in rows if r["kind"]=="AVAILABILITY"]
+        self.assertEqual(len(actual),1)
+        self.assertEqual(actual[0]["player"],"Player One")
+        self.assertEqual(actual[0]["status"],"QUESTIONABLE")
+        self.assertFalse(any("Exempt" in r.get("player","") for r in rows))
+    def test_unknown_non_exempt_still_quarantines_report(self):
+        rows,qa=extract("SEC",{"a":card(rows=[{"name":"QB #12 Star","status":"Exempt"},
+                           {"name":"RB #11 Player","status":"Injured"}])},
+                        [G],ALIASES,"2026-10-24T17:00:00Z")
+        self.assertEqual(rows,[])
+        self.assertEqual(qa["report_cards"][0]["publication_status"],"PLAYER_ROW_SCHEMA_ERROR")
     def test_unknown_status_quarantines_whole_card(self):
         rows,qa=extract("SEC",{"a":card(rows=[{"name":"QB #12 Player One","status":"Injured"}])},
                          [G],ALIASES,"2026-10-24T17:00:00Z")
