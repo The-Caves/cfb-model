@@ -37,6 +37,22 @@ jobs:
         run: |
           python -m scripts.site_export --archive-root .context-state --output site/data/dashboard.json | tee /tmp/site-export.txt
           cat /tmp/site-export.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Report earliest today research matchups without betting claims
+        run: |
+          python - <<'PY'
+          import datetime as dt,json
+          from zoneinfo import ZoneInfo
+          d=json.load(open("site/data/dashboard.json"))
+          zone=ZoneInfo("America/New_York")
+          today=dt.datetime.now(zone).date()
+          games=[g for g in d["games"] if dt.datetime.fromisoformat(g["kickoff_utc"].replace("Z","+00:00")).astimezone(zone).date()==today]
+          print("Early today model research projections (NOT validated picks):")
+          for g in games[:18]:
+              local=dt.datetime.fromisoformat(g["kickoff_utc"].replace("Z","+00:00")).astimezone(zone)
+              m=g["model_home_margin"]
+              winner=(g["home_team"] if m>0 else g["away_team"] if m<0 else "TIE") if m is not None else "PASS"
+              print(local.strftime("%I:%M %p"),g["away_team"],"at",g["home_team"],"research projected winner:",winner,"home margin:",m,"total:",g["model_total"],"QB:",str(g["qb_starters_verified"])+"/2","Reports:",str(g["official_team_reports_verified"])+"/2")
+          PY
       - name: Confirm research-only and missing sportsbook prices
         run: |
           python - <<'PY'
