@@ -15,7 +15,7 @@ import re
 import urllib.request
 from pathlib import Path
 from zoneinfo import ZoneInfo
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin, urlsplit, parse_qs
 from scripts.game_context import parse_time
 
 INDEX="https://www.ourlads.com/ncaa-football-depth-charts/"
@@ -49,8 +49,17 @@ def allowed(url):
     p=urlsplit(url)
     return p.scheme=="https" and p.hostname==HOST and p.port in (None,443) and not p.username and not p.password
 
+def depth_link(url):
+    if not allowed(url):return False
+    p=urlsplit(url)
+    if p.path!="/ncaa-football-depth-charts/depth-chart.aspx":return False
+    qs=parse_qs(p.query)
+    return (len(qs.get("id",[]))==1 and qs["id"][0].isdigit()
+            and len(qs.get("s",[]))==1
+            and bool(re.fullmatch(r"[a-z0-9-]{2,65}",qs["s"][0])))
+
 def download(url):
-    if not allowed(url) or (url!=INDEX and "/ncaa-football-depth-charts/depth-chart/" not in urlsplit(url).path):
+    if not allowed(url) or (url!=INDEX and not depth_link(url)):
         raise ValueError("Unreviewed depth-chart URL")
     req=urllib.request.Request(url,headers={
         "User-Agent":"CFB-2026-public-depth-order/0.1 (contact via project repo)",
@@ -75,8 +84,7 @@ class IndexParser(HTMLParser):
             if alt and len(alt)<85:self.school=alt
         if tag=="a":
             href=urljoin(INDEX,a.get("href",""))
-            if (self.school and allowed(href) and
-                "/ncaa-football-depth-charts/depth-chart/" in urlsplit(href).path):
+            if self.school and depth_link(href):
                 self.pages.setdefault(candidate_name(self.school),href)
 
 class TableParser(HTMLParser):
