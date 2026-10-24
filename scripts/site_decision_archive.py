@@ -34,7 +34,7 @@ def freeze(board,now,run_id):
     orig=parse_time(board["forecast_observed_utc"])
     if orig>now:raise ValueError("Forecast from future")
     # External odds timestamps are preserved separately from model timestamps.
-    rows=[];ids=set();quote_count=0;ats=0;ou=0
+    rows=[];ids=set();quote_count=0;ats=0;ou=0;high_disagreement=0
     for g in board["games"]:
         gid=str(g["game_id"])
         kickoff=parse_time(g["kickoff_utc"])
@@ -81,7 +81,12 @@ def freeze(board,now,run_id):
             if over!="PASS":ou+=1
         elif tt:
             raise ValueError("Observed total without computed side")
+        discrepancy=round(abs(margin+spread),4) if sp else None
+        risk="HIGH_MODEL_MARKET_DISAGREEMENT" if discrepancy is not None and discrepancy>=10 else "NONE"
+        high_disagreement+=int(risk!="NONE")
         rows.append({
+            "model_market_margin_disagreement":discrepancy,
+            "calibration_review_flag":risk,
             "game_id":gid,"home":home,"away":away,"kickoff_utc":g["kickoff_utc"],
             "frozen_forecast_home_margin":margin,"frozen_forecast_total":total,
             "frozen_forecast_run_id":str(board["forecast_run_id"]),
@@ -102,7 +107,8 @@ def freeze(board,now,run_id):
             "market_publication_time_authenticated":False,
             "not_an_executed_bet":True,"eligible_for_future_verified_outcome_grading":True,
             "summary":{"future_games":len(rows),"games_with_line":quote_count,
-                       "ats_decisions":ats,"total_decisions":ou},
+                       "ats_decisions":ats,"total_decisions":ou,
+                       "model_market_high_disagreements":high_disagreement},
             "rows":rows}
 
 def archive(snapshot):
