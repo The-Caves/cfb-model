@@ -93,124 +93,136 @@ def confirmed_rows(history, games, now):
                 "description":"Conflicting or invalid game-specific QB evidence"}
     return idx
 
-def overlay(board,history,now,team_id_map=None,leaders=None):
+def passer_from_game_summary(summary,team_id,expected_team):
+    """The top box-score PASSING athlete is NOT necessarily the team's starter."""
+    box=summary.get("boxscore") or {}
+    for row in box.get("players",[]) or []:
+        team=row.get("team") or {}
+        if str(team.get("id"))!=str(team_id) or team.get("displayName")!=expected_team:
+            continue
+        for group in row.get("statistics",[]) or []:
+            if group.get("name")!="passing":continue
+            for item in group.get("athletes",[]) or []:
+                ath=item.get("athlete") or {}
+                player=ath.get("displayName")
+                if (isinstance(player,str) and 3<=len(player)<=100
+                    and isinstance(item.get("stats"),list) and item["stats"]
+                    and all(c.isprintable() for c in player)):
+                    return player.strip()
+    return None
+
+def recent_completed_game_map(payload,required_team_ids,now):
+    """Most recent completed game in an observed score slate, never a future game."""
+    matches={}
+    for game in payload.get("events",[]) or []:
+        gid=str(game.get("id") or "")
+        status=(game.get("status") or {}).get("type") or {}
+        if status.get("completed") is not True or not gid.isdigit():continue
+        try:when=parse_time(game["date"])
+        except (KeyError,ValueError,TypeError):continue
+        if when>=now:continue
+        comps=game.get("competitions") or []
+        if not comps:continue
+        for side in comps[0].get("competitors") or []:
+            tid=str((side.get("team") or {}).get("id") or "")
+            if tid not in required_team_ids:continue
+            if (side.get("team") or {}).get("displayName")!=required_team_ids[tid]:
+                continue
+            if tid not in matches or when>parse_time(matches[tid]["date"]):
+                matches[tid]={"game_id":gid,"date":when.isoformat()}
+    return matches
+
+def overlay(board,history,now,team_id_map=None,recent_passers=None):
     if board.get("schema_version")!=2 or board.get("betting_status")!="PASS_UNVALIDATED":
         raise ValueError("Untrusted forecast board")
     games={str(g["game_id"]):g for g in board["games"]}
     confirmed=confirmed_rows(history,games,now)
     team_id_map=team_id_map or {}
-    leaders=leaders or {}
-    counts={"confirmed":0,"season_passing_leader":0,"unknown":0,"conflicts":0}
+    recent_passers=recent_passers or {}
+    counts={"confirmed":0,"recent_game_passer":0,"unknown":0,"conflicts":0}
     for g in board["games"]:
         gid=str(g["game_id"])
         for key,team in (("qb_home",g["home_team"]),("qb_away",g["away_team"])):
             slot=confirmed.get((gid,team))
             if slot is None:
                 tid=team_id_map.get((gid,team))
-                player=leaders.get(tid) if tid else None
-                if player:
-                    slot={"player":player,"status":"SEASON_PASSING_LEADER",
-                          "source_url":BASE+"/teams/"+tid+"/leaders?season=2026",
+                latest=recent_passers.get(tid) if tid else None
+                if latest and isinstance(latest.get("player"),str):
+                    slot={"player":latest["player"],"status":"RECENT_GAME_PASSER",
+                          "source_url":latest["source_url"],
+                          "last_game_utc":latest["last_game_utc"],
                           "observed_at_utc":now.isoformat(),
-                          "description":"2026 season passing leader, NOT a game-specific starter prediction"}
-                else:
-                    slot=dict(UNKNOWN)
+                          "description":"Last completed game's ESPN passing box-score leader, NOT a game-specific starter prediction"}
+                else:slot=dict(UNKNOWN)
             g[key]=slot
-            counts[{"CONFIRMED_OFFICIAL":"confirmed","SEASON_PASSING_LEADER":"season_passing_leader",
+            counts[{"CONFIRMED_OFFICIAL":"confirmed","RECENT_GAME_PASSER":"recent_game_passer",
                     "CONFLICT_REVIEW":"conflicts","UNKNOWN":"unknown"}[slot["status"]]]+=1
     board["qb_display"]={"status":STATUS,"captured_at_utc":now.isoformat(),
         "official_history_observed_utc":history.get("observed_at_utc") if history else None,
         "counts":counts,"model_features_updated":False,
-        "warning":"Season passing leaders are NOT confirmed or projected starters. Latest source overlay was observed separately from the frozen forecast."}
+        "warning":"A previous game's passing leader is NOT confirmation or prediction of this game's starter. Latest source overlay is separate from the frozen forecast."}
     return board
 
 def collect(board,now,fetch=fetch_json):
-    """Best effort current ESPN context: errors never promote a starter."""
+    """Try confirmed official archive first; use recent completed-game passer as fallback."""
     wanted={str(g["game_id"]):g for g in board["games"]}
-    days=sorted({parse_time(g["kickoff_utc"]).date() for g in wanted.values()})[:14]
+    days=sorted({parse_time(g["kickoff_utc"]).astimezone(
+        dt.timezone(dt.timedelta(hours=-4))).date() for g in wanted.values()})[:14]
     refs={};failures=[]
     for day in days:
         try:
             url=BASE+"/scoreboard?dates="+day.strftime("%Y%m%d")+"&limit=500&groups=80"
             refs.update(team_ids_from_scoreboard(fetch(url),wanted,now))
         except (ValueError,KeyError,OSError,TypeError) as exc:
-            failures.append({"kind":"scoreboard","date":day.isoformat(),"error":type(exc).__name__})
-    # Diagnose available completed-game public QB-leader schema before
-    # promoting any last-game performer to a sourced, non-starter label.
-    try:
-        sample_day=now.date()-dt.timedelta(days=7)
-        sample=fetch(BASE+"/scoreboard?dates="+sample_day.strftime("%Y%m%d")+"&limit=500&groups=80")
-        ev=next((e for e in sample.get("events",[]) if e.get("competitions")),None)
-        comp=ev["competitions"][0] if ev else {}
-        team=(comp.get("competitors") or [{}])[0]
-        leadership=team.get("leaders")
-        desc={"events":len(sample.get("events",[])),"team_keys":sorted(team.keys()),
-              "competitor_leaders_type":type(leadership).__name__,
-              "first_category":(leadership[:1] if isinstance(leadership,list) else None)}
-        print(json.dumps({"prior_week_espn_qb_diagnostic":desc})[:2000])
-        if ev and str(ev.get("id","")).isdigit():
-            detail=fetch(BASE+"/summary?event="+str(ev["id"]))
-            box=detail.get("boxscore") or {}
-            sides=box.get("players") or []
-            sample_side=sides[0] if sides else {}
-            stats=sample_side.get("statistics") or []
-            stat_sample=stats[0] if stats else {}
-            athletes=stat_sample.get("athletes") or []
-            sample_athlete=athletes[0] if athletes else {}
-            print(json.dumps({"prior_game_summary_qb_diagnostic":{
-                "game_id":str(ev["id"]),"keys":sorted(detail.keys()),
-                "boxscore_keys":sorted(box.keys()),"player_teams":len(sides),
-                "team_keys":sorted(sample_side.keys()),
-                "category_names":[str(x.get("name") or x.get("label")) for x in stats if isinstance(x,dict)][:15],
-                "category_keys":sorted(stat_sample.keys()),"athlete_keys":sorted(sample_athlete.keys()),
-                "first_athlete_keys":sorted((sample_athlete.get("athlete") or {}).keys())
-            }})[:2000])
-
-    except (ValueError,KeyError,OSError,TypeError) as exc:
-        print(json.dumps({"prior_week_espn_qb_diagnostic_error":type(exc).__name__}))
-    unique=sorted(set(refs.values()))
-    results={}
-    shapes=[]
-    def one(tid):
-        data=fetch(BASE+"/teams/"+tid+"/leaders?season=2026")
-        sample={"team_id":tid,"keys":sorted(data.keys())[:15],
-                "leaders_type":type(data.get("leaders")).__name__,
-                "categories_type":type(data.get("categories")).__name__}
-        groups=data.get("leaders") or data.get("categories") or []
-        if isinstance(groups,list) and groups:
-            sample["first_category_keys"]=sorted(groups[0].keys()) if isinstance(groups[0],dict) else []
-            if isinstance(groups[0],dict):
-                sample["first_category_name"]=groups[0].get("name")
-                sample["first_category_display"]=groups[0].get("displayName")
-                details=groups[0].get("leaders") or []
-                if isinstance(details,list) and details and isinstance(details[0],dict):
-                    sample["first_leader_keys"]=sorted(details[0].keys())
-                    player=details[0].get("athlete") or {}
-                    sample["first_athlete_keys"]=sorted(player.keys()) if isinstance(player,dict) else []
-        return season_passing_leader(data),sample
+            failures.append({"kind":"upcoming_scoreboard","day":day.isoformat(),"error":type(exc).__name__})
+    wanted_teams={}
+    for (gid,name),tid in refs.items():
+        if tid in wanted_teams and wanted_teams[tid]!=name:
+            raise ValueError("ESPN team id resolves to different school names")
+        wanted_teams[tid]=name
+    latest={}
+    # Three recent weeks find teams returning after a bye, without attempting
+    # to infer a QB1 from a season stat, roster position or future game.
+    for n in range(1,23):
+        day=now.date()-dt.timedelta(days=n)
+        try:
+            url=BASE+"/scoreboard?dates="+day.strftime("%Y%m%d")+"&limit=500&groups=80"
+            available=recent_completed_game_map(fetch(url),wanted_teams,now)
+            for tid,item in available.items():
+                if tid not in latest or parse_time(item["date"])>parse_time(latest[tid]["date"]):
+                    latest[tid]=item
+        except (ValueError,KeyError,OSError,TypeError) as exc:
+            failures.append({"kind":"completed_scoreboard","day":day.isoformat(),"error":type(exc).__name__})
+    by_game={}
+    for tid,g in latest.items():by_game.setdefault(g["game_id"],[]).append(tid)
+    recent={}
+    def collect_game(gid):
+        return fetch(BASE+"/summary?event="+gid)
     with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
-        futures={pool.submit(one,tid):tid for tid in unique}
-        for f in concurrent.futures.as_completed(futures):
-            tid=futures[f]
+        futures={pool.submit(collect_game,gid):gid for gid in sorted(by_game)}
+        for future in concurrent.futures.as_completed(futures):
+            gid=futures[future]
             try:
-                name,sample=f.result()
-                if name:results[tid]=name
-                if len(shapes)<3 and (not name):shapes.append(sample)
+                summary=future.result()
+                for tid in by_game[gid]:
+                    name=passer_from_game_summary(summary,tid,wanted_teams[tid])
+                    if name:
+                        recent[tid]={"player":name,
+                            "source_url":"https://www.espn.com/college-football/game/_/gameId/"+gid,
+                            "last_game_utc":latest[tid]["date"]}
             except (ValueError,KeyError,OSError,TypeError) as exc:
-                failures.append({"kind":"team_leaders","team_id":tid,"error":type(exc).__name__})
-    if not results and shapes:
-        print(json.dumps({"qb_source_format_diagnostic":shapes}))
-    return refs,results,failures
+                failures.append({"kind":"completed_game_boxscore","game_id":gid,"error":type(exc).__name__})
+    return refs,recent,failures
 
 def run(board_path,history_path,now=None,collector=collect):
     now=now or dt.datetime.now(dt.timezone.utc)
     source=Path(board_path);board=json.loads(source.read_text())
     hpath=Path(history_path)
     history=json.loads(hpath.read_text()) if hpath.exists() else None
-    ids,leaders,errors=collector(board,now)
-    result=overlay(board,history,now,ids,leaders)
+    ids,recent,errors=collector(board,now)
+    result=overlay(board,history,now,ids,recent)
     result["qb_display"]["school_ids_matched"]=len(ids)
-    result["qb_display"]["season_leaders_identified"]=len(leaders)
+    result["qb_display"]["recent_passers_identified"]=len(recent)
     result["qb_display"]["fetch_failures"]=errors[:150]
     source.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n")
     print(json.dumps(result["qb_display"]))
