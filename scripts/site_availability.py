@@ -57,19 +57,26 @@ def merge(board,rows,now,manifest=None):
                  (pub,captured)>(parse_time(prev["published_at_utc"]),
                                   parse_time(prev["observed_at_utc"])) )):
             picked[key]=record
-    counts={"official_qb_designations":0,"games_with_qb_designations":0,
+    counts={"official_qb_designations":0,"actionable_qb_designations":0,
+            "games_with_qb_designations":0,"games_with_actionable_qb_designations":0,
             "starter_conflicts":0}
     for g in board["games"]:
         has_qb=False
         for side in ("home","away"):
             team=g[side+"_team"]
-            designations=sorted(
+            all_designations=sorted(
                 (v for (gid,t,_),v in picked.items()
                  if gid==str(g["game_id"]) and t==team),
                 key=lambda r:(r["player"],r["status"]))
+            # Do not flood cards with all listed backup QBs marked AVAILABLE.
+            # Available/probable is not confirmation of QB1 or even playing time.
+            designations=[r for r in all_designations
+                          if r["status"] not in ("AVAILABLE","PROBABLE")]
             g["qb_availability_"+side]=designations
-            counts["official_qb_designations"]+=len(designations)
-            has_qb|=bool(designations)
+            counts["official_qb_designations"]+=len(all_designations)
+            counts["actionable_qb_designations"]+=len(designations)
+            has_qb|=bool(all_designations)
+            if designations:g.setdefault("_qb_has_actionable",True)
             claimed=g.get("qb_"+side) or {}
             if claimed.get("status")=="CONFIRMED_OFFICIAL":
                 if any(d["player"].casefold()==claimed["player"].casefold()
@@ -79,6 +86,7 @@ def merge(board,rows,now,manifest=None):
                                    "description":"New official availability conflicts with an earlier starter confirmation"}
                     counts["starter_conflicts"]+=1
         counts["games_with_qb_designations"]+=int(has_qb)
+        counts["games_with_actionable_qb_designations"]+=int(g.pop("_qb_has_actionable",False))
     board["qb_availability_display"]={
         **counts,
         "source":"Official SEC/Big Ten/ACC/Big 12 published availability reporting",
