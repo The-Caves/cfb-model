@@ -53,6 +53,16 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 .marketTile .researchSide.unavailable{color:#a7bacd;font-weight:500}
 .marketMeta{color:#96adc2;font-size:11px;margin-top:10px;line-height:1.5}
 @media(max-width:560px){.dayShell{padding:0 16px 14px}.dayButton{min-width:77px}.marketTile{padding:9px}.marketTile .marketValue{font-size:16px}}
+
+.qbPanel{margin:13px 0 5px;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.qbSlot{padding:11px 12px;background:#102237;border:1px solid #344b60;border-radius:10px;min-width:0}
+.qbSlot.confirmed{border-color:#447e69;background:#17372f}
+.qbSlotHeader{font-size:10px;color:#a5bed3;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.qbName{font-weight:750;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.qbStatus{color:#f1d6a1;font-size:11px;line-height:1.5;margin-top:4px}
+.qbSlot.confirmed .qbStatus{color:#a6f0d9}
+.qbSlot a{font-size:11px;display:inline-block;margin-top:6px;text-decoration:underline}
+@media(max-width:500px){.qbSlot{padding:9px}.qbName{font-size:12px}}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top"><div class="brand">🏈 CFB <span>LAB</span> / 2026</div><div class="pill">Research model</div></div>
@@ -66,7 +76,7 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 <div class="tool">
 <input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
 <select id="sort" aria-label="Sort games"><option value="time">Kickoff · earliest first</option><option value="late">Kickoff · latest first</option><option value="ats">Biggest model ATS difference</option><option value="total">Biggest model total difference</option><option value="alpha">School · A to Z</option></select>
-<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs reviewed</option></select>
+<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs reviewed</option><option value="qb-named">Both QB names available</option><option value="qb-unknown">QB information missing</option></select>
 </div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden"><div class="results"><div class="panel"><div class="small">Prospective SU</div><div class="metric" id="su">—</div></div><div class="panel"><div class="small">Prospective ATS</div><div class="metric" id="ats">—</div></div><div class="panel"><div class="small">Prospective totals</div><div class="metric" id="ou">—</div></div></div><div class="panel" style="margin-top:14px"><h3>Performance will not be fabricated</h3><p class="state">Verified forward-looking prediction grading is separate from retrospective research. Unobserved sportsbook lines cannot generate ATS or totals records. Until audited grading is published, those results remain unavailable.</p></div></section>
@@ -93,10 +103,32 @@ function marketTile(label,line,selection,edge){
  if(selection&&selection!=="PASS"&&Number.isFinite(edge))box.append(node("div","small","Model difference: "+num(edge)+" pts"));
  return box;
 }
+function qbCard(team,side){
+ const slot=node("div","qbSlot"+(side&&side.status==="CONFIRMED_OFFICIAL"?" confirmed":""));
+ slot.append(node("div","qbSlotHeader",team+" · Quarterback"));
+ slot.append(node("div","qbName",side&&side.player?side.player:"Starter unknown"));
+ const states={CONFIRMED_OFFICIAL:"Confirmed · reviewed official game statement",
+  SEASON_PASSING_LEADER:"2026 passing leader · NOT confirmed to start",
+  CONFLICT_REVIEW:"Conflicting QB evidence · under review",
+  UNKNOWN:"No verified game-specific starter"};
+ slot.append(node("div","qbStatus",states[side&&side.status]||states.UNKNOWN));
+ if(side&&side.source_url){
+   try{
+     const url=new URL(side.source_url);
+     if(url.protocol==="https:"){
+       const a=node("a","","View source");
+       a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";slot.append(a);
+     }
+   }catch(_){}
+ }
+ return slot;
+}
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("b","small",fmtDate.format(dateOf(g.kickoff_utc))),node("span","small","ESPN "+g.game_id));el.append(top);
  const teams=node("div","teams");teams.append(node("span","team",g.away_team),node("span","at","@"),node("span","team",g.home_team));el.append(teams);
+ const qbPanel=node("div","qbPanel");
+ qbPanel.append(qbCard(g.away_team,g.qb_away),qbCard(g.home_team,g.qb_home));el.append(qbPanel);
  const scores=node("div","scoreline"),away=node("div"),home=node("div","scoreHome");
  away.append(node("div","projected","Away · model"),node("div","score",num(g.model_away_points)));
  home.append(node("div","projected","Home · model"),node("div","score",num(g.model_home_points)));
@@ -156,13 +188,15 @@ function render(){
  const needle=byId("query").value.trim().toLowerCase(),filter=byId("market-filter").value,order=byId("sort").value;
  const shown=future.filter(g=>{
   if(selectedDay!=="all"&&dateKey(dateOf(g.kickoff_utc))!==selectedDay)return false;
-  if(needle&&!(g.away_team+" "+g.home_team+" "+g.game_id).toLowerCase().includes(needle))return false;
+  if(needle&&!(g.away_team+" "+g.home_team+" "+g.game_id+" "+(g.qb_home?.player||"")+" "+(g.qb_away?.player||"")).toLowerCase().includes(needle))return false;
   if(filter==="lines"&&!Number.isFinite(g.market_home_spread)&&!Number.isFinite(g.market_total))return false;
   if(filter==="ats"&&!g.model_ats_side)return false;
   if(filter==="ou"&&!g.model_ou_side)return false;
   if((filter==="home"||filter==="away")&&g.model_ats_side!==filter.toUpperCase())return false;
   if((filter==="over"||filter==="under")&&g.model_ou_side!==filter.toUpperCase())return false;
   if(filter==="qb"&&g.qb_starters_verified!==2)return false;
+  if(filter==="qb-named"&&(!g.qb_home?.player||!g.qb_away?.player))return false;
+  if(filter==="qb-unknown"&&g.qb_home?.status!=="UNKNOWN"&&g.qb_away?.status!=="UNKNOWN")return false;
   return true;
  });
  const when=g=>dateOf(g.kickoff_utc).getTime();
