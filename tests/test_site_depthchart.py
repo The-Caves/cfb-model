@@ -1,7 +1,8 @@
 """Depth-chart ranks must be explicit, sourced, and never confirmed-QB1 evidence."""
-import datetime as dt,unittest
+import datetime as dt,unittest,json,tempfile
+from pathlib import Path
 from scripts.site_depthchart import (INDEX,SOURCE,IndexParser,TableParser,
-    extract_chart,overlay,chart_for_teams,clean_name,normalized)
+    extract_chart,overlay,chart_for_teams,clean_name,normalized,source_updated,run)
 UTC=dt.timezone.utc
 NOW=dt.datetime(2026,10,24,14,tzinfo=UTC)
 def board():
@@ -48,6 +49,27 @@ class DepthTests(unittest.TestCase):
     def test_untrusted_url_or_source_not_promoted(self):
         bad=chart();bad["source_url"]="https://other-site.example/depth-chart"
         self.assertEqual(overlay(board(),{"Mississippi State Bulldogs":bad},NOW)["games"][0]["qb_depth_home"],[])
+    def test_source_page_update_has_trustworthy_year_and_time(self):
+        page='<div>Updated: 10/23/2026 7:04PM ET</div>'
+        observed=dt.datetime(2026,10,24,14,tzinfo=UTC)
+        self.assertIn("2026-10-23",source_updated(page,observed)["source_updated_et"])
+        self.assertIsNone(source_updated(page,dt.datetime(2026,10,20,14,tzinfo=UTC)))
+        self.assertIsNone(source_updated("<div>Updated: 10/23/2025 7:04PM ET</div>",observed))
+    def test_daily_cache_keeps_charts_without_network_recrawl(self):
+        with tempfile.TemporaryDirectory() as folder:
+            src=Path(folder)/"board.json";cache=Path(folder)/"charts.json"
+            src.write_text(json.dumps(board()))
+            counter=[0]
+            def reader(*_):
+                counter[0]+=1
+                return {"Mississippi State Bulldogs":chart()},{"charted_schools":1}
+            first=run(src,now=NOW,collector=reader,cache=cache)
+            self.assertEqual(first["games"][0]["qb_depth_home"][0]["label"],"QB1")
+            self.assertFalse(first["qb_depth_display"]["cache_reused"])
+            src.write_text(json.dumps(board()))
+            second=run(src,now=NOW,collector=reader,cache=cache)
+            self.assertEqual(counter[0],1)
+            self.assertTrue(second["qb_depth_display"]["cache_reused"])
     def test_name_parsing(self):
         self.assertEqual(clean_name("Taylor, Kamario SO"),"Kamario Taylor")
         self.assertEqual(clean_name("Puckett, Parker RS FR"),"Parker Puckett")
