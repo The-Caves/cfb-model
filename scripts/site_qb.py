@@ -148,6 +148,24 @@ def collect(board,now,fetch=fetch_json):
               "competitor_leaders_type":type(leadership).__name__,
               "first_category":(leadership[:1] if isinstance(leadership,list) else None)}
         print(json.dumps({"prior_week_espn_qb_diagnostic":desc})[:2000])
+        if ev and str(ev.get("id","")).isdigit():
+            detail=fetch(BASE+"/summary?event="+str(ev["id"]))
+            box=detail.get("boxscore") or {}
+            sides=box.get("players") or []
+            sample_side=sides[0] if sides else {}
+            stats=sample_side.get("statistics") or []
+            stat_sample=stats[0] if stats else {}
+            athletes=stat_sample.get("athletes") or []
+            sample_athlete=athletes[0] if athletes else {}
+            print(json.dumps({"prior_game_summary_qb_diagnostic":{
+                "game_id":str(ev["id"]),"keys":sorted(detail.keys()),
+                "boxscore_keys":sorted(box.keys()),"player_teams":len(sides),
+                "team_keys":sorted(sample_side.keys()),
+                "category_names":[str(x.get("name") or x.get("label")) for x in stats if isinstance(x,dict)][:15],
+                "category_keys":sorted(stat_sample.keys()),"athlete_keys":sorted(sample_athlete.keys()),
+                "first_athlete_keys":sorted((sample_athlete.get("athlete") or {}).keys())
+            }})[:2000])
+
     except (ValueError,KeyError,OSError,TypeError) as exc:
         print(json.dumps({"prior_week_espn_qb_diagnostic_error":type(exc).__name__}))
     unique=sorted(set(refs.values()))
