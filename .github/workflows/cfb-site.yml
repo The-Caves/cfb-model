@@ -9,6 +9,8 @@ on:
       - 'scripts/site_market.py'
       - 'scripts/site_qb.py'
       - 'scripts/site_availability.py'
+      - 'scripts/official_availability.py'
+      - 'tests/test_official_availability.py'
       - 'tests/test_site_availability.py'
       - 'tests/test_site_qb.py'
       - 'tests/test_site_market.py'
@@ -44,6 +46,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_site_market.py' -v
       - name: Test game-specific QB status and season-passer fallback
         run: python -m unittest discover -s tests -p 'test_site_qb.py' -v
+      - name: Test canonical official report parsing and Exempt exclusion
+        run: python -m unittest discover -s tests -p 'test_official_availability.py' -v
       - name: Test actual official QB availability overlay
         run: python -m unittest discover -s tests -p 'test_site_availability.py' -v
       - name: Produce actual archived model projections
