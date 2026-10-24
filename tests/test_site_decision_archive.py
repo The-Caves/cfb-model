@@ -5,7 +5,7 @@ from scripts.site_decision_archive import freeze
 NOW=dt.datetime(2026,10,24,15,45,tzinfo=dt.timezone.utc)
 def board():
     return {"schema_version":2,"betting_status":"PASS_UNVALIDATED",
-      "forecast_sha256":"a"*64,"forecast_run_id":"555",
+      "forecast_sha256":"a"*64,"forecast_run_id":"555","model":"V03_RIDGE_OBSERVED_PROSPECTIVE_BASE14_V1",
       "forecast_observed_utc":"2026-10-24T14:05:00Z",
       "games":[{"game_id":"3","home_team":"Home","away_team":"Away",
         "kickoff_utc":"2026-10-24T17:00:00Z",
@@ -21,6 +21,7 @@ class ProspectiveDashboardArchiveTests(unittest.TestCase):
         self.assertEqual(row["market_home_spread"],-7.5)
         self.assertEqual(row["frozen_forecast_home_margin"],10)
         self.assertEqual(row["displayed_ats_side"],"HOME")
+        self.assertEqual(row["forecast_model_version"],"V03_RIDGE_OBSERVED_PROSPECTIVE_BASE14_V1")
         self.assertEqual(row["displayed_ou_side"],"OVER")
         self.assertEqual(snap["summary"]["ats_decisions"],1)
         self.assertEqual(snap["rows"][0]["model_market_margin_disagreement"],2.5)
