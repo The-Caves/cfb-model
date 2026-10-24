@@ -12,6 +12,7 @@ def discover(aliases,payload):
     with Path(aliases).open(newline="",encoding="utf-8-sig") as f:
         names=[r["espn_display_name"].strip() for r in csv.DictReader(f)]
     found={}
+    by_id={}
     for sport in payload.get("sports",[]):
         for league in sport.get("leagues",[]):
             for item in league.get("teams",[]):
@@ -25,6 +26,7 @@ def discover(aliases,payload):
     return {"status":"REVIEW_REQUIRED_NOT_OFFICIAL_VERIFICATION",
             "expected":len(names),"matched":sum(n in found for n in names),
             "unmatched":[n for n in names if n not in found],
+            "match_rate_percent":round(100*sum(n in found for n in names)/len(names),2),
             "teams":[{"team":n,**found.get(n,{"espn_team_id":None,"espn_links":[]}),
                       "official_athletics_domain":None,"official_feed_url":None,
                       "source_verified":False} for n in names]}
