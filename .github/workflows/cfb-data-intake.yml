@@ -144,6 +144,12 @@ jobs:
             --registry config/official_qb_rss_registry.json \
             --athletics config/official_athletics_sites_2026.json \
             --output data/context/official-source-connectivity-2026.json
+      - name: Merge full 138-school source reachability audit
+        run: |
+          python -m scripts.official_school_source_audit \
+            --registry data/context/official-school-source-registry-2026.json \
+            --connectivity data/context/official-source-connectivity-2026.json \
+            --output data/context/official-school-source-audit-2026.json
       - name: Preserve nationwide athletics discovery and source-expansion audits
         if: always()
         uses: actions/upload-artifact@v4
@@ -155,6 +161,7 @@ jobs:
             data/context/athletics-source-candidates-2026.json
             data/context/official-school-source-registry-2026.json
             data/context/official-source-connectivity-2026.json
+            data/context/official-school-source-audit-2026.json
           if-no-files-found: warn
           retention-days: 30
       - name: Discover official QB news candidates and build review queue
