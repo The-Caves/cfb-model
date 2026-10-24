@@ -109,9 +109,13 @@ function qbCard(team,side){
  slot.append(node("div","qbName",side&&side.player?side.player:"Starter unknown"));
  const states={CONFIRMED_OFFICIAL:"Confirmed · reviewed official game statement",
   SEASON_PASSING_LEADER:"2026 passing leader · NOT confirmed to start",
+  RECENT_GAME_PASSER:"Last game passing leader · NOT confirmed to start",
   CONFLICT_REVIEW:"Conflicting QB evidence · under review",
   UNKNOWN:"No verified game-specific starter"};
  slot.append(node("div","qbStatus",states[side&&side.status]||states.UNKNOWN));
+ if(side&&side.status==="RECENT_GAME_PASSER"&&side.last_game_utc){
+   slot.append(node("div","small","Previous game: "+fmtDate.format(dateOf(side.last_game_utc))));
+ }
  if(side&&side.source_url){
    try{
      const url=new URL(side.source_url);
