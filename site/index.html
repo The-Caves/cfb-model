@@ -63,20 +63,30 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 .qbSlot.confirmed .qbStatus{color:#a6f0d9}
 .qbSlot a{font-size:11px;display:inline-block;margin-top:6px;text-decoration:underline}
 @media(max-width:500px){.qbSlot{padding:9px}.qbName{font-size:12px}}
+
+.availPanel{margin:9px 0 13px;padding:11px 13px;border-radius:11px;border:1px solid #536348;background:#263123}
+.availTitle{font-weight:780;font-size:12px;color:#e6eebd;margin-bottom:6px}
+.availRow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;font-size:12px}
+.availRow strong{font-weight:700}.availTag{padding:3px 7px;border-radius:7px;background:#594327;color:#ffdfab;font-size:11px}
+.availTag.out{background:#62383a;color:#ffced1}.availTag.available{background:#235348;color:#b3f0dc}
+.availPanel a{font-size:11px;display:inline-block;margin-left:auto}
+.availFoot{font-size:11px;color:#bdc9ae;margin-top:8px;line-height:1.45}
+.modelTag{display:inline-block;margin-bottom:12px;font-size:11px;font-weight:700;color:#b0f0e2;padding:6px 9px;border-radius:8px;border:1px solid #4f8175;background:#21423d}
+.qbRisk{padding:9px 11px;border:1px solid #705336;border-radius:9px;background:#29261f;color:#f4d5a8;font-size:11px;line-height:1.55;margin:10px 0 7px}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top"><div class="brand">🏈 CFB <span>LAB</span> / 2026</div><div class="pill">Research model</div></div>
 <div class="hero"><div><div class="kicker">COLLEGE FOOTBALL / 2026</div><h1>Saturday starts here.</h1><p class="intro">Browse actual model-computed game projections by kickoff time, compare score forecasts, and see exactly which official personnel information is missing.</p></div>
 <div class="heroStats"><div class="heroStat"><b id="upcoming-count">—</b><small>Upcoming</small></div><div class="heroStat"><b id="today-count">—</b><small>Today (ET)</small></div></div></div></div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
 <main class="wrap">
-<div class="warning"><b>Experimental research · PASS_UNVALIDATED.</b> These are reproducible model projections, not validated betting picks. QB and injury coverage is incomplete. When ESPN publishes a usable pregame spread/total, we show the observed line and the model's conditional ATS/total comparison. These are unvalidated research sides, not betting recommendations. A missing line stays unavailable.</div>
+<div class="warning"><b>Actual model picks · Experimental / PASS_UNVALIDATED.</b> Projected scores and winners are computed by our fitted model. ATS and O/U directions come from those projections compared with observed ESPN sportsbook lines. These are <b>not validated betting recommendations</b>. QB starter and availability evidence appearing below may be newer than the frozen forecast and does not automatically adjust that prediction.</div>
 <div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span></div>
 <nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Matchups</button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Performance</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Data &amp; sources</button></nav>
 <section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern. Scores are model estimates, not live results.</p>
 <div class="tool">
 <input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
 <select id="sort" aria-label="Sort games"><option value="time">Kickoff · earliest first</option><option value="late">Kickoff · latest first</option><option value="ats">Biggest model ATS difference</option><option value="total">Biggest model total difference</option><option value="alpha">School · A to Z</option></select>
-<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="qb-unknown">QB information missing</option></select>
+<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option></select>
 </div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden"><div class="results"><div class="panel"><div class="small">Prospective SU</div><div class="metric" id="su">—</div></div><div class="panel"><div class="small">Prospective ATS</div><div class="metric" id="ats">—</div></div><div class="panel"><div class="small">Prospective totals</div><div class="metric" id="ou">—</div></div></div><div class="panel" style="margin-top:14px"><h3>Performance will not be fabricated</h3><p class="state">Verified forward-looking prediction grading is separate from retrospective research. Unobserved sportsbook lines cannot generate ATS or totals records. Until audited grading is published, those results remain unavailable.</p></div></section>
@@ -127,12 +137,42 @@ function qbCard(team,side){
  }
  return slot;
 }
+function officialQBPanel(game){
+ const records=[...(game.qb_availability_away||[]).map(r=>({...r,team:game.away_team})),
+                ...(game.qb_availability_home||[]).map(r=>({...r,team:game.home_team}))];
+ if(!records.length)return null;
+ const panel=node("section","availPanel");
+ panel.append(node("div","availTitle","Official QB availability · this matchup"));
+ for(const r of records){
+   const line=node("div","availRow");
+   line.append(node("strong","",r.team+": "+r.player));
+   const cls=["OUT","SUSPENDED","DOUBTFUL","CONFLICT_REVIEW"].includes(r.status)?" out":r.status==="AVAILABLE"?" available":"";
+   line.append(node("span","availTag"+cls,r.status.replaceAll("_"," ")));
+   if(r.source_url){
+     try{const u=new URL(r.source_url);if(u.protocol==="https:"){
+       const a=node("a","","Official report");a.href=u.href;a.rel="noopener noreferrer";a.target="_blank";line.append(a);
+     }}catch(_){}
+   }
+   panel.append(line);
+ }
+ panel.append(node("div","availFoot","This official availability designation is NOT confirmation of who will start. It may be newer than the original model prediction."));
+ return panel;
+}
+function hasQBRisk(game){
+ return ["home","away"].some(side=>(game["qb_availability_"+side]||[]).some(r=>
+   ["QUESTIONABLE","DOUBTFUL","OUT","SUSPENDED","LIMITED","GAME_TIME_DECISION","CONFLICT_REVIEW"].includes(r.status)));
+}
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("b","small",fmtDate.format(dateOf(g.kickoff_utc))),node("span","small","ESPN "+g.game_id));el.append(top);
+ el.append(node("span","modelTag","Model pick · experimental"));
  const teams=node("div","teams");teams.append(node("span","team",g.away_team),node("span","at","@"),node("span","team",g.home_team));el.append(teams);
  const qbPanel=node("div","qbPanel");
  qbPanel.append(qbCard(g.away_team,g.qb_away),qbCard(g.home_team,g.qb_home));el.append(qbPanel);
+ const availability=officialQBPanel(g);
+ if(availability)el.append(availability);
+ if(hasQBRisk(g))el.append(node("div","qbRisk","QB status alert: this frozen model projection has NOT been recomputed for the reported quarterback situation."));
+
  const scores=node("div","scoreline"),away=node("div"),home=node("div","scoreHome");
  away.append(node("div","projected","Away · model"),node("div","score",num(g.model_away_points)));
  home.append(node("div","projected","Home · model"),node("div","score",num(g.model_home_points)));
@@ -162,7 +202,7 @@ function gameCard(g){
  const badges=node("div","badges");
  badges.append(node("span","badge"+(g.qb_starters_verified<2?" low":""),"At forecast QB verified "+g.qb_starters_verified+"/2"),
                node("span","badge"+(g.official_team_reports_verified<2?" low":""),"Reports "+g.official_team_reports_verified+"/2"),
-               node("span","badge","Research only"));el.append(badges);
+               node("span","badge","Model-computed · unvalidated"));el.append(badges);
  el.append(node("div","bottom","Original frozen forecast: "+fmtDate.format(dateOf(data.forecast_observed_utc))+" · Not validated for betting"));
  return el;
 }
@@ -201,6 +241,8 @@ function render(){
   if(filter==="qb"&&(g.qb_home?.status!=="CONFIRMED_OFFICIAL"||g.qb_away?.status!=="CONFIRMED_OFFICIAL"))return false;
   if(filter==="qb-named"&&(!g.qb_home?.player||!g.qb_away?.player))return false;
   if(filter==="qb-unknown"&&g.qb_home?.status!=="UNKNOWN"&&g.qb_away?.status!=="UNKNOWN")return false;
+  if(filter==="qb-status"&&!(g.qb_availability_home?.length||g.qb_availability_away?.length))return false;
+  if(filter==="qb-risk"&&!hasQBRisk(g))return false;
   return true;
  });
  const when=g=>dateOf(g.kickoff_utc).getTime();
