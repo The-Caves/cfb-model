@@ -14,6 +14,7 @@ import json
 import re
 import urllib.request
 from pathlib import Path
+from zoneinfo import ZoneInfo
 from urllib.parse import urljoin, urlsplit
 from scripts.game_context import parse_time
 
@@ -128,6 +129,18 @@ def extract_chart(html):
         return []
     return candidates[0]
 
+def source_updated(html,observed):
+    """Website-provided chart-update timestamp, not an independent publication audit."""
+    flat=re.sub(r"<[^>]*>"," ",html).replace("&nbsp;"," ")
+    flat=" ".join(flat.split())
+    match=re.search(r"\bUpdated:\s*(\d{1,2}/\d{1,2}/2026)\s+(\d{1,2}:\d{2})\s*([AP]M)\s*(?:ET|EST|EDT)\b",flat,re.I)
+    if not match:return None
+    try:
+        updated=dt.datetime.strptime(" ".join(match.groups()),"%m/%d/%Y %I:%M %p").replace(tzinfo=ZoneInfo("America/New_York"))
+    except ValueError:return None
+    if updated>observed or (observed-updated).total_seconds()>35*86400:return None
+    return {"source_updated_et":updated.isoformat(),"label":" ".join(match.groups())+" ET"}
+
 def load_names(path):
     with Path(path).open(newline="",encoding="utf-8") as f:
         rows=list(csv.DictReader(f))
@@ -163,15 +176,17 @@ def chart_for_teams(board,alias_file,fetch=download,max_workers=7):
     def one(item):
         team,url=item
         data=fetch(url)
-        return team,url,extract_chart(data)
+        return team,url,extract_chart(data),source_updated(data,captured)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures={pool.submit(one,item):item[0] for item in sorted(routes.items())}
         for fut in concurrent.futures.as_completed(futures):
             team=futures[fut]
             try:
-                team,url,players=fut.result()
-                if players:
+                team,url,players,updated=fut.result()
+                if players and updated:
                     records[team]={"source_url":url,"players":players,
+                        "source_updated_et":updated["source_updated_et"],
+                        "source_updated_label":updated["label"],
                         "observed_at_utc":captured.isoformat(),
                         "source_type":SOURCE}
                 else:failures.append({"team":team,"issue":"NO_UNAMBIGUOUS_QB_ROW"})
@@ -204,6 +219,7 @@ def overlay(board,charts,now,coverage=None):
                     ranks.append({"rank":n,"label":"QB"+str(n),"player":player,
                         "source_url":source["source_url"],
                         "source_type":SOURCE,"observed_at_utc":source["observed_at_utc"],
+                        "source_updated_et":source.get("source_updated_et"),
                         "confirmed_starter":False})
             game["qb_depth_"+side]=ranks
             both &= bool(ranks)
@@ -220,12 +236,27 @@ def overlay(board,charts,now,coverage=None):
         "note":"QB1 is a chart rank, not proof of who will take the first snap; status can change with injuries, coach decisions, and game-week official notes."}
     return board
 
-def run(board_file,aliases="data/archive/2026_team_aliases.csv",now=None,collector=chart_for_teams):
+def run(board_file,aliases="data/archive/2026_team_aliases.csv",now=None,collector=chart_for_teams,cache=None):
     when=now or dt.datetime.now(dt.timezone.utc)
     path=Path(board_file);board=json.loads(path.read_text())
-    charts,coverage=collector(board,aliases)
+    charts=None;coverage=None;cached=False
+    if cache and Path(cache).exists():
+        try:
+            existing=json.loads(Path(cache).read_text())
+            observed=parse_time(existing["retrieved_at_utc"])
+            if observed.date()==when.date() and observed<=when and existing["charts"]:
+                charts=existing["charts"];coverage=existing["coverage"];cached=True
+        except (KeyError,ValueError,TypeError):
+            pass
+    if charts is None:
+        charts,coverage=collector(board,aliases)
+        if cache and charts:
+            dest=Path(cache);dest.parent.mkdir(parents=True,exist_ok=True)
+            dest.write_text(json.dumps({"retrieved_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
+                "charts":charts,"coverage":coverage})+"\n")
     if now is None:when=dt.datetime.now(dt.timezone.utc)
     board=overlay(board,charts,when,coverage)
+    board["qb_depth_display"]["cache_reused"]=cached
     path.write_text(json.dumps(board,indent=2,allow_nan=False)+"\n",encoding="utf-8")
     print(json.dumps(board["qb_depth_display"]))
     return board
@@ -233,5 +264,6 @@ def run(board_file,aliases="data/archive/2026_team_aliases.csv",now=None,collect
 if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--dashboard",required=True)
+    p.add_argument("--cache",default=None)
     args=p.parse_args()
-    run(args.dashboard)
+    run(args.dashboard,cache=args.cache)
