@@ -37,17 +37,37 @@ button{cursor:pointer}
 footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:var(--muted);font-size:12px}
 @media(max-width:800px){.hero{display:block}.heroStats{margin-top:25px}.grid{grid-template-columns:1fr}}
 @media(max-width:560px){.wrap{padding:16px}.hero{padding:30px 0 18px}.heroStat{flex:1}.results{grid-template-columns:1fr}.score{font-size:26px}.sourceRow{display:block}.sourceRow span:last-child{display:block;text-align:left;margin-top:5px}}
+
+/* calendar, sorting and market comparison tools */
+.dayShell{max-width:1110px;margin:0 auto;padding:0 22px 17px}
+.dayNav{display:flex;gap:8px;align-items:stretch;overflow-x:auto;padding-bottom:5px;scrollbar-width:thin}
+.dayButton{display:flex;flex-direction:column;gap:3px;min-width:85px;align-items:center;border:1px solid #446177;border-radius:12px;background:#193044;color:#c2d3e2;padding:10px 12px;cursor:pointer;flex-shrink:0}
+.dayButton strong{font-size:14px}.dayButton span{font-size:11px;color:#adc4d5}
+.dayButton.selected{background:#226355;color:white;border-color:#87dcca}.dayButton.selected span{color:#d5fff3}
+.tool select{background:#15273b;color:#e2eff6;border:1px solid #365067;padding:10px;border-radius:10px;font-size:13px;max-width:100%}
+.marketTiles{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.marketTile{background:#0c1d2e;padding:11px;border:1px solid #31475c;border-radius:11px;min-width:0}
+.marketTile .marketLabel{font-size:10px;color:#a7bed0;letter-spacing:.04em;text-transform:uppercase;margin-bottom:7px}
+.marketTile .marketValue{font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.marketTile .researchSide{font-weight:730;color:#94e4d1;font-size:12px;line-height:1.55;margin-top:4px}
+.marketTile .researchSide.unavailable{color:#a7bacd;font-weight:500}
+.marketMeta{color:#96adc2;font-size:11px;margin-top:10px;line-height:1.5}
+@media(max-width:560px){.dayShell{padding:0 16px 14px}.dayButton{min-width:77px}.marketTile{padding:9px}.marketTile .marketValue{font-size:16px}}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top"><div class="brand">🏈 CFB <span>LAB</span> / 2026</div><div class="pill">Research model</div></div>
 <div class="hero"><div><div class="kicker">COLLEGE FOOTBALL / 2026</div><h1>Saturday starts here.</h1><p class="intro">Browse actual model-computed game projections by kickoff time, compare score forecasts, and see exactly which official personnel information is missing.</p></div>
-<div class="heroStats"><div class="heroStat"><b id="upcoming-count">—</b><small>Upcoming</small></div><div class="heroStat"><b id="today-count">—</b><small>Today (ET)</small></div></div></div></div></header>
+<div class="heroStats"><div class="heroStat"><b id="upcoming-count">—</b><small>Upcoming</small></div><div class="heroStat"><b id="today-count">—</b><small>Today (ET)</small></div></div></div></div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
 <main class="wrap">
-<div class="warning"><b>Experimental research · PASS_UNVALIDATED.</b> These are reproducible model projections, not validated betting picks. Starting quarterback and availability coverage is incomplete. No actual sportsbook lines or verified ATS / over-under edges are shown.</div>
+<div class="warning"><b>Experimental research · PASS_UNVALIDATED.</b> These are reproducible model projections, not validated betting picks. QB and injury coverage is incomplete. When ESPN publishes a usable pregame spread/total, we show the observed line and the model's conditional ATS/total comparison. These are unvalidated research sides, not betting recommendations. A missing line stays unavailable.</div>
 <div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span></div>
 <nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Matchups</button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Performance</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Data &amp; sources</button></nav>
-<section id="matchups" role="tabpanel"><div class="row"><h2>Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern. Scores are model estimates, not live results.</p>
-<div class="tool"><button class="filter active" data-range="today">Today</button><button class="filter" data-range="48">Next 48 hours</button><button class="filter" data-range="all">All upcoming</button><input class="search" type="search" id="query" placeholder="Search by school" aria-label="Search teams"></div>
+<section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern. Scores are model estimates, not live results.</p>
+<div class="tool">
+<input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
+<select id="sort" aria-label="Sort games"><option value="time">Kickoff · earliest first</option><option value="late">Kickoff · latest first</option><option value="ats">Biggest model ATS difference</option><option value="total">Biggest model total difference</option><option value="alpha">School · A to Z</option></select>
+<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs reviewed</option></select>
+</div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden"><div class="results"><div class="panel"><div class="small">Prospective SU</div><div class="metric" id="su">—</div></div><div class="panel"><div class="small">Prospective ATS</div><div class="metric" id="ats">—</div></div><div class="panel"><div class="small">Prospective totals</div><div class="metric" id="ou">—</div></div></div><div class="panel" style="margin-top:14px"><h3>Performance will not be fabricated</h3><p class="state">Verified forward-looking prediction grading is separate from retrospective research. Unobserved sportsbook lines cannot generate ATS or totals records. Until audited grading is published, those results remain unavailable.</p></div></section>
 <section id="sources" role="tabpanel" class="hidden"><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Model ID</span><span id="modelid">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
@@ -56,62 +76,144 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 <script id="dashboard-data" type="application/json"></script>
 <script>
 "use strict";
-let data=null,range="today";
+
+let data=null,selectedDay=null;
 const byId=id=>document.getElementById(id),dateOf=s=>new Date(s),num=(v,d=1)=>Number.isFinite(v)?v.toFixed(d):"—";
-const dtFmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});
-const dayFmt=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
+const fmtDate=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});
+const dayFmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
+const weekdayFmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short"});
+const labelFmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",weekday:"long"});
+const dateKey=d=>dayFmt.format(d);
 function node(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=String(txt);return n}
 function empty(title,desc){const box=node("div","empty");box.append(node("b","",title),node("span","",desc));byId("games").replaceChildren(box)}
+function marketTile(label,line,selection,edge){
+ const box=node("div","marketTile");box.append(node("div","marketLabel",label));
+ box.append(node("div","marketValue",line));
+ const pick=node("div","researchSide"+(selection?"":" unavailable"),selection||"No comparable line");box.append(pick);
+ if(selection&&selection!=="PASS"&&Number.isFinite(edge))box.append(node("div","small","Model difference: "+num(edge)+" pts"));
+ return box;
+}
 function gameCard(g){
- const el=node("article","game"),top=node("div","gameTop");top.append(node("b","small",dtFmt.format(dateOf(g.kickoff_utc))),node("span","small","ESPN "+g.game_id));el.append(top);
+ const el=node("article","game"),top=node("div","gameTop");
+ top.append(node("b","small",fmtDate.format(dateOf(g.kickoff_utc))),node("span","small","ESPN "+g.game_id));el.append(top);
  const teams=node("div","teams");teams.append(node("span","team",g.away_team),node("span","at","@"),node("span","team",g.home_team));el.append(teams);
  const scores=node("div","scoreline"),away=node("div"),home=node("div","scoreHome");
- away.append(node("div","projected","Away projection"),node("div","score",num(g.model_away_points)));
- home.append(node("div","projected","Home projection"),node("div","score",num(g.model_home_points)));
+ away.append(node("div","projected","Away · model"),node("div","score",num(g.model_away_points)));
+ home.append(node("div","projected","Home · model"),node("div","score",num(g.model_home_points)));
  scores.append(away,node("span","at","—"),home);el.append(scores);
- const m=g.model_home_margin,lead=Number.isFinite(m)?m===0?"Projected tie":(m>0?g.home_team:g.away_team)+" by "+num(Math.abs(m)):"Insufficient training data";el.append(node("div","favorite",lead));
- const stats=node("div","stats");for(const [value,label] of [[num(g.model_total),"Model total"],[Number.isFinite(g.research_home_win_probability)?num(g.research_home_win_probability*100,0)+"%":"—","Home win estimate · uncalibrated"]]){const x=node("div","stat");x.append(node("b","",value),node("small","",label));stats.append(x)}el.append(stats);
- const badges=node("div","badges");badges.append(node("span","badge"+(g.qb_starters_verified<2?" low":""),"QBs "+g.qb_starters_verified+"/2"),node("span","badge"+(g.official_team_reports_verified<2?" low":""),"Reports "+g.official_team_reports_verified+"/2"),node("span","badge","Odds unavailable"));el.append(badges);
- el.append(node("div","bottom","Frozen pregame research forecast · No live updates"));return el;
+ const m=g.model_home_margin,lead=Number.isFinite(m)?m===0?"Projected tie":(m>0?g.home_team:g.away_team)+" by "+num(Math.abs(m)):"No numeric model projection";
+ el.append(node("div","favorite",lead));
+ const stats=node("div","stats");
+ for(const [v,label] of [[num(g.model_total),"Model projected total"],[Number.isFinite(g.research_home_win_probability)?num(g.research_home_win_probability*100,0)+"%":"—","Home win probability · uncalibrated"]]){
+ const s=node("div","stat");s.append(node("b","",v),node("small","",label));stats.append(s);
+ }el.append(stats);
+ const tiles=node("div","marketTiles");
+ let spreadLine="Unavailable",atsPick=null,totalLine="Unavailable",ouPick=null;
+ if(Number.isFinite(g.market_home_spread)){
+  const homeLine=(g.market_home_spread>0?"+":"")+num(g.market_home_spread);
+  spreadLine=g.home_team+" "+homeLine;
+  if(g.model_ats_side)atsPick=g.model_ats_side==="PASS"?"Model: PASS":("Model: "+(g.model_ats_side==="HOME"?g.home_team:g.away_team)+" ATS");
+ }
+ if(Number.isFinite(g.market_total)){
+  totalLine=num(g.market_total);
+  if(g.model_ou_side)ouPick=g.model_ou_side==="PASS"?"Model: PASS":"Model: "+g.model_ou_side;
+ }
+ tiles.append(marketTile("Observed spread",spreadLine,atsPick,g.ats_edge_points),
+              marketTile("Observed O/U",totalLine,ouPick,g.ou_edge_points));el.append(tiles);
+ el.append(node("div","marketMeta",g.market_provider?
+  "Source: ESPN / "+g.market_provider+" · observed "+fmtDate.format(dateOf(g.market_observed_utc))+". Quote is not independently publication-time authenticated.":
+  "No verified pregame ESPN quote currently available. ATS and O/U comparisons withheld."));
+ const badges=node("div","badges");
+ badges.append(node("span","badge"+(g.qb_starters_verified<2?" low":""),"QBs "+g.qb_starters_verified+"/2"),
+               node("span","badge"+(g.official_team_reports_verified<2?" low":""),"Reports "+g.official_team_reports_verified+"/2"),
+               node("span","badge","Research only"));el.append(badges);
+ el.append(node("div","bottom","Original frozen forecast: "+fmtDate.format(dateOf(data.forecast_observed_utc))+" · Not validated for betting"));
+ return el;
 }
-const localDay=d=>dayFmt.format(d);
+function updateDayNav(){
+ if(!data)return;
+ const keys=[...new Set(data.games.map(g=>dateKey(dateOf(g.kickoff_utc))))].sort((a,b)=>new Date(a)-new Date(b));
+ const today=dateKey(new Date());
+ if(!keys.includes(selectedDay)&&selectedDay!=="all")selectedDay=keys.includes(today)?today:(keys[0]||"all");
+ const nav=byId("day-nav");nav.replaceChildren();
+ for(const key of keys){
+ const first=data.games.find(g=>dateKey(dateOf(g.kickoff_utc))===key);
+ const d=dateOf(first.kickoff_utc);
+ const b=node("button","dayButton"+(selectedDay===key?" selected":""),undefined);
+ b.type="button";b.dataset.date=key;
+ b.append(node("strong","",weekdayFmt.format(d)),node("span","",new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"}).format(d)));
+ b.setAttribute("aria-pressed",String(selectedDay===key));b.addEventListener("click",()=>{selectedDay=key;updateDayNav();render();});
+ nav.append(b);
+ }
+ const all=node("button","dayButton"+(selectedDay==="all"?" selected":""),undefined);
+ all.type="button";all.append(node("strong","","All"),node("span","","Dates"));all.setAttribute("aria-pressed",String(selectedDay==="all"));all.addEventListener("click",()=>{selectedDay="all";updateDayNav();render();});nav.append(all);
+}
 function render(){
  if(!data)return;
  const now=new Date(),future=data.games.filter(g=>dateOf(g.kickoff_utc)>now);
  byId("upcoming-count").textContent=future.length;
- byId("today-count").textContent=future.filter(g=>localDay(dateOf(g.kickoff_utc))===localDay(now)).length;
- const q=byId("query").value.trim().toLowerCase();
+ byId("today-count").textContent=future.filter(g=>dateKey(dateOf(g.kickoff_utc))===dateKey(now)).length;
+ const needle=byId("query").value.trim().toLowerCase(),filter=byId("market-filter").value,order=byId("sort").value;
  const shown=future.filter(g=>{
- const dt=dateOf(g.kickoff_utc);
- if(q&&!(g.away_team+" "+g.home_team).toLowerCase().includes(q))return false;
- if(range==="today")return localDay(dt)===localDay(now);
- if(range==="48")return dt<=new Date(now.getTime()+48*3600*1000);
- return true;
+  if(selectedDay!=="all"&&dateKey(dateOf(g.kickoff_utc))!==selectedDay)return false;
+  if(needle&&!(g.away_team+" "+g.home_team+" "+g.game_id).toLowerCase().includes(needle))return false;
+  if(filter==="lines"&&!Number.isFinite(g.market_home_spread)&&!Number.isFinite(g.market_total))return false;
+  if(filter==="ats"&&!g.model_ats_side)return false;
+  if(filter==="ou"&&!g.model_ou_side)return false;
+  if((filter==="home"||filter==="away")&&g.model_ats_side!==filter.toUpperCase())return false;
+  if((filter==="over"||filter==="under")&&g.model_ou_side!==filter.toUpperCase())return false;
+  if(filter==="qb"&&g.qb_starters_verified!==2)return false;
+  return true;
  });
+ const when=g=>dateOf(g.kickoff_utc).getTime();
+ shown.sort((a,b)=>{
+  if(order==="late")return when(b)-when(a)||String(a.game_id).localeCompare(String(b.game_id));
+  if(order==="ats"||order==="total"){
+    const prop=order==="ats"?"ats_edge_points":"ou_edge_points";
+    const va=Number.isFinite(a[prop])?a[prop]:-1,vb=Number.isFinite(b[prop])?b[prop]:-1;
+    return vb-va||when(a)-when(b);
+  }
+  if(order==="alpha")return a.away_team.localeCompare(b.away_team)||when(a)-when(b);
+  return when(a)-when(b)||String(a.game_id).localeCompare(String(b.game_id));
+ });
+ if(selectedDay==="all")byId("day-heading").textContent="All upcoming games";
+ else {
+ const representative=data.games.find(g=>dateKey(dateOf(g.kickoff_utc))===selectedDay);
+ byId("day-heading").textContent=representative?labelFmt.format(dateOf(representative.kickoff_utc)):"Upcoming games";
+ }
  byId("showing").textContent=shown.length+" shown";
- if(!shown.length){empty("No upcoming games in this view","Try another filter. Games already kicked off do not appear as pregame projections.");return}
+ if(!shown.length){empty("No games match this view","Select another day or remove a filter. Only games not yet kicked off can be shown as pregame projections.");return;}
  byId("games").replaceChildren(...shown.map(gameCard));
 }
-for(const button of document.querySelectorAll("[data-tab]"))button.addEventListener("click",()=>{for(const other of document.querySelectorAll("[data-tab]")){const yes=other===button;other.setAttribute("aria-selected",String(yes));byId(other.dataset.tab).classList.toggle("hidden",!yes)}});
-for(const button of document.querySelectorAll("[data-range]"))button.addEventListener("click",()=>{range=button.dataset.range;for(const other of document.querySelectorAll("[data-range]"))other.classList.toggle("active",other===button);render()});
-byId("query").addEventListener("input",render);
+for(const button of document.querySelectorAll("[data-tab]"))button.addEventListener("click",()=>{
+ for(const other of document.querySelectorAll("[data-tab]")){
+ const active=other===button;other.setAttribute("aria-selected",String(active));
+ byId(other.dataset.tab).classList.toggle("hidden",!active);
+ }});
+for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id==="query"?"input":"change",render);
 (async()=>{
  try{
- const embedded=byId("dashboard-data");
- let d;
+ const embedded=byId("dashboard-data");let d;
  if(embedded&&embedded.textContent.trim())d=JSON.parse(embedded.textContent);
  else {
-  const response=await fetch("./data/dashboard.json",{cache:"no-store"});
-  if(!response.ok)throw Error("Dashboard export HTTP "+response.status);
-  d=await response.json();
+ const response=await fetch("./data/dashboard.json",{cache:"no-store"});
+ if(!response.ok)throw Error("Dashboard export HTTP "+response.status);
+ d=await response.json();
  }
- if(d.schema_version!==2||d.betting_status!=="PASS_UNVALIDATED"||!Array.isArray(d.games))throw Error("Unverified export schema");
+ if(d.schema_version!==2||d.betting_status!=="PASS_UNVALIDATED"||!Array.isArray(d.games))throw Error("Invalid research data contract");
  data=d;
- byId("captured").textContent="Model forecast: "+dtFmt.format(dateOf(d.forecast_observed_utc));
- byId("refreshed").textContent="Dashboard updated: "+dtFmt.format(dateOf(d.generated_at_utc));
- byId("runid").textContent=d.forecast_run_id;byId("modelid").textContent=d.model;byId("observation").textContent=dtFmt.format(dateOf(d.forecast_observed_utc));byId("hash").textContent=d.forecast_sha256;
- byId("limitations").textContent=(d.data_limitations||[]).join(" ");
- render();
- }catch(err){byId("captured").textContent="Verified export not available";byId("refreshed").textContent="Check GitHub Actions";empty("Dashboard is ready but not populated","The automated forecast build has not published a valid snapshot. No simulated games or lines will be substituted.");console.error(err)}
+ byId("captured").textContent="Forecast: "+fmtDate.format(dateOf(d.forecast_observed_utc));
+ byId("refreshed").textContent="Board refreshed: "+fmtDate.format(dateOf(d.generated_at_utc));
+ byId("runid").textContent=d.forecast_run_id;byId("modelid").textContent=d.model;
+ byId("observation").textContent=fmtDate.format(dateOf(d.forecast_observed_utc));byId("hash").textContent=d.forecast_sha256;
+ const market=d.market_display||{};
+ const extra=" Market source: "+(market.source||"unavailable")+". Observed spread: "+(market.usable_spreads||0)+" games; totals: "+(market.usable_totals||0)+" games. No historical publication-time authentication.";
+ byId("limitations").textContent=(d.data_limitations||[]).join(" ")+extra;
+ updateDayNav();render();
+ }catch(error){
+ byId("captured").textContent="Unable to load research snapshot";byId("refreshed").textContent="See GitHub Actions";
+ empty("No verified data published","The research build may have failed or no model archive was found. Games, lines and picks will not be fabricated.");
+ console.error(error);
+ }
 })();
 </script></body></html>
