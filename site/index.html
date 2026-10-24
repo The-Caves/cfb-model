@@ -76,7 +76,7 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 <div class="tool">
 <input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
 <select id="sort" aria-label="Sort games"><option value="time">Kickoff · earliest first</option><option value="late">Kickoff · latest first</option><option value="ats">Biggest model ATS difference</option><option value="total">Biggest model total difference</option><option value="alpha">School · A to Z</option></select>
-<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs reviewed</option><option value="qb-named">Both QB names available</option><option value="qb-unknown">QB information missing</option></select>
+<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="qb-unknown">QB information missing</option></select>
 </div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden"><div class="results"><div class="panel"><div class="small">Prospective SU</div><div class="metric" id="su">—</div></div><div class="panel"><div class="small">Prospective ATS</div><div class="metric" id="ats">—</div></div><div class="panel"><div class="small">Prospective totals</div><div class="metric" id="ou">—</div></div></div><div class="panel" style="margin-top:14px"><h3>Performance will not be fabricated</h3><p class="state">Verified forward-looking prediction grading is separate from retrospective research. Unobserved sportsbook lines cannot generate ATS or totals records. Until audited grading is published, those results remain unavailable.</p></div></section>
@@ -198,7 +198,7 @@ function render(){
   if(filter==="ou"&&!g.model_ou_side)return false;
   if((filter==="home"||filter==="away")&&g.model_ats_side!==filter.toUpperCase())return false;
   if((filter==="over"||filter==="under")&&g.model_ou_side!==filter.toUpperCase())return false;
-  if(filter==="qb"&&g.qb_starters_verified!==2)return false;
+  if(filter==="qb"&&(g.qb_home?.status!=="CONFIRMED_OFFICIAL"||g.qb_away?.status!=="CONFIRMED_OFFICIAL"))return false;
   if(filter==="qb-named"&&(!g.qb_home?.player||!g.qb_away?.player))return false;
   if(filter==="qb-unknown"&&g.qb_home?.status!=="UNKNOWN"&&g.qb_away?.status!=="UNKNOWN")return false;
   return true;
