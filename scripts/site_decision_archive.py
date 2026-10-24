@@ -29,6 +29,7 @@ def freeze(board,now,run_id):
         or not isinstance(board.get("games"),list) or
         not isinstance(board.get("forecast_sha256"),str)
         or len(board["forecast_sha256"])!=64
+        or not isinstance(board.get("model"),str) or not board["model"].strip()
         or not str(run_id).isdigit()):
         raise ValueError("Invalid published research snapshot/identity")
     orig=parse_time(board["forecast_observed_utc"])
@@ -90,6 +91,7 @@ def freeze(board,now,run_id):
             "game_id":gid,"home":home,"away":away,"kickoff_utc":g["kickoff_utc"],
             "frozen_forecast_home_margin":margin,"frozen_forecast_total":total,
             "frozen_forecast_run_id":str(board["forecast_run_id"]),
+            "forecast_model_version":board["model"],
             "frozen_forecast_observed_utc":board["forecast_observed_utc"],
             "frozen_forecast_sha256":board["forecast_sha256"],
             "market_home_spread":spread,"market_total":market_total,
@@ -102,6 +104,7 @@ def freeze(board,now,run_id):
     return {"status":STATUS,"schema_version":1,"betting_status":"PASS_UNVALIDATED",
             "capture_utc":now.isoformat(),"dashboard_run_id":str(run_id),
             "model_forecast_sha256":board["forecast_sha256"],
+            "model_version":board["model"],
             "model_forecast_observed_utc":board["forecast_observed_utc"],
             "comparison_timing":"MARKET_MAY_HAVE_BEEN_OBSERVED_AFTER_FROZEN_MODEL_FORECAST",
             "market_publication_time_authenticated":False,
