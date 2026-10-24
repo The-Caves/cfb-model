@@ -123,7 +123,7 @@ function marketTile(label,line,selection,edge){
  if(selection&&selection!=="PASS"&&Number.isFinite(edge))box.append(node("div","small","Model difference: "+num(edge)+" pts"));
  return box;
 }
-function qbCard(team,side,depth){
+function qbCard(team,side,depth,availability){
  const slot=node("div","qbSlot"+(side&&side.status==="CONFIRMED_OFFICIAL"?" confirmed":""));
  slot.append(node("div","qbSlotHeader",team+" · Quarterback"));
  slot.append(node("div","qbName",side&&side.status==="CONFIRMED_OFFICIAL"&&side.player?side.player:"Starter not confirmed"));
@@ -139,9 +139,20 @@ function qbCard(team,side,depth){
      if(![1,2,3].includes(q.rank)||!q.player)continue;
      const line=node("div","qbRankRow"+(q.rank===1?" rankOne":""));
      line.append(node("span","qbRank","QB"+q.rank),node("span","qbNameSmall",q.player));
+     const key=x=>String(x||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+     const status=(availability||[]).find(r=>key(r.player)===key(q.player));
+     if(status&&status.status&&status.status!=="AVAILABLE"){
+       const note=node("span","availTag"+(["OUT","SUSPENDED","DOUBTFUL"].includes(status.status)?" out":""),status.status.replaceAll("_"," "));
+       line.append(note);
+     }
+     if(side&&side.status==="CONFIRMED_OFFICIAL"&&key(side.player)===key(q.player)){
+       line.append(node("span","availTag available","Confirmed starter"));
+     }
      list.append(line);
    }
-   const source=node("div","depthFoot","Third-party projected chart · not official starter news");
+   const update=depth[0]?.source_updated_et?
+     " · updated "+new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"}).format(dateOf(depth[0].source_updated_et)):"";
+   const source=node("div","depthFoot","Ourlads projected depth chart"+update+" · not official starter news");
    const first=depth[0];
    if(first&&first.source_url){
      try{const url=new URL(first.source_url);if(url.protocol==="https:"&&url.hostname==="www.ourlads.com"){
@@ -198,7 +209,7 @@ function gameCard(g){
  el.append(node("span","modelTag","Model pick · experimental"));
  const teams=node("div","teams");teams.append(node("span","team",g.away_team),node("span","at","@"),node("span","team",g.home_team));el.append(teams);
  const qbPanel=node("div","qbPanel");
- qbPanel.append(qbCard(g.away_team,g.qb_away,g.qb_depth_away),qbCard(g.home_team,g.qb_home,g.qb_depth_home));el.append(qbPanel);
+ qbPanel.append(qbCard(g.away_team,g.qb_away,g.qb_depth_away,g.qb_availability_away),qbCard(g.home_team,g.qb_home,g.qb_depth_home,g.qb_availability_home));el.append(qbPanel);
  const availability=officialQBPanel(g);
  if(availability)el.append(availability);
  if(hasQBRisk(g))el.append(node("div","qbRisk","QB status alert: this frozen model projection has NOT been recomputed for the reported quarterback situation."));
