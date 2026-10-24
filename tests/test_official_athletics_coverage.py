@@ -10,6 +10,10 @@ class SiteCoverageTests(unittest.TestCase):
         result=build("data/archive/2026_team_aliases.csv",
             "config/official_qb_rss_registry.json",
             athletics="config/official_athletics_sites_2026.json")
+        import json
+        with open("config/official_athletics_sites_2026.json",encoding="utf-8") as handle:
+            directory=json.load(handle)
+        self.assertTrue(all("upstream_ncaa_id_unverified" not in row for row in directory["schools"]))
         self.assertEqual(result["expected"],138)
         self.assertEqual(result["homepage_candidate_count"],138)
         self.assertEqual(result["homepage_verified_count"],0)
