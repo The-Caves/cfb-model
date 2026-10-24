@@ -42,7 +42,7 @@ class Links(HTMLParser):
         attrs=dict(attrs)
         href=attrs.get("href","")
         if href:
-            self.current={"href":href,"text":(attrs.get("title","")+" "+attrs.get("aria-label","")).strip()}
+            self.current={"href":href,"text":((attrs.get("title") or "")+" "+(attrs.get("aria-label") or "")).strip()}
     def handle_data(self,data):
         if self.current is not None:
             self.current["text"]+=((" "+data) if data else "")
@@ -85,7 +85,7 @@ def default_fetch(url):
 def safe_page(url,origin,fetch):
     if not host_allowed(url,origin):raise ValueError("UNTRUSTED_PAGE")
     final,data=fetch(url)
-    if not host_allowed(final,origin):raise ValueError("CROSS_DOMAIN_REDIRECT")
+    if not host_allowed(final,origin):raise ValueError("CROSS_DOMAIN_REDIRECT:"+str(urlsplit(final).hostname))
     return resolved_links(data,final,origin),hashlib.sha256(data).hexdigest()
 
 def football_pages(home_links,home):
