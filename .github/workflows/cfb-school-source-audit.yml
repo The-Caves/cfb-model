@@ -12,6 +12,7 @@ on:
       - "scripts/official_personnel_source_discovery.py"
       - "scripts/official_personnel_source_coverage.py"
       - "tests/test_official_personnel_source_discovery.py"
+      - "tests/test_official_personnel_source_coverage.py"
       - "tests/test_official_athletics_coverage.py"
       - "tests/test_official_school_source_audit.py"
       - ".github/workflows/cfb-school-source-audit.yml"
@@ -34,6 +35,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_official_school_source_audit.py' -v
           python -m unittest discover -s tests -p 'test_official_school_source_registry.py' -v
           python -m unittest discover -s tests -p 'test_official_personnel_source_discovery.py' -v
+          python -m unittest discover -s tests -p 'test_official_personnel_source_coverage.py' -v
       - name: Assemble full canonical source registry
         run: |
           python -m scripts.official_school_source_registry \
