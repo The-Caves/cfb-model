@@ -1,47 +1,33 @@
-# CFB dashboard deployment and data contract
+# 2026 CFB research dashboard
 
-The static site lives in `site/index.html`. It is not deployed yet.
+This is a mobile-friendly front end to real, frozen 2026 college-football model research forecasts. It is **not** a validated betting recommendation engine, and displays `PASS_UNVALIDATED` until the model has adequate leakage-safe out-of-sample evidence. It does not fabricate moneylines, spreads, totals, QB starters, injury diagnoses, or graded outcomes.
 
-## Private preview
+## What is built
 
-Do not enable GitHub Pages or publicly deploy this directory while the dashboard is intended to remain private. GitHub repository privacy is not the same as website access control. For an authenticated preview, connect the repository to a hosting provider with access controls, verify those controls on the actual deployment, and only then distribute the preview URL. No hosting account or domain has been connected by this commit.
+- The responsive website is `site/index.html`: Eastern kickoff times, Today / Next 48h / All game filters, team search, projected scores, model total and **uncalibrated** home-win estimate, QB/injury source coverage warnings, provenance and performance panels.
+- The exporter `scripts/site_export.py` reads the most recent pregame archive from `context-state/research_2026/forecast_index.json` and the indexed `forecasts/YYYY/MM/DD/run-*.json.gz` file.
+- It validates the original forecast record with `scripts.personnel_forecast.verify`, compares the index checksum and record identity, rejects surprising sportsbook market data, and excludes games which kicked off before site publication. It keeps the exact originally frozen forecast capture timestamp.
+- The export payload is schema v2 in `site/data/dashboard.json`. It exposes only public game identity, genuine numeric projections, 0–2 reviewed-QB and team-report coverage counts, original provenance, and explicit model limitations. Private sportsbook vault information and player-level detail are not exported.
+- `tests/test_site_export.py` tests output safety, missing odds, time gates, index checksum, path traversal and compressed forecast reading.
+- `.github/workflows/cfb-site.yml` builds and validates the dashboard on selected pushes, scheduled checks and manual runs. It also embeds the JSON into the generated HTML so the downloadable ZIP includes a self-contained **offline-viewable** page. No paid infrastructure or AWS is needed.
 
-## Published data
+## Opening the website today
 
-The site optionally loads `site/data/dashboard.json` using a relative path. A missing file is a valid initial state: no picks are shown. When the exporter is implemented, publish a JSON object:
+The GitHub Actions `CFB Research Dashboard` workflow creates an artifact called `cfb-website-preview-<run number>`. On a phone, download the ZIP from the most recent successful Actions run, extract it in Files, then open the HTML file. The exported HTML has its data embedded, so it does not require GitHub Pages for an offline preview. Note that its static forecasts will not update while the local file is open.
 
-```json
-{
-  "schema_version": 1,
-  "generated_at_utc": "2026-10-23T14:00:00Z",
-  "games": [
-    {
-      "game_id": "example-only",
-      "away_team": "Away",
-      "home_team": "Home",
-      "kickoff_utc": "2026-10-24T19:00:00Z",
-      "model_home_margin": null,
-      "model_total": null,
-      "market_home_spread": null
-    }
-  ],
-  "prospective_records": {
-    "su": {"wins": 0, "losses": 0, "pushes": 0},
-    "ats": {"wins": 0, "losses": 0, "pushes": 0},
-    "ou": {"wins": 0, "losses": 0, "pushes": 0}
-  }
-}
-```
+### Optional public web address
 
-The example is a schema illustration, not a prediction or betting line. Positive `model_home_margin` means the home team is projected to win by that many points; negative `market_home_spread` means the home team is favored. Home ATS edge = model home margin + market home spread.
+Earlier project instructions requested a private preview. **GitHub Pages creates a publicly accessible website**, so the workflow does not enable it automatically. If the owner chooses to make this research site public:
 
-## Validation rules
+1. Go to repository **Settings > Pages**.
+2. Under **Build and deployment > Source**, select **GitHub Actions**.
+3. Open **Actions > CFB Research Dashboard > Run workflow** or let its next scheduled build complete.
+4. Confirm an actual successful Pages deployment. The expected standard address, once live, is `https://the-caves.github.io/cfb-model/`.
 
-- Store market line source, quote timestamp (UTC), collection timestamp (UTC), game ID, and kickoff timestamp.
-- Freeze the prediction and market snapshot before kickoff; never retroactively overwrite a frozen prediction.
-- If no verified pregame market quote exists, show ATS edge as unavailable and do not grade ATS.
-- Grade pushes separately and exclude them from ATS win-rate denominator.
-- Grade straight-up, ATS and totals from the same archived snapshot with explicit as-of times.
-- Keep retrospective research metrics separate from prospective performance.
-- Do not promote experimental model variants solely based on historical holdouts.
-- Avoid publishing user identifiers or private personnel/news evidence in static artifacts.
+Do not call that address live before verification. The Actions deploy job records when Pages is disabled; the preview ZIP remains available regardless. For a restricted-access website, use an authenticated hosting provider instead of public GitHub Pages.
+
+## Remaining model limitations
+
+Projections are **research outputs**, not calibrated bets. National game-specific QB1 evidence and availability are incomplete. The 2026 historical play-by-play availability times are not independently attested. Historical FanDuel lines are unavailable; SU/ATS/O-U retrospective and prospective claims require genuine, time-stamped markets and paired verified outcomes. Keep these limitations visible in the public site.
+
+For official personnel-source verification and milestone exit rules, see `docs/MILESTONE_2B_OFFICIAL_SCHOOL_SOURCES.md`. Update this README and the milestone record whenever the publication contract or evidence changes.
