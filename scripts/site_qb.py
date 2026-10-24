@@ -1,9 +1,10 @@
 """Source-labeled QB context for the public research dashboard.
 
 Game-specific reviewed official starters come from immutable as-observed
-context-state QB history, never from season stats. 2026 ESPN season passing
-leader is only a prior-performance reference, explicitly NOT a projected or
-confirmed future starting quarterback. No change to frozen model features.
+context-state QB history, never from season stats. ESPN prior-completed-game
+passing box scores supply *last-game performers* as secondary context only;
+they do NOT identify or confirm a future starting quarterback. The frozen
+model prediction and its QB verification counters are never rewritten.
 """
 import argparse,concurrent.futures,datetime as dt,json,re,urllib.request
 from pathlib import Path
