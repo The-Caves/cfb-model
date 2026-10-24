@@ -35,6 +35,6 @@ class OfficialPersonnelSourceDiscoveryTests(unittest.TestCase):
     def test_missing_football_link_is_not_invented(self):
         result=inspect_school({"team":"Test","athletics_homepage":self.ROOT},
                               lambda url:(url,b"<html><h1>Home</h1></html>"))
-        self.assertEqual(result["crawl_status"],"NO_OFFICIAL_FOOTBALL_LINK_FOUND")
+        self.assertEqual(result["crawl_status"],"FOOTBALL_PAGE_FETCH_FAILED")
         self.assertIsNone(result["football_page"])
 if __name__=="__main__":unittest.main()
