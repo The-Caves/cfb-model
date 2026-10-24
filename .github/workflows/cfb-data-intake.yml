@@ -129,6 +129,17 @@ jobs:
           python -m scripts.athletics_source_discovery \
             --aliases data/archive/2026_team_aliases.csv \
             --output data/context/athletics-source-candidates-2026.json
+      - name: Preserve nationwide athletics discovery and source-expansion audits
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-2026-personnel-source-audit-${{ github.run_id }}
+          path: |
+            data/context/personnel-source-inventory-2026.json
+            data/context/personnel-source-expansion-backlog-2026.csv
+            data/context/athletics-source-candidates-2026.json
+          if-no-files-found: warn
+          retention-days: 30
       - name: Discover official QB news candidates and build review queue
         run: |
           python -m scripts.qb_official_news_watch \
