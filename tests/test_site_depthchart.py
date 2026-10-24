@@ -54,6 +54,11 @@ class DepthTests(unittest.TestCase):
     def test_untrusted_url_or_source_not_promoted(self):
         bad=chart();bad["source_url"]="https://other-site.example/depth-chart"
         self.assertEqual(overlay(board(),{"Mississippi State Bulldogs":bad},NOW)["games"][0]["qb_depth_home"],[])
+    def test_html_unescaped_slug_encoded_before_network_request(self):
+        parser=IndexParser()
+        parser.feed('<img alt="Utah State"><a href="/ncaa-football-depth-charts/depth-chart.aspx?s=utah state&amp;id=92315">Chart</a>')
+        self.assertEqual(parser.pages["utah state"],
+            "https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?s=utah%20state&id=92315")
     def test_source_slug_may_contain_url_encoded_space(self):
         self.assertTrue(depth_link("https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?id=92315&s=utah+state"))
         self.assertFalse(depth_link("https://evil.example/ncaa-football-depth-charts/depth-chart.aspx?id=92315&s=utah+state"))

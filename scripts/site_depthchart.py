@@ -65,6 +65,7 @@ def depth_link(url):
 def download(url):
     if not allowed(url) or (url!=INDEX and not depth_link(url)):
         raise ValueError("Unreviewed depth-chart URL")
+    url=url.replace(" ","%20")
     req=urllib.request.Request(url,headers={
         "User-Agent":"CFB-2026-public-depth-order/0.1 (contact via project repo)",
         "Accept":"text/html"})
@@ -89,7 +90,9 @@ class IndexParser(HTMLParser):
         if tag=="a":
             href=urljoin(INDEX,a.get("href",""))
             if self.school and depth_link(href):
-                self.pages.setdefault(candidate_name(self.school),href)
+                # Source markup sometimes leaves a literal space in s=utah state.
+                # Percent-encode it after full origin/path/id/slug validation.
+                self.pages.setdefault(candidate_name(self.school),href.replace(" ","%20"))
 
 class TableParser(HTMLParser):
     """Read table cells only, never copy or republish complete chart tables."""
