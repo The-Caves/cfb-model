@@ -7,6 +7,7 @@ confirmed future starting quarterback. No change to frozen model features.
 """
 import argparse,concurrent.futures,datetime as dt,json,re,urllib.request
 from pathlib import Path
+from zoneinfo import ZoneInfo
 from urllib.parse import urlsplit
 from scripts.game_context import parse_time
 from scripts.qb_history import verify_observation
@@ -167,7 +168,7 @@ def collect(board,now,fetch=fetch_json):
     """Try confirmed official archive first; use recent completed-game passer as fallback."""
     wanted={str(g["game_id"]):g for g in board["games"]}
     days=sorted({parse_time(g["kickoff_utc"]).astimezone(
-        dt.timezone(dt.timedelta(hours=-4))).date() for g in wanted.values()})[:14]
+        ZoneInfo("America/New_York")).date() for g in wanted.values()})[:14]
     refs={};failures=[]
     for day in days:
         try:
