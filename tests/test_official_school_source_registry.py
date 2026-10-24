@@ -1,5 +1,6 @@
 import csv,json,tempfile,unittest
 from pathlib import Path
+from unittest.mock import patch
 from scripts.official_school_source_registry import build
 
 class OfficialSourceRegistryTests(unittest.TestCase):
@@ -12,7 +13,8 @@ class OfficialSourceRegistryTests(unittest.TestCase):
             registry.write_text(json.dumps({"status":"REVIEWED_OFFICIAL_RSS_REGISTRY_V1",
                 "feeds":[{"team":"Team A","url":"https://sports.example.edu/rss",
                 "reviewed":True,"publisher_host":"sports.example.edu"}]}))
-            result=build(aliases,registry)
+            with patch('scripts.qb_official_news_watch.FEEDS',{}):
+                result=build(aliases,registry)
             self.assertEqual(result["expected"],2)
             self.assertEqual(result["official_rss_reviewed_count"],1)
             self.assertEqual(result["homepage_verified_count"],0)
