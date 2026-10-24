@@ -53,6 +53,7 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 <section id="sources" role="tabpanel" class="hidden"><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Model ID</span><span id="modelid">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
 <footer>2026 CFB Lab · Research only · No wagers placed. <a href="https://github.com/The-Caves/cfb-model">Open GitHub project</a></footer>
 </main>
+<script id="dashboard-data" type="application/json"></script>
 <script>
 "use strict";
 let data=null,range="today";
@@ -96,9 +97,14 @@ for(const button of document.querySelectorAll("[data-range]"))button.addEventLis
 byId("query").addEventListener("input",render);
 (async()=>{
  try{
- const response=await fetch("./data/dashboard.json",{cache:"no-store"});
- if(!response.ok)throw Error("Dashboard export HTTP "+response.status);
- const d=await response.json();
+ const embedded=byId("dashboard-data");
+ let d;
+ if(embedded&&embedded.textContent.trim())d=JSON.parse(embedded.textContent);
+ else {
+  const response=await fetch("./data/dashboard.json",{cache:"no-store"});
+  if(!response.ok)throw Error("Dashboard export HTTP "+response.status);
+  d=await response.json();
+ }
  if(d.schema_version!==2||d.betting_status!=="PASS_UNVALIDATED"||!Array.isArray(d.games))throw Error("Unverified export schema");
  data=d;
  byId("captured").textContent="Model forecast: "+dtFmt.format(dateOf(d.forecast_observed_utc));
