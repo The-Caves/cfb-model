@@ -116,6 +116,12 @@ jobs:
             --output data/model_v03/backtest-evidence-gate.json
       - name: Collect timestamped upcoming schedules, rest, travel proxies, weather and reviewed personnel
         run: python -m scripts.ingest_game_context --raw-dir data/raw --availability-csv data/manual/availability_2026.csv --output data/context --horizon-days 10 --auto-official
+      - name: Inventory nationwide 2026 personnel sources
+        run: |
+          python -m scripts.personnel_source_inventory \
+            --aliases data/archive/2026_team_aliases.csv \
+            --registry config/official_qb_rss_registry.json \
+            --output data/context/personnel-source-inventory-2026.json
       - name: Discover official QB news candidates and build review queue
         run: |
           python -m scripts.qb_official_news_watch \
