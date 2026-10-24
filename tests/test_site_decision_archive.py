@@ -23,8 +23,17 @@ class ProspectiveDashboardArchiveTests(unittest.TestCase):
         self.assertEqual(row["displayed_ats_side"],"HOME")
         self.assertEqual(row["displayed_ou_side"],"OVER")
         self.assertEqual(snap["summary"]["ats_decisions"],1)
+        self.assertEqual(snap["rows"][0]["model_market_margin_disagreement"],2.5)
+        self.assertEqual(snap["summary"]["model_market_high_disagreements"],0)
         self.assertFalse(snap["market_publication_time_authenticated"])
         self.assertNotEqual(row["market_observed_utc"],snap["model_forecast_observed_utc"])
+    def test_larger_than_ten_point_model_market_gap_is_flagged(self):
+        b=board()
+        b["games"][0]["model_home_margin"]=28.0
+        g=freeze(b,NOW,"888")
+        self.assertEqual(g["summary"]["model_market_high_disagreements"],1)
+        self.assertEqual(g["rows"][0]["calibration_review_flag"],"HIGH_MODEL_MARKET_DISAGREEMENT")
+        self.assertAlmostEqual(g["rows"][0]["model_market_margin_disagreement"],20.5)
     def test_future_collection_not_accepted(self):
         b=board();b["games"][0]["market_observed_utc"]="2026-10-24T16:00:00Z"
         with self.assertRaises(ValueError):freeze(b,NOW,"888")
