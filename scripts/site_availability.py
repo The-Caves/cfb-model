@@ -112,6 +112,13 @@ def run(dashboard_path,aliases="data/archive/2026_team_aliases.csv",now=None,fet
     with TemporaryDirectory() as tmp:
         rows,manifest=fetcher(upcoming,aliases,Path(tmp)/"reports")
     result=merge(board,rows,now,manifest)
+    diagnostics={}
+    for item in rows:
+        if item.get("kind")!="AVAILABILITY":continue
+        pos=str(item.get("position") or "MISSING")
+        diagnostics[pos]=diagnostics.get(pos,0)+1
+    result["qb_availability_display"]["publisher_player_rows_by_position"]=diagnostics
+    result["qb_availability_display"]["publisher_total_player_rows"]=sum(diagnostics.values())
     path.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n")
     print(json.dumps(result["qb_availability_display"]))
     return result
