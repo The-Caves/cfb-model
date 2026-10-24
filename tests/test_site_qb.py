@@ -1,7 +1,7 @@
 """Current-context QB display must not promote unreviewed season stat leaders."""
 import copy,datetime as dt,json,tempfile,unittest
 from pathlib import Path
-from scripts.site_qb import overlay,season_passing_leader,team_ids_from_scoreboard,run,BASE
+from scripts.site_qb import overlay,season_passing_leader,team_ids_from_scoreboard,run,passer_from_game_summary,recent_completed_game_map,BASE
 from scripts.qb_history import STATUS as QSTATUS
 NOW=dt.datetime(2026,10,24,14,tzinfo=dt.timezone.utc)
 GAME={"game_id":"401","home_team":"Home College","away_team":"Away College",
@@ -27,14 +27,16 @@ class Tests(unittest.TestCase):
         r=overlay(board(),None,NOW)
         self.assertEqual(r["games"][0]["qb_home"]["status"],"UNKNOWN")
         self.assertEqual(r["qb_display"]["counts"]["unknown"],2)
-    def test_season_passing_leader_not_confirmed(self):
-        r=overlay(board(),None,NOW,{("401","Home College"):"1"},{"1":"Season Leader"})
-        self.assertEqual(r["games"][0]["qb_home"]["player"],"Season Leader")
-        self.assertEqual(r["games"][0]["qb_home"]["status"],"SEASON_PASSING_LEADER")
+    def test_recent_passer_never_confirmed(self):
+        recent={"1":{"player":"Recent Passer","last_game_utc":"2026-10-17T17:00:00Z",
+            "source_url":"https://www.espn.com/college-football/game/_/gameId/202"}}
+        r=overlay(board(),None,NOW,{("401","Home College"):"1"},recent)
+        self.assertEqual(r["games"][0]["qb_home"]["player"],"Recent Passer")
+        self.assertEqual(r["games"][0]["qb_home"]["status"],"RECENT_GAME_PASSER")
         self.assertEqual(r["qb_display"]["counts"]["confirmed"],0)
         self.assertFalse(r["qb_display"]["model_features_updated"])
     def test_official_confirmed_overrides_stat_leader(self):
-        r=overlay(board(),history(True),NOW,{("401","Home College"):"1"},{"1":"Other Passer"})
+        r=overlay(board(),history(True),NOW,{("401","Home College"):"1"},{"1":{"player":"Other Passer","last_game_utc":"2026-10-17T17:00:00Z","source_url":"https://www.espn.com/college-football/game/_/gameId/202"}})
         self.assertEqual(r["games"][0]["qb_home"]["player"],"Jane Quarterback")
         self.assertEqual(r["games"][0]["qb_home"]["status"],"CONFIRMED_OFFICIAL")
         self.assertEqual(r["games"][0]["qb_away"]["status"],"UNKNOWN")
@@ -59,6 +61,24 @@ class Tests(unittest.TestCase):
         self.assertEqual(ids[("401","Home College")],"9")
         bad=copy.deepcopy(fixture);bad["events"][0]["competitions"][0]["competitors"][0]["team"]["displayName"]="Not Home"
         self.assertNotIn(("401","Home College"),team_ids_from_scoreboard(bad,{"401":GAME},NOW))
+    def test_completed_box_score_passer_is_only_performance(self):
+        summary={"boxscore":{"players":[
+          {"team":{"id":"1","displayName":"Home College"},
+           "statistics":[{"name":"passing","athletes":[
+             {"athlete":{"displayName":"Passer One"},"stats":["21/31","214","1"]}]}]},
+          {"team":{"id":"2","displayName":"Away College"},"statistics":[]}]}}
+        self.assertEqual(passer_from_game_summary(summary,"1","Home College"),"Passer One")
+        self.assertIsNone(passer_from_game_summary(summary,"2","Away College"))
+        self.assertIsNone(passer_from_game_summary(summary,"1","Different"))
+    def test_reject_future_and_incomplete_game_boxscore(self):
+        def event(completed=True,date="2026-10-17T17:00:00Z"):
+            return {"events":[{"id":"202","date":date,"status":{"type":{"completed":completed}},
+                "competitions":[{"competitors":[
+                    {"team":{"id":"1","displayName":"Home College"}},{"team":{"id":"2","displayName":"Away College"}}]}]}]}
+        self.assertEqual(recent_completed_game_map(event(),{"1":"Home College"},NOW)["1"]["game_id"],"202")
+        self.assertEqual(recent_completed_game_map(event(False),{"1":"Home College"},NOW),{})
+        self.assertEqual(recent_completed_game_map(event(date="2026-10-25T17:00:00Z"),{"1":"Home College"},NOW),{})
+        self.assertEqual(recent_completed_game_map(event(),{"1":"Wrong College"},NOW),{})
     def test_run_without_network_outputs_unknown(self):
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp)/"board.json";p.write_text(json.dumps(board()))
