@@ -73,6 +73,16 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 .availFoot{font-size:11px;color:#bdc9ae;margin-top:8px;line-height:1.45}
 .modelTag{display:inline-block;margin-bottom:12px;font-size:11px;font-weight:700;color:#b0f0e2;padding:6px 9px;border-radius:8px;border:1px solid #4f8175;background:#21423d}
 .qbRisk{padding:9px 11px;border:1px solid #705336;border-radius:9px;background:#29261f;color:#f4d5a8;font-size:11px;line-height:1.55;margin:10px 0 7px}
+
+/* Source-labelled QB depth-chart positions; not starter confirmations */
+.qbDepth{margin-top:10px;padding-top:9px;border-top:1px solid #3c5369}
+.qbDepthHeading{color:#a6d9d0;font-size:11px;font-weight:750;letter-spacing:.02em;margin-bottom:8px}
+.qbRankRow{display:flex;align-items:center;gap:7px;margin:5px 0;line-height:1.45;font-size:12px}
+.qbRank{display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:#304e67;color:#d7f4ed;font-size:10px;font-weight:750;min-width:36px;padding:3px 4px}
+.qbRankRow.rankOne .qbRank{background:#23624f;color:#e5fff5}
+.qbRankRow .qbNameSmall{font-size:12px;overflow-wrap:anywhere;font-weight:650}
+.depthFoot{font-size:10px;color:#a9bbcc;line-height:1.5;margin-top:9px}
+.depthFoot a{color:#9adfd0;margin-left:5px}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top"><div class="brand">🏈 CFB <span>LAB</span> / 2026</div><div class="pill">Research model</div></div>
@@ -86,7 +96,7 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 <div class="tool">
 <input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
 <select id="sort" aria-label="Sort games"><option value="time">Kickoff · earliest first</option><option value="late">Kickoff · latest first</option><option value="ats">Biggest model ATS difference</option><option value="total">Biggest model total difference</option><option value="alpha">School · A to Z</option></select>
-<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option></select>
+<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="depth">With QB depth-chart ranks</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option></select>
 </div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden"><div class="results"><div class="panel"><div class="small">Prospective SU</div><div class="metric" id="su">—</div></div><div class="panel"><div class="small">Prospective ATS</div><div class="metric" id="ats">—</div></div><div class="panel"><div class="small">Prospective totals</div><div class="metric" id="ou">—</div></div></div><div class="panel" style="margin-top:14px"><h3>Performance will not be fabricated</h3><p class="state">Verified forward-looking prediction grading is separate from retrospective research. Unobserved sportsbook lines cannot generate ATS or totals records. Until audited grading is published, those results remain unavailable.</p></div></section>
@@ -113,30 +123,47 @@ function marketTile(label,line,selection,edge){
  if(selection&&selection!=="PASS"&&Number.isFinite(edge))box.append(node("div","small","Model difference: "+num(edge)+" pts"));
  return box;
 }
-function qbCard(team,side){
+function qbCard(team,side,depth){
  const slot=node("div","qbSlot"+(side&&side.status==="CONFIRMED_OFFICIAL"?" confirmed":""));
  slot.append(node("div","qbSlotHeader",team+" · Quarterback"));
  slot.append(node("div","qbName",side&&side.status==="CONFIRMED_OFFICIAL"&&side.player?side.player:"Starter not confirmed"));
- if(side&&side.status==="RECENT_GAME_PASSER"&&side.player){
-   slot.append(node("div","small","Last game passer: "+side.player));
- }
  const states={CONFIRMED_OFFICIAL:"Confirmed · reviewed official game statement",
-  SEASON_PASSING_LEADER:"2026 passing leader · NOT confirmed to start",
-  RECENT_GAME_PASSER:"Player appeared in last game · NOT confirmed today",
+  RECENT_GAME_PASSER:"Recent game's passer only · NOT confirmed today",
   CONFLICT_REVIEW:"Conflicting QB evidence · under review",
   UNKNOWN:"No verified game-specific starter"};
  slot.append(node("div","qbStatus",states[side&&side.status]||states.UNKNOWN));
+ if(Array.isArray(depth)&&depth.length){
+   const list=node("div","qbDepth");
+   list.append(node("div","qbDepthHeading","Listed depth-chart order · not a start confirmation"));
+   for(const q of depth){
+     if(![1,2,3].includes(q.rank)||!q.player)continue;
+     const line=node("div","qbRankRow"+(q.rank===1?" rankOne":""));
+     line.append(node("span","qbRank","QB"+q.rank),node("span","qbNameSmall",q.player));
+     list.append(line);
+   }
+   const source=node("div","depthFoot","Third-party projected chart · not official starter news");
+   const first=depth[0];
+   if(first&&first.source_url){
+     try{const url=new URL(first.source_url);if(url.protocol==="https:"&&url.hostname==="www.ourlads.com"){
+       const link=node("a","","View depth chart");link.href=url.href;
+       link.target="_blank";link.rel="noopener noreferrer";source.append(link);
+     }}catch(_){}
+   }
+   list.append(source);slot.append(list);
+ }else{
+   slot.append(node("div","depthFoot","QB1–QB3 ranking: not verified from a current chart"));
+ }
+ if(side&&side.status==="RECENT_GAME_PASSER"&&side.player){
+   slot.append(node("div","small","Last game's passer: "+side.player));
+ }
  if(side&&side.status==="RECENT_GAME_PASSER"&&side.last_game_utc){
    slot.append(node("div","small","Previous game: "+fmtDate.format(dateOf(side.last_game_utc))));
  }
  if(side&&side.source_url){
-   try{
-     const url=new URL(side.source_url);
-     if(url.protocol==="https:"){
-       const a=node("a","","View source");
-       a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";slot.append(a);
-     }
-   }catch(_){}
+   try{const url=new URL(side.source_url);if(url.protocol==="https:"){
+     const a=node("a","","View "+(side.status==="CONFIRMED_OFFICIAL"?"official QB1 source":"previous-game source"));
+     a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";slot.append(a);
+   }}catch(_){}
  }
  return slot;
 }
@@ -171,7 +198,7 @@ function gameCard(g){
  el.append(node("span","modelTag","Model pick · experimental"));
  const teams=node("div","teams");teams.append(node("span","team",g.away_team),node("span","at","@"),node("span","team",g.home_team));el.append(teams);
  const qbPanel=node("div","qbPanel");
- qbPanel.append(qbCard(g.away_team,g.qb_away),qbCard(g.home_team,g.qb_home));el.append(qbPanel);
+ qbPanel.append(qbCard(g.away_team,g.qb_away,g.qb_depth_away),qbCard(g.home_team,g.qb_home,g.qb_depth_home));el.append(qbPanel);
  const availability=officialQBPanel(g);
  if(availability)el.append(availability);
  if(hasQBRisk(g))el.append(node("div","qbRisk","QB status alert: this frozen model projection has NOT been recomputed for the reported quarterback situation."));
@@ -243,6 +270,7 @@ function render(){
   if((filter==="over"||filter==="under")&&g.model_ou_side!==filter.toUpperCase())return false;
   if(filter==="qb"&&(g.qb_home?.status!=="CONFIRMED_OFFICIAL"||g.qb_away?.status!=="CONFIRMED_OFFICIAL"))return false;
   if(filter==="qb-named"&&(!g.qb_home?.player||!g.qb_away?.player))return false;
+  if(filter==="depth"&&!(g.qb_depth_home?.length&&g.qb_depth_away?.length))return false;
   if(filter==="qb-unknown"&&g.qb_home?.status!=="UNKNOWN"&&g.qb_away?.status!=="UNKNOWN")return false;
   if(filter==="qb-status"&&!(g.qb_availability_home?.length||g.qb_availability_away?.length))return false;
   if(filter==="qb-risk"&&!hasQBRisk(g))return false;
