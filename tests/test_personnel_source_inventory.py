@@ -1,6 +1,7 @@
 import csv,json,tempfile,unittest
 from pathlib import Path
 from scripts.personnel_source_inventory import inventory
+from unittest.mock import patch
 
 class InventoryTests(unittest.TestCase):
     def test_sources_never_imply_verified_players(self):
@@ -14,7 +15,8 @@ class InventoryTests(unittest.TestCase):
             registry.write_text(json.dumps({"status":"REVIEWED_OFFICIAL_RSS_REGISTRY_V1",
                 "feeds":[{"team":"Tulsa Golden Hurricane","url":"https://tulsahurricane.com/rss?path=football",
                           "reviewed":True,"publisher_host":"tulsahurricane.com"}]}))
-            result=inventory(aliases,registry)
+            with patch("scripts.personnel_source_inventory.load_feed_registry",return_value={"Tulsa Golden Hurricane":"https://tulsahurricane.com/rss?path=football"}):
+                result=inventory(aliases,registry)
             self.assertEqual(result["inventory_team_count"],2)
             self.assertEqual(result["official_rss_configured"],1)
             self.assertFalse(result["expected_count_matches"])
