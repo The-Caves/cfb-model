@@ -31,10 +31,16 @@ def evaluate(data):
         rows.append(row)
     counts={c:{state:sum(r[c+"_status"]==state for r in rows) for state in STATES}
             for c in CATEGORIES}
+    unresolved=[{"team":r["team"],"football_page":r["football_page"],
+                 "missing_candidate_types":[c for c in CATEGORIES if r[c+"_candidate_count"]==0],
+                 "crawl_status":r["crawl_status"]} for r in rows
+                if r["crawl_status"]!="AUDITED" or any(r[c+"_candidate_count"]==0 for c in CATEGORIES)]
     return {"status":"SOURCE_TYPE_DISCOVERY_AUDIT_NOT_PERSONNEL_VERIFICATION",
             "expected_teams":138,"schools_audited":sum(r["crawl_status"]=="AUDITED" for r in rows),
             "source_type_counts":counts,"personnel_verified_count":0,
-            "missing_source_not_equivalent_to_unpublished":True,"schools":rows}
+            "missing_source_not_equivalent_to_unpublished":True,
+            "source_type_review_backlog_count":len(unresolved),
+            "source_type_review_backlog":unresolved,"schools":rows}
 
 def run(source,output,csv_output=None):
     report=evaluate(json.loads(Path(source).read_text(encoding="utf-8")))
@@ -46,7 +52,7 @@ def run(source,output,csv_output=None):
             fields=["team","football_page","crawl_status"]+[c+"_status" for c in CATEGORIES]+[c+"_candidate_count" for c in CATEGORIES]
             writer=csv.DictWriter(f,fieldnames=fields,extrasaction="ignore")
             writer.writeheader();writer.writerows(report["schools"])
-    print(json.dumps({k:v for k,v in report.items() if k!="schools"}))
+    print(json.dumps({k:v for k,v in report.items() if k not in ("schools","source_type_review_backlog")}))
     return report
 
 if __name__=="__main__":
