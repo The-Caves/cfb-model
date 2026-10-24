@@ -5,6 +5,16 @@ from scripts.official_school_source_registry import build
 from scripts.official_source_connectivity import probe
 
 class SiteCoverageTests(unittest.TestCase):
+    def test_production_138_school_site_registry_is_complete(self):
+        from scripts.official_school_source_registry import build
+        result=build("data/archive/2026_team_aliases.csv",
+            "config/official_qb_rss_registry.json",
+            athletics="config/official_athletics_sites_2026.json")
+        self.assertEqual(result["expected"],138)
+        self.assertEqual(result["homepage_candidate_count"],138)
+        self.assertEqual(result["homepage_verified_count"],0)
+        self.assertEqual(len({x["official_athletics_homepage"] for x in result["schools"]}),138)
+
     def test_site_candidates_do_not_imply_verification(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder)
