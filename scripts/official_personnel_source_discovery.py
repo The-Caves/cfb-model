@@ -54,7 +54,9 @@ class Links(HTMLParser):
 
 def host_allowed(url,origin):
     a=urlsplit(url);b=urlsplit(origin)
-    return (a.scheme=="https" and bool(a.hostname) and a.hostname.lower()==b.hostname.lower()
+    ah=(a.hostname or "").lower().removeprefix("www.")
+    bh=(b.hostname or "").lower().removeprefix("www.")
+    return (a.scheme=="https" and bool(a.hostname) and ah==bh
             and not a.username and not a.password and a.port in (None,443)
             and not a.fragment)
 
@@ -151,17 +153,24 @@ def inspect_school(school,fetch=default_fetch):
              "football_page_status":"NOT_LOCATED",
              "pages_checked":[],"game_notes":[],"depth_chart":[],"injury_report":[],
              "game_specific_player_evidence_verified":False}
+    first=[]
     try:
         first,hashsum=safe_page(root,root,fetch)
         outcome["pages_checked"].append({"url":root,"sha256":hashsum})
     except Exception as exc:
-        outcome["crawl_status"]="HOMEPAGE_FETCH_FAILED"
-        outcome["error_type"]=type(exc).__name__
-        return outcome
+        outcome["homepage_error_type"]=type(exc).__name__
     options=football_pages(first,root)
-    if not options:
-        outcome["crawl_status"]="NO_OFFICIAL_FOOTBALL_LINK_FOUND"
-        return outcome
+    # Explicitly probe common athletics-site football routes only on the
+    # school-owned host. These are guesses until a live page responds.
+    base=root.rstrip("/")
+    from urllib.parse import urlunsplit
+    parsed=urlsplit(root)
+    origin=urlunsplit((parsed.scheme,parsed.netloc,"","","")).rstrip("/")
+    for path in ("/sports/football","/sport/football","/sports/m-footbl",
+                 "/sports/football/index","/sports/football/index.aspx",
+                 "/index.aspx?path=football"):
+        url=origin+path
+        if url not in options:options.append(url)
     football=None
     for page in options:
         try:
