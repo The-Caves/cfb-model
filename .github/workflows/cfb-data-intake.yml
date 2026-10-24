@@ -135,12 +135,14 @@ jobs:
             --aliases data/archive/2026_team_aliases.csv \
             --registry config/official_qb_rss_registry.json \
             --discovery data/context/athletics-source-candidates-2026.json \
+            --athletics config/official_athletics_sites_2026.json \
             --output data/context/official-school-source-registry-2026.json
       - name: Probe official RSS source connectivity
         continue-on-error: true
         run: |
           python -m scripts.official_source_connectivity \
             --registry config/official_qb_rss_registry.json \
+            --athletics config/official_athletics_sites_2026.json \
             --output data/context/official-source-connectivity-2026.json
       - name: Preserve nationwide athletics discovery and source-expansion audits
         if: always()
