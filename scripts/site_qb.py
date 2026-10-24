@@ -137,18 +137,36 @@ def collect(board,now,fetch=fetch_json):
             failures.append({"kind":"scoreboard","date":day.isoformat(),"error":type(exc).__name__})
     unique=sorted(set(refs.values()))
     results={}
+    shapes=[]
     def one(tid):
         data=fetch(BASE+"/teams/"+tid+"/leaders?season=2026")
-        return season_passing_leader(data)
+        sample={"team_id":tid,"keys":sorted(data.keys())[:15],
+                "leaders_type":type(data.get("leaders")).__name__,
+                "categories_type":type(data.get("categories")).__name__}
+        groups=data.get("leaders") or data.get("categories") or []
+        if isinstance(groups,list) and groups:
+            sample["first_category_keys"]=sorted(groups[0].keys()) if isinstance(groups[0],dict) else []
+            if isinstance(groups[0],dict):
+                sample["first_category_name"]=groups[0].get("name")
+                sample["first_category_display"]=groups[0].get("displayName")
+                details=groups[0].get("leaders") or []
+                if isinstance(details,list) and details and isinstance(details[0],dict):
+                    sample["first_leader_keys"]=sorted(details[0].keys())
+                    player=details[0].get("athlete") or {}
+                    sample["first_athlete_keys"]=sorted(player.keys()) if isinstance(player,dict) else []
+        return season_passing_leader(data),sample
     with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
         futures={pool.submit(one,tid):tid for tid in unique}
         for f in concurrent.futures.as_completed(futures):
             tid=futures[f]
             try:
-                name=f.result()
+                name,sample=f.result()
                 if name:results[tid]=name
+                if len(shapes)<3 and (not name):shapes.append(sample)
             except (ValueError,KeyError,OSError,TypeError) as exc:
                 failures.append({"kind":"team_leaders","team_id":tid,"error":type(exc).__name__})
+    if not results and shapes:
+        print(json.dumps({"qb_source_format_diagnostic":shapes}))
     return refs,results,failures
 
 def run(board_path,history_path,now=None,collector=collect):
