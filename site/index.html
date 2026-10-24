@@ -160,7 +160,7 @@ function gameCard(g){
   "Source: ESPN / "+g.market_provider+" · observed "+fmtDate.format(dateOf(g.market_observed_utc))+". Quote is not independently publication-time authenticated.":
   "No verified pregame ESPN quote currently available. ATS and O/U comparisons withheld."));
  const badges=node("div","badges");
- badges.append(node("span","badge"+(g.qb_starters_verified<2?" low":""),"QBs "+g.qb_starters_verified+"/2"),
+ badges.append(node("span","badge"+(g.qb_starters_verified<2?" low":""),"At forecast QB verified "+g.qb_starters_verified+"/2"),
                node("span","badge"+(g.official_team_reports_verified<2?" low":""),"Reports "+g.official_team_reports_verified+"/2"),
                node("span","badge","Research only"));el.append(badges);
  el.append(node("div","bottom","Original frozen forecast: "+fmtDate.format(dateOf(data.forecast_observed_utc))+" · Not validated for betting"));
