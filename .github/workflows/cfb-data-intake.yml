@@ -120,7 +120,8 @@ jobs:
         run: |
           python -m scripts.qb_official_news_watch \
             --context data/context/upcoming_game_context_2026.json \
-            --output data/context/qb-official-news.json
+            --output data/context/qb-official-news.json \
+            --registry config/official_qb_rss_registry.json
           python -m scripts.qb_review_queue \
             --context data/context/upcoming_game_context_2026.json \
             --news data/context/qb-official-news.json \
