@@ -12,7 +12,6 @@ def discover(aliases,payload):
     with Path(aliases).open(newline="",encoding="utf-8-sig") as f:
         names=[r["espn_display_name"].strip() for r in csv.DictReader(f)]
     found={}
-    by_id={}
     for sport in payload.get("sports",[]):
         for league in sport.get("leagues",[]):
             for item in league.get("teams",[]):
