@@ -1,0 +1,92 @@
+name: CFB Research Dashboard
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'scripts/site_export.py'
+      - 'tests/test_site_export.py'
+      - '.github/workflows/cfb-site.yml'
+  schedule:
+    - cron: '33 11,14,17,20,23 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: cfb-research-site
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: context-state
+          path: .context-state
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Test forecast export
+        run: python -m unittest discover -s tests -p 'test_site_export.py' -v
+      - name: Produce actual archived model projections
+        run: |
+          python -m scripts.site_export --archive-root .context-state --output site/data/dashboard.json | tee /tmp/site-export.txt
+          cat /tmp/site-export.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Confirm research-only and missing sportsbook prices
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open("site/data/dashboard.json"))
+          assert d["schema_version"] == 2 and d["betting_status"] == "PASS_UNVALIDATED"
+          assert all(g["market_home_spread"] is None and g["market_total"] is None for g in d["games"])
+          print("Public export validated")
+          PY
+      - name: Save portable website preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-website-preview-${{ github.run_id }}
+          path: |
+            site/index.html
+            site/README.md
+            site/data/dashboard.json
+          retention-days: 7
+      - name: Prepare Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page_url }}
+    steps:
+      - name: Check whether public Pages is already enabled
+        id: enabled
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          code=$(curl -sS -o /tmp/pages.json -w '%{http_code}' -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages")
+          if [ "$code" = "200" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          elif [ "$code" = "404" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Public Pages is disabled; to publish publicly use Settings > Pages > Source: GitHub Actions. Preview artifact remains available." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Cannot verify Pages: HTTP $code" >&2
+            exit 1
+          fi
+      - uses: actions/configure-pages@v5
+        if: steps.enabled.outputs.ready == 'true'
+      - uses: actions/deploy-pages@v4
+        if: steps.enabled.outputs.ready == 'true'
+        id: publish
