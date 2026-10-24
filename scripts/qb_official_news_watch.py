@@ -21,6 +21,33 @@ FEEDS={
     "Texas Longhorns":"https://texaslonghorns.com/rss?path=football",
     "North Carolina Tar Heels":"https://goheels.com/rss?path=football"
 }
+# Additional official feeds must be explicitly approved; never infer URLs from school names.
+# A registry is optional so existing scheduled runs remain backward compatible.
+def load_feed_registry(path=None):
+    feeds=dict(FEEDS)
+    if path is None:
+        return feeds
+    payload=json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload,dict) or payload.get("status")!="REVIEWED_OFFICIAL_RSS_REGISTRY_V1":
+        raise ValueError("Unreviewed official feed registry")
+    entries=payload.get("feeds")
+    if not isinstance(entries,list):
+        raise ValueError("Invalid official feed registry entries")
+    for entry in entries:
+        if not isinstance(entry,dict) or set(entry)!={"team","url","reviewed","publisher_host"}:
+            raise ValueError("Invalid feed registry record")
+        team,url,host=entry["team"],entry["url"],entry["publisher_host"]
+        parsed=urlsplit(url)
+        if (not isinstance(team,str) or not team.strip() or
+            not isinstance(host,str) or not host or
+            entry["reviewed"] is not True or
+            parsed.scheme!="https" or parsed.hostname!=host or
+            parsed.username or parsed.password or parsed.port not in (None,443) or
+            parsed.fragment or team in feeds):
+            raise ValueError("Unverified, duplicate or unsafe official feed")
+        feeds[team]=url
+    return feeds
+
 QB_TOPIC=re.compile(r"\b(quarterback|quarterbacks|qb|qbs|signal.caller)\b",re.I)
 # The word "named" alone is noisy: award lists routinely say a QB was named
 # an honoree. Specific starting language or personnel-news terms are required.
@@ -31,7 +58,7 @@ TAG=re.compile(r"<[^>]{0,500}>")
 def clean(value,max_chars=500):
     return " ".join(html.unescape(TAG.sub(" ",value or "")).split())[:max_chars]
 
-def article_candidates(xml_bytes,team,games,captured):
+def article_candidates(xml_bytes,team,games,captured,feeds=None):
     """Extract a bounded, candidate-only review queue from an RSS2 XML feed."""
     root=ET.fromstring(xml_bytes)
     entries=root.findall("./channel/item")
@@ -49,7 +76,7 @@ def article_candidates(xml_bytes,team,games,captured):
             continue
         link=(entry.findtext("link") or "").strip()
         u=urlsplit(link)
-        source_host=urlsplit(FEEDS[team]).hostname
+        source_host=urlsplit((feeds or FEEDS)[team]).hostname
         if not (u.scheme=="https" and u.hostname==source_host and not u.username and not u.password):
             continue
         date_string=(entry.findtext("pubDate") or "").strip()
@@ -84,17 +111,18 @@ def fetch_rss(url,timeout=9,max_bytes=2_000_000):
     if len(result)>max_bytes:raise ValueError("RSS feed exceeds byte limit")
     return result
 
-def run(context_file,output_file,reader=fetch_rss,now=None):
+def run(context_file,output_file,reader=fetch_rss,now=None,registry=None):
     data=json.loads(Path(context_file).read_text(encoding="utf-8"))
     games=data.get("games")
     if not isinstance(games,list):raise ValueError("Missing context games")
     captured=parse_time(now or dt.datetime.now(dt.timezone.utc).isoformat()).isoformat()
+    feeds=load_feed_registry(registry)
     qa={"status":"OFFICIAL_NEWS_REVIEW_ONLY","asof_utc":captured,
-        "feeds_configured":len(FEEDS),"feeds_read":0,"feeds_skipped_no_upcoming_game":0,
+        "feeds_configured":len(feeds),"feeds_read":0,"feeds_skipped_no_upcoming_game":0,
         "feeds_failed":0,"errors":[],"candidate_count":0,"feed_status":{},
         "confirmed_qb_starter_count":0}
     out=[]
-    for team,url in FEEDS.items():
+    for team,url in feeds.items():
         if not any(team in (g.get("home"),g.get("away")) and
                    parse_time(g["kickoff_utc"])>parse_time(captured) for g in games):
             qa["feeds_skipped_no_upcoming_game"]+=1
@@ -102,7 +130,7 @@ def run(context_file,output_file,reader=fetch_rss,now=None):
             continue
         try:
             payload=reader(url)
-            records=article_candidates(payload,team,games,captured)
+            records=article_candidates(payload,team,games,captured,feeds)
             out.extend(records);qa["feeds_read"]+=1
             qa["feed_status"][team]="FETCHED"
         except (OSError,ValueError,ET.ParseError,KeyError) as exc:
@@ -150,5 +178,6 @@ if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--context",required=True)
     p.add_argument("--output",required=True)
+    p.add_argument("--registry",default=None)
     a=p.parse_args()
-    run(a.context,a.output)
+    run(a.context,a.output,registry=a.registry)
