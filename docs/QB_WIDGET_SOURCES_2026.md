@@ -56,3 +56,25 @@ To raise true starter-confirmation coverage rather than merely show recent playe
 - **Mississippi State vs Oklahoma** (October 24): contemporary reporting says Kamario Taylor was officially listed questionable and expected to attempt to play, while last-game backup Parker “Billy” Puckett played against LSU. A new pre-kickoff reviewed statement that explicitly names this game's starter is still required to call anyone confirmed. Do not infer a Taylor OUT, a Puckett confirmation, a replacement-value spread, or a revised betting pick from this report alone.
 
 Next priority: debug missing *published SEC* cards by inspecting exact report-matching reason, fix verified school alias/date/schema bugs with fixtures, obtain explicit current game-specific QB starter claims from official school announcements or on-record coach quotes, then feed them into the immutable review archive *before* recalculating new model variants. Maintain separate clocks for official report observation, forecast capture and market observation.
+
+## Verified late-morning October 24 repair — official QB reports now flow
+
+The earlier `0 official QB designations` checkpoint above is **superseded** by the following verified repairs and results. Keep it as a timestamped record of the original defect, not as the current state.
+
+### Root causes resolved
+
+1. Public official conference report cards contain rows with `status: Exempt`. This is **not** a medical/availability designation. Former code rejected an entire report on such a row, producing SEC 0/6 and Big 12 0/8. `scripts/official_availability.py` now explicitly excludes Exempt rows from player claims (never calls them AVAILABLE or OUT), while still rejecting truly unrecognized *reportable* statuses. `tests/test_official_availability.py` covers both cases.
+2. `site_availability.run` had taken its evidence as-of time **before** live network fetches, so valid reports captured a few seconds later were all rejected as future-sourced. It now uses an actual **post-fetch** UTC cutoff in live runs, while preserving the explicit deterministic test cutoff. It still rejects reports published in the future or game IDs/kickoff times that do not match. `tests/test_site_availability.py` contains a dedicated live-return regression test.
+3. The official report publisher returns full-roster availability, including many `AVAILABLE` backups, which is not starter evidence. The website now displays only **consequential** official QB designations (e.g., OUT, QUESTIONABLE, DOUBTFUL, GAME_TIME_DECISION, LIMITED) and keeps full-source counts in the audit; a list of AVAILABLE backups is not promoted to named starters.
+
+### Live acceptance evidence
+
+- [Build 40106031838](https://github.com/The-Caves/cfb-model/actions/runs/40106031838) passed with 25 accepted official matchup report cards out of 27 fetched: SEC 6/6, Big Ten 6/6, ACC 5/7 and Big 12 8/8.
+- [Build 40106267876](https://github.com/The-Caves/cfb-model/actions/runs/40106267876) passed after the post-fetch cutoff repair. It matched **245** public-source quarterback player availability rows across **25** upcoming games, sourced from **5,266** published athlete rows (QB position 245). `official_qb_designations` counts report claims, not confirmed starters.
+- For October 24 Oklahoma at Mississippi State (ESPN game `401856730`), the verified source data at approximately 11:17 AM ET listed **Kamario Taylor: QUESTIONABLE**, while **Parker “Billy” Puckett: AVAILABLE**, **AJ Swann: AVAILABLE**. “Available” does **not** mean the player is starting. The ESPN last-game box score displays Parker Puckett as last week's passer, also not confirmation of today's QB1.
+- Official starting-QB confirmation count is still **zero**, because `data/manual/qb_starter_evidence_2026.csv` has no newly reviewed explicit game-specific declaration. Do **not** silently change it to 245 or declare either Taylor or Puckett the starter.
+- The live 14-feature team model scores, market comparisons and historical forecasts remain untouched. An official current-day QB availability overlay **flags** a risk but does not magically supply trained replacement-value adjustment or a retested QB-aware model.
+
+### Next evidence milestone
+
+Audit and approve explicitly current game-specific school/coach confirmations, including links and time stamps, before submitting to the QB evidence review gate. A final SEC report 90 minutes before kickoff is a useful **availability** update but need not contain an affirmative “starting QB” claim. For prediction adjustments, collect confirmed QB identities and replacement performance in point-in-time training rows, run chronological ablations against the current 14-feature model, and promote only if independently validated.
