@@ -29,10 +29,21 @@ def inventory(aliases, registry=None):
             "conference_reports":"GAME_SPECIFIC_SEPARATE_PIPELINE",
             "teams":records}
 
-def run(aliases,output,registry=None):
+def run(aliases,output,registry=None,backlog=None):
     result=inventory(aliases,registry)
     target=Path(output);target.parent.mkdir(parents=True,exist_ok=True)
     target.write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
+    if backlog is not None:
+        backlog_path=Path(backlog)
+        backlog_path.parent.mkdir(parents=True,exist_ok=True)
+        with backlog_path.open("w",newline="",encoding="utf-8") as stream:
+            writer=csv.DictWriter(stream,fieldnames=["team","official_rss_url","review_status","verification_required"])
+            writer.writeheader()
+            for row in result["teams"]:
+                if not row["rss_configured"]:
+                    writer.writerow({"team":row["team"],"official_rss_url":"",
+                                     "review_status":"SOURCE_DISCOVERY_REQUIRED",
+                                     "verification_required":"OFFICIAL_DOMAIN_AND_LIVE_FEED"})
     print(json.dumps({k:v for k,v in result.items() if k!="teams"}))
     return result
 
@@ -41,5 +52,6 @@ if __name__=="__main__":
     p.add_argument("--aliases",required=True)
     p.add_argument("--registry")
     p.add_argument("--output",required=True)
+    p.add_argument("--backlog")
     a=p.parse_args()
-    run(a.aliases,a.output,a.registry)
+    run(a.aliases,a.output,a.registry,a.backlog)
