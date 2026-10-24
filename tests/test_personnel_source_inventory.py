@@ -24,7 +24,7 @@ class InventoryTests(unittest.TestCase):
     def test_expansion_queue_is_complete_and_does_not_invent_sources(self):
         with tempfile.TemporaryDirectory() as folder:
             base=Path(folder);aliases=base/"teams.csv";registry=base/"registry.json"
-            aliases.write_text("archived_team,espn_display_name\\nA,Tulsa Golden Hurricane\\nB,Other Team\\n")
+            aliases.write_text("archived_team,espn_display_name\nA,Tulsa Golden Hurricane\nB,Other Team\n")
             registry.write_text(json.dumps({"status":"REVIEWED_OFFICIAL_RSS_REGISTRY_V1","feeds":[]}))
             with patch("scripts.personnel_source_inventory.load_feed_registry",
                        return_value={"Tulsa Golden Hurricane":"https://tulsahurricane.com/rss?path=football"}):
