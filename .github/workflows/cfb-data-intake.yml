@@ -123,6 +123,12 @@ jobs:
             --registry config/official_qb_rss_registry.json \
             --output data/context/personnel-source-inventory-2026.json \
             --backlog data/context/personnel-source-expansion-backlog-2026.csv
+      - name: Discover athletics source candidates for every FBS school (review only)
+        continue-on-error: true
+        run: |
+          python -m scripts.athletics_source_discovery \
+            --aliases data/archive/2026_team_aliases.csv \
+            --output data/context/athletics-source-candidates-2026.json
       - name: Discover official QB news candidates and build review queue
         run: |
           python -m scripts.qb_official_news_watch \
