@@ -136,6 +136,12 @@ jobs:
             --registry config/official_qb_rss_registry.json \
             --discovery data/context/athletics-source-candidates-2026.json \
             --output data/context/official-school-source-registry-2026.json
+      - name: Probe official RSS source connectivity
+        continue-on-error: true
+        run: |
+          python -m scripts.official_source_connectivity \
+            --registry config/official_qb_rss_registry.json \
+            --output data/context/official-source-connectivity-2026.json
       - name: Preserve nationwide athletics discovery and source-expansion audits
         if: always()
         uses: actions/upload-artifact@v4
@@ -146,6 +152,7 @@ jobs:
             data/context/personnel-source-expansion-backlog-2026.csv
             data/context/athletics-source-candidates-2026.json
             data/context/official-school-source-registry-2026.json
+            data/context/official-source-connectivity-2026.json
           if-no-files-found: warn
           retention-days: 30
       - name: Discover official QB news candidates and build review queue
