@@ -174,10 +174,13 @@ jobs:
         with:
           name: cfb-website-preview-${{ github.run_id }}
           path: site
+      - name: Install archival dependencies
+        run: python -m pip install -r requirements.txt
       - name: Save immutable displayed pregame picks, providers, spreads, totals, timestamps
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           python -m scripts.site_decision_archive --dashboard site/data/dashboard.json | tee /tmp/displayed-decisions.txt
           cat /tmp/displayed-decisions.txt >> "$GITHUB_STEP_SUMMARY"
           echo "Persisted research display snapshots are NOT synchronized model/market pre-decision backtests or wager records." >> "$GITHUB_STEP_SUMMARY"
