@@ -1,16 +1,111 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1220"><title>CFB Model | Predictions</title>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0b1422"><title>CFB Lab | 2026 Matchups</title>
 <style>
-:root{font-family:Inter,system-ui,-apple-system,sans-serif;color:#e9eef8;background:#0b1220}*{box-sizing:border-box}body{margin:0}header{border-bottom:1px solid #263247;background:#111c2c}.wrap{max-width:1100px;margin:auto;padding:24px}h1{font-size:28px;margin:0}p{color:#9caec8;line-height:1.5}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.brand{font-weight:800;letter-spacing:.04em}.tag{background:#23344a;border-radius:30px;padding:7px 12px;color:#c6d5e9;font-size:12px}nav{display:flex;gap:8px;margin:28px 0;flex-wrap:wrap}button{border:1px solid #32435b;background:#17263a;color:#e9eef8;padding:10px 18px;border-radius:10px;cursor:pointer}button[aria-selected=true]{background:#305a83;border-color:#6da8dc}.panel{border:1px solid #2a3c53;border-radius:14px;background:#121e2e;padding:20px;margin-bottom:14px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.number{font-size:24px;font-weight:750;color:white}.small{font-size:13px;color:#9caec8}.empty{padding:45px 20px;text-align:center}.notice{border-left:3px solid #e7b35d;padding:12px 15px;background:#282619;color:#f5d9a3;margin:20px 0}.hidden{display:none}table{border-collapse:collapse;width:100%}td,th{padding:12px;border-bottom:1px solid #2a3c53;text-align:left}th{color:#a7b8ce;font-size:13px}a{color:#8cc5ff}@media(max-width:640px){.cards{grid-template-columns:1fr}.wrap{padding:16px}h1{font-size:23px}table{font-size:13px}}
-</style></head><body><header><div class="wrap top"><div class="brand">🏈 CFB MODEL <span class="small">/ 2026</span></div><span class="tag">Research dashboard · Not yet public</span></div></header>
-<main class="wrap"><h1>College Football Predictions</h1><p>Model projections, archived market lines, and transparent out-of-sample grading. Missing information is displayed as unavailable, never guessed.</p><div class="notice" id="notice">Research preview. Live predictions and verified sportsbook lines will appear after the publication pipeline is connected.</div>
-<nav role="tablist" aria-label="Dashboard sections"><button role="tab" aria-selected="true" data-tab="predictions">Predictions</button><button role="tab" aria-selected="false" data-tab="results">Results</button><button role="tab" aria-selected="false" data-tab="teams">Teams</button></nav>
-<section id="predictions" role="tabpanel"><div class="panel"><div class="top"><h2>Upcoming games</h2><span class="tag" id="updated">No published snapshot</span></div><div id="games" class="empty small">No authenticated pregame predictions have been published yet.</div></div></section>
-<section id="results" role="tabpanel" class="hidden"><div class="cards"><div class="panel"><div class="small">Prospective SU</div><div class="number" id="su">—</div></div><div class="panel"><div class="small">Prospective ATS</div><div class="number" id="ats">—</div></div><div class="panel"><div class="small">Prospective O/U</div><div class="number" id="ou">—</div></div></div><div class="panel"><h2>Validation history</h2><p>Records will accumulate only from predictions and market quotes archived before kickoff. Research backtests are not mixed with prospective results.</p></div></section>
-<section id="teams" role="tabpanel" class="hidden"><div class="panel"><h2>2026 team profiles</h2><p>Opponent-adjusted performance, passing/rushing matchups, and verified availability data will be published here when the export is ready.</p></div></section>
-<footer class="small">Predictions are probabilistic estimates, not guarantees. No wagers are placed by this site. <a href="https://github.com/The-Caves/cfb-model">Project repository</a>.</footer></main>
+:root{font-family:Inter,system-ui,-apple-system,sans-serif;color:#eff5fb;background:#0c1624;--line:#293b50;--muted:#9bb0c4;--mint:#89e0ce}*{box-sizing:border-box}
+body{margin:0}a{color:var(--mint)}button,input{font:inherit}
+.wrap{width:min(1110px,100%);margin:auto;padding:22px}
+header{background:linear-gradient(115deg,#213e50,#101d2e 75%);border-bottom:1px solid var(--line)}
+.top,.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:15px;font-weight:850;letter-spacing:.1em}.brand span{color:var(--mint)}
+.pill{border:1px solid #486678;border-radius:20px;padding:8px 12px;font-size:11px;color:#c9dbe9}
+.hero{padding:42px 0 30px;display:flex;justify-content:space-between;gap:25px;align-items:end}
+h1{font-size:clamp(32px,6vw,55px);letter-spacing:-.055em;line-height:1.06;margin:8px 0 13px}
+h2{font-size:20px;letter-spacing:-.03em;margin:0}h3{margin:0 0 13px}
+.kicker{font-weight:750;color:var(--mint);letter-spacing:.12em;font-size:12px}
+.intro{color:#bacbdc;line-height:1.65;max-width:700px;font-size:14px}
+.heroStats{display:flex;gap:10px}.heroStat{min-width:110px;background:#22394b;padding:15px 10px;text-align:center;border-radius:14px;border:1px solid #375167}.heroStat b{display:block;font-size:27px}.heroStat small{font-size:11px;color:#aebfd1}
+.warning{color:#f1d7a5;background:#282719;border:1px solid #5e533b;border-radius:12px;padding:14px 17px;font-size:13px;line-height:1.6}
+.meta{display:flex;gap:15px;flex-wrap:wrap;color:var(--muted);margin:15px 0 5px;font-size:12px}
+nav{display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line);margin:23px 0;padding-bottom:12px}
+button{cursor:pointer}
+.tab,.filter{border:1px solid transparent;border-radius:9px;background:transparent;color:#bdcfe0;padding:10px 14px;font-size:13px;font-weight:650}
+.tab[aria-selected=true],.filter.active{background:#24493f;color:#c9faef;border-color:#447c70}
+.tool{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.filter{border-color:var(--line);background:#15273b}
+.search{min-width:180px;flex:1;background:#101f30;border:1px solid #365067;color:white;border-radius:10px;padding:10px 12px;outline-offset:3px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.game,.panel{background:#142337;border:1px solid var(--line);border-radius:15px;padding:20px;min-width:0}
+.small{font-size:12px;color:var(--muted)}.gameTop{display:flex;justify-content:space-between;gap:14px;margin-bottom:18px}
+.teams{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:16px;font-weight:750}.team{min-width:0;overflow-wrap:anywhere}.at{color:var(--muted);font-size:12px}
+.scoreline{display:flex;justify-content:space-between;align-items:center;gap:18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:15px 0;padding:12px 0}
+.projected{color:var(--muted);font-size:11px}.score{font-size:29px;font-weight:800;font-variant-numeric:tabular-nums}.scoreHome{text-align:right}
+.favorite{color:var(--mint);font-weight:700;font-size:14px;margin-bottom:13px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#0e1d2d;border-radius:9px;padding:10px}.stat b{display:block;font-size:16px}.stat small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:5px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}.badge{font-size:11px;padding:6px 8px;border:1px solid #3e5164;border-radius:8px;color:#c5d3e1}.low{border-color:#826944;color:#f3d6a3}
+.bottom{margin-top:13px;font-size:11px;color:var(--muted)}.empty{grid-column:1/-1;text-align:center;border:1px dashed #475d71;border-radius:13px;padding:50px 18px;color:#b2c4d5}.empty b{display:block;margin-bottom:7px}
+.hidden{display:none!important}.results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.metric{font-size:28px;font-weight:800;margin:8px 0}.state{color:#a9bed0;font-size:13px;line-height:1.7}.sourceRow{border-bottom:1px solid var(--line);padding:12px 0;display:flex;justify-content:space-between;gap:15px;font-size:13px}.sourceRow span:last-child{overflow-wrap:anywhere;text-align:right}.sourceRow span:first-child{color:var(--muted)}
+footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:var(--muted);font-size:12px}
+@media(max-width:800px){.hero{display:block}.heroStats{margin-top:25px}.grid{grid-template-columns:1fr}}
+@media(max-width:560px){.wrap{padding:16px}.hero{padding:30px 0 18px}.heroStat{flex:1}.results{grid-template-columns:1fr}.score{font-size:26px}.sourceRow{display:block}.sourceRow span:last-child{display:block;text-align:left;margin-top:5px}}
+</style></head>
+<body>
+<header><div class="wrap"><div class="top"><div class="brand">🏈 CFB <span>LAB</span> / 2026</div><div class="pill">Research model</div></div>
+<div class="hero"><div><div class="kicker">COLLEGE FOOTBALL / 2026</div><h1>Saturday starts here.</h1><p class="intro">Browse actual model-computed game projections by kickoff time, compare score forecasts, and see exactly which official personnel information is missing.</p></div>
+<div class="heroStats"><div class="heroStat"><b id="upcoming-count">—</b><small>Upcoming</small></div><div class="heroStat"><b id="today-count">—</b><small>Today (ET)</small></div></div></div></div></header>
+<main class="wrap">
+<div class="warning"><b>Experimental research · PASS_UNVALIDATED.</b> These are reproducible model projections, not validated betting picks. Starting quarterback and availability coverage is incomplete. No actual sportsbook lines or verified ATS / over-under edges are shown.</div>
+<div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span></div>
+<nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Matchups</button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Performance</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Data &amp; sources</button></nav>
+<section id="matchups" role="tabpanel"><div class="row"><h2>Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern. Scores are model estimates, not live results.</p>
+<div class="tool"><button class="filter active" data-range="today">Today</button><button class="filter" data-range="48">Next 48 hours</button><button class="filter" data-range="all">All upcoming</button><input class="search" type="search" id="query" placeholder="Search by school" aria-label="Search teams"></div>
+<div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
+<section id="performance" role="tabpanel" class="hidden"><div class="results"><div class="panel"><div class="small">Prospective SU</div><div class="metric" id="su">—</div></div><div class="panel"><div class="small">Prospective ATS</div><div class="metric" id="ats">—</div></div><div class="panel"><div class="small">Prospective totals</div><div class="metric" id="ou">—</div></div></div><div class="panel" style="margin-top:14px"><h3>Performance will not be fabricated</h3><p class="state">Verified forward-looking prediction grading is separate from retrospective research. Unobserved sportsbook lines cannot generate ATS or totals records. Until audited grading is published, those results remain unavailable.</p></div></section>
+<section id="sources" role="tabpanel" class="hidden"><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Model ID</span><span id="modelid">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
+<footer>2026 CFB Lab · Research only · No wagers placed. <a href="https://github.com/The-Caves/cfb-model">Open GitHub project</a></footer>
+</main>
 <script>
-const tabs=[...document.querySelectorAll('[data-tab]')];tabs.forEach(b=>b.addEventListener('click',()=>{tabs.forEach(t=>{let on=t===b;t.setAttribute('aria-selected',String(on));document.getElementById(t.dataset.tab).classList.toggle('hidden',!on)})}));
-const safe=s=>String(s??'—');const fmt=n=>typeof n==='number'&&Number.isFinite(n)?n.toFixed(1):'—';
-(async()=>{try{const response=await fetch('./data/dashboard.json',{cache:'no-store'});if(!response.ok)return;const d=await response.json();if(d.schema_version!==1)return;document.getElementById('updated').textContent=d.generated_at_utc?'Updated '+new Date(d.generated_at_utc).toLocaleString():'No published snapshot';const games=Array.isArray(d.games)?d.games:[];if(games.length){const table=document.createElement('table');const head=document.createElement('thead');head.innerHTML='<tr><th>Matchup</th><th>Model margin (home)</th><th>Market spread (home)</th><th>ATS edge</th><th>Model total</th></tr>';table.append(head);const body=document.createElement('tbody');for(const g of games){const tr=document.createElement('tr');const margin=Number.isFinite(g.model_home_margin)?g.model_home_margin:null;const line=Number.isFinite(g.market_home_spread)?g.market_home_spread:null;const cells=[safe(g.away_team)+' @ '+safe(g.home_team),fmt(margin),fmt(line),margin!==null&&line!==null?fmt(margin+line):'—',fmt(g.model_total)];for(const c of cells){const td=document.createElement('td');td.textContent=c;tr.append(td)}body.append(tr)}table.append(body);document.getElementById('games').replaceChildren(table)}const records=d.prospective_records||{};for(const key of ['su','ats','ou']){const v=records[key];if(v&&Number.isInteger(v.wins)&&Number.isInteger(v.losses))document.getElementById(key).textContent=v.wins+'–'+v.losses+(v.pushes?'–'+v.pushes:'')}}catch(e){console.warn('Dashboard data unavailable:',e)}})();
+"use strict";
+let data=null,range="today";
+const byId=id=>document.getElementById(id),dateOf=s=>new Date(s),num=(v,d=1)=>Number.isFinite(v)?v.toFixed(d):"—";
+const dtFmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});
+const dayFmt=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
+function node(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=String(txt);return n}
+function empty(title,desc){const box=node("div","empty");box.append(node("b","",title),node("span","",desc));byId("games").replaceChildren(box)}
+function gameCard(g){
+ const el=node("article","game"),top=node("div","gameTop");top.append(node("b","small",dtFmt.format(dateOf(g.kickoff_utc))),node("span","small","ESPN "+g.game_id));el.append(top);
+ const teams=node("div","teams");teams.append(node("span","team",g.away_team),node("span","at","@"),node("span","team",g.home_team));el.append(teams);
+ const scores=node("div","scoreline"),away=node("div"),home=node("div","scoreHome");
+ away.append(node("div","projected","Away projection"),node("div","score",num(g.model_away_points)));
+ home.append(node("div","projected","Home projection"),node("div","score",num(g.model_home_points)));
+ scores.append(away,node("span","at","—"),home);el.append(scores);
+ const m=g.model_home_margin,lead=Number.isFinite(m)?m===0?"Projected tie":(m>0?g.home_team:g.away_team)+" by "+num(Math.abs(m)):"Insufficient training data";el.append(node("div","favorite",lead));
+ const stats=node("div","stats");for(const [value,label] of [[num(g.model_total),"Model total"],[Number.isFinite(g.research_home_win_probability)?num(g.research_home_win_probability*100,0)+"%":"—","Home win estimate · uncalibrated"]]){const x=node("div","stat");x.append(node("b","",value),node("small","",label));stats.append(x)}el.append(stats);
+ const badges=node("div","badges");badges.append(node("span","badge"+(g.qb_starters_verified<2?" low":""),"QBs "+g.qb_starters_verified+"/2"),node("span","badge"+(g.official_team_reports_verified<2?" low":""),"Reports "+g.official_team_reports_verified+"/2"),node("span","badge","Odds unavailable"));el.append(badges);
+ el.append(node("div","bottom","Frozen pregame research forecast · No live updates"));return el;
+}
+const localDay=d=>dayFmt.format(d);
+function render(){
+ if(!data)return;
+ const now=new Date(),future=data.games.filter(g=>dateOf(g.kickoff_utc)>now);
+ byId("upcoming-count").textContent=future.length;
+ byId("today-count").textContent=future.filter(g=>localDay(dateOf(g.kickoff_utc))===localDay(now)).length;
+ const q=byId("query").value.trim().toLowerCase();
+ const shown=future.filter(g=>{
+ const dt=dateOf(g.kickoff_utc);
+ if(q&&!(g.away_team+" "+g.home_team).toLowerCase().includes(q))return false;
+ if(range==="today")return localDay(dt)===localDay(now);
+ if(range==="48")return dt<=new Date(now.getTime()+48*3600*1000);
+ return true;
+ });
+ byId("showing").textContent=shown.length+" shown";
+ if(!shown.length){empty("No upcoming games in this view","Try another filter. Games already kicked off do not appear as pregame projections.");return}
+ byId("games").replaceChildren(...shown.map(gameCard));
+}
+for(const button of document.querySelectorAll("[data-tab]"))button.addEventListener("click",()=>{for(const other of document.querySelectorAll("[data-tab]")){const yes=other===button;other.setAttribute("aria-selected",String(yes));byId(other.dataset.tab).classList.toggle("hidden",!yes)}});
+for(const button of document.querySelectorAll("[data-range]"))button.addEventListener("click",()=>{range=button.dataset.range;for(const other of document.querySelectorAll("[data-range]"))other.classList.toggle("active",other===button);render()});
+byId("query").addEventListener("input",render);
+(async()=>{
+ try{
+ const response=await fetch("./data/dashboard.json",{cache:"no-store"});
+ if(!response.ok)throw Error("Dashboard export HTTP "+response.status);
+ const d=await response.json();
+ if(d.schema_version!==2||d.betting_status!=="PASS_UNVALIDATED"||!Array.isArray(d.games))throw Error("Unverified export schema");
+ data=d;
+ byId("captured").textContent="Model forecast: "+dtFmt.format(dateOf(d.forecast_observed_utc));
+ byId("refreshed").textContent="Dashboard updated: "+dtFmt.format(dateOf(d.generated_at_utc));
+ byId("runid").textContent=d.forecast_run_id;byId("modelid").textContent=d.model;byId("observation").textContent=dtFmt.format(dateOf(d.forecast_observed_utc));byId("hash").textContent=d.forecast_sha256;
+ byId("limitations").textContent=(d.data_limitations||[]).join(" ");
+ render();
+ }catch(err){byId("captured").textContent="Verified export not available";byId("refreshed").textContent="Check GitHub Actions";empty("Dashboard is ready but not populated","The automated forecast build has not published a valid snapshot. No simulated games or lines will be substituted.");console.error(err)}
+})();
 </script></body></html>
