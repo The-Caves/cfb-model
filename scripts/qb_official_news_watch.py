@@ -123,10 +123,22 @@ def run(context_file,output_file,reader=fetch_rss,now=None):
         r["feed_status"]=="NOT_CONFIGURED" for r in upcoming_slots)
     qa["unconfigured_unique_teams"]=len({
         r["team"] for r in upcoming_slots if r["feed_status"]=="NOT_CONFIGURED"})
-    # Discovery backlog only: never invent an official RSS endpoint.
+    # Keep the full backlog: truncating at 100 silently hid teams from review.
+    # Group repeat appearances while preserving every game and deadline.
+    backlog={}
+    for slot in upcoming_slots:
+        if slot["feed_status"]!="NOT_CONFIGURED":
+            continue
+        entry=backlog.setdefault(slot["team"],{"team":slot["team"],"game_ids":[],
+            "next_kickoff_utc":slot["kickoff_utc"],"opponents":[]})
+        entry["game_ids"].append(slot["game_id"])
+        entry["opponents"].append(slot["opponent"])
+        if parse_time(slot["kickoff_utc"])<parse_time(entry["next_kickoff_utc"]):
+            entry["next_kickoff_utc"]=slot["kickoff_utc"]
     qa["feed_expansion_backlog"]=sorted(
-        [r for r in upcoming_slots if r["feed_status"]=="NOT_CONFIGURED"],
-        key=lambda r:(r["kickoff_utc"],r["team"]))[:100]
+        backlog.values(),key=lambda r:(r["next_kickoff_utc"],r["team"]))
+    qa["backlog_unique_teams"]=len(backlog)
+    qa["backlog_complete"]=qa["backlog_unique_teams"]==qa["unconfigured_unique_teams"]
     result={"manifest":qa,"candidates":out,
             "safe_for_betting":False,"betting_status":"PASS_UNVALIDATED"}
     output_file=Path(output_file);output_file.parent.mkdir(parents=True,exist_ok=True)
