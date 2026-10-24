@@ -54,9 +54,10 @@
       "team": "Arizona State Sun Devils",
       "archived_team": "Arizona State",
       "institution": "Arizona State University",
-      "athletics_homepage": "https://thesundevils.com/",
-      "source_host": "thesundevils.com",
-      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+      "athletics_homepage": "https://sundevils.com/",
+      "source_host": "sundevils.com",
+      "review_state": "REDIRECT_TARGET_DISCOVERED_NEEDS_LIVE_CHECK",
+      "previous_directory_url": "https://thesundevils.com/"
     },
     {
       "team": "Arkansas Razorbacks",
@@ -366,9 +367,10 @@
       "team": "Jacksonville State Gamecocks",
       "archived_team": "Jacksonville State",
       "institution": "Jacksonville State University",
-      "athletics_homepage": "https://jsugamecocksports.com/",
-      "source_host": "jsugamecocksports.com",
-      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+      "athletics_homepage": "https://jaxstatesports.com/",
+      "source_host": "jaxstatesports.com",
+      "review_state": "REDIRECT_TARGET_DISCOVERED_NEEDS_LIVE_CHECK",
+      "previous_directory_url": "https://jsugamecocksports.com/"
     },
     {
       "team": "James Madison Dukes",
@@ -430,9 +432,10 @@
       "team": "Liberty Flames",
       "archived_team": "Liberty",
       "institution": "Liberty University",
-      "athletics_homepage": "https://liberty.edu/flames",
-      "source_host": "liberty.edu",
-      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+      "athletics_homepage": "https://libertyflames.com/",
+      "source_host": "libertyflames.com",
+      "review_state": "REDIRECT_TARGET_DISCOVERED_NEEDS_LIVE_CHECK",
+      "previous_directory_url": "https://liberty.edu/flames"
     },
     {
       "team": "Louisiana Ragin' Cajuns",
@@ -494,9 +497,10 @@
       "team": "Miami Hurricanes",
       "archived_team": "Miami (FL)",
       "institution": "University of Miami",
-      "athletics_homepage": "https://hurricanesports.com/",
-      "source_host": "hurricanesports.com",
-      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+      "athletics_homepage": "https://miamihurricanes.com/",
+      "source_host": "miamihurricanes.com",
+      "review_state": "REDIRECT_TARGET_DISCOVERED_NEEDS_LIVE_CHECK",
+      "previous_directory_url": "https://hurricanesports.com/"
     },
     {
       "team": "Miami (OH) RedHawks",
@@ -654,9 +658,10 @@
       "team": "Notre Dame Fighting Irish",
       "archived_team": "Notre Dame",
       "institution": "University of Notre Dame",
-      "athletics_homepage": "https://und.com/",
-      "source_host": "und.com",
-      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+      "athletics_homepage": "https://fightingirish.com/",
+      "source_host": "fightingirish.com",
+      "review_state": "REDIRECT_TARGET_DISCOVERED_NEEDS_LIVE_CHECK",
+      "previous_directory_url": "https://und.com/"
     },
     {
       "team": "Ohio Bobcats",
@@ -870,9 +875,10 @@
       "team": "Texas Longhorns",
       "archived_team": "Texas",
       "institution": "University of Texas at Austin",
-      "athletics_homepage": "https://texassports.com/",
-      "source_host": "texassports.com",
-      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+      "athletics_homepage": "https://texaslonghorns.com/",
+      "source_host": "texaslonghorns.com",
+      "review_state": "REDIRECT_TARGET_DISCOVERED_NEEDS_LIVE_CHECK",
+      "previous_directory_url": "https://texassports.com/"
     },
     {
       "team": "Texas A&M Aggies",
@@ -886,9 +892,10 @@
       "team": "Texas State Bobcats",
       "archived_team": "Texas State",
       "institution": "Texas State University",
-      "athletics_homepage": "https://txstatebobcats.com/",
-      "source_host": "txstatebobcats.com",
-      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+      "athletics_homepage": "https://txst.com/",
+      "source_host": "txst.com",
+      "review_state": "REDIRECT_TARGET_DISCOVERED_NEEDS_LIVE_CHECK",
+      "previous_directory_url": "https://txstatebobcats.com/"
     },
     {
       "team": "Texas Tech Red Raiders",
@@ -998,9 +1005,10 @@
       "team": "UTEP Miners",
       "archived_team": "UTEP",
       "institution": "University of Texas at El Paso",
-      "athletics_homepage": "https://utepathletics.com/",
-      "source_host": "utepathletics.com",
-      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+      "athletics_homepage": "https://utepminers.com/",
+      "source_host": "utepminers.com",
+      "review_state": "REDIRECT_TARGET_DISCOVERED_NEEDS_LIVE_CHECK",
+      "previous_directory_url": "https://utepathletics.com/"
     },
     {
       "team": "UTSA Roadrunners",
