@@ -18,7 +18,7 @@ import urllib.request
 
 HEADERS={"User-Agent":"CFB2026-Source-Audit/0.4 (public school athletics research)",
          "Accept":"text/html,application/xhtml+xml"}
-MAX_BYTES=1_500_000
+MAX_BYTES=5_000_000
 MAX_LINKS=2500
 BAD_ENDPOINTS=("/roster","/stats","/staff","/coaches","/tickets","/shop","/watch","/video",
                "/basketball","/soccer","/baseball","/softball")
@@ -159,6 +159,7 @@ def inspect_school(school,fetch=default_fetch):
         outcome["pages_checked"].append({"url":root,"sha256":hashsum})
     except Exception as exc:
         outcome["homepage_error_type"]=type(exc).__name__
+        outcome["homepage_error_reason"]=str(exc)[:180]
     options=football_pages(first,root)
     # Explicitly probe common athletics-site football routes only on the
     # school-owned host. These are guesses until a live page responds.
@@ -172,15 +173,19 @@ def inspect_school(school,fetch=default_fetch):
         url=origin+path
         if url not in options:options.append(url)
     football=None
+    failed_probes=[]
     for page in options:
         try:
             links,digest=safe_page(page,root,fetch)
             football=(page,links,digest)
             break
-        except Exception:
+        except Exception as exc:
+            failed_probes.append({"url":page,"error_type":type(exc).__name__,
+                                  "reason":str(exc)[:160]})
             continue
     if football is None:
         outcome["crawl_status"]="FOOTBALL_PAGE_FETCH_FAILED"
+        outcome["football_probe_failures"]=failed_probes[:12]
         return outcome
     page,links,digest=football
     outcome["football_page"]=page
