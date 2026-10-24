@@ -31,6 +31,10 @@ ALIASES={
     "appalachian state":"appalachian state",
     "smu":"smu",
     "connecticut":"uconn",
+    "florida international":"fiu",
+    "central florida":"ucf",
+    "south florida":"usf",
+    "miami ohio":"miami oh",
     "texas-san antonio":"utsa",
     "alabama-birmingham":"uab",
     "southern miss":"southern miss",
@@ -202,6 +206,7 @@ def chart_for_teams(board,alias_file,fetch=download,max_workers=7):
                 failures.append({"team":team,"issue":type(exc).__name__})
     return records,{"listed_schools":len(index.pages),"matched_schools":len(routes),
                     "charted_schools":len(records),"unmatched_schools":sorted(wanted-set(routes)),
+                    "unmatched_index_keys":sorted(k for k in index.pages if k not in key_to_name)[:30],
                     "failures":sorted(failures,key=lambda r:r["team"])[:150]}
 
 def overlay(board,charts,now,coverage=None):
