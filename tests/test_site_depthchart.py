@@ -2,7 +2,7 @@
 import datetime as dt,unittest,json,tempfile
 from pathlib import Path
 from scripts.site_depthchart import (INDEX,SOURCE,IndexParser,TableParser,
-    extract_chart,overlay,chart_for_teams,clean_name,normalized,source_updated,run)
+    extract_chart,overlay,chart_for_teams,clean_name,normalized,candidate_name,source_updated,run)
 UTC=dt.timezone.utc
 NOW=dt.datetime(2026,10,24,14,tzinfo=UTC)
 def board():
@@ -25,6 +25,11 @@ class DepthTests(unittest.TestCase):
         html="<tr><td>QB</td><td>1</td><td>John Smith SO</td></tr><tr><td>QB</td><td>2</td><td>Another Guy FR</td></tr>"
         self.assertEqual(extract_chart(html),[])
         self.assertEqual(extract_chart("<tr><td>RB</td><td>24</td><td>Bothwell, Fluff SO</td></tr>"),[])
+    def test_unambiguous_school_name_aliases(self):
+        self.assertEqual(candidate_name("Florida International"),"fiu")
+        self.assertEqual(candidate_name("Central Florida"),"ucf")
+        self.assertEqual(candidate_name("South Florida"),"usf")
+        self.assertEqual(candidate_name("Miami (Ohio)"),"miami oh")
     def test_school_index_official_unique_routes(self):
         p=IndexParser()
         p.feed('<html><img alt="Mississippi State"><a href="/ncaa-football-depth-charts/depth-chart.aspx?id=91211&s=mississippi-state">Depth Chart</a>'
