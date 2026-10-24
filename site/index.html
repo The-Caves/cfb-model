@@ -83,6 +83,7 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 .qbRankRow .qbNameSmall{font-size:12px;overflow-wrap:anywhere;font-weight:650}
 .depthFoot{font-size:10px;color:#a9bbcc;line-height:1.5;margin-top:9px}
 .depthFoot a{color:#9adfd0;margin-left:5px}
+.marginAlert{margin:12px 0 4px;padding:10px 12px;color:#f7deb4;border:1px solid #7d673e;background:#2b281e;border-radius:10px;font-size:12px;line-height:1.5}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top"><div class="brand">🏈 CFB <span>LAB</span> / 2026</div><div class="pill">Research model</div></div>
@@ -237,6 +238,9 @@ function gameCard(g){
  }
  tiles.append(marketTile("Observed spread",spreadLine,atsPick,g.ats_edge_points),
               marketTile("Observed O/U",totalLine,ouPick,g.ou_edge_points));el.append(tiles);
+ if(Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
+   el.append(node("div","marginAlert","Calibration warning: model differs from observed spread by "+num(g.ats_edge_points)+" points. This is not a validated betting edge; review this matchup after the final."));
+ }
  el.append(node("div","marketMeta",g.market_provider?
   "Source: ESPN / "+g.market_provider+" · observed "+fmtDate.format(dateOf(g.market_observed_utc))+". Quote is not independently publication-time authenticated.":
   "No verified pregame ESPN quote currently available. ATS and O/U comparisons withheld."));
