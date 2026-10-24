@@ -1,0 +1,62 @@
+name: CFB 2026 School Source Audit
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "config/official_athletics_sites_2026.json"
+      - "config/official_qb_rss_registry.json"
+      - "scripts/official_school_source_registry.py"
+      - "scripts/official_source_connectivity.py"
+      - "scripts/official_school_source_audit.py"
+      - "tests/test_official_athletics_coverage.py"
+      - "tests/test_official_school_source_audit.py"
+      - ".github/workflows/cfb-school-source-audit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate source mapping and evidence gates
+        run: |
+          python -m unittest discover -s tests -p 'test_official_athletics_coverage.py' -v
+          python -m unittest discover -s tests -p 'test_official_school_source_audit.py' -v
+          python -m unittest discover -s tests -p 'test_official_school_source_registry.py' -v
+      - name: Assemble full canonical source registry
+        run: |
+          python -m scripts.official_school_source_registry \
+            --aliases data/archive/2026_team_aliases.csv \
+            --registry config/official_qb_rss_registry.json \
+            --athletics config/official_athletics_sites_2026.json \
+            --output data/context/official-school-source-registry-2026.json
+      - name: Probe all 138 school sites and eight official RSS feeds
+        run: |
+          python -m scripts.official_source_connectivity \
+            --registry config/official_qb_rss_registry.json \
+            --athletics config/official_athletics_sites_2026.json \
+            --output data/context/official-source-connectivity-2026.json
+      - name: Freeze per-school source accessibility audit
+        run: |
+          python -m scripts.official_school_source_audit \
+            --registry data/context/official-school-source-registry-2026.json \
+            --connectivity data/context/official-source-connectivity-2026.json \
+            --output data/context/official-school-source-audit-2026.json
+      - name: Upload school source audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-school-source-audit-${{ github.run_id }}
+          path: |
+            data/context/official-school-source-registry-2026.json
+            data/context/official-source-connectivity-2026.json
+            data/context/official-school-source-audit-2026.json
+          if-no-files-found: warn
+          retention-days: 30
