@@ -252,7 +252,7 @@ def run(board_file,aliases="data/archive/2026_team_aliases.csv",now=None,collect
         charts,coverage=collector(board,aliases)
         if cache and charts:
             dest=Path(cache);dest.parent.mkdir(parents=True,exist_ok=True)
-            dest.write_text(json.dumps({"retrieved_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
+            dest.write_text(json.dumps({"retrieved_at_utc":(when if now is not None else dt.datetime.now(dt.timezone.utc)).isoformat(),
                 "charts":charts,"coverage":coverage})+"\n")
     if now is None:when=dt.datetime.now(dt.timezone.utc)
     board=overlay(board,charts,when,coverage)
