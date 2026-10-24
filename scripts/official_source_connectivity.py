@@ -1,5 +1,6 @@
 """Probe configured official RSS endpoints; HTTP success is not personnel verification."""
 import argparse,datetime as dt,json,urllib.error,urllib.request
+from urllib.parse import urlsplit
 from pathlib import Path
 from scripts.qb_official_news_watch import load_feed_registry
 
@@ -29,8 +30,19 @@ def probe(feeds,fetch=None):
 if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--registry",required=True);p.add_argument("--output",required=True)
+    p.add_argument("--athletics")
     a=p.parse_args()
     result=probe(load_feed_registry(a.registry))
+    if a.athletics:
+        directory=json.loads(Path(a.athletics).read_text(encoding="utf-8"))
+        sites={item["team"]:item["athletics_homepage"] for item in directory["schools"]}
+        if len(sites)!=directory["expected_teams"]:
+            raise ValueError("Incomplete athletics site registry")
+        homepage_result=probe(sites)
+        result["athletics_homepages"]=homepage_result["sources"]
+        result["athletics_homepage_checked"]=homepage_result["checked"]
+        result["athletics_homepage_reachable"]=homepage_result["reachable"]
+        result["athletics_homepage_feed_like"]=homepage_result["feed_like"]
     dest=Path(a.output);dest.parent.mkdir(parents=True,exist_ok=True)
     dest.write_text(json.dumps(result,indent=2)+"\n")
     print(json.dumps({k:v for k,v in result.items() if k!="sources"}))
