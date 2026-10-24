@@ -46,6 +46,20 @@ jobs:
           assert all(g["market_home_spread"] is None and g["market_total"] is None for g in d["games"])
           print("Public export validated")
           PY
+      - name: Embed data into downloadable standalone HTML
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          html=Path("site/index.html")
+          source=html.read_text(encoding="utf-8")
+          marker='<script id="dashboard-data" type="application/json"></script>'
+          assert source.count(marker)==1, "Data insertion marker missing or duplicate"
+          data=json.loads(Path("site/data/dashboard.json").read_text(encoding="utf-8"))
+          payload=json.dumps(data,ensure_ascii=True,separators=(",",":")).replace("<",r"\u003c")
+          html.write_text(source.replace(marker,marker.replace("</script>",payload+"</script>")),encoding="utf-8")
+          print("Self-contained HTML preview contains verified forecast data")
+          PY
       - name: Save portable website preview
         uses: actions/upload-artifact@v4
         with:
