@@ -16,10 +16,14 @@ def inventory(aliases, registry=None):
               "coverage_status":"UNKNOWN_UNTIL_GAME_SPECIFIC_EVIDENCE"}
              for t in sorted(teams)]
     missing=sorted(set(feeds)-set(teams))
+    if missing:
+        raise ValueError("Official RSS registry contains unmatched canonical teams: "+", ".join(missing))
     return {"season":2026,"inventory_team_count":len(records),
             "expected_fbs_team_count":138,
             "expected_count_matches":len(records)==138,
             "official_rss_configured":sum(r["rss_configured"] for r in records),
+            "official_rss_unconfigured":sum(not r["rss_configured"] for r in records),
+            "source_coverage_percent":round(100*sum(r["rss_configured"] for r in records)/len(records),2),
             "unmatched_registry_teams":missing,
             "source_presence_is_not_personnel_verification":True,
             "conference_reports":"GAME_SPECIFIC_SEPARATE_PIPELINE",
