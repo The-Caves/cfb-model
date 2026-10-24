@@ -7,6 +7,7 @@ on:
       - 'site/**'
       - 'scripts/site_export.py'
       - 'scripts/site_decision_archive.py'
+      - 'scripts/personnel_results_archive.py'
       - 'tests/test_site_decision_archive.py'
       - 'scripts/site_market.py'
       - 'scripts/site_qb.py'
