@@ -1,0 +1,1262 @@
+{
+  "season": 2026,
+  "status": "EXTERNALLY_CROSS_REFERENCED_ATHLETICS_DIRECTORY_CANDIDATES_V1",
+  "provenance": {
+    "repository": "chrissabato/college-athletics-directory",
+    "path": "schools.json",
+    "upstream_commit_sha": "f7ffd7855602afb6f78ca27f8f8c9a0760c4b7f8",
+    "source_url": "https://github.com/chrissabato/college-athletics-directory/blob/main/schools.json",
+    "method": "School names matched against canonical 2026 FBS inventory with explicit abbreviation overrides. Upstream NCAA IDs may contain errors; independent site verification required."
+  },
+  "expected_teams": 138,
+  "upstream_ncaa_id_duplicate_teams": [
+    "Georgia Bulldogs",
+    "Georgia Tech Yellow Jackets",
+    "LSU Tigers",
+    "Louisiana Ragin' Cajuns"
+  ],
+  "schools": [
+    {
+      "team": "Air Force Falcons",
+      "archived_team": "Air Force",
+      "institution": "United States Air Force Academy",
+      "upstream_ncaa_id_unverified": 721,
+      "athletics_homepage": "https://goairforcefalcons.com/",
+      "source_host": "goairforcefalcons.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Akron Zips",
+      "archived_team": "Akron",
+      "institution": "University of Akron",
+      "upstream_ncaa_id_unverified": 5,
+      "athletics_homepage": "https://gozips.com/",
+      "source_host": "gozips.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Alabama Crimson Tide",
+      "archived_team": "Alabama",
+      "institution": "University of Alabama",
+      "upstream_ncaa_id_unverified": 8,
+      "athletics_homepage": "https://rolltide.com/",
+      "source_host": "rolltide.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "App State Mountaineers",
+      "archived_team": "Appalachian State",
+      "institution": "Appalachian State University",
+      "upstream_ncaa_id_unverified": 27,
+      "athletics_homepage": "https://appstatesports.com/",
+      "source_host": "appstatesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Arizona Wildcats",
+      "archived_team": "Arizona",
+      "institution": "University of Arizona",
+      "upstream_ncaa_id_unverified": 29,
+      "athletics_homepage": "https://arizonawildcats.com/",
+      "source_host": "arizonawildcats.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Arizona State Sun Devils",
+      "archived_team": "Arizona State",
+      "institution": "Arizona State University",
+      "upstream_ncaa_id_unverified": 28,
+      "athletics_homepage": "https://thesundevils.com/",
+      "source_host": "thesundevils.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Arkansas Razorbacks",
+      "archived_team": "Arkansas",
+      "institution": "University of Arkansas",
+      "upstream_ncaa_id_unverified": 31,
+      "athletics_homepage": "https://arkansasrazorbacks.com/",
+      "source_host": "arkansasrazorbacks.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Arkansas State Red Wolves",
+      "archived_team": "Arkansas State",
+      "institution": "Arkansas State University",
+      "upstream_ncaa_id_unverified": 30,
+      "athletics_homepage": "https://astateredwolves.com/",
+      "source_host": "astateredwolves.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Army Black Knights",
+      "archived_team": "Army",
+      "institution": "United States Military Academy (Army)",
+      "upstream_ncaa_id_unverified": 725,
+      "athletics_homepage": "https://goarmywestpoint.com/",
+      "source_host": "goarmywestpoint.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Auburn Tigers",
+      "archived_team": "Auburn",
+      "institution": "Auburn University",
+      "upstream_ncaa_id_unverified": 37,
+      "athletics_homepage": "https://auburntigers.com/",
+      "source_host": "auburntigers.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "BYU Cougars",
+      "archived_team": "BYU",
+      "institution": "Brigham Young University",
+      "upstream_ncaa_id_unverified": 77,
+      "athletics_homepage": "https://byucougars.com/",
+      "source_host": "byucougars.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Ball State Cardinals",
+      "archived_team": "Ball State",
+      "institution": "Ball State University",
+      "upstream_ncaa_id_unverified": 47,
+      "athletics_homepage": "https://ballstatesports.com/",
+      "source_host": "ballstatesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Baylor Bears",
+      "archived_team": "Baylor",
+      "institution": "Baylor University",
+      "upstream_ncaa_id_unverified": 51,
+      "athletics_homepage": "https://baylorbears.com/",
+      "source_host": "baylorbears.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Boise State Broncos",
+      "archived_team": "Boise State",
+      "institution": "Boise State University",
+      "upstream_ncaa_id_unverified": 66,
+      "athletics_homepage": "https://broncosports.com/",
+      "source_host": "broncosports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Boston College Eagles",
+      "archived_team": "Boston College",
+      "institution": "Boston College",
+      "upstream_ncaa_id_unverified": 67,
+      "athletics_homepage": "https://bceagles.com/",
+      "source_host": "bceagles.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Bowling Green Falcons",
+      "archived_team": "Bowling Green",
+      "institution": "Bowling Green State University",
+      "upstream_ncaa_id_unverified": 71,
+      "athletics_homepage": "https://bgsufalcons.com/",
+      "source_host": "bgsufalcons.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Buffalo Bulls",
+      "archived_team": "Buffalo",
+      "institution": "State University of New York at Buffalo",
+      "upstream_ncaa_id_unverified": 86,
+      "athletics_homepage": "https://ubbulls.com/",
+      "source_host": "ubbulls.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "California Golden Bears",
+      "archived_team": "California",
+      "institution": "University of California, Berkeley",
+      "upstream_ncaa_id_unverified": 107,
+      "athletics_homepage": "https://calbears.com/",
+      "source_host": "calbears.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Central Michigan Chippewas",
+      "archived_team": "Central Michigan",
+      "institution": "Central Michigan University",
+      "upstream_ncaa_id_unverified": 129,
+      "athletics_homepage": "https://cmuchippewas.com/",
+      "source_host": "cmuchippewas.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Charlotte 49ers",
+      "archived_team": "Charlotte",
+      "institution": "University of North Carolina at Charlotte",
+      "upstream_ncaa_id_unverified": 458,
+      "athletics_homepage": "https://charlotte49ers.com/",
+      "source_host": "charlotte49ers.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Cincinnati Bearcats",
+      "archived_team": "Cincinnati",
+      "institution": "University of Cincinnati",
+      "upstream_ncaa_id_unverified": 140,
+      "athletics_homepage": "https://gobearcats.com/",
+      "source_host": "gobearcats.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Clemson Tigers",
+      "archived_team": "Clemson",
+      "institution": "Clemson University",
+      "upstream_ncaa_id_unverified": 147,
+      "athletics_homepage": "https://clemsontigers.com/",
+      "source_host": "clemsontigers.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Coastal Carolina Chanticleers",
+      "archived_team": "Coastal Carolina",
+      "institution": "Coastal Carolina University",
+      "upstream_ncaa_id_unverified": 149,
+      "athletics_homepage": "https://goccusports.com/",
+      "source_host": "goccusports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Colorado Buffaloes",
+      "archived_team": "Colorado",
+      "institution": "University of Colorado Boulder",
+      "upstream_ncaa_id_unverified": 157,
+      "athletics_homepage": "https://cubuffs.com/",
+      "source_host": "cubuffs.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Colorado State Rams",
+      "archived_team": "Colorado State",
+      "institution": "Colorado State University",
+      "upstream_ncaa_id_unverified": 156,
+      "athletics_homepage": "https://csurams.com/",
+      "source_host": "csurams.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Delaware Blue Hens",
+      "archived_team": "Delaware",
+      "institution": "University of Delaware",
+      "upstream_ncaa_id_unverified": 180,
+      "athletics_homepage": "https://bluehens.com/",
+      "source_host": "bluehens.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Duke Blue Devils",
+      "archived_team": "Duke",
+      "institution": "Duke University",
+      "upstream_ncaa_id_unverified": 193,
+      "athletics_homepage": "https://goduke.com/",
+      "source_host": "goduke.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "East Carolina Pirates",
+      "archived_team": "East Carolina",
+      "institution": "East Carolina University",
+      "upstream_ncaa_id_unverified": 196,
+      "athletics_homepage": "https://ecupirates.com/",
+      "source_host": "ecupirates.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Eastern Michigan Eagles",
+      "archived_team": "Eastern Michigan",
+      "institution": "Eastern Michigan University",
+      "upstream_ncaa_id_unverified": 204,
+      "athletics_homepage": "https://emueagles.com/",
+      "source_host": "emueagles.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Florida International Panthers",
+      "archived_team": "FIU",
+      "institution": "Florida International University",
+      "upstream_ncaa_id_unverified": 231,
+      "athletics_homepage": "https://fiusports.com/",
+      "source_host": "fiusports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Florida Gators",
+      "archived_team": "Florida",
+      "institution": "University of Florida",
+      "upstream_ncaa_id_unverified": 235,
+      "athletics_homepage": "https://floridagators.com/",
+      "source_host": "floridagators.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Florida Atlantic Owls",
+      "archived_team": "Florida Atlantic",
+      "institution": "Florida Atlantic University",
+      "upstream_ncaa_id_unverified": 229,
+      "athletics_homepage": "https://fausports.com/",
+      "source_host": "fausports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Florida State Seminoles",
+      "archived_team": "Florida State",
+      "institution": "Florida State University",
+      "upstream_ncaa_id_unverified": 234,
+      "athletics_homepage": "https://seminoles.com/",
+      "source_host": "seminoles.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Fresno State Bulldogs",
+      "archived_team": "Fresno State",
+      "institution": "California State University, Fresno",
+      "upstream_ncaa_id_unverified": 96,
+      "athletics_homepage": "https://gobulldogs.com/",
+      "source_host": "gobulldogs.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Georgia Bulldogs",
+      "archived_team": "Georgia",
+      "institution": "University of Georgia",
+      "upstream_ncaa_id_unverified": 257,
+      "athletics_homepage": "https://georgiadogs.com/",
+      "source_host": "georgiadogs.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Georgia Southern Eagles",
+      "archived_team": "Georgia Southern",
+      "institution": "Georgia Southern University",
+      "upstream_ncaa_id_unverified": 253,
+      "athletics_homepage": "https://gseagles.com/",
+      "source_host": "gseagles.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Georgia State Panthers",
+      "archived_team": "Georgia State",
+      "institution": "Georgia State University",
+      "upstream_ncaa_id_unverified": 254,
+      "athletics_homepage": "https://georgiastatesports.com/",
+      "source_host": "georgiastatesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Georgia Tech Yellow Jackets",
+      "archived_team": "Georgia Tech",
+      "institution": "Georgia Institute of Technology",
+      "upstream_ncaa_id_unverified": 257,
+      "athletics_homepage": "https://ramblinwreck.com/",
+      "source_host": "ramblinwreck.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Hawai'i Rainbow Warriors",
+      "archived_team": "Hawaii",
+      "institution": "University of Hawaii at Manoa",
+      "upstream_ncaa_id_unverified": 277,
+      "athletics_homepage": "https://hawaiiathletics.com/",
+      "source_host": "hawaiiathletics.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Houston Cougars",
+      "archived_team": "Houston",
+      "institution": "University of Houston",
+      "upstream_ncaa_id_unverified": 288,
+      "athletics_homepage": "https://uhcougars.com/",
+      "source_host": "uhcougars.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Illinois Fighting Illini",
+      "archived_team": "Illinois",
+      "institution": "University of Illinois",
+      "upstream_ncaa_id_unverified": 301,
+      "athletics_homepage": "https://fightingillini.com/",
+      "source_host": "fightingillini.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Indiana Hoosiers",
+      "archived_team": "Indiana",
+      "institution": "Indiana University",
+      "upstream_ncaa_id_unverified": 306,
+      "athletics_homepage": "https://iuhoosiers.com/",
+      "source_host": "iuhoosiers.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Iowa Hawkeyes",
+      "archived_team": "Iowa",
+      "institution": "University of Iowa",
+      "upstream_ncaa_id_unverified": 312,
+      "athletics_homepage": "https://hawkeyesports.com/",
+      "source_host": "hawkeyesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Iowa State Cyclones",
+      "archived_team": "Iowa State",
+      "institution": "Iowa State University",
+      "upstream_ncaa_id_unverified": 311,
+      "athletics_homepage": "https://cyclones.com/",
+      "source_host": "cyclones.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Jacksonville State Gamecocks",
+      "archived_team": "Jacksonville State",
+      "institution": "Jacksonville State University",
+      "upstream_ncaa_id_unverified": 315,
+      "athletics_homepage": "https://jsugamecocksports.com/",
+      "source_host": "jsugamecocksports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "James Madison Dukes",
+      "archived_team": "James Madison",
+      "institution": "James Madison University",
+      "upstream_ncaa_id_unverified": 317,
+      "athletics_homepage": "https://jmusports.com/",
+      "source_host": "jmusports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Kansas Jayhawks",
+      "archived_team": "Kansas",
+      "institution": "University of Kansas",
+      "upstream_ncaa_id_unverified": 328,
+      "athletics_homepage": "https://kuathletics.com/",
+      "source_host": "kuathletics.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Kansas State Wildcats",
+      "archived_team": "Kansas State",
+      "institution": "Kansas State University",
+      "upstream_ncaa_id_unverified": 327,
+      "athletics_homepage": "https://kstatesports.com/",
+      "source_host": "kstatesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Kennesaw State Owls",
+      "archived_team": "Kennesaw State",
+      "institution": "Kennesaw State University",
+      "upstream_ncaa_id_unverified": 1157,
+      "athletics_homepage": "https://ksuowls.com/",
+      "source_host": "ksuowls.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Kent State Golden Flashes",
+      "archived_team": "Kent State",
+      "institution": "Kent State University",
+      "upstream_ncaa_id_unverified": 331,
+      "athletics_homepage": "https://kentstatesports.com/",
+      "source_host": "kentstatesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Kentucky Wildcats",
+      "archived_team": "Kentucky",
+      "institution": "University of Kentucky",
+      "upstream_ncaa_id_unverified": 334,
+      "athletics_homepage": "https://ukathletics.com/",
+      "source_host": "ukathletics.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "LSU Tigers",
+      "archived_team": "LSU",
+      "institution": "Louisiana State University",
+      "upstream_ncaa_id_unverified": 671,
+      "athletics_homepage": "https://lsusports.net/",
+      "source_host": "lsusports.net",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Liberty Flames",
+      "archived_team": "Liberty",
+      "institution": "Liberty University",
+      "upstream_ncaa_id_unverified": 355,
+      "athletics_homepage": "https://liberty.edu/flames",
+      "source_host": "liberty.edu",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Louisiana Ragin' Cajuns",
+      "archived_team": "Louisiana",
+      "institution": "University of Louisiana at Lafayette",
+      "upstream_ncaa_id_unverified": 671,
+      "athletics_homepage": "https://ragincajuns.com/",
+      "source_host": "ragincajuns.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Louisiana Tech Bulldogs",
+      "archived_team": "Louisiana Tech",
+      "institution": "Louisiana Tech University",
+      "upstream_ncaa_id_unverified": 366,
+      "athletics_homepage": "https://latechsports.com/",
+      "source_host": "latechsports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "UL Monroe Warhawks",
+      "archived_team": "Louisiana-Monroe",
+      "institution": "University of Louisiana at Monroe",
+      "upstream_ncaa_id_unverified": 498,
+      "athletics_homepage": "https://ulmwarhawks.com/",
+      "source_host": "ulmwarhawks.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Louisville Cardinals",
+      "archived_team": "Louisville",
+      "institution": "University of Louisville",
+      "upstream_ncaa_id_unverified": 367,
+      "athletics_homepage": "https://gocards.com/",
+      "source_host": "gocards.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Marshall Thundering Herd",
+      "archived_team": "Marshall",
+      "institution": "Marshall University",
+      "upstream_ncaa_id_unverified": 388,
+      "athletics_homepage": "https://herdzone.com/",
+      "source_host": "herdzone.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Maryland Terrapins",
+      "archived_team": "Maryland",
+      "institution": "University of Maryland",
+      "upstream_ncaa_id_unverified": 392,
+      "athletics_homepage": "https://umterps.com/",
+      "source_host": "umterps.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Memphis Tigers",
+      "archived_team": "Memphis",
+      "institution": "University of Memphis",
+      "upstream_ncaa_id_unverified": 404,
+      "athletics_homepage": "https://gotigersgo.com/",
+      "source_host": "gotigersgo.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Miami Hurricanes",
+      "archived_team": "Miami (FL)",
+      "institution": "University of Miami",
+      "upstream_ncaa_id_unverified": 415,
+      "athletics_homepage": "https://hurricanesports.com/",
+      "source_host": "hurricanesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Miami (OH) RedHawks",
+      "archived_team": "Miami (OH)",
+      "institution": "Miami University",
+      "upstream_ncaa_id_unverified": 414,
+      "athletics_homepage": "https://miamiredhawks.com/",
+      "source_host": "miamiredhawks.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Michigan Wolverines",
+      "archived_team": "Michigan",
+      "institution": "University of Michigan",
+      "upstream_ncaa_id_unverified": 418,
+      "athletics_homepage": "https://mgoblue.com/",
+      "source_host": "mgoblue.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Michigan State Spartans",
+      "archived_team": "Michigan State",
+      "institution": "Michigan State University",
+      "upstream_ncaa_id_unverified": 416,
+      "athletics_homepage": "https://msuspartans.com/",
+      "source_host": "msuspartans.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Middle Tennessee Blue Raiders",
+      "archived_team": "Middle Tennessee",
+      "institution": "Middle Tennessee State University",
+      "upstream_ncaa_id_unverified": 419,
+      "athletics_homepage": "https://goblueraiders.com/",
+      "source_host": "goblueraiders.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Minnesota Golden Gophers",
+      "archived_team": "Minnesota",
+      "institution": "University of Minnesota",
+      "upstream_ncaa_id_unverified": 428,
+      "athletics_homepage": "https://gophersports.com/",
+      "source_host": "gophersports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Mississippi State Bulldogs",
+      "archived_team": "Mississippi State",
+      "institution": "Mississippi State University",
+      "upstream_ncaa_id_unverified": 430,
+      "athletics_homepage": "https://hailstate.com/",
+      "source_host": "hailstate.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Missouri Tigers",
+      "archived_team": "Missouri",
+      "institution": "University of Missouri",
+      "upstream_ncaa_id_unverified": 434,
+      "athletics_homepage": "https://mutigers.com/",
+      "source_host": "mutigers.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Missouri State Bears",
+      "archived_team": "Missouri State",
+      "institution": "Missouri State University",
+      "upstream_ncaa_id_unverified": 669,
+      "athletics_homepage": "https://missouristatebears.com/",
+      "source_host": "missouristatebears.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "NC State Wolfpack",
+      "archived_team": "NC State",
+      "institution": "North Carolina State University",
+      "upstream_ncaa_id_unverified": 490,
+      "athletics_homepage": "https://gopack.com/",
+      "source_host": "gopack.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Navy Midshipmen",
+      "archived_team": "Navy",
+      "institution": "United States Naval Academy (Navy)",
+      "upstream_ncaa_id_unverified": 726,
+      "athletics_homepage": "https://navysports.com/",
+      "source_host": "navysports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Nebraska Cornhuskers",
+      "archived_team": "Nebraska",
+      "institution": "University of Nebraska",
+      "upstream_ncaa_id_unverified": 463,
+      "athletics_homepage": "https://huskers.com/",
+      "source_host": "huskers.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Nevada Wolf Pack",
+      "archived_team": "Nevada",
+      "institution": "University of Nevada, Reno",
+      "upstream_ncaa_id_unverified": 466,
+      "athletics_homepage": "https://nevadawolfpack.com/",
+      "source_host": "nevadawolfpack.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "New Mexico Lobos",
+      "archived_team": "New Mexico",
+      "institution": "University of New Mexico",
+      "upstream_ncaa_id_unverified": 473,
+      "athletics_homepage": "https://golobos.com/",
+      "source_host": "golobos.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "New Mexico State Aggies",
+      "archived_team": "New Mexico State",
+      "institution": "New Mexico State University",
+      "upstream_ncaa_id_unverified": 472,
+      "athletics_homepage": "https://nmstatesports.com/",
+      "source_host": "nmstatesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "North Carolina Tar Heels",
+      "archived_team": "North Carolina",
+      "institution": "University of North Carolina at Chapel Hill",
+      "upstream_ncaa_id_unverified": 457,
+      "athletics_homepage": "https://goheels.com/",
+      "source_host": "goheels.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "North Dakota State Bison",
+      "archived_team": "North Dakota State",
+      "institution": "North Dakota State University",
+      "upstream_ncaa_id_unverified": 493,
+      "athletics_homepage": "https://gobison.com/",
+      "source_host": "gobison.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "North Texas Mean Green",
+      "archived_team": "North Texas",
+      "institution": "University of North Texas",
+      "upstream_ncaa_id_unverified": 497,
+      "athletics_homepage": "https://meangreensports.com/",
+      "source_host": "meangreensports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Northern Illinois Huskies",
+      "archived_team": "Northern Illinois",
+      "institution": "Northern Illinois University",
+      "upstream_ncaa_id_unverified": 503,
+      "athletics_homepage": "https://niuhuskies.com/",
+      "source_host": "niuhuskies.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Northwestern Wildcats",
+      "archived_team": "Northwestern",
+      "institution": "Northwestern University",
+      "upstream_ncaa_id_unverified": 509,
+      "athletics_homepage": "https://nusports.com/",
+      "source_host": "nusports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Notre Dame Fighting Irish",
+      "archived_team": "Notre Dame",
+      "institution": "University of Notre Dame",
+      "upstream_ncaa_id_unverified": 513,
+      "athletics_homepage": "https://und.com/",
+      "source_host": "und.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Ohio Bobcats",
+      "archived_team": "Ohio",
+      "institution": "Ohio University",
+      "upstream_ncaa_id_unverified": 519,
+      "athletics_homepage": "https://ohiobobcats.com/",
+      "source_host": "ohiobobcats.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Ohio State Buckeyes",
+      "archived_team": "Ohio State",
+      "institution": "Ohio State University",
+      "upstream_ncaa_id_unverified": 518,
+      "athletics_homepage": "https://ohiostatebuckeyes.com/",
+      "source_host": "ohiostatebuckeyes.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Oklahoma Sooners",
+      "archived_team": "Oklahoma",
+      "institution": "University of Oklahoma",
+      "upstream_ncaa_id_unverified": 522,
+      "athletics_homepage": "https://soonersports.com/",
+      "source_host": "soonersports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Oklahoma State Cowboys",
+      "archived_team": "Oklahoma State",
+      "institution": "Oklahoma State University",
+      "upstream_ncaa_id_unverified": 521,
+      "athletics_homepage": "https://okstate.com/",
+      "source_host": "okstate.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Old Dominion Monarchs",
+      "archived_team": "Old Dominion",
+      "institution": "Old Dominion University",
+      "upstream_ncaa_id_unverified": 523,
+      "athletics_homepage": "https://odusports.com/",
+      "source_host": "odusports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Ole Miss Rebels",
+      "archived_team": "Ole Miss",
+      "institution": "University of Mississippi",
+      "upstream_ncaa_id_unverified": 433,
+      "athletics_homepage": "https://olemisssports.com/",
+      "source_host": "olemisssports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Oregon Ducks",
+      "archived_team": "Oregon",
+      "institution": "University of Oregon",
+      "upstream_ncaa_id_unverified": 529,
+      "athletics_homepage": "https://goducks.com/",
+      "source_host": "goducks.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Oregon State Beavers",
+      "archived_team": "Oregon State",
+      "institution": "Oregon State University",
+      "upstream_ncaa_id_unverified": 528,
+      "athletics_homepage": "https://osubeavers.com/",
+      "source_host": "osubeavers.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Penn State Nittany Lions",
+      "archived_team": "Penn State",
+      "institution": "Pennsylvania State University",
+      "upstream_ncaa_id_unverified": 539,
+      "athletics_homepage": "https://gopsusports.com/",
+      "source_host": "gopsusports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Pittsburgh Panthers",
+      "archived_team": "Pittsburgh",
+      "institution": "University of Pittsburgh",
+      "upstream_ncaa_id_unverified": 545,
+      "athletics_homepage": "https://pittsburghpanthers.com/",
+      "source_host": "pittsburghpanthers.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Purdue Boilermakers",
+      "archived_team": "Purdue",
+      "institution": "Purdue University",
+      "upstream_ncaa_id_unverified": 559,
+      "athletics_homepage": "https://purduesports.com/",
+      "source_host": "purduesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Rice Owls",
+      "archived_team": "Rice",
+      "institution": "Rice University",
+      "upstream_ncaa_id_unverified": 574,
+      "athletics_homepage": "https://riceowls.com/",
+      "source_host": "riceowls.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Rutgers Scarlet Knights",
+      "archived_team": "Rutgers",
+      "institution": "Rutgers University-New Brunswick",
+      "upstream_ncaa_id_unverified": 587,
+      "athletics_homepage": "https://scarletknights.com/",
+      "source_host": "scarletknights.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "SMU Mustangs",
+      "archived_team": "SMU",
+      "institution": "Southern Methodist University",
+      "upstream_ncaa_id_unverified": 663,
+      "athletics_homepage": "https://smumustangs.com/",
+      "source_host": "smumustangs.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Sacramento State Hornets",
+      "archived_team": "Sacramento State",
+      "institution": "California State University, Sacramento",
+      "upstream_ncaa_id_unverified": 102,
+      "athletics_homepage": "https://hornetsports.com/",
+      "source_host": "hornetsports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Sam Houston Bearkats",
+      "archived_team": "Sam Houston",
+      "institution": "Sam Houston State University",
+      "upstream_ncaa_id_unverified": 624,
+      "athletics_homepage": "https://gobearkats.com/",
+      "source_host": "gobearkats.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "San Diego State Aztecs",
+      "archived_team": "San Diego State",
+      "institution": "San Diego State University",
+      "upstream_ncaa_id_unverified": 626,
+      "athletics_homepage": "https://goaztecs.com/",
+      "source_host": "goaztecs.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "San José State Spartans",
+      "archived_team": "San Jose State",
+      "institution": "San Jose State University",
+      "upstream_ncaa_id_unverified": 630,
+      "athletics_homepage": "https://sjsuspartans.com/",
+      "source_host": "sjsuspartans.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "South Alabama Jaguars",
+      "archived_team": "South Alabama",
+      "institution": "University of South Alabama",
+      "upstream_ncaa_id_unverified": 646,
+      "athletics_homepage": "https://usajaguars.com/",
+      "source_host": "usajaguars.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "South Carolina Gamecocks",
+      "archived_team": "South Carolina",
+      "institution": "University of South Carolina",
+      "upstream_ncaa_id_unverified": 648,
+      "athletics_homepage": "https://gamecocksonline.com/",
+      "source_host": "gamecocksonline.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Southern Miss Golden Eagles",
+      "archived_team": "Southern Miss",
+      "institution": "University of Southern Mississippi",
+      "upstream_ncaa_id_unverified": 664,
+      "athletics_homepage": "https://southernmiss.com/",
+      "source_host": "southernmiss.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Stanford Cardinal",
+      "archived_team": "Stanford",
+      "institution": "Stanford University",
+      "upstream_ncaa_id_unverified": 674,
+      "athletics_homepage": "https://gostanford.com/",
+      "source_host": "gostanford.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Syracuse Orange",
+      "archived_team": "Syracuse",
+      "institution": "Syracuse University",
+      "upstream_ncaa_id_unverified": 688,
+      "athletics_homepage": "https://cuse.com/",
+      "source_host": "cuse.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "TCU Horned Frogs",
+      "archived_team": "TCU",
+      "institution": "Texas Christian University",
+      "upstream_ncaa_id_unverified": 698,
+      "athletics_homepage": "https://gofrogs.com/",
+      "source_host": "gofrogs.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Temple Owls",
+      "archived_team": "Temple",
+      "institution": "Temple University",
+      "upstream_ncaa_id_unverified": 690,
+      "athletics_homepage": "https://owlsports.com/",
+      "source_host": "owlsports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Tennessee Volunteers",
+      "archived_team": "Tennessee",
+      "institution": "University of Tennessee",
+      "upstream_ncaa_id_unverified": 694,
+      "athletics_homepage": "https://utsports.com/",
+      "source_host": "utsports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Texas Longhorns",
+      "archived_team": "Texas",
+      "institution": "University of Texas at Austin",
+      "upstream_ncaa_id_unverified": 703,
+      "athletics_homepage": "https://texassports.com/",
+      "source_host": "texassports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Texas A&M Aggies",
+      "archived_team": "Texas A&M",
+      "institution": "Texas A&M University",
+      "upstream_ncaa_id_unverified": 697,
+      "athletics_homepage": "https://12thman.com/",
+      "source_host": "12thman.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Texas State Bobcats",
+      "archived_team": "Texas State",
+      "institution": "Texas State University",
+      "upstream_ncaa_id_unverified": 670,
+      "athletics_homepage": "https://txstatebobcats.com/",
+      "source_host": "txstatebobcats.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Texas Tech Red Raiders",
+      "archived_team": "Texas Tech",
+      "institution": "Texas Tech University",
+      "upstream_ncaa_id_unverified": 700,
+      "athletics_homepage": "https://texastech.com/",
+      "source_host": "texastech.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Toledo Rockets",
+      "archived_team": "Toledo",
+      "institution": "University of Toledo",
+      "upstream_ncaa_id_unverified": 709,
+      "athletics_homepage": "https://utrockets.com/",
+      "source_host": "utrockets.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Troy Trojans",
+      "archived_team": "Troy",
+      "institution": "Troy University",
+      "upstream_ncaa_id_unverified": 716,
+      "athletics_homepage": "https://troytrojans.com/",
+      "source_host": "troytrojans.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Tulane Green Wave",
+      "archived_team": "Tulane",
+      "institution": "Tulane University",
+      "upstream_ncaa_id_unverified": 718,
+      "athletics_homepage": "https://tulanegreenwave.com/",
+      "source_host": "tulanegreenwave.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Tulsa Golden Hurricane",
+      "archived_team": "Tulsa",
+      "institution": "University of Tulsa",
+      "upstream_ncaa_id_unverified": 719,
+      "athletics_homepage": "https://tulsahurricane.com/",
+      "source_host": "tulsahurricane.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "UAB Blazers",
+      "archived_team": "UAB",
+      "institution": "University of Alabama at Birmingham",
+      "upstream_ncaa_id_unverified": 9,
+      "athletics_homepage": "https://uabsports.com/",
+      "source_host": "uabsports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "UCF Knights",
+      "archived_team": "UCF",
+      "institution": "University of Central Florida",
+      "upstream_ncaa_id_unverified": 128,
+      "athletics_homepage": "https://ucfknights.com/",
+      "source_host": "ucfknights.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "UCLA Bruins",
+      "archived_team": "UCLA",
+      "institution": "University of California, Los Angeles",
+      "upstream_ncaa_id_unverified": 110,
+      "athletics_homepage": "https://uclabruins.com/",
+      "source_host": "uclabruins.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "UConn Huskies",
+      "archived_team": "UConn",
+      "institution": "University of Connecticut",
+      "upstream_ncaa_id_unverified": 164,
+      "athletics_homepage": "https://uconnhuskies.com/",
+      "source_host": "uconnhuskies.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Massachusetts Minutemen",
+      "archived_team": "UMass",
+      "institution": "University of Massachusetts",
+      "upstream_ncaa_id_unverified": 400,
+      "athletics_homepage": "https://umassathletics.com/",
+      "source_host": "umassathletics.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "UNLV Rebels",
+      "archived_team": "UNLV",
+      "institution": "University of Nevada, Las Vegas",
+      "upstream_ncaa_id_unverified": 465,
+      "athletics_homepage": "https://unlvrebels.com/",
+      "source_host": "unlvrebels.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "USC Trojans",
+      "archived_team": "USC",
+      "institution": "University of Southern California",
+      "upstream_ncaa_id_unverified": 657,
+      "athletics_homepage": "https://usctrojans.com/",
+      "source_host": "usctrojans.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "South Florida Bulls",
+      "archived_team": "USF",
+      "institution": "University of South Florida",
+      "upstream_ncaa_id_unverified": 651,
+      "athletics_homepage": "https://gousfbulls.com/",
+      "source_host": "gousfbulls.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "UTEP Miners",
+      "archived_team": "UTEP",
+      "institution": "University of Texas at El Paso",
+      "upstream_ncaa_id_unverified": 704,
+      "athletics_homepage": "https://utepathletics.com/",
+      "source_host": "utepathletics.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "UTSA Roadrunners",
+      "archived_team": "UTSA",
+      "institution": "University of Texas at San Antonio",
+      "upstream_ncaa_id_unverified": 706,
+      "athletics_homepage": "https://goutsa.com/",
+      "source_host": "goutsa.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Utah Utes",
+      "archived_team": "Utah",
+      "institution": "University of Utah",
+      "upstream_ncaa_id_unverified": 732,
+      "athletics_homepage": "https://utahutes.com/",
+      "source_host": "utahutes.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Utah State Aggies",
+      "archived_team": "Utah State",
+      "institution": "Utah State University",
+      "upstream_ncaa_id_unverified": 731,
+      "athletics_homepage": "https://utahstateaggies.com/",
+      "source_host": "utahstateaggies.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Vanderbilt Commodores",
+      "archived_team": "Vanderbilt",
+      "institution": "Vanderbilt University",
+      "upstream_ncaa_id_unverified": 736,
+      "athletics_homepage": "https://vucommodores.com/",
+      "source_host": "vucommodores.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Virginia Cavaliers",
+      "archived_team": "Virginia",
+      "institution": "University of Virginia",
+      "upstream_ncaa_id_unverified": 746,
+      "athletics_homepage": "https://virginiasports.com/",
+      "source_host": "virginiasports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Virginia Tech Hokies",
+      "archived_team": "Virginia Tech",
+      "institution": "Virginia Tech",
+      "upstream_ncaa_id_unverified": 742,
+      "athletics_homepage": "https://hokiesports.com/",
+      "source_host": "hokiesports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Wake Forest Demon Deacons",
+      "archived_team": "Wake Forest",
+      "institution": "Wake Forest University",
+      "upstream_ncaa_id_unverified": 749,
+      "athletics_homepage": "https://godeacs.com",
+      "source_host": "godeacs.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Washington Huskies",
+      "archived_team": "Washington",
+      "institution": "University of Washington",
+      "upstream_ncaa_id_unverified": 756,
+      "athletics_homepage": "https://gohuskies.com/",
+      "source_host": "gohuskies.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Washington State Cougars",
+      "archived_team": "Washington State",
+      "institution": "Washington State University",
+      "upstream_ncaa_id_unverified": 754,
+      "athletics_homepage": "https://wsucougars.com/",
+      "source_host": "wsucougars.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "West Virginia Mountaineers",
+      "archived_team": "West Virginia",
+      "institution": "West Virginia University",
+      "upstream_ncaa_id_unverified": 768,
+      "athletics_homepage": "https://wvusports.com/",
+      "source_host": "wvusports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Western Kentucky Hilltoppers",
+      "archived_team": "Western Kentucky",
+      "institution": "Western Kentucky University",
+      "upstream_ncaa_id_unverified": 772,
+      "athletics_homepage": "https://wkusports.com/",
+      "source_host": "wkusports.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Western Michigan Broncos",
+      "archived_team": "Western Michigan",
+      "institution": "Western Michigan University",
+      "upstream_ncaa_id_unverified": 774,
+      "athletics_homepage": "https://wmubroncos.com/",
+      "source_host": "wmubroncos.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Wisconsin Badgers",
+      "archived_team": "Wisconsin",
+      "institution": "University of Wisconsin",
+      "upstream_ncaa_id_unverified": 796,
+      "athletics_homepage": "https://uwbadgers.com/",
+      "source_host": "uwbadgers.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    },
+    {
+      "team": "Wyoming Cowboys",
+      "archived_team": "Wyoming",
+      "institution": "University of Wyoming",
+      "upstream_ncaa_id_unverified": 811,
+      "athletics_homepage": "https://gowyo.com/",
+      "source_host": "gowyo.com",
+      "review_state": "DIRECTORY_CANDIDATE_NEEDS_LIVE_CHECK"
+    }
+  ]
+}
