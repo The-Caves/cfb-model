@@ -135,6 +135,21 @@ def collect(board,now,fetch=fetch_json):
             refs.update(team_ids_from_scoreboard(fetch(url),wanted,now))
         except (ValueError,KeyError,OSError,TypeError) as exc:
             failures.append({"kind":"scoreboard","date":day.isoformat(),"error":type(exc).__name__})
+    # Diagnose available completed-game public QB-leader schema before
+    # promoting any last-game performer to a sourced, non-starter label.
+    try:
+        sample_day=now.date()-dt.timedelta(days=7)
+        sample=fetch(BASE+"/scoreboard?dates="+sample_day.strftime("%Y%m%d")+"&limit=500&groups=80")
+        ev=next((e for e in sample.get("events",[]) if e.get("competitions")),None)
+        comp=ev["competitions"][0] if ev else {}
+        team=(comp.get("competitors") or [{}])[0]
+        leadership=team.get("leaders")
+        desc={"events":len(sample.get("events",[])),"team_keys":sorted(team.keys()),
+              "competitor_leaders_type":type(leadership).__name__,
+              "first_category":(leadership[:1] if isinstance(leadership,list) else None)}
+        print(json.dumps({"prior_week_espn_qb_diagnostic":desc})[:2000])
+    except (ValueError,KeyError,OSError,TypeError) as exc:
+        print(json.dumps({"prior_week_espn_qb_diagnostic_error":type(exc).__name__}))
     unique=sorted(set(refs.values()))
     results={}
     shapes=[]
