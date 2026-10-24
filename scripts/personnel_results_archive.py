@@ -276,7 +276,8 @@ def _commit_material(material, run_id):
                         ROOT+"/forecast_index.json",
                         ROOT+"/forecast_grades_index.json",
                         ROOT+"/free_market_comparisons/index.json",
-                        ROOT+"/market_finals/index.json"):
+                        ROOT+"/market_finals/index.json",
+                        ROOT+"/site_board_snapshots/index.json"):
             prior = store.get_blob_file(path)
             if prior is not None and prior != content:
                 raise ValueError("Immutable archive collision")
