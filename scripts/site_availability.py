@@ -88,7 +88,15 @@ def merge(board,rows,now,manifest=None):
         "changes_frozen_model_picks":False,
         "warning":"Official availability is distinct from confirmed starting QB1. Questionable does not mean OUT. These statuses may be newer than the original frozen model prediction.",
         "fetch_status":{k:{"status":v.get("status","FETCHED"),
-                          "accepted_reports":v.get("official_reports_accepted",0)}
+                          "accepted_reports":v.get("official_reports_accepted",0),
+                          "card_decisions":sorted([
+                            {"match":str(card.get("game_match","UNKNOWN")),
+                             "published":str(card.get("publication_status","UNVERIFIED"))}
+                            for card in v.get("report_cards",[]) if
+                            card.get("publication_status")=="ACCEPTED_VERIFIED_OFFICIAL_REPORT"
+                            or card.get("game_match")!="NO_UNIQUE_ESPN_GAME_MATCH"
+                          ],key=lambda x:(x["match"],x["published"]))[:15],
+                          "total_cards":v.get("card_count",0)}
                         for k,v in (manifest or {}).get("feeds",{}).items()}}
     return board
 
