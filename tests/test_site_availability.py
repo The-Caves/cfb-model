@@ -30,6 +30,17 @@ class Tests(unittest.TestCase):
         self.assertEqual(g["qb_availability_home"][0]["status"],"QUESTIONABLE")
         self.assertEqual(g["model_ats_side"],"HOME")
         self.assertFalse(d["qb_availability_display"]["changes_frozen_model_picks"])
+    def test_available_backup_not_confused_with_starter_or_flood_widget(self):
+        b=board()
+        rows=[status("Kamario Taylor","QUESTIONABLE"),
+              status("Parker Puckett","AVAILABLE"),
+              status("AJ Swann","AVAILABLE")]
+        d=merge(b,rows,NOW)
+        self.assertEqual(d["qb_availability_display"]["official_qb_designations"],3)
+        self.assertEqual(d["qb_availability_display"]["actionable_qb_designations"],1)
+        self.assertEqual([(r["player"],r["status"]) for r in d["games"][0]["qb_availability_home"]],
+                         [("Kamario Taylor","QUESTIONABLE")])
+        self.assertEqual(d["games"][0]["qb_home"]["status"],"RECENT_GAME_PASSER")
     def test_out_qb_does_not_auto_appoint_backup(self):
         d=merge(board(),[status(designation="OUT")],NOW)
         self.assertEqual(d["games"][0]["qb_home"]["status"],"RECENT_GAME_PASSER")
