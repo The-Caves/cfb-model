@@ -33,8 +33,10 @@ class OfficialPersonnelSourceDiscoveryTests(unittest.TestCase):
                             for x in result[category]))
         self.assertFalse(result["game_specific_player_evidence_verified"])
     def test_missing_football_link_is_not_invented(self):
-        result=inspect_school({"team":"Test","athletics_homepage":self.ROOT},
-                              lambda url:(url,b"<html><h1>Home</h1></html>"))
+        def fetch(url):
+            if url!=self.ROOT:raise ValueError("NOT_FOUND")
+            return url,b"<html><h1>Home</h1></html>"
+        result=inspect_school({"team":"Test","athletics_homepage":self.ROOT},fetch)
         self.assertEqual(result["crawl_status"],"FOOTBALL_PAGE_FETCH_FAILED")
         self.assertIsNone(result["football_page"])
 if __name__=="__main__":unittest.main()
