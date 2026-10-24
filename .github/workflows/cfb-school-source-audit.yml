@@ -66,6 +66,9 @@ jobs:
             --source data/context/official-personnel-source-discovery-2026.json \
             --output data/context/official-personnel-source-coverage-2026.json \
             --csv-output data/context/official-personnel-source-coverage-2026.csv
+      - name: Enforce full football-page coverage without overstating personnel verification
+        run: |
+          python -c 'import json; d=json.load(open("data/context/official-personnel-source-coverage-2026.json")); assert d["expected_teams"]==138 and d["schools_audited"]==138, "Unresolved football-page coverage"; assert d["personnel_verified_count"]==0, "Unreviewed personnel evidence promoted"'
       - name: Upload school source audit
         if: always()
         uses: actions/upload-artifact@v4
