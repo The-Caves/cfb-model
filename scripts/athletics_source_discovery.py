@@ -20,7 +20,9 @@ def discover(aliases,payload):
                 if name and name in names:
                     links=[x.get("href") for x in team.get("links",[]) if isinstance(x,dict) and x.get("href")]
                     found[name]={"espn_team_id":str(team.get("id","")),"espn_links":links}
-    if len(names)!=len(set(names)) or not names:\n        raise ValueError("Canonical team registry empty or duplicated")\n    return {"status":"REVIEW_REQUIRED_NOT_OFFICIAL_VERIFICATION",
+    if len(names)!=len(set(names)) or not names:
+        raise ValueError("Canonical team registry empty or duplicated")
+    return {"status":"REVIEW_REQUIRED_NOT_OFFICIAL_VERIFICATION",
             "expected":len(names),"matched":sum(n in found for n in names),
             "unmatched":[n for n in names if n not in found],
             "teams":[{"team":n,**found.get(n,{"espn_team_id":None,"espn_links":[]}),
