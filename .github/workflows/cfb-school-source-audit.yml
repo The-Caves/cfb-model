@@ -9,6 +9,8 @@ on:
       - "scripts/official_school_source_registry.py"
       - "scripts/official_source_connectivity.py"
       - "scripts/official_school_source_audit.py"
+      - "scripts/official_personnel_source_discovery.py"
+      - "tests/test_official_personnel_source_discovery.py"
       - "tests/test_official_athletics_coverage.py"
       - "tests/test_official_school_source_audit.py"
       - ".github/workflows/cfb-school-source-audit.yml"
@@ -30,6 +32,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_official_athletics_coverage.py' -v
           python -m unittest discover -s tests -p 'test_official_school_source_audit.py' -v
           python -m unittest discover -s tests -p 'test_official_school_source_registry.py' -v
+          python -m unittest discover -s tests -p 'test_official_personnel_source_discovery.py' -v
       - name: Assemble full canonical source registry
         run: |
           python -m scripts.official_school_source_registry \
@@ -49,6 +52,11 @@ jobs:
             --registry data/context/official-school-source-registry-2026.json \
             --connectivity data/context/official-source-connectivity-2026.json \
             --output data/context/official-school-source-audit-2026.json
+      - name: Discover football game notes depth charts and injury sources
+        run: |
+          python -m scripts.official_personnel_source_discovery \
+            --sites config/official_athletics_sites_2026.json \
+            --output data/context/official-personnel-source-discovery-2026.json
       - name: Upload school source audit
         if: always()
         uses: actions/upload-artifact@v4
@@ -58,5 +66,6 @@ jobs:
             data/context/official-school-source-registry-2026.json
             data/context/official-source-connectivity-2026.json
             data/context/official-school-source-audit-2026.json
+            data/context/official-personnel-source-discovery-2026.json
           if-no-files-found: warn
           retention-days: 30
