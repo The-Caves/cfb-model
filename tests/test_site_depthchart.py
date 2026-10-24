@@ -13,7 +13,7 @@ def board():
       "qb_away":{"player":None,"status":"UNKNOWN"},
       "model_home_margin":4.5,"model_ats_side":"HOME"}]}
 def chart(players=None):
-    return {"source_url":"https://www.ourlads.com/ncaa-football-depth-charts/depth-chart/mississippi-state/91211",
+    return {"source_url":"https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?id=91211&s=mississippi-state",
        "source_type":SOURCE,"observed_at_utc":"2026-10-24T13:00:00Z",
        "players":players or ["Kamario Taylor","Parker Puckett","AJ Swann"]}
 class DepthTests(unittest.TestCase):
@@ -27,10 +27,10 @@ class DepthTests(unittest.TestCase):
         self.assertEqual(extract_chart("<tr><td>RB</td><td>24</td><td>Bothwell, Fluff SO</td></tr>"),[])
     def test_school_index_official_unique_routes(self):
         p=IndexParser()
-        p.feed('<html><img alt="Mississippi State"><a href="/ncaa-football-depth-charts/depth-chart/mississippi-state/91211">Depth Chart</a>'
-               '<img alt="Mississippi"><a href="/ncaa-football-depth-charts/depth-chart/mississippi/92000">Depth Chart</a></html>')
+        p.feed('<html><img alt="Mississippi State"><a href="/ncaa-football-depth-charts/depth-chart.aspx?id=91211&s=mississippi-state">Depth Chart</a>'
+               '<img alt="Mississippi"><a href="/ncaa-football-depth-charts/depth-chart.aspx?id=92000&s=mississippi">Depth Chart</a></html>')
         self.assertIn("mississippi state",p.pages)
-        self.assertEqual(p.pages["ole miss"],"https://www.ourlads.com/ncaa-football-depth-charts/depth-chart/mississippi/92000")
+        self.assertEqual(p.pages["ole miss"],"https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?id=92000&s=mississippi")
     def test_display_does_not_modify_forecast_or_promote(self):
         b=overlay(board(),{"Mississippi State Bulldogs":chart()},NOW)
         game=b["games"][0]
