@@ -91,7 +91,8 @@ def merge(board,rows,now,manifest=None):
                           "accepted_reports":v.get("official_reports_accepted",0),
                           "card_decisions":sorted([
                             {"match":str(card.get("game_match","UNKNOWN")),
-                             "published":str(card.get("publication_status","UNVERIFIED"))}
+                             "published":str(card.get("publication_status","UNVERIFIED")),
+                             "reason":str(card.get("error",""))[:130]}
                             for card in v.get("report_cards",[]) if
                             card.get("publication_status")=="ACCEPTED_VERIFIED_OFFICIAL_REPORT"
                             or card.get("game_match")!="NO_UNIQUE_ESPN_GAME_MATCH"
