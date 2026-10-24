@@ -60,7 +60,7 @@ def depth_link(url):
     qs=parse_qs(p.query)
     return (len(qs.get("id",[]))==1 and qs["id"][0].isdigit()
             and len(qs.get("s",[]))==1
-            and bool(re.fullmatch(r"[a-z0-9-]{2,65}",qs["s"][0])))
+            and bool(re.fullmatch(r"[a-z0-9 -]{2,65}",qs["s"][0])))
 
 def download(url):
     if not allowed(url) or (url!=INDEX and not depth_link(url)):

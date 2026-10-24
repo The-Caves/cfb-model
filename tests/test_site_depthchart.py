@@ -2,7 +2,7 @@
 import datetime as dt,unittest,json,tempfile
 from pathlib import Path
 from scripts.site_depthchart import (INDEX,SOURCE,IndexParser,TableParser,
-    extract_chart,overlay,chart_for_teams,clean_name,normalized,candidate_name,source_updated,run)
+    extract_chart,overlay,chart_for_teams,clean_name,normalized,candidate_name,source_updated,run,depth_link)
 UTC=dt.timezone.utc
 NOW=dt.datetime(2026,10,24,14,tzinfo=UTC)
 def board():
@@ -54,6 +54,10 @@ class DepthTests(unittest.TestCase):
     def test_untrusted_url_or_source_not_promoted(self):
         bad=chart();bad["source_url"]="https://other-site.example/depth-chart"
         self.assertEqual(overlay(board(),{"Mississippi State Bulldogs":bad},NOW)["games"][0]["qb_depth_home"],[])
+    def test_source_slug_may_contain_url_encoded_space(self):
+        self.assertTrue(depth_link("https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?id=92315&s=utah+state"))
+        self.assertFalse(depth_link("https://evil.example/ncaa-football-depth-charts/depth-chart.aspx?id=92315&s=utah+state"))
+        self.assertFalse(depth_link("https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?id=abc&s=utah+state"))
     def test_source_page_update_has_trustworthy_year_and_time(self):
         page='<div>Updated: 10/23/2026 7:04PM ET</div>'
         observed=dt.datetime(2026,10,24,14,tzinfo=UTC)

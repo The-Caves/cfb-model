@@ -77,7 +77,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/cfb-qb-depth-2026.json
-          key: cfb-2026-qb-depth-v2-${{ steps.depth_key.outputs.date }}
+          key: cfb-2026-qb-depth-v3-${{ steps.depth_key.outputs.date }}
       - name: Overlay ranked QB depth charts (NOT confirmed starters)
         run: |
           python -m scripts.site_depthchart --dashboard site/data/dashboard.json --cache .cache/cfb-qb-depth-2026.json | tee /tmp/site-depthchart.txt
