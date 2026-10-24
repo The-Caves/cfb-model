@@ -1,4 +1,11 @@
 {
   "status": "REVIEWED_OFFICIAL_RSS_REGISTRY_V1",
-  "feeds": []
+  "feeds": [
+    {
+      "team": "Tulsa Golden Hurricane",
+      "url": "https://tulsahurricane.com/rss?path=football",
+      "reviewed": true,
+      "publisher_host": "tulsahurricane.com"
+    }
+  ]
 }
