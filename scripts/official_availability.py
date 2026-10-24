@@ -145,12 +145,19 @@ def extract(conference,feed,games,aliases,captured):
         # Validate *all* relevant rows before attesting that either side
         # has a verified official report. Partial parsing must never count.
         parsed=[]
+        excluded_exempt=0
         for side in gamesides:
             team=aliases[side["teamDisplayName"]]
             rawrows=side.get("rows")
             if not isinstance(rawrows,list):
                 report["publication_status"]="MISSING_TEAM_PLAYER_ROWS";parsed=[];break
-            try:individual=[parse_player(r) for r in rawrows]
+            # 'Exempt' is an administrative publisher designation, NOT
+            # an injury/availability conclusion. Do not emit a player status
+            # or infer healthy. Validate every other reportable row.
+            exempt=[r for r in rawrows if isinstance(r,dict)
+                    and str(r.get("status") or "").strip()=="Exempt"]
+            excluded_exempt+=len(exempt)
+            try:individual=[parse_player(r) for r in rawrows if r not in exempt]
             except (ValueError,TypeError) as exc:
                 report["publication_status"]="PLAYER_ROW_SCHEMA_ERROR"
                 report["error"]=str(exc)[:140];parsed=[];break
@@ -172,6 +179,7 @@ def extract(conference,feed,games,aliases,captured):
                 records.append({**base,"kind":"AVAILABILITY","player":p["player"],
                                 "position":p["position"],"status":p["status"]})
         report["publication_status"]="ACCEPTED_VERIFIED_OFFICIAL_REPORT"
+        report["excluded_exempt_rows"]=excluded_exempt
         report["player_rows"]=sum(len(players) for _,players in parsed)
         report["published_utc"]=t
     meta["official_reports_accepted"]=sum(x.get("publication_status")=="ACCEPTED_VERIFIED_OFFICIAL_REPORT" for x in meta["report_cards"])
