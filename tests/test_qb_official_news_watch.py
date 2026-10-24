@@ -1,6 +1,6 @@
 import json,tempfile,unittest
 from pathlib import Path
-from scripts.qb_official_news_watch import article_candidates,run,FEEDS
+from scripts.qb_official_news_watch import article_candidates,run,FEEDS,load_feed_registry
 
 NOW="2026-10-21T17:00:00Z"
 GAME={"game_id":"100","home":"NC State Wolfpack","away":"Virginia Cavaliers",
@@ -14,6 +14,44 @@ XML=b"""<?xml version="1.0"?><rss version="2.0"><channel>
 <description>Read about the defense</description></item></channel></rss>"""
 
 class OfficialNewsCandidateTests(unittest.TestCase):
+    def test_reviewed_registry_expands_official_candidates(self):
+        with tempfile.TemporaryDirectory() as d:
+            registry=Path(d)/"registry.json"
+            registry.write_text(json.dumps({"status":"REVIEWED_OFFICIAL_RSS_REGISTRY_V1",
+                "feeds":[{"team":"Virginia Cavaliers","url":"https://virginiasports.com/rss/football",
+                          "publisher_host":"virginiasports.com","reviewed":True}]}))
+            feeds=load_feed_registry(registry)
+            self.assertEqual(len(feeds),len(FEEDS)+1)
+            xml=XML.replace(b"gopack.com",b"virginiasports.com")
+            rows=article_candidates(xml,"Virginia Cavaliers",[GAME],NOW,feeds)
+            self.assertEqual(len(rows),1)
+            self.assertEqual(rows[0]["status"],"UNREVIEWED_NEWS_CANDIDATE")
+            self.assertNotIn("player",rows[0])
+    def test_registry_rejects_unreviewed_or_wrong_host(self):
+        with tempfile.TemporaryDirectory() as d:
+            registry=Path(d)/"registry.json"
+            record={"team":"Virginia Cavaliers","url":"https://untrusted.example/rss",
+                    "publisher_host":"virginiasports.com","reviewed":True}
+            for bad in (record,dict(record,publisher_host="untrusted.example",reviewed=False),
+                        dict(record,url="http://untrusted.example/rss",
+                             publisher_host="untrusted.example")):
+                registry.write_text(json.dumps({"status":"REVIEWED_OFFICIAL_RSS_REGISTRY_V1",
+                    "feeds":[bad]}))
+                with self.assertRaises(ValueError):
+                    load_feed_registry(registry)
+    def test_complete_backlog_keeps_more_than_hundred_teams(self):
+        with tempfile.TemporaryDirectory() as d:
+            inp=Path(d)/"context.json";out=Path(d)/"out.json"
+            games=[{"game_id":str(i),"home":"School "+str(i),
+                    "away":"Opponent "+str(i),"kickoff_utc":"2026-10-24T16:00:00Z"}
+                   for i in range(55)]
+            inp.write_text(json.dumps({"games":games}))
+            result=run(inp,out,reader=lambda url: XML,now=NOW)
+            manifest=result["manifest"]
+            self.assertEqual(manifest["unconfigured_upcoming_team_slots"],110)
+            self.assertEqual(manifest["backlog_unique_teams"],110)
+            self.assertTrue(manifest["backlog_complete"])
+            self.assertEqual(len(manifest["feed_expansion_backlog"]),110)
     def test_official_texas_and_north_carolina_feed_urls(self):
         self.assertEqual(FEEDS["Texas Longhorns"],
                          "https://texaslonghorns.com/rss?path=football")
