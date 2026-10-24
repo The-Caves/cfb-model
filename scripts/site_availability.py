@@ -104,6 +104,7 @@ def merge(board,rows,now,manifest=None):
 def run(dashboard_path,aliases="data/archive/2026_team_aliases.csv",now=None,fetcher=fetch_and_match):
     path=Path(dashboard_path)
     board=json.loads(path.read_text())
+    now_was_omitted=now is None
     now=now or dt.datetime.now(dt.timezone.utc)
     upcoming=[{"game_id":str(g["game_id"]),"home":g["home_team"],
        "away":g["away_team"],"kickoff_utc":g["kickoff_utc"],
@@ -111,7 +112,12 @@ def run(dashboard_path,aliases="data/archive/2026_team_aliases.csv",now=None,fet
        for g in board["games"] if parse_time(g["kickoff_utc"])>now]
     with TemporaryDirectory() as tmp:
         rows,manifest=fetcher(upcoming,aliases,Path(tmp)/"reports")
-    result=merge(board,rows,now,manifest)
+    # Fetcher records its actual collection time *during* these calls.
+    # A pre-fetch cutoff would wrongly discard every freshly captured row.
+    # Always advance the observation instant after collection in real runs;
+    # keep explicit now for deterministic fixture-based tests.
+    verified_cutoff=dt.datetime.now(dt.timezone.utc) if now_was_omitted else now
+    result=merge(board,rows,verified_cutoff,manifest)
     diagnostics={}
     for item in rows:
         if item.get("kind")!="AVAILABILITY":continue
