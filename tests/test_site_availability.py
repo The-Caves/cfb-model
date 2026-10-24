@@ -53,6 +53,24 @@ class Tests(unittest.TestCase):
         rows=[status(designation="AVAILABLE"),status(designation="OUT")]
         r=merge(board(),rows,NOW)
         self.assertEqual(r["games"][0]["qb_availability_home"][0]["status"],"CONFLICT_REVIEW")
+    def test_live_fetch_cutoff_advances_past_report_capture(self):
+        # A live request is captured *after* the initial run() invocation.
+        # Latest source must be accepted without hindsight or future input.
+        stamp=dt.datetime.now(dt.timezone.utc)
+        kickoff=(stamp+dt.timedelta(days=2)).isoformat()
+        b=board();g=b["games"][0];g["kickoff_utc"]=kickoff
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)/"board.json";p.write_text(json.dumps(b))
+            def live(games,aliases,path):
+                capture=dt.datetime.now(dt.timezone.utc)
+                publication=capture-dt.timedelta(minutes=3)
+                row=status(kickoff_utc=kickoff,
+                           published_at_utc=publication.isoformat(),
+                           captured_at_utc=capture.isoformat())
+                return [row],{"feeds":{"SEC":{"official_reports_accepted":1}}}
+            result=run(p,fetcher=live)
+            self.assertEqual(len(result["games"][0]["qb_availability_home"]),1)
+            self.assertEqual(result["games"][0]["qb_availability_home"][0]["status"],"QUESTIONABLE")
     def test_io_and_fetched_report_status(self):
         with tempfile.TemporaryDirectory() as tmp:
             file=Path(tmp)/"dashboard.json";file.write_text(json.dumps(board()))
