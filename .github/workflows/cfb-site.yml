@@ -8,6 +8,8 @@ on:
       - 'scripts/site_export.py'
       - 'scripts/site_market.py'
       - 'scripts/site_qb.py'
+      - 'scripts/site_depthchart.py'
+      - 'tests/test_site_depthchart.py'
       - 'scripts/site_availability.py'
       - 'scripts/official_availability.py'
       - 'tests/test_official_availability.py'
@@ -50,6 +52,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_official_availability.py' -v
       - name: Test actual official QB availability overlay
         run: python -m unittest discover -s tests -p 'test_site_availability.py' -v
+      - name: Test sourced QB1-QB3 depth chart parsing and cache
+        run: python -m unittest discover -s tests -p 'test_site_depthchart.py' -v
       - name: Produce actual archived model projections
         run: |
           python -m scripts.site_export --archive-root .context-state --output site/data/dashboard.json | tee /tmp/site-export.txt
@@ -66,6 +70,18 @@ jobs:
         run: |
           python -m scripts.site_availability --dashboard site/data/dashboard.json | tee /tmp/site-availability.txt
           cat /tmp/site-availability.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Set daily UTC depth chart cache key
+        id: depth_key
+        run: echo "date=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+      - name: Reuse today's public source-labeled depth charts
+        uses: actions/cache@v4
+        with:
+          path: .cache/cfb-qb-depth-2026.json
+          key: cfb-2026-qb-depth-v1-${{ steps.depth_key.outputs.date }}
+      - name: Overlay ranked QB depth charts (NOT confirmed starters)
+        run: |
+          python -m scripts.site_depthchart --dashboard site/data/dashboard.json --cache .cache/cfb-qb-depth-2026.json | tee /tmp/site-depthchart.txt
+          cat /tmp/site-depthchart.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Report earliest today research matchups without betting claims
         run: |
           python - <<'PY'
@@ -96,6 +112,11 @@ jobs:
           assert d["qb_display"]["model_features_updated"] is False
           assert d["qb_availability_display"]["changes_frozen_model_picks"] is False
           assert d["qb_availability_display"]["confirms_starting_qb"] is False
+          assert d["qb_depth_display"]["confirmed_starting_QB_from_chart"] is False
+          assert d["qb_depth_display"]["changes_frozen_model_picks"] is False
+          assert all(isinstance(g["qb_depth_home"],list) and isinstance(g["qb_depth_away"],list) for g in d["games"])
+          assert all(not q["confirmed_starter"] and q["source_url"].startswith("https://www.ourlads.com/") for g in d["games"] for side in ("home","away") for q in g["qb_depth_"+side])
+
           assert all(isinstance(g["qb_availability_home"],list) and isinstance(g["qb_availability_away"],list) for g in d["games"])
           assert all(row["source_type"]=="OFFICIAL_CONFERENCE_AVAILABILITY" and row["not_starter_confirmation"] is True for g in d["games"] for side in ("home","away") for row in g["qb_availability_"+side])
 
