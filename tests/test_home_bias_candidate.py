@@ -73,6 +73,28 @@ class CandidateTests(unittest.TestCase):
                     writer=csv.DictWriter(f,fieldnames=list(rows[0]))
                     writer.writeheader();writer.writerows(rows)
             with self.assertRaises(ValueError):load_combined(p/"features.csv",p/"labels.csv")
+    def test_empty_csv_feature_is_unknown_not_zero(self):
+        with tempfile.TemporaryDirectory() as temp:
+            p=Path(temp)
+            feature={"game_id":"1","date":"2026-09-26",
+                     "kickoff_utc":"2026-09-26T18:00:00Z",
+                     "home_games_prior":"2","away_games_prior":"1",
+                     "betting_status":"PASS_UNVALIDATED",
+                     "feature_evidence_status":"RETROSPECTIVE_NOT_PUBLICATION_VERIFIED",
+                     **{name:"" for name in BASE_FIELDS}}
+            labels={"game_id":"1","date":"2026-09-26",
+                    "kickoff_utc":"2026-09-26T18:00:00Z",
+                    "home_score":"23","away_score":"12"}
+            for name,record in (("features.csv",feature),("labels.csv",labels)):
+                with (p/name).open("w",newline="") as output:
+                    writer=csv.DictWriter(output,fieldnames=list(record))
+                    writer.writeheader()
+                    writer.writerow(record)
+            rows=load_combined(p/"features.csv",p/"labels.csv")
+            self.assertEqual(len(rows),1)
+            self.assertIsNone(rows[0]["score_margin_form"])
+            self.assertIsNone(rows[0]["off_epa_matchup"])
+            self.assertNotEqual(rows[0]["score_margin_form"],0)
     def test_dual_prior_training_does_not_promote_candidate(self):
         report=validate(self.sample())
         self.assertEqual(report["candidate_version"],"HOME_MARGIN_PRIOR_GAMES_RECENCY14D_CANDIDATE_V1")
