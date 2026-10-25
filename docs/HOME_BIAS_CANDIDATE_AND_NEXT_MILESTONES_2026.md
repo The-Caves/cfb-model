@@ -20,15 +20,16 @@ Code: `scripts/home_bias_candidate.py`, `tests/test_home_bias_candidate.py`. The
 5. Compare three models on **identical eligible test games** per chronological holdout week: original **all-training** ridge, eligible-only ablation, and eligible+recency ridge. Store exact game IDs, date windows, training volume, margin MAE, signed home bias, straight-up correct/accuracy, and home-win selection share.
 6. **No odds or player/medical data are synthesized**. The comparison is game-chronological retrospectively reconstructed advanced/PBP research. Historical PBP publication-before-decision is **not independently verified**. There are no authenticated as-of historical market spreads or O/U lines for grading the candidate. All outputs remain research-only.
 
-### Initial offline reproduction on the original October 24 training artifact
+### Reproduced GitHub Actions evaluation on the original October 24 training artifact
+**Authoritative repeat:** [run 40200790213](https://github.com/The-Caves/cfb-model/actions/runs/40200790213) passed the candidate unit tests, retrieved the exact October 24 data-intake archive and produced a downloadable JSON report with all four fold IDs and metrics. The documented numbers below are from this independent cloud run, correcting an earlier local exploratory calculator that did not reproduce the exact CSV missing-data handling.
 
 Using 248 held-out games across weeks beginning Sept 26, Oct 3, Oct 10 and Oct 17, on the same dual-profile-eligible holdout games:
 
 | Variant | Margin MAE | Signed home overprediction | SU accuracy | Predicted home winner |
 | --- | ---: | ---: | ---: | ---: |
-| Original active (all prior games) | 17.63 | +13.36 | 59.3% | 97.6% |
-| Eligible-only | 14.36 | +4.69 | 62.9% | 86.7% |
-| Eligible + 14-day recency | **14.08** | **+3.75** | **64.9%** | **81.5%** |
+| Original active (all prior games) | 16.52 | +10.85 | 58.9% | 97.2% |
+| Eligible-only | 14.35 | +4.70 | 63.7% | 86.7% |
+| Eligible + 14-day recency | **14.06** | **+3.79** | **64.1%** | **82.3%** |
 
 These are exploratory, **not preregistered**, and are influenced by discovering home bias on the Oct 24 slate. Do not label them independently validated market performance or use as evidence of betting profitability. A subsequent clean prospective window and early-season sample composition/coverage audit are required.
 
@@ -68,3 +69,5 @@ Implementation requirements:
 2. Build Milestone 2 confirmed QB1 historical-observation dataset and trainability gate. Only then add learned QB effects to a separate candidate.
 3. Build Milestone 3 totals distribution candidate and chronological validation. Compare 1+2+3 as one separate version only after individually measured ablations.
 4. Promote **only explicitly approved, independently validated versions**. Update the dashboard to show model version and uncertainty; preserve existing immutable predictions, observations, lines and performance records.
+
+**Operational CI note:** The first full intake integration found blank CSV features being interpreted as nonnumeric strings. Fixed `load_combined` to convert blank 2026 feature values to true missingness (`None`) and added regression tests; never substitute zero for an unknown profile. Full CI validation passed at [run 40200546532](https://github.com/The-Caves/cfb-model/actions/runs/40200546532) while the longer ingestion job proceeded independently. The dedicated evaluation [40200790213](https://github.com/The-Caves/cfb-model/actions/runs/40200790213) is the independently verified four-fold result. **The existing production forecast and website picks remain on V03**; this candidate has not been promoted.
