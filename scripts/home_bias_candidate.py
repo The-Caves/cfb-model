@@ -106,6 +106,17 @@ def load_combined(features_path,labels_path):
             date_of(row).year!=2026):
             raise ValueError("Unmatched/retimed or nonresearch football game")
         merged=dict(row)
+        # CSV writers represent absent numeric profiles as empty strings.
+        # Preserve UNKNOWN as None: never manufacture zeros for week-zero EPA.
+        for field in BASE_FIELDS:
+            value=merged.get(field)
+            if value in ("",None):
+                merged[field]=None
+            else:
+                number=float(value)
+                if not math.isfinite(number):
+                    raise ValueError("Invalid numeric profile field")
+                merged[field]=number
         merged["home_score"]=int(lab["home_score"])
         merged["away_score"]=int(lab["away_score"])
         result.append(merged)
