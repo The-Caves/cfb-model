@@ -46,7 +46,8 @@ class CandidateTests(unittest.TestCase):
         self.assertAlmostEqual(predict_candidate(test,BASE_FIELDS,params)[0],old)
     def test_no_margin_score_fabrication_from_malformed_labels(self):
         train=[r for r in self.sample() if r["date"]<"2026-10-10"]
-        train[1]["home_score"]=float("nan")
+        # Select an established-profile game; week-zero rows are intentionally excluded.
+        train[27]["home_score"]=float("nan")
         with self.assertRaises(ValueError):fit_candidate(train,BASE_FIELDS,"2026-10-10")
     def test_chronological_ablation_consistent_test_counts(self):
         report=validate(self.sample(),start="2026-09-26",weeks=4)
