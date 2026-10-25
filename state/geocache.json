@@ -1141,5 +1141,14 @@
     "admin1": "Oregon",
     "country_code": "US",
     "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Detroit\",\"MI\",\"USA\"]": {
+    "latitude": 42.33143,
+    "longitude": -83.04575,
+    "geonames_id": 4990729,
+    "name": "Detroit",
+    "admin1": "Michigan",
+    "country_code": "US",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
   }
 }
