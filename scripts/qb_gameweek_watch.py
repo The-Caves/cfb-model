@@ -93,7 +93,7 @@ def observe(config,now,reader=fetch,previous=None):
             elif QB.search(text) and row["availability_language_examples"]:row["language_flag"]="QB_AVAILABILITY_CONTEXT_REVIEW"
             elif QB.search(text):row["language_flag"]="QB_CONTEXT_NOT_STARTER_CONFIRMATION"
         except (ValueError,OSError,UnicodeError) as exc:
-            row["source_read_status"]="FETCH_FAILED";row["source_change"]="UNKNOWN_FETCH_FAILED";row["error_kind"]=type(exc).__name__
+            row["source_read_status"]="FETCH_FAILED";row["source_change"]="UNKNOWN_FETCH_FAILED";row["error_kind"]=type(exc).__name__;row["error_reason"]=str(exc)[:160]
         records.append(row)
     return {"status":STATUS,"season":2026,"captured_at_utc":now.isoformat(),
         "source_publication_times_attested":False,"safe_for_betting":False,
