@@ -13,8 +13,13 @@ QB=re.compile(r"\b(?:quarterbacks?|QB|signal[- ]caller|passing|passer)\b",re.I)
 INJURY=re.compile(r"\b(?:injur(?:y|ies|ed)|questionable|doubtful|game[- ]time decision|ruled out|available|return(?:s|ed|ing)? from|miss(?:ed|ing)? (?:the|two|three) games?)\b",re.I)
 class Article(HTMLParser):
     def __init__(self):
-        super().__init__(convert_charrefs=True);self.tags=[];self.skipped=0;self.all=[];self.main=[];self.article=[]
+        super().__init__(convert_charrefs=True);self.tags=[];self.skipped=0;self.all=[];self.main=[];self.article=[];self.page_descriptions=[]
     def handle_starttag(self,tag,attrs):
+        if tag=="meta":
+            meta=dict(attrs)
+            if meta.get("name","").casefold()=="description" or meta.get("property","").casefold()=="og:description":
+                description=" ".join((meta.get("content") or "").split())
+                if 40<=len(description)<=3000:self.page_descriptions.append(description)
         self.tags.append(tag)
         if tag in ("script","style","noscript","svg","nav","footer","header"):self.skipped+=1
     def handle_endtag(self,tag):
@@ -29,6 +34,12 @@ class Article(HTMLParser):
 def text_from_html(markup):
     h=Article();h.feed(markup)
     return " ".join(" ".join(next((v for v in (h.article,h.main,h.all) if len(" ".join(v).split())>=35),h.all)).split())[:100000]
+
+def metadata_description(markup):
+    parser=Article();parser.feed(markup)
+    # SiteArm/Sidearm articles can serve only JS hydration and short HTML
+    # shells. Metadata is NOT full article content or starter confirmation.
+    return max(parser.page_descriptions,key=len,default="")[:1500]
 
 def safe(url):
     try:
@@ -93,15 +104,27 @@ def observe(config,now,reader=fetch,previous=None):
                 ("embedded_story",r"storyBody|articleContent|contentHtml|bodyHtml"),
                 ("data_state",r"__INITIAL_STATE__|__PRELOADED_STATE__"))}
             row["source_readable_text_chars"]=len(text)
-            if len(text)<100:raise ValueError("Insufficient readable official article content")
+            if len(text)>=100:
+                scope="FULL_ARTICLE_TEXT"
+            else:
+                description=metadata_description(markup)
+                row["source_metadata_description_chars"]=len(description)
+                if len(description)<80:raise ValueError("Insufficient readable article or metadata")
+                text=description
+                scope="METADATA_ONLY_NOT_FULL_ARTICLE"
+            row["source_content_scope"]=scope
             digest=hashlib.sha256(text.encode()).hexdigest()
             prior=old.get(key)
             row["content_sha256"]=digest
             row["source_change"]="FIRST_CAPTURE" if not prior or not prior.get("content_sha256") else "UNCHANGED" if prior["content_sha256"]==digest else "CHANGED_REVIEW_REQUIRED"
             row["starter_language_examples"]=passages(text,START)
             row["availability_language_examples"]=passages(text,INJURY)
-            row["source_read_status"]="FETCHED_HTML"
-            if row["starter_language_examples"]:row["language_flag"]="POSSIBLE_START_LANGUAGE_NEEDS_REVIEW"
+            row["source_read_status"]="FETCHED_HTML" if scope=="FULL_ARTICLE_TEXT" else "FETCHED_METADATA_ONLY"
+            if scope=="METADATA_ONLY_NOT_FULL_ARTICLE":
+                row["language_flag"]="METADATA_ONLY_INSUFFICIENT_FOR_QB1_CONFIRMATION"
+                # Do not mistake SEO descriptions for current game-week declarations.
+                row["starter_language_examples"]=[]
+            elif row["starter_language_examples"]:row["language_flag"]="POSSIBLE_START_LANGUAGE_NEEDS_REVIEW"
             elif QB.search(text) and row["availability_language_examples"]:row["language_flag"]="QB_AVAILABILITY_CONTEXT_REVIEW"
             elif QB.search(text):row["language_flag"]="QB_CONTEXT_NOT_STARTER_CONFIRMATION"
         except (ValueError,OSError,UnicodeError) as exc:
@@ -112,11 +135,13 @@ def observe(config,now,reader=fetch,previous=None):
         "betting_status":"PASS_UNVALIDATED","confirmed_starters_added":0,
         "model_predictions_modified":False,
         "summary":{"future_source_pages":len(records),
-                   "fetched":sum(x["source_read_status"]=="FETCHED_HTML" for x in records),
+                   "fetched":sum(x["source_read_status"] in ("FETCHED_HTML","FETCHED_METADATA_ONLY") for x in records),
+                   "full_articles_fetched":sum(x["source_read_status"]=="FETCHED_HTML" for x in records),
+                   "metadata_only":sum(x["source_read_status"]=="FETCHED_METADATA_ONLY" for x in records),
                    "fetch_failed":sum(x["source_read_status"]=="FETCH_FAILED" for x in records),
                    "changed":sum(x["source_change"]=="CHANGED_REVIEW_REQUIRED" for x in records),
                    "possible_start_language":sum(x["language_flag"]=="POSSIBLE_START_LANGUAGE_NEEDS_REVIEW" for x in records)},
-        "monitor_health":("DEGRADED_ALL_ACTIVE_SOURCES_FAILED" if records and all(r["source_read_status"]=="FETCH_FAILED" for r in records) else "NO_ACTIVE_SOURCES" if not records else "PARTIAL_FAILURE" if any(r["source_read_status"]=="FETCH_FAILED" for r in records) else "OK"),
+        "monitor_health":("DEGRADED_ALL_ACTIVE_SOURCES_FAILED" if records and all(r["source_read_status"]=="FETCH_FAILED" for r in records) else "NO_ACTIVE_SOURCES" if not records else "PARTIAL_FAILURE" if any(r["source_read_status"]=="FETCH_FAILED" for r in records) else "LIMITED_METADATA_ONLY" if all(r["source_read_status"]=="FETCHED_METADATA_ONLY" for r in records) else "OK"),
         "entries":records,
         "warning":"Source changes and keyword excerpts are review leads only. They never confirm QB1."}
 
