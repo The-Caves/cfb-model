@@ -1,0 +1,70 @@
+name: CFB Official Gameweek QB Watch
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/qb_gameweek_watch.py'
+      - 'tests/test_qb_gameweek_watch.py'
+      - 'config/official_gameweek_sources_2026.json'
+      - '.github/workflows/cfb-qb-gameweek-watch.yml'
+  schedule:
+    - cron: '17 11,15,19,22 * * *'
+permissions:
+  contents: read
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify source-change logic and fail-closed QB1 rules
+        run: python -m unittest discover -s tests -p 'test_qb_gameweek_watch.py' -v
+      - name: Restore previous official-page fingerprints
+        uses: actions/cache/restore@v4
+        with:
+          key: cfb-official-gameweek-watch-v1-${{ github.run_id }}
+          restore-keys: |
+            cfb-official-gameweek-watch-v1-
+          path: .qb-watch/previous.json
+      - name: Monitor dated university articles and generate review-only changes
+        run: |
+          set -euo pipefail
+          mkdir -p data/qb_review .qb-watch
+          python -m scripts.qb_gameweek_watch \
+            --config config/official_gameweek_sources_2026.json \
+            --previous .qb-watch/previous.json \
+            --output data/qb_review/official_gameweek_language_watch.json \
+            --csv data/qb_review/official_gameweek_language_watch.csv
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          page=Path("data/qb_review/official_gameweek_language_watch.json")
+          data=json.loads(page.read_text())
+          assert data["status"]=="OFFICIAL_GAMEWEEK_QB_LANGUAGE_REVIEW_ONLY"
+          assert data["betting_status"]=="PASS_UNVALIDATED"
+          assert data["confirmed_starters_added"]==0
+          assert data["model_predictions_modified"] is False
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+              f.write("### Verified school QB article watch\n\n")
+              f.write("Automated language detection does not confirm QB1 or recompute picks.\n\n")
+              f.write(json.dumps(data["summary"],indent=2)+"\n")
+          print(json.dumps(data["summary"],sort_keys=True))
+          PY
+          cp data/qb_review/official_gameweek_language_watch.json .qb-watch/previous.json
+      - name: Cache page fingerprints for next scheduled scan
+        uses: actions/cache/save@v4
+        with:
+          key: cfb-official-gameweek-watch-v1-${{ github.run_id }}
+          path: .qb-watch/previous.json
+      - name: Publish official QB source changes and injury-language review queue
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-official-qb-review-watch-${{ github.run_id }}
+          path: data/qb_review/
+          if-no-files-found: warn
+          retention-days: 30
