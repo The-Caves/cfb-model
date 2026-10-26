@@ -83,6 +83,15 @@ def observe(config,now,reader=fetch,previous=None):
             markup=reader(url)
             text=text_from_html(markup)
             row["source_html_chars"]=len(markup)
+            row["source_html_markers"]={name:bool(re.search(pattern,markup,re.I)) for name,pattern in (
+                ("articleBody",r"articleBody"),
+                ("json_ld",r'application/ld\+json'),
+                ("next_data",r"__NEXT_DATA__"),
+                ("article_content",r"article[-_]content"),
+                ("story_text",r"story[-_]text"),
+                ("article_description",r"og:description"),
+                ("embedded_story",r"storyBody|articleContent|contentHtml|bodyHtml"),
+                ("data_state",r"__INITIAL_STATE__|__PRELOADED_STATE__"))}
             row["source_readable_text_chars"]=len(text)
             if len(text)<100:raise ValueError("Insufficient readable official article content")
             digest=hashlib.sha256(text.encode()).hexdigest()
