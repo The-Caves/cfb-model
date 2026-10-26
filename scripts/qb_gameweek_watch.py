@@ -28,7 +28,7 @@ class Article(HTMLParser):
 
 def text_from_html(markup):
     h=Article();h.feed(markup)
-    return " ".join(" ".join(h.article or h.main or h.all).split())[:100000]
+    return " ".join(" ".join(next((v for v in (h.article,h.main,h.all) if len(" ".join(v).split())>=35),h.all)).split())[:100000]
 
 def safe(url):
     try:
