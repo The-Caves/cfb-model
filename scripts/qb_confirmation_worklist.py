@@ -17,7 +17,10 @@ FIELDS=("game_id","kickoff_utc","team","opponent","review_priority",
         "official_athletics_homepage","homepage_verified","game_notes_url",
         "game_notes_verified","personnel_evidence_verified",
         "reviewed_official_preview_url","reviewed_game_notes_link",
-        "reviewed_gameweek_source_status","source_followup",
+        "reviewed_gameweek_source_status","contextual_qb_player",
+        "contextual_qb_evidence_type","contextual_qb_reliability",
+        "contextual_qb_summary","contextual_qb_source_url",
+        "source_followup",
         "source_verification_status")
 
 def _gameweek_index(config):
@@ -34,6 +37,18 @@ def _gameweek_index(config):
         if key in index:raise ValueError("Duplicate official gameweek source")
         date=dt.date.fromisoformat(e["published_date"])
         if date.year!=2026:raise ValueError("Stale gameweek release")
+        ctx=e.get("qb_context")
+        if ctx is not None:
+            if (not isinstance(ctx,dict) or ctx.get("mention_type") not in
+                {"RETURNED_FROM_INJURY_IN_PREVIOUS_GAME","PREVIOUS_TWO_GAMES_STARTED",
+                 "SEASON_PASSING_PRODUCTION"} or
+                not isinstance(ctx.get("player"),str) or not 4<=len(ctx["player"])<=90 or
+                not isinstance(ctx.get("summary"),str) or not 20<=len(ctx["summary"])<=300 or
+                not isinstance(ctx.get("quote"),str) or not 5<=len(ctx["quote"])<=180 or
+                ctx.get("source_url")!=e.get("preview_url") or
+                any(term in ctx["summary"].casefold() for term in
+                    ("confirmed starter","will start tomorrow","starts this game"))):
+                raise ValueError("Contextual quarterback mention is not a verified starter")
         index[key]=e
     return index
 
@@ -91,6 +106,7 @@ def build(queue,source_registry,gameweek_sources=None):
                 raise ValueError("No canonical official publisher to verify")
             reviewed_preview=_validated_source_link(link["preview_url"],published_host)
             reviewed_notes=_validated_source_link(link.get("game_notes_url"),published_host,True)
+        qb_context=link.get("qb_context") if link else None
         # Document links are leads to be actually read, not claims of QB1.
         if row.get("starter_status")=="VERIFIED_SOURCE":
             follow="AUDIT_PREEXISTING_REVIEWED_CLAIM"
@@ -116,6 +132,11 @@ def build(queue,source_registry,gameweek_sources=None):
             "reviewed_official_preview_url":reviewed_preview,
             "reviewed_game_notes_link":reviewed_notes,
             "reviewed_gameweek_source_status":("OFFICIAL_GAME_MATCH_VERIFIED_NO_QB1_CLAIM" if link else "NO_REVIEWED_GAMEWEEK_SOURCE"),
+            "contextual_qb_player":qb_context.get("player") if qb_context else None,
+            "contextual_qb_evidence_type":qb_context.get("mention_type") if qb_context else None,
+            "contextual_qb_reliability":"OFFICIAL_GAMEWEEK_CONTEXT_NOT_STARTER_CONFIRMED" if qb_context else "NOT_REVIEWED",
+            "contextual_qb_summary":qb_context.get("summary") if qb_context else None,
+            "contextual_qb_source_url":qb_context.get("source_url") if qb_context else None,
             "source_followup":follow,
             "source_verification_status":"SOURCE_CANDIDATE_ONLY_NO_GAME_SPECIFIC_STARTER_CONFIRMATION"
         })
@@ -134,7 +155,8 @@ def build(queue,source_registry,gameweek_sources=None):
                    "rss_school_links":sum(bool(r["official_rss_url"]) for r in ranked),
                    "prioritized_official_news_candidates":sum(r["candidate_count"]>0 for r in ranked),
                    "reviewed_official_gameweek_preview_links":sum(bool(r["reviewed_official_preview_url"]) for r in ranked),
-                   "linked_official_gameweek_notes":sum(bool(r["reviewed_game_notes_link"]) for r in ranked)},
+                   "linked_official_gameweek_notes":sum(bool(r["reviewed_game_notes_link"]) for r in ranked),
+                   "official_contextual_qb_mentions_not_starting_confirmations":sum(bool(r["contextual_qb_player"]) for r in ranked)},
         "rows":ranked,"manual_acceptance_requirements":[
             "Read an explicit game-specific official coach/school QB starter declaration",
             "Verify exact ESPN game identity, teams and originally published instant",

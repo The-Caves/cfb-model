@@ -57,6 +57,27 @@ class WorklistTests(unittest.TestCase):
         self.assertEqual(r["game_specific_QB_confirmations_added"],0)
         self.assertEqual(r["rows"][1]["starter_status"],"UNKNOWN")
         self.assertTrue(any(x["reviewed_official_preview_url"] for x in r["rows"]))
+    def test_recent_qb_mention_does_not_become_confirmed_starter(self):
+        qb,s=fixtures()
+        entry={"game_id":"401","team":"Alpha University","opponent":"Beta College",
+            "kickoff_utc":"2026-10-31T16:00:00Z","published_date":"2026-10-29",
+            "preview_url":"https://example.edu/Alpha-University/preview",
+            "game_notes_url":None,"starter_confirmed":False,
+            "evidence_type":"OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
+            "qb_context":{"player":"John Quarterback",
+                "mention_type":"RETURNED_FROM_INJURY_IN_PREVIOUS_GAME",
+                "quote":"returned after missing two games due to injury",
+                "summary":"Player returned last week but not confirmed for the next football game.",
+                "source_url":"https://example.edu/Alpha-University/preview"}}
+        config={"status":"REVIEWED_OFFICIAL_GAMEWEEK_LINKS_NOT_QB_STARTERS",
+                "season":2026,"entries":[entry]}
+        board=build(qb,s,config)
+        self.assertEqual(board["summary"]["official_contextual_qb_mentions_not_starting_confirmations"],1)
+        record=next(x for x in board["rows"] if x["team"]=="Alpha University")
+        self.assertEqual(record["contextual_qb_player"],"John Quarterback")
+        self.assertEqual(record["starter_status"],"UNKNOWN")
+        entry["qb_context"]["mention_type"]="OFFICIAL_STARTER_CONFIRMED"
+        with self.assertRaises(ValueError):build(qb,s,config)
     def test_gameweek_mismatch_or_claim_rejected(self):
         qb,s=fixtures()
         entry={"game_id":"401","team":"Alpha University","opponent":"Beta College",

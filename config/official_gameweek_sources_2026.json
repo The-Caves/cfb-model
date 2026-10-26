@@ -14,7 +14,8 @@
       "preview_url": "https://wkusports.com/news/2026/10/25/football-hilltoppers-welcome-delaware-for-weekday-cusa-matchup",
       "game_notes_url": "https://wkusports.com/documents/2026/10/25/WKU_FB_26___Game_Notes___Delaware.pdf",
       "evidence_type": "OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
-      "starter_confirmed": false
+      "starter_confirmed": false,
+      "qb_context": null
     },
     {
       "game_id": "401871071",
@@ -25,7 +26,14 @@
       "preview_url": "https://bluehens.com/news/2026/10/26/football-wraps-weekday-cusa-play-at-wku",
       "game_notes_url": "https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/bluehens.com/documents/2026/10/26/2026_Delaware_Football_Notes_-_WKU.pdf?timestamp=20261026032134",
       "evidence_type": "OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
-      "starter_confirmed": false
+      "starter_confirmed": false,
+      "qb_context": {
+        "player": "Nick Minicucci",
+        "mention_type": "RETURNED_FROM_INJURY_IN_PREVIOUS_GAME",
+        "summary": "Official preview says he returned for Missouri State after missing two games; does not explicitly say he will start at WKU.",
+        "quote": "returned after missing two games due to injury",
+        "source_url": "https://bluehens.com/news/2026/10/26/football-wraps-weekday-cusa-play-at-wku"
+      }
     },
     {
       "game_id": "401871072",
@@ -36,7 +44,14 @@
       "preview_url": "https://missouristatebears.com/news/2026/10/23/football-bears-back-home-tuesday-to-host-sam-houston",
       "game_notes_url": null,
       "evidence_type": "OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
-      "starter_confirmed": false
+      "starter_confirmed": false,
+      "qb_context": {
+        "player": "Henry Belin IV",
+        "mention_type": "PREVIOUS_TWO_GAMES_STARTED",
+        "summary": "The October 23 team preview reports two starts and 637 passing yards, but does not explicitly say he will start against Sam Houston.",
+        "quote": "In his 2 starts with the Bears",
+        "source_url": "https://missouristatebears.com/news/2026/10/23/football-bears-back-home-tuesday-to-host-sam-houston"
+      }
     },
     {
       "game_id": "401871072",
@@ -47,7 +62,14 @@
       "preview_url": "https://gobearkats.com/news/2026/10/25/football-game-8-preview-at-missouri-state",
       "game_notes_url": null,
       "evidence_type": "OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
-      "starter_confirmed": false
+      "starter_confirmed": false,
+      "qb_context": {
+        "player": "Landyn Locke",
+        "mention_type": "SEASON_PASSING_PRODUCTION",
+        "summary": "The October 25 official preview describes season passing production, not the named starter for the Missouri State game.",
+        "quote": "Landyn Locke was one of 15 quarterbacks added",
+        "source_url": "https://gobearkats.com/news/2026/10/25/football-game-8-preview-at-missouri-state"
+      }
     },
     {
       "game_id": "401862812",
@@ -58,7 +80,14 @@
       "preview_url": "https://fausports.com/news/2026/10/23/football-florida-atlantic-at-north-texas-to-air-on-espn",
       "game_notes_url": null,
       "evidence_type": "OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
-      "starter_confirmed": false
+      "starter_confirmed": false,
+      "qb_context": {
+        "player": "Caden Veltkamp",
+        "mention_type": "SEASON_PASSING_PRODUCTION",
+        "summary": "October 23 official article identifies season QB production but does not name the North Texas game starter.",
+        "quote": "graduate QB Caden Veltkamp",
+        "source_url": "https://fausports.com/news/2026/10/23/football-florida-atlantic-at-north-texas-to-air-on-espn"
+      }
     }
   ]
 }
