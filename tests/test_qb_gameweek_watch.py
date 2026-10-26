@@ -39,6 +39,7 @@ class SourceMonitorTests(unittest.TestCase):
         self.assertEqual(result["summary"]["fetch_failed"],1)
         self.assertEqual(result["entries"][0]["source_change"],"UNKNOWN_FETCH_FAILED")
         self.assertEqual(result["confirmed_starters_added"],0)
+        self.assertEqual(result["monitor_health"],"DEGRADED_ALL_ACTIVE_SOURCES_FAILED")
     def test_untrusted_url_year_or_confirmation_rejected(self):
         for field,value in (("starter_confirmed",True),("preview_url","http://unsafe.test/"),
                             ("published_date","2025-10-25")):
@@ -47,6 +48,7 @@ class SourceMonitorTests(unittest.TestCase):
     def test_no_fetch_after_kickoff(self):
         result=observe(source(),NOW+dt.timedelta(days=5),reader=lambda _:self.fail("Should not fetch"))
         self.assertEqual(result["summary"]["future_source_pages"],0)
+        self.assertEqual(result["monitor_health"],"NO_ACTIVE_SOURCES")
     def test_page_nav_and_scripts_cannot_fake_start(self):
         text=text_from_html("<nav>QB will start</nav><article><p>Normal football previews and game information for Tuesday. This is a discussion of the upcoming school event.</p><script>QB named starter</script></article>")
         self.assertNotIn("QB will start",text)
