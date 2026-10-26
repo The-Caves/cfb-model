@@ -12,7 +12,7 @@
       "kickoff_utc": "2026-10-27T23:00:00Z",
       "published_date": "2026-10-25",
       "preview_url": "https://wkusports.com/news/2026/10/25/football-hilltoppers-welcome-delaware-for-weekday-cusa-matchup",
-      "game_notes_url": "https://wkusports.com/documents/2026/10/25/WKU_FB_26___Game_Notes___Delaware.pdf",
+      "game_notes_url": "https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/wkusports.com/documents/2026/10/25/WKU_FB_26___Game_Notes___Delaware.pdf?timestamp=20261025072633",
       "evidence_type": "OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
       "starter_confirmed": false,
       "qb_context": null
@@ -42,7 +42,7 @@
       "kickoff_utc": "2026-10-28T00:00:00Z",
       "published_date": "2026-10-23",
       "preview_url": "https://missouristatebears.com/news/2026/10/23/football-bears-back-home-tuesday-to-host-sam-houston",
-      "game_notes_url": "https://missouristatebears.com/documents/2026/10/23/Game_Notes_8_vs_Sam_Houston.pdf",
+      "game_notes_url": "https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/missouristatebears.com/documents/2026/10/23/Game_Notes_8_vs_Sam_Houston.pdf?timestamp=20261025115445",
       "evidence_type": "OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
       "starter_confirmed": false,
       "qb_context": {
