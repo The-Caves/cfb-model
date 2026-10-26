@@ -51,3 +51,11 @@ These thresholds are research-readiness gates, **not** guarantees of betting mod
 Calibrate totals distributions only after distinguishing past-game EPA/explosive/pace features from authentic original-source timestamps. Maintain separate mean, uncertainty and tail calibration; compare every experiment with both the current total model and contemporary market line on one game ID each. QB effects and weather must remain unknown unless independently observed before decision.
 
 *Free GitHub Actions/context-state infrastructure; no new AWS/paid API dependency.*
+
+## Milestone 2B source-worklist automation committed
+
+`scripts/qb_confirmation_worklist.py` and `tests/test_qb_confirmation_worklist.py` now join the canonical **138-school** official athletics source audit with each upcoming `qb-review-queue.json` game/team slot. The worklist is ordered by scheduled kickoff, preserves any official news review candidates and each school's known source homepage/RSS/game-notes leads, and explicitly labels unverified source candidates as **not game-specific starter confirmation**. CI publishes both JSON and a convenient CSV under `data/context/qb-starter-source-review-worklist.{json,csv}` with each full intake artifact; this is a review backlog, not an automatic injured-player or QB1 determination.
+
+The October 26 observed slate contained 61 upcoming ESPN matchups / **122 school-QB review slots**, with all 122 schools matching a canonical registry school (many schools repeat across future schedules, so the total is slots, not distinct universities). The source registry includes 138 homepage URL candidates but 0 verified game-specific personnel source pages. Date-stamped explicit reviewed evidence remains `0` until genuinely acquired and verified. Do not present an institutional homepage as proof of who starts.
+
+**CI:** the QB trainability tests and worklist parser tests passed within the full `CFB 2026 Data Intake` validation job on the corresponding main-branch pushes. The full data intake is responsible for publishing the generated run-specific JSON/CSV artifacts and remains separate from the locked V03 model's forecast archive.
