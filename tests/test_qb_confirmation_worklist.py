@@ -43,4 +43,32 @@ class WorklistTests(unittest.TestCase):
         self.assertTrue(any(x["game_notes_verified"] for x in board["rows"]))
         self.assertTrue(all(x["starter_status"]=="UNKNOWN" for x in board["rows"]))
         self.assertFalse(board["trained_replacement_points"])
+    def test_reviewed_gameweek_previews_enrich_but_never_confirm(self):
+        qb,s=fixtures()
+        registry={"status":"REVIEWED_OFFICIAL_GAMEWEEK_LINKS_NOT_QB_STARTERS",
+            "season":2026,"entries":[{
+              "game_id":"401","team":"Alpha University","opponent":"Beta College",
+              "kickoff_utc":"2026-10-31T16:00:00Z","published_date":"2026-10-29",
+              "preview_url":"https://example.edu/Alpha-University/football-preview",
+              "game_notes_url":None,"starter_confirmed":False,
+              "evidence_type":"OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM"}]}
+        r=build(qb,s,registry)
+        self.assertEqual(r["summary"]["reviewed_official_gameweek_preview_links"],1)
+        self.assertEqual(r["game_specific_QB_confirmations_added"],0)
+        self.assertEqual(r["rows"][1]["starter_status"],"UNKNOWN")
+        self.assertTrue(any(x["reviewed_official_preview_url"] for x in r["rows"]))
+    def test_gameweek_mismatch_or_claim_rejected(self):
+        qb,s=fixtures()
+        entry={"game_id":"401","team":"Alpha University","opponent":"Beta College",
+               "kickoff_utc":"2026-10-31T16:00:00Z","published_date":"2026-10-29",
+               "preview_url":"https://example.edu/a","game_notes_url":None,
+               "starter_confirmed":False,
+               "evidence_type":"OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM"}
+        registry={"status":"REVIEWED_OFFICIAL_GAMEWEEK_LINKS_NOT_QB_STARTERS",
+                  "season":2026,"entries":[entry]}
+        for change in [{"starter_confirmed":True},{"opponent":"Elsewhere"},
+                       {"published_date":"2025-10-30"},{"preview_url":"https://attacker.test/a"}]:
+            copied=copy.deepcopy(registry)
+            copied["entries"][0].update(change)
+            with self.assertRaises(ValueError):build(qb,s,copied)
 if __name__=="__main__":unittest.main()
