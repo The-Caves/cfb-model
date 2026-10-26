@@ -53,6 +53,8 @@ jobs:
               f.write("Automated language detection does not confirm QB1 or recompute picks.\n\n")
               f.write(json.dumps(data["summary"],indent=2)+"\n")
           print(json.dumps(data["summary"],sort_keys=True))
+          if data["monitor_health"]=="DEGRADED_ALL_ACTIVE_SOURCES_FAILED":
+              raise SystemExit("MONITOR_DEGRADED: all active official previews returned unreadable content; no QB status may be inferred")
           PY
           cp data/qb_review/official_gameweek_language_watch.json .qb-watch/previous.json
       - name: Cache page fingerprints for next scheduled scan
