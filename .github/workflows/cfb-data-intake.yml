@@ -186,6 +186,7 @@ jobs:
           python -m scripts.qb_confirmation_worklist \
             --queue data/context/qb-review-queue.json \
             --registry data/context/official-school-source-audit-2026.json \
+            --gameweek-sources config/official_gameweek_sources_2026.json \
             --output data/context/qb-starter-source-review-worklist.json \
             --review-csv data/context/qb-starter-source-review-worklist.csv
       - name: Audit actual verified QB and injury-report coverage
