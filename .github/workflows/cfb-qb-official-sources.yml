@@ -1,0 +1,62 @@
+name: CFB QB Official Source Review Validation
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'config/official_gameweek_sources_2026.json'
+      - 'scripts/qb_confirmation_worklist.py'
+      - 'tests/test_qb_confirmation_worklist.py'
+      - '.github/workflows/cfb-qb-official-sources.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate official gameweek source and starter claim separation
+        run: python -m unittest discover -s tests -p 'test_qb_confirmation_worklist.py' -v
+      - name: Retrieve original October 26 source and QB worklist archive
+        uses: actions/download-artifact@v4
+        with:
+          repository: The-Caves/cfb-model
+          run-id: 40252874370
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: cfb-2026-data-40252874370
+          path: .frozen
+      - name: Replay matching of verified upcoming official gameweek sources
+        run: |
+          set -euo pipefail
+          python -m scripts.qb_confirmation_worklist \
+            --queue .frozen/context/qb-review-queue.json \
+            --registry .frozen/context/official-school-source-audit-2026.json \
+            --gameweek-sources config/official_gameweek_sources_2026.json \
+            --output qb-reviewed-sources.json \
+            --review-csv qb-reviewed-sources.csv
+          python - <<'PY'
+          import json
+          data=json.load(open("qb-reviewed-sources.json"))
+          assert data["status"]=="QB_STARTER_MANUAL_REVIEW_WORKLIST_RESEARCH_ONLY"
+          assert data["betting_status"]=="PASS_UNVALIDATED"
+          assert data["summary"]["team_slots"]==122
+          assert data["summary"]["reviewed_official_gameweek_preview_links"]==5
+          assert data["summary"]["linked_official_gameweek_notes"]==3
+          assert data["summary"]["official_contextual_qb_mentions_not_starting_confirmations"]==4
+          assert data["game_specific_QB_confirmations_added"]==0
+          assert all(row["starter_status"]!="VERIFIED_SOURCE" for row in data["rows"])
+          assert all(row["contextual_qb_reliability"]!="QB1_CONFIRMED" for row in data["rows"])
+          print(json.dumps(data["summary"],sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cfb-qb-reviewed-source-worklist-${{ github.run_id }}
+          path: |
+            qb-reviewed-sources.json
+            qb-reviewed-sources.csv
+          retention-days: 30
