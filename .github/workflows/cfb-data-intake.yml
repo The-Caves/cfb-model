@@ -249,6 +249,14 @@ jobs:
           python -m scripts.personnel_validation_readiness \
             --dataset-dir "data/pregame_evidence/step3e-${{ github.run_id }}" \
             --output "data/pregame_evidence/step3e-${{ github.run_id }}/step3f-readiness.json"
+      - name: Audit verified game-specific QB starter and replacement-event trainability
+        run: |
+          set -euo pipefail
+          python -m scripts.qb_trainability_audit \
+            --dataset-dir "data/pregame_evidence/step3e-${{ github.run_id }}" \
+            --output "data/pregame_evidence/step3e-${{ github.run_id }}/qb-trainability-readiness.json" | tee /tmp/qb-trainability.txt
+          cat /tmp/qb-trainability.txt >> "$GITHUB_STEP_SUMMARY"
+          echo "No guessed QB starters, replacement-value penalties or retrospective medical data." >> "$GITHUB_STEP_SUMMARY"
       - name: Freeze genuine 2026 prospective baseline research forecasts (Step 3G)
         run: |
           python -m scripts.personnel_forecast \
