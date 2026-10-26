@@ -80,8 +80,11 @@ def observe(config,now,reader=fetch,previous=None):
             "language_flag":"NO_LANGUAGE_DETECTED","content_sha256":None,
             "starter_language_examples":[],"availability_language_examples":[]}
         try:
-            text=text_from_html(reader(url))
-            if len(text)<100:raise ValueError("Empty official article text")
+            markup=reader(url)
+            text=text_from_html(markup)
+            row["source_html_chars"]=len(markup)
+            row["source_readable_text_chars"]=len(text)
+            if len(text)<100:raise ValueError("Insufficient readable official article content")
             digest=hashlib.sha256(text.encode()).hexdigest()
             prior=old.get(key)
             row["content_sha256"]=digest
@@ -104,6 +107,7 @@ def observe(config,now,reader=fetch,previous=None):
                    "fetch_failed":sum(x["source_read_status"]=="FETCH_FAILED" for x in records),
                    "changed":sum(x["source_change"]=="CHANGED_REVIEW_REQUIRED" for x in records),
                    "possible_start_language":sum(x["language_flag"]=="POSSIBLE_START_LANGUAGE_NEEDS_REVIEW" for x in records)},
+        "monitor_health":("DEGRADED_ALL_ACTIVE_SOURCES_FAILED" if records and all(r["source_read_status"]=="FETCH_FAILED" for r in records) else "NO_ACTIVE_SOURCES" if not records else "PARTIAL_FAILURE" if any(r["source_read_status"]=="FETCH_FAILED" for r in records) else "OK"),
         "entries":records,
         "warning":"Source changes and keyword excerpts are review leads only. They never confirm QB1."}
 
