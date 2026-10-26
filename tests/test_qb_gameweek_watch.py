@@ -33,6 +33,15 @@ class SourceMonitorTests(unittest.TestCase):
         result=observe(source(),NOW,reader=lambda _:text)
         self.assertEqual(result["summary"]["possible_start_language"],0)
         self.assertEqual(result["entries"][0]["status"],"REVIEW_ONLY_NOT_CONFIRMED")
+    def test_only_seo_metadata_is_limited_not_qb_start_confirmation(self):
+        description="Western Kentucky football welcomes Delaware in a conference matchup with updated pregame logistics and notes for visitors."
+        markup='<html><head><meta property="og:description" content="'+description+'"></head><body>Small article shell.</body></html>'
+        result=observe(source(),NOW,reader=lambda _:markup)
+        self.assertEqual(result["monitor_health"],"LIMITED_METADATA_ONLY")
+        self.assertEqual(result["summary"]["metadata_only"],1)
+        self.assertEqual(result["summary"]["full_articles_fetched"],0)
+        self.assertEqual(result["entries"][0]["language_flag"],"METADATA_ONLY_INSUFFICIENT_FOR_QB1_CONFIRMATION")
+        self.assertEqual(result["confirmed_starters_added"],0)
     def test_source_fetch_failure_fails_closed(self):
         def broken(_):raise OSError("network unavailable")
         result=observe(source(),NOW,reader=broken)
