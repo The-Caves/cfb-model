@@ -41,3 +41,23 @@ Earlier source-review acceptance: [40365177539](https://github.com/The-Caves/cfb
 - Expand verified football feed registrations beyond the current seven to cover the next scheduled games. Never invent standard-looking feed URLs or claim working feed access without a live validation test.
 - Re-run the game-week source review regularly as new official releases are published. Collect actual game-specific QB declarations and conflicting injury reports into the reviewed evidence gate; preserve earlier capture times and frozen model versions.
 - Add independently verified postgame QB starts and substitution labels separately, then test learned player availability and replacement value without leakage.
+
+
+## October 26 late-evening follow-up — 3/3 direct university game-note PDFs now readable
+
+The official five-page HTML monitoring remains partial (four readable publisher metadata descriptions, zero fully parsed article bodies, one metadata fetch failure). A separate, source-authorized direct-PDF watcher now provides a **full-text source path** without pretending metadata is enough.
+
+New modules:
+- `scripts/qb_official_notes_watch.py`: strict official-publisher or matching Sidearm S3 game-note URL checks; bound PDF bytes and page count; reject encrypted, malformed or unexpectedly HTML responses; extract searchable PDF text via `pypdf`; record file SHA256, actual capture timestamp, before-kickoff constraints and a capped set of QB/injury language review snippets; preserve **confirmed_starter=false**.
+- `tests/test_qb_official_notes_watch.py`: replay direct PDFs, misdirected HTML landing pages, document changes, unsafe publisher URLs, postkickoff exclusion and corrupt files; no automatic QB1 promotion.
+- `.github/workflows/cfb-qb-gameweek-watch.yml` installs `pypdf`, tests and executes PDF screening alongside four-times-daily HTML source review. Both results are exposed in the archived GitHub Actions artifact, not as active model inputs.
+- For the two originally reviewed football-note landing pages, the safe official-document link discoverer extracted exact matching PDF names and publisher-authorized Sidearm S3 URLs; the verified links replaced the HTML landing pages in `config/official_gameweek_sources_2026.json`. This was reviewed linkage, not inference about the starting QB.
+
+**Final acceptance:** [GitHub Actions run 40413098757](https://github.com/The-Caves/cfb-model/actions/runs/40413098757) **passed**, with **3 direct official PDF documents extracted out of 3 linked game-note documents**, **0 PDF landing pages**, **0 unreadable docs**, **0 candidate game-specific "will start" phrases**, and **0 confirmed starters**. The companion [official fixture/source validation run 40413098739](https://github.com/The-Caves/cfb-model/actions/runs/40413098739) also passed. Documents currently monitored:
+- Western Kentucky vs Delaware — source-discovered exact official Sidearm PDF (`2026/10/25/WKU_FB_26___Game_Notes___Delaware.pdf`).
+- Delaware at WKU — previously direct official Sidearm PDF (`2026/10/26/2026_Delaware_Football_Notes_-_WKU.pdf`), **77 pages** verified on initial run.
+- Missouri State vs Sam Houston — source-discovered exact official Sidearm PDF (`2026/10/23/Game_Notes_8_vs_Sam_Houston.pdf`).
+
+This improves **document readability**, not actual starter coverage. The watcher records PDF byte-level changes but no independently authenticated upstream publication timestamp or human approval. Old source previews still cover only 5 of 122 candidate team/game slots, and directly linked readable game notes cover only 3 of those 122. The current signal is a review lead, not QB1 evidence, and the active V03 model remains unchanged.
+
+**Next acceptance work:** Expand verified full-text notes/news coverage to additional scheduled schools, obtain real explicit game-specific QB announcements and capture times, then collect *independently validated postgame QB starts/substitutions* for prospective replacement-value modeling. For longer-term provenance, preserve the document-monitor run summaries/fingerprints beyond GitHub artifact expiration in the immutable `context-state` archive; today's watcher uses GitHub Actions cache for comparisons and 30-day artifacts.
