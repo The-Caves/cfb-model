@@ -1,5 +1,5 @@
 import datetime as dt,unittest
-from scripts.qb_official_notes_watch import observe,trusted_notes,STATUS
+from scripts.qb_official_notes_watch import observe,trusted_notes,verified_pdf_leads,STATUS
 NOW=dt.datetime(2026,10,26,21,tzinfo=dt.timezone.utc)
 def conf(link="https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/bluehens.com/documents/2026/10/26/notes.pdf"):
     return {"status":"REVIEWED_OFFICIAL_GAMEWEEK_LINKS_NOT_QB_STARTERS","season":2026,
@@ -24,6 +24,13 @@ class NotesTests(unittest.TestCase):
                   extractor=lambda raw:self.fail("Do not parse HTML as PDF"))
         self.assertEqual(x["summary"]["pdf_landing_pages"],1)
         self.assertEqual(x["summary"]["keyword_candidates"],0)
+    def test_html_landing_pdf_leads_must_match_document_and_publisher(self):
+        landing="https://bluehens.com/documents/2026/10/26/notes.pdf"
+        page=b'<html><a href="https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/bluehens.com/documents/2026/10/26/notes.pdf?download=1">Download</a><a href="https://attacker.test/notes.pdf">Evil</a><a href="/documents/2026/10/26/other.pdf">Wrong notes</a></html>'
+        c=verified_pdf_leads(page,landing,"https://bluehens.com/news/2026/10/26/preview")
+        self.assertEqual(len(c),1)
+        self.assertIn("sidearm.nextgen.sites/bluehens.com/",c[0])
+        self.assertEqual(verified_pdf_leads(b'<html><a href="http://attacker.test/notes.pdf">bad</a></html>',landing,"https://bluehens.com/news/a"),[])
     def test_changed_pdf_preserves_snapshot_scope(self):
         first=observe(conf(),NOW,fetcher=lambda u:(b"%PDF-1.7 first","application/pdf"),
                       extractor=lambda raw:("Football content with QB and opponent "+"x"*110,4))
