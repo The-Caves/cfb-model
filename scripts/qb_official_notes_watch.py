@@ -5,7 +5,8 @@ a school declaration of the starter for this particular game. No picks update.
 """
 import argparse,csv,datetime as dt,hashlib,io,json,re,urllib.request
 from pathlib import Path
-from urllib.parse import urlsplit
+from html.parser import HTMLParser
+from urllib.parse import urlsplit,urljoin,unquote
 from scripts.qb_gameweek_watch import QB,START,INJURY,passages,safe
 
 STATUS="OFFICIAL_QB_NOTES_DOCUMENT_REVIEW_ONLY"
@@ -29,6 +30,33 @@ def get_notes(url):
     if not safe(final) or urlsplit(final).hostname!=urlsplit(url).hostname:
         raise ValueError("Game notes redirect away from source publisher")
     return body,mime
+
+class _LandingLinks(HTMLParser):
+    def __init__(self):
+        super().__init__();self.links=[]
+    def handle_starttag(self,tag,attrs):
+        if tag not in ("a","iframe"):return
+        data=dict(attrs)
+        url=data.get("href") if tag=="a" else data.get("src")
+        if url:self.links.append(url)
+
+def verified_pdf_leads(html_bytes,landing,publisher):
+    """Report document URL candidates without downloading or trusting them."""
+    try:text=html_bytes.decode("utf-8","replace")
+    except (UnicodeError,AttributeError):return []
+    parser=_LandingLinks();parser.feed(text)
+    target_name=unquote(urlsplit(landing).path).rsplit("/",1)[-1].casefold()
+    found=[]
+    for href in parser.links[:300]:
+        candidate=urljoin(landing,href)
+        if not trusted_notes(candidate,publisher):continue
+        name=unquote(urlsplit(candidate).path).rsplit("/",1)[-1].casefold()
+        if not name.endswith(".pdf"):continue
+        # Only same named document from official university/Sidearm authority.
+        if name != target_name:continue
+        if candidate not in found and candidate!=landing:found.append(candidate)
+        if len(found)>=5:break
+    return found
 
 def pages_text(raw):
     # Import lazily so source matching and synthetic tests do not need pypdf.
@@ -70,6 +98,7 @@ def observe(config,now,fetcher=get_notes,extractor=pages_text,previous=None):
             if not raw.startswith(b"%PDF-"):
                 row["source_read_status"]="NOT_DIRECT_PDF_LANDING_PAGE"
                 row["source_change"]="NO_COMPARABLE_PDF_BYTES"
+                row["review_only_direct_pdf_link_candidates"]=verified_pdf_leads(raw,url,e["preview_url"])
             else:
                 if "pdf" not in mime.lower() and "octet-stream" not in mime.lower():
                     raise ValueError("Mismatched PDF response MIME")
