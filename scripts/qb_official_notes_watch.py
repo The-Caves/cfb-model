@@ -45,15 +45,20 @@ def verified_pdf_leads(html_bytes,landing,publisher):
     try:text=html_bytes.decode("utf-8","replace")
     except (UnicodeError,AttributeError):return []
     parser=_LandingLinks();parser.feed(text)
-    target_name=unquote(urlsplit(landing).path).rsplit("/",1)[-1].casefold()
+    landing_path=unquote(urlsplit(landing).path)
+    if "/documents/" not in landing_path:return []
+    # Resolve only the exact same 2026 year/month/day/file path, not a
+    # previous game's identically named PDF in another upload directory.
+    expected=landing_path.split("/documents/",1)[1]
     found=[]
     for href in parser.links[:300]:
         candidate=urljoin(landing,href)
         if not trusted_notes(candidate,publisher):continue
-        name=unquote(urlsplit(candidate).path).rsplit("/",1)[-1].casefold()
-        if not name.endswith(".pdf"):continue
-        # Only same named document from official university/Sidearm authority.
-        if name != target_name:continue
+        candidate_path=unquote(urlsplit(candidate).path)
+        if "/documents/" not in candidate_path:continue
+        relative=candidate_path.split("/documents/",1)[1]
+        if not relative.lower().endswith(".pdf"):continue
+        if relative != expected:continue
         if candidate not in found and candidate!=landing:found.append(candidate)
         if len(found)>=5:break
     return found

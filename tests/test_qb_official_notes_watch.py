@@ -63,6 +63,18 @@ class NotesTests(unittest.TestCase):
         self.assertEqual(verified_pdf_leads(html,landing,
                          "https://fausports.com/news/2026/10/26/football-game-notes-8"),[good])
 
+    def test_prior_week_same_filename_is_not_accepted(self):
+        landing="https://fausports.com/documents/2026/10/26/FootballGameNotes.pdf"
+        correct="https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/fausports.com/documents/2026/10/26/FootballGameNotes.pdf"
+        stale="https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/fausports.com/documents/2026/10/20/FootballGameNotes.pdf"
+        wrong_year="https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/fausports.com/documents/2025/10/26/FootballGameNotes.pdf"
+        raw=('<a href="'+stale+'">Previous week</a><a href="'+wrong_year+
+             '">Previous season</a><a href="'+correct+'">Current dated source</a>').encode()
+        self.assertEqual(verified_pdf_leads(raw,landing,
+                         "https://fausports.com/news/2026/10/26/football-game-notes-8"),[correct])
+        self.assertEqual(verified_pdf_leads(('<a href="'+stale+'">stale only</a>').encode(),
+                         landing,"https://fausports.com/news/2026/10/26/football-game-notes-8"),[])
+
     def test_changed_pdf_preserves_snapshot_scope(self):
         first=observe(conf(),NOW,fetcher=lambda u:(b"%PDF-1.7 first","application/pdf"),
                       extractor=lambda raw:("Football content with QB and opponent "+"x"*110,4))
