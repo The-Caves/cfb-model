@@ -1,6 +1,6 @@
 import copy
 import unittest
-from scripts.multifactor_walkforward import prepare, walkforward
+from scripts.multifactor_walkforward import prepare, walkforward, injury_pressure_interaction, VARIANTS
 from scripts.personnel_features import BASE_FIELDS
 
 def records():
@@ -27,6 +27,44 @@ class MultifactorTests(unittest.TestCase):
                              "2026-10-25T12:00:00Z", weeks=1)
         self.assertEqual(report["folds"][0]["status"], "INSUFFICIENT_OBSERVED_GAMES")
         self.assertFalse(report["model_promoted"])
+
+    def test_partial_reports_do_not_create_fake_zero_player_effect(self):
+        self.assertEqual(injury_pressure_interaction({
+            "coverage":"INCOMPLETE",
+            "home_report_by_position":{"coverage":"VERIFIED_REPORT_REVIEWED","absences":{"OL":2,"QB":0}},
+            "away_report_by_position":{"coverage":"UNKNOWN","absences":None}
+        },0.3),(None,None))
+
+    def test_asof_verified_ol_and_qb_pressure_matchup_is_only_candidate(self):
+        feature,label=records()
+        all_positions={p:0 for p in __import__("scripts.player_replacement",fromlist=["POSITIONS"]).POSITIONS}
+        home=dict(all_positions,OL=2,QB=1)
+        away=dict(all_positions,OL=1,QB=0)
+        replacement=[{"game_id":"1","kickoff_utc":feature["kickoff_utc"],
+                      "decision_asof_utc":feature["capture_utc"],
+                      "coverage":"BOTH_REPORTS","absence_differentials":
+                      {p:home[p]-away[p] for p in all_positions},
+                      "home_report_by_position":{"coverage":"VERIFIED_REPORT_REVIEWED","absences":home},
+                      "away_report_by_position":{"coverage":"VERIFIED_REPORT_REVIEWED","absences":away}}]
+        rows=prepare([feature],[label],replacement=replacement,
+                     evaluation_asof_utc="2026-10-25T12:00:00Z")
+        self.assertAlmostEqual(rows[0]["verified_ol_absence_pressure_interaction"],0.1)
+        self.assertAlmostEqual(rows[0]["verified_qb_absence_pressure_interaction"],0.1)
+        self.assertIn("plus_injury_pressure_interaction",VARIANTS)
+        self.assertNotIn("player_point_penalty",rows[0])
+
+    def test_future_injury_coverage_rejected_and_missing_is_null(self):
+        feature,label=records()
+        late=[{"game_id":"1","kickoff_utc":feature["kickoff_utc"],
+               "decision_asof_utc":"2026-10-24T12:00:00Z",
+               "coverage":"INCOMPLETE","absence_differentials":None}]
+        with self.assertRaises(ValueError):
+            prepare([feature],[label],replacement=late,
+                    evaluation_asof_utc="2026-10-25T12:00:00Z")
+        rows=prepare([feature],[label],
+                     evaluation_asof_utc="2026-10-25T12:00:00Z")
+        self.assertIsNone(rows[0]["verified_ol_absence_pressure_interaction"])
+        self.assertIsNone(rows[0]["verified_qb_absence_pressure_interaction"])
 
     def test_rejects_future_weather(self):
         feature, label = records()

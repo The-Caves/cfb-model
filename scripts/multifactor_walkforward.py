@@ -18,10 +18,39 @@ from scripts.player_replacement import POSITIONS
 STATUS = "MULTIFACTOR_OBSERVED_WALKFORWARD_RESEARCH_ONLY"
 WX = tuple("wx_" + field for field in WEATHER_FIELDS)
 ABS = tuple("absence_" + position.lower() for position in POSITIONS)
+INJURY_STRESS = ("verified_ol_absence_pressure_interaction",
+                 "verified_qb_absence_pressure_interaction")
 VARIANTS = {"baseline": tuple(BASE_FIELDS),
             "plus_weather": tuple(BASE_FIELDS) + WX,
             "plus_absences": tuple(BASE_FIELDS) + ABS,
-            "all_features": tuple(BASE_FIELDS) + WX + ABS}
+            "plus_injury_pressure_interaction": tuple(BASE_FIELDS) + ABS + INJURY_STRESS,
+            "all_features": tuple(BASE_FIELDS) + WX + ABS + INJURY_STRESS}
+
+def injury_pressure_interaction(report, matchup_pressure):
+    """As-of observed OL/QB absences × relative historical pressure *proxy*.
+
+    Both schools' position-count reports must be verified. Missing coverage
+    yields None (not zero). This is not an estimated player-value coefficient.
+    """
+    if (report.get("coverage") != "BOTH_REPORTS" or
+        type(matchup_pressure) not in (int,float) or
+        not math.isfinite(matchup_pressure)):
+        return (None,None)
+    h,a=report.get("home_report_by_position"),report.get("away_report_by_position")
+    if not isinstance(h,dict) or not isinstance(a,dict) or any(
+        r.get("coverage")!="VERIFIED_REPORT_REVIEWED" or not isinstance(r.get("absences"),dict)
+        for r in (h,a)):
+        return (None,None)
+    def count(r,position):
+        value=r["absences"].get(position)
+        if type(value) is not int or value<0:
+            raise ValueError("Invalid verified personnel position count")
+        return value
+    # The pregame score-profile pressure_form is a relative rate, not an
+    # absolute pass-rush grade. Coefficient must be learned out of sample.
+    ol=(count(h,"OL")-count(a,"OL"))*float(matchup_pressure)
+    qb=(count(h,"QB")-count(a,"QB"))*float(matchup_pressure)
+    return (ol,qb)
 
 def prepare(features, labels, weather=(), replacement=(), evaluation_asof_utc=None):
     evaluation = parse_time(evaluation_asof_utc or dt.datetime.now(dt.timezone.utc).isoformat())
@@ -76,8 +105,13 @@ def prepare(features, labels, weather=(), replacement=(), evaluation_asof_utc=No
                 raise ValueError("Invalid replacement schema")
             for position in POSITIONS:
                 row["absence_" + position.lower()] = diff[position] if diff is not None else None
+            x,y=injury_pressure_interaction(
+                injury,fields.get("pressure_form")) if diff is not None else (None,None)
+            row[INJURY_STRESS[0]]=x
+            row[INJURY_STRESS[1]]=y
         else:
             row.update({name: None for name in ABS})
+            row.update({name: None for name in INJURY_STRESS})
         label = finals.get(gid)
         if label is None:
             continue

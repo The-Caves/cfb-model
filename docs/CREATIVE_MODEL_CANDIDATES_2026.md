@@ -25,3 +25,9 @@ These research experiments are implemented in `scripts/creative_model_features.p
 ## Game-by-game audit files
 
 Every full intake additionally writes \`creative-candidate-predictions.json\` with the held-out forecast margin and total beside the observed final, keyed by exact ESPN game ID and model version. It is research-only, not historical sportsbook quotes. Unit tests exercise every measured experimental variant and confirm that changing held-out outcomes does not alter pregame forecasts.
+
+## Injury/OL-versus-pressure candidate (strict as-of)
+
+\`scripts/multifactor_walkforward.py\` now has a separate \`plus_injury_pressure_interaction\` variant. It combines verified as-of OL and QB absence differentials from \`personnel_replacement_capture.py\` with the contemporaneous frozen team \`pressure_form\` proxy. It never applies a manual point penalty; coefficients would be fit only on prior observed completed games. If either school's report is missing, both interaction features stay null and the evaluation variant is skipped when there is no training variation. New tests cover verified, partial and post-cutoff evidence.
+
+This connects injury context to a future **model candidate**, not to the live dashboard. The absence of official report coverage still prevents learning any actual injury coefficient.
