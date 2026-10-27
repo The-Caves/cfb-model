@@ -53,6 +53,16 @@ class NotesTests(unittest.TestCase):
         self.assertEqual(result["summary"]["direct_pdf_extracted"],1)
         self.assertEqual(result["entries"][0]["resolved_direct_pdf_url"],full)
         self.assertEqual(result["official_starting_qb_confirmations"],0)
+    def test_fau_game_8_landing_only_resolves_identical_official_document(self):
+        landing="https://fausports.com/documents/2026/10/26/2026_Game_Notes__8_remediated.pdf"
+        good="https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/fausports.com/documents/2026/10/26/2026_Game_Notes__8_remediated.pdf?timestamp=20261026010000"
+        previous="https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/fausports.com/documents/2026/10/20/2026_Game_Notes__7_remediated.pdf"
+        html=('<html><a href="'+previous+'">Previous-game notes</a>'
+              '<a href="'+good+'">Game 8 PDF</a>'
+              '<a href="https://attacker.test/2026_Game_Notes__8_remediated.pdf">Unofficial</a></html>').encode()
+        self.assertEqual(verified_pdf_leads(html,landing,
+                         "https://fausports.com/news/2026/10/26/football-game-notes-8"),[good])
+
     def test_changed_pdf_preserves_snapshot_scope(self):
         first=observe(conf(),NOW,fetcher=lambda u:(b"%PDF-1.7 first","application/pdf"),
                       extractor=lambda raw:("Football content with QB and opponent "+"x"*110,4))

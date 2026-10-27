@@ -77,18 +77,20 @@
       "team": "Florida Atlantic Owls",
       "opponent": "North Texas Mean Green",
       "kickoff_utc": "2026-10-29T23:30:00Z",
-      "published_date": "2026-10-23",
-      "preview_url": "https://fausports.com/news/2026/10/23/football-florida-atlantic-at-north-texas-to-air-on-espn",
-      "game_notes_url": null,
+      "published_date": "2026-10-26",
+      "preview_url": "https://fausports.com/news/2026/10/26/football-game-notes-8",
+      "game_notes_url": "https://fausports.com/documents/2026/10/26/2026_Game_Notes__8_remediated.pdf",
       "evidence_type": "OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
       "starter_confirmed": false,
       "qb_context": {
         "player": "Caden Veltkamp",
         "mention_type": "SEASON_PASSING_PRODUCTION",
-        "summary": "October 23 official article identifies season QB production but does not name the North Texas game starter.",
+        "summary": "The October 26 official Game Notes #8 release discusses season passing production, not an explicit starter confirmation for the October 29 game at North Texas.",
         "quote": "graduate QB Caden Veltkamp",
-        "source_url": "https://fausports.com/news/2026/10/23/football-florida-atlantic-at-north-texas-to-air-on-espn"
-      }
+        "source_url": "https://fausports.com/news/2026/10/26/football-game-notes-8"
+      },
+      "game_notes_release_url": "https://fausports.com/news/2026/10/26/football-game-notes-8",
+      "superseded_preview_url": "https://fausports.com/news/2026/10/23/football-florida-atlantic-at-north-texas-to-air-on-espn"
     },
     {
       "game_id": "401862812",
