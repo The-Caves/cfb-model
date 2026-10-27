@@ -58,6 +58,39 @@ class FeatureTests(unittest.TestCase):
         self.assertIsNotNone(rows[3]["recency_margin_shift_diff"])
         self.assertEqual(rows[2]["home_games_prior"],2)
 
+    def test_opponent_adjusted_latent_filter_no_same_date_label_leak(self):
+        from scripts.creative_model_features import _advance_latent, _latent_asof
+        states={}
+        games=[
+            {"date":"2026-10-01","home":"Home","away":"Away",
+             "home_score":"28","away_score":"7"},
+            {"date":"2026-10-02","home":"Home","away":"Away",
+             "home_score":"14","away_score":"10"}
+        ]
+        self.assertIsNone(_latent_asof(states,"Home","2026-10-01"))
+        _advance_latent(states,[games[0]])
+        self.assertGreater(_latent_asof(states,"Home","2026-10-02")["mean"],0)
+        self.assertEqual(_latent_asof(states,"Home","2026-10-02")["games"],1)
+        with self.assertRaises(ValueError):
+            _latent_asof(states,"Home","2026-09-30")
+        with self.assertRaises(ValueError):
+            _advance_latent(states,[games[1],games[1]])
+
+    def test_score_state_only_advances_between_dates(self):
+        date=dt.date(2026,10,10)
+        def game(i,home,away,day):
+            return {"game_id":str(i),"date":day.isoformat(),
+                    "kickoff_utc":day.isoformat()+"T17:00:00Z",
+                    "home":home,"away":away,"home_score":"30","away_score":"10",
+                    "neutral":"false"}
+        rows=build([game(0,"A","B",date),game(1,"C","D",date),
+                    game(2,"A","C",date+dt.timedelta(days=7)),
+                    game(3,"B","D",date+dt.timedelta(days=7)),
+                    game(4,"A","D",date+dt.timedelta(days=14))],{})
+        self.assertIsNone(rows[0]["latent_strength_diff"])
+        self.assertIsNone(rows[1]["latent_strength_diff"])
+        self.assertIsNotNone(rows[4]["latent_strength_diff"])
+
     def test_verified_player_stressor_preserves_partial_unknown(self):
         verified={"coverage":"VERIFIED_REPORT_REVIEWED","absences":{"OL":2}}
         unknown={"coverage":"UNKNOWN","absences":None}

@@ -23,7 +23,7 @@ GROUPS = {
     "drive_resilience": ("third_down_success_diff", "fourth_down_success_diff",
                           "explosive_dependence_diff", "pressure_resilience_diff"),
     "evolving_strength": ("recency_margin_shift_diff", "recency_epa_shift_diff",
-                           "recency_coverage_diff")
+                           "recency_coverage_diff", "latent_strength_diff", "latent_uncertainty_sum")
 }
 CREATIVE_FIELDS = tuple(dict.fromkeys(f for names in GROUPS.values() for f in names))
 
@@ -163,11 +163,62 @@ def _features(home, away, day):
     return f
 
 
+LATENT_MEASUREMENT_VARIANCE = 64.
+LATENT_PROCESS_VARIANCE_PER_DAY = 0.5
+
+def _latent_asof(states, team, date):
+    item=states.get(team)
+    if item is None:
+        return None
+    day=dt.date.fromisoformat(date)
+    age=(day-item["date"]).days
+    if age<0:raise ValueError("Future latent state")
+    return {"mean":item["mean"],
+            "variance":item["variance"]+age*LATENT_PROCESS_VARIANCE_PER_DAY,
+            "games":item["games"]}
+
+
+def _advance_latent(states, group):
+    """Simple Kalman-style team-quality filter. Entire same-date group updates
+    only AFTER every matchup's feature row has been computed.
+
+    Observation is capped realized team-score margin; opposing latent strengths
+    adjust each other, unlike unadjusted rolling win %. No postgame label
+    is ever fed to a same-day matchup. This is a candidate signal, not a
+    posterior calibrated to actual football score uncertainty.
+    """
+    next_states={}
+    consumed=set()
+    for game in group:
+        home,away=game["home"],game["away"]
+        if home in consumed or away in consumed:
+            raise ValueError("Ambiguous two-game same-day team update")
+        consumed.update((home,away))
+        day=game["date"]
+        h=_latent_asof(states,home,day) or {"mean":0.,"variance":64.,"games":0}
+        a=_latent_asof(states,away,day) or {"mean":0.,"variance":64.,"games":0}
+        realized=max(-28.,min(28.,float(game["home_score"])-float(game["away_score"])))
+        innovation=realized-(h["mean"]-a["mean"])
+        denom=h["variance"]+a["variance"]+LATENT_MEASUREMENT_VARIANCE
+        h_gain=h["variance"]/denom
+        a_gain=a["variance"]/denom
+        next_states[home]={"date":dt.date.fromisoformat(day),
+                           "mean":h["mean"]+h_gain*innovation,
+                           "variance":h["variance"]*(1-h_gain),
+                           "games":h["games"]+1}
+        next_states[away]={"date":dt.date.fromisoformat(day),
+                           "mean":a["mean"]-a_gain*innovation,
+                           "variance":a["variance"]*(1-a_gain),
+                           "games":a["games"]+1}
+    states.update(next_states)
+
+
 def build(games, advanced):
     """One feature row per completed game, built before advancing its football date."""
     base = {str(row["game_id"]):row for row in augment(games, advanced)}
     if len(base)!=len(games):raise ValueError("Duplicate baseline game IDs")
     history=defaultdict(list)
+    latent={}
     seen=set()
     for _, group in group_by_date(games):
         for game in group:
@@ -176,8 +227,17 @@ def build(games, advanced):
             seen.add(gid)
             home,away=game["home"],game["away"]
             additions=_features(history[home],history[away],game["date"])
+            hs=_latent_asof(latent,home,game["date"])
+            az=_latent_asof(latent,away,game["date"])
+            if hs and az and min(hs["games"],az["games"])>=2:
+                additions["latent_strength_diff"]=hs["mean"]-az["mean"]
+                additions["latent_uncertainty_sum"]=hs["variance"]+az["variance"]
+            else:
+                additions["latent_strength_diff"]=None
+                additions["latent_uncertainty_sum"]=None
             base[gid].update(additions)
             base[gid]["creative_feature_source"]="PRIOR_2026_GAMES_RETROSPECTIVE_RECONSTRUCTION"
+        _advance_latent(latent,group)
         for game in group:
             for team in (game["home"],game["away"]):
                 history[team].append(_record(game,team,advanced))
