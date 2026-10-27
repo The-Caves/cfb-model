@@ -74,3 +74,12 @@ This improves **document readability**, not actual starter coverage. The watcher
 - All watch runs still count site metadata as **limited**, not independently authenticated game-week article bodies. Game-note PDFs are searchable, but a phrase or depth chart remains an unreviewed source lead rather than a verified starter. The active 14-feature model remains unchanged. The QB-data trainability gate still blocks player-replacement effects.
 
 **Next priorities:** scale published football media center/source indexes by school, audit each exact new document, obtain explicit dated QB declarations or credible official injury reports and follow through with postgame participation labels before testing a learned QB-impact feature. Preserve fresh capture and upstream-publication clocks separately.
+
+
+### Verified targeted media-center polling and complete source-run archival
+
+The latest [Official Gameweek QB Watch run 40430715155](https://github.com/The-Caves/cfb-model/actions/runs/40430715155) succeeded with direct text extraction from **4/4** official game-week PDFs, **1 historical/undated "starting quarterback" keyword lead**, 0 verified QB1s, and 6 monitored school previews (4 metadata-only successes, 2 unavailable). The official North Texas media-center pilot fetched its 2026 index, matched the **Game 8 / October 29 / Florida Atlantic** section, and found **0 actual linked current-game notes documents**, so it did not reuse a previous week's UNT notes or invent a URL. Official [UNT football media center](https://meangreensports.com/sports/2026/9/2/unt-media-center) remains a reviewed index lead.
+
+Source-watch archiving includes the media-center observation hash, original link-review status, HTML metadata/PDF capture times and contents SHA256, via `scripts/qb_source_watch_archive.py`. Run **40430715155** persisted research-only audit record `context-state/research_2026/qb_source_watch/2026/10/27/run-40430715155.json.gz` and verified its GitHub commit. This is an observation archive, **not** an authenticated upstream publish timestamp, starter approval or historical source-body archive. Automatic source discovery remains a pilot for **one official media center**, not nationwide coverage. The full-body HTML news parser remains incomplete.
+
+The specific PDF false-positive snippet arose from Sam Houston's *prior ten games* description of **Landyn Locke as starting quarterback**; it is contextual historical usage, not verification that Locke will start October 27. No starter confirmations or injury-related point values have been added.
