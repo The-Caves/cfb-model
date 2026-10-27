@@ -8,14 +8,19 @@ on:
       - 'tests/test_qb_gameweek_watch.py'
       - 'scripts/qb_official_notes_watch.py'
       - 'tests/test_qb_official_notes_watch.py'
+      - 'scripts/qb_source_watch_archive.py'
+      - 'tests/test_qb_source_watch_archive.py'
       - 'config/official_gameweek_sources_2026.json'
       - '.github/workflows/cfb-qb-gameweek-watch.yml'
   schedule:
     - cron: '17 11,15,19,22 * * *'
 permissions:
-  contents: read
+  contents: write
 jobs:
   watch:
+    concurrency:
+      group: cfb-context-state
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -83,6 +88,18 @@ jobs:
           print(json.dumps(data["summary"],sort_keys=True))
           PY
           cp data/qb_review/official_gameweek_notes_watch.json .qb-watch/previous-notes.json
+      - name: Test strict archived QB-source observation clocks
+        run: python -m unittest discover -s tests -p 'test_qb_source_watch_archive.py' -v
+      - name: Preserve immutable observed source evidence on context-state branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          python -m scripts.qb_source_watch_archive \
+            --html data/qb_review/official_gameweek_language_watch.json \
+            --notes data/qb_review/official_gameweek_notes_watch.json | tee /tmp/qb-source-archive-result.json
+          cat /tmp/qb-source-archive-result.json >> "$GITHUB_STEP_SUMMARY"
+          echo "Stored source change observations only; no confirmed starting QBs or modified picks." >> "$GITHUB_STEP_SUMMARY"
       - name: Cache page fingerprints for next scheduled scan
         uses: actions/cache/save@v4
         with:
