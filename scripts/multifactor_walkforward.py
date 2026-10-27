@@ -160,6 +160,11 @@ def walkforward(rows, first_test_utc, evaluation_asof_utc, weeks=12,
         fold["status"] = "RESEARCH_EVALUATED"
         for name, columns in VARIANTS.items():
             extras = [field for field in columns if field not in BASE_FIELDS]
+            if name == "plus_injury_pressure_interaction" and not any(
+                len({r[field] for r in train if r.get(field) is not None}) > 1
+                for field in INJURY_STRESS):
+                fold["models"][name] = {"status": "SKIPPED_NO_VERIFIED_INJURY_INTERACTION_VARIATION"}
+                continue
             if extras and not any(
                 len({r[field] for r in train if r.get(field) is not None}) > 1
                 for field in extras):

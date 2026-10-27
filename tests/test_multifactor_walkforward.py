@@ -66,6 +66,30 @@ class MultifactorTests(unittest.TestCase):
         self.assertIsNone(rows[0]["verified_ol_absence_pressure_interaction"])
         self.assertIsNone(rows[0]["verified_qb_absence_pressure_interaction"])
 
+    def test_injury_candidate_requires_actual_verified_interaction_variation(self):
+        import datetime as dt
+        from scripts.multifactor_walkforward import INJURY_STRESS, ABS
+        rows=[]
+        for i in range(125):
+            kickoff=(dt.datetime(2026,8,1,tzinfo=dt.timezone.utc)+
+                     dt.timedelta(days=i//5))
+            row={"game_id":str(i),"kickoff_utc":kickoff.isoformat(),
+                 "capture_utc":(kickoff-dt.timedelta(days=1)).isoformat(),
+                 "outcome_known_at_utc":(kickoff+dt.timedelta(hours=8)).isoformat(),
+                 "home_score":24+i%5,"away_score":20+i%3}
+            row.update({field:0.1 for field in BASE_FIELDS})
+            row.update({field:None for field in INJURY_STRESS})
+            row.update({field:i%2 for field in ABS})
+            rows.append(row)
+        report=walkforward(rows,"2026-08-21T00:00:00Z",
+                           "2026-09-01T00:00:00Z",weeks=1,
+                           min_train=90,min_test=10)
+        fold=report["folds"][0]
+        self.assertEqual(fold["status"],"RESEARCH_EVALUATED")
+        self.assertEqual(fold["models"]["plus_injury_pressure_interaction"]["status"],
+                         "SKIPPED_NO_VERIFIED_INJURY_INTERACTION_VARIATION")
+        self.assertFalse(report["model_promoted"])
+
     def test_rejects_future_weather(self):
         feature, label = records()
         weather = {"game_id": "1", "decision_asof_utc": feature["capture_utc"],
