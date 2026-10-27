@@ -31,6 +31,28 @@ class NotesTests(unittest.TestCase):
         self.assertEqual(len(c),1)
         self.assertIn("sidearm.nextgen.sites/bluehens.com/",c[0])
         self.assertEqual(verified_pdf_leads(b'<html><a href="http://attacker.test/notes.pdf">bad</a></html>',landing,"https://bluehens.com/news/a"),[])
+    def test_official_single_matching_pdf_is_followed_automatically(self):
+        landing="https://gobearkats.com/documents/2026/10/26/Game_8_at_MOST.pdf"
+        full="https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/gobearkats.com/documents/2026/10/26/Game_8_at_MOST.pdf?timestamp=20261026090000"
+        config={"status":"REVIEWED_OFFICIAL_GAMEWEEK_LINKS_NOT_QB_STARTERS","season":2026,
+            "entries":[{"game_id":"1","team":"Sam Houston Bearkats",
+            "opponent":"Missouri State Bears","kickoff_utc":"2026-10-28T00:00:00Z",
+            "preview_url":"https://gobearkats.com/news/2026/10/25/football-game-8-preview-at-missouri-state",
+            "game_notes_url":landing,"starter_confirmed":False,
+            "evidence_type":"OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM"}]}
+        calls=[]
+        def fake(u):
+            calls.append(u)
+            if u==landing:
+                return ('<a href="'+full+'">Download game 8 notes</a>').encode(),"text/html"
+            if u==full:
+                return b"%PDF-1.7 official synthetic PDF bytes","application/pdf"
+            raise AssertionError("Unexpected URL")
+        result=observe(config,NOW,fetcher=fake,extractor=lambda raw:("Football game notes "+"sample "*40,12))
+        self.assertEqual(calls,[landing,full])
+        self.assertEqual(result["summary"]["direct_pdf_extracted"],1)
+        self.assertEqual(result["entries"][0]["resolved_direct_pdf_url"],full)
+        self.assertEqual(result["official_starting_qb_confirmations"],0)
     def test_changed_pdf_preserves_snapshot_scope(self):
         first=observe(conf(),NOW,fetcher=lambda u:(b"%PDF-1.7 first","application/pdf"),
                       extractor=lambda raw:("Football content with QB and opponent "+"x"*110,4))
