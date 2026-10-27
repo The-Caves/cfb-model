@@ -27,6 +27,22 @@ class SourceArchiveTests(unittest.TestCase):
         self.assertEqual(report["official_starting_qb_confirmations"],0)
         self.assertEqual(report["run_id"],"123456")
         self.assertEqual(len(report["pdf_review_sha256"]),64)
+    def test_media_notes_index_is_preserved_without_approval(self):
+        lead={"status":"OFFICIAL_FOOTBALL_MEDIA_INDEX_GAME_NOTE_LEADS_ONLY",
+             "season":2026,"captured_at_utc":"2026-10-26T23:20:00Z",
+             "betting_status":"PASS_UNVALIDATED","starter_confirmations_added":0,
+             "predictions_changed":False,"summary":{"indexes_checked":1},
+             "entries":[{"game_id":"2","team":"North Texas Mean Green",
+               "kickoff_utc":"2026-10-29T23:30:00Z",
+               "captured_at_utc":"2026-10-26T23:20:00Z",
+               "source_url":"https://meangreensports.com/sports/2026/9/2/unt-media-center",
+               "confirmed_starter":False,"links":[]}]}
+        out=plan(*pair(),NOW,123456,lead)
+        self.assertEqual(out["media_index_summary"]["indexes_checked"],1)
+        self.assertEqual(len(out["media_index_sha256"]),64)
+        self.assertEqual(out["official_starting_qb_confirmations"],0)
+        lead["entries"][0]["confirmed_starter"]=True
+        with self.assertRaises(ValueError):plan(*pair(),NOW,123456,lead)
     def test_cannot_archive_future_or_stale_source(self):
         html,pdf=pair();html["captured_at_utc"]="2026-10-26T23:50:00Z"
         with self.assertRaises(ValueError):plan(html,pdf,NOW,1)
