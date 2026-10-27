@@ -96,10 +96,27 @@ def observe(config,now,fetcher=get_notes,extractor=pages_text,previous=None):
             raw,mime=fetcher(url)
             if len(raw)>MAX_BYTES:raise ValueError("Oversize fetched game notes")
             if not raw.startswith(b"%PDF-"):
-                row["source_read_status"]="NOT_DIRECT_PDF_LANDING_PAGE"
-                row["source_change"]="NO_COMPARABLE_PDF_BYTES"
-                row["review_only_direct_pdf_link_candidates"]=verified_pdf_leads(raw,url,e["preview_url"])
-            else:
+                choices=verified_pdf_leads(raw,url,e["preview_url"])
+                row["review_only_direct_pdf_link_candidates"]=choices
+                # Follow at most one exact-filename PDF linked by the official
+                # school's own document landing page; never search arbitrary
+                # S3 keys, change school, or choose between ambiguous files.
+                if len(choices)==1:
+                    candidate=choices[0]
+                    candidate_raw,candidate_mime=fetcher(candidate)
+                    if (not candidate_raw.startswith(b"%PDF-") or
+                        "pdf" not in candidate_mime.lower() and
+                        "octet-stream" not in candidate_mime.lower()):
+                        raise ValueError("Officially linked direct download is not PDF")
+                    if len(candidate_raw)>MAX_BYTES:
+                        raise ValueError("Officially linked PDF exceeds bounded filesize")
+                    raw,mime=candidate_raw,candidate_mime
+                    row["resolved_direct_pdf_url"]=candidate
+                    row["game_notes_landing_url"]=url
+                else:
+                    row["source_read_status"]="NOT_DIRECT_PDF_LANDING_PAGE"
+                    row["source_change"]="NO_COMPARABLE_PDF_BYTES"
+            if raw.startswith(b"%PDF-"):
                 if "pdf" not in mime.lower() and "octet-stream" not in mime.lower():
                     raise ValueError("Mismatched PDF response MIME")
                 text,pages=extractor(raw)
