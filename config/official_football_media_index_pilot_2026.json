@@ -1,0 +1,18 @@
+{
+  "status": "REVIEWED_OFFICIAL_FOOTBALL_MEDIA_INDEX_PILOT_2026",
+  "season": 2026,
+  "entries": [
+    {
+      "game_id": "401862812",
+      "team": "North Texas Mean Green",
+      "opponent": "Florida Atlantic Owls",
+      "kickoff_utc": "2026-10-29T23:30:00Z",
+      "game_number": 8,
+      "target_game_date_label": "Oct. 29",
+      "opponent_short": "Florida Atlantic",
+      "owner_label": "UNT",
+      "index_url": "https://meangreensports.com/sports/2026/9/2/unt-media-center",
+      "preview_url": "https://meangreensports.com/news/2026/10/26/football-unt-hosting-fau-on-espn-in-national-spotlight"
+    }
+  ]
+}
