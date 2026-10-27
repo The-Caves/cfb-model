@@ -80,6 +80,25 @@ class CreativeModelResearch(unittest.TestCase):
         self.assertNotIn("all_creative",p)
         self.assertIn("active_v03",p)
 
+    def test_all_measured_groups_execute_and_no_target_leakage(self):
+        from scripts.creative_model_features import CREATIVE_FIELDS
+        rows=synthetic_rows(145)
+        for i,row in enumerate(rows):
+            for j,name in enumerate(CREATIVE_FIELDS):
+                row[name]=float((i%11)*0.1+(j%7)*0.03)
+            row["possession_score_estimate"]=(float(i%9-4),float(48+i%6))
+            row["volatility_proxy"]=float(i%5)
+        cutoff=dt.date(2026,8,23)
+        train,test=rows[:110],rows[110:115]
+        before,skipped=_predictions(train,test,cutoff)
+        self.assertFalse(skipped)
+        self.assertTrue(set(VARIANTS).issubset(set(before)))
+        self.assertIn("possession_mechanistic",before)
+        self.assertIn("fixed_weight_ensemble",before)
+        modified=[dict(row,home_score=104,away_score=0) for row in test]
+        after,_=_predictions(train,modified,cutoff)
+        self.assertEqual(before,after)
+
     def test_duplicate_identity_and_bad_status_fail_closed(self):
         rows=synthetic_rows(150)
         with self.assertRaises(ValueError):validate(rows+[rows[0]])

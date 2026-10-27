@@ -284,23 +284,35 @@ def validate(rows,start="2026-09-26",weeks=12,min_train=MIN_TRAIN):
             "weeks":folds,"aggregate":aggregate},dict(scores)
 
 
-def run(games,advanced,manifest,output):
+def run(games,advanced,manifest,output,predictions_output=None):
     source,adv,_=load_inputs(games,advanced,manifest)
     rows=build(source,adv)
     report,predictions=validate(rows)
     dest=Path(output)
     dest.parent.mkdir(parents=True,exist_ok=True)
     if dest.exists():raise FileExistsError("Do not overwrite an experiment report")
+    if predictions_output is not None:
+        detail=Path(predictions_output)
+        if detail.exists() or detail==dest:
+            raise FileExistsError("Do not overwrite predictions or report")
+        detail.parent.mkdir(parents=True,exist_ok=True)
+        detail.write_text(json.dumps({
+            "status":"CREATIVE_CANDIDATE_GAME_BY_GAME_RESEARCH_ONLY",
+            "version":VERSION,"model_promoted":False,
+            "historical_pbp_publication_verified":False,
+            "betting_status":"PASS_UNVALIDATED",
+            "per_candidate":predictions
+        },indent=2,allow_nan=False)+"\n",encoding="utf-8")
     dest.write_text(json.dumps(report,indent=2,allow_nan=False)+"\n",encoding="utf-8")
     print(json.dumps({"status":STATUS,"model_promoted":False,
                       "groups":list(GROUPS),"weeks":len(report["weeks"]),
                       "models":report["aggregate"]},sort_keys=True))
     return report
 
-
 if __name__=="__main__":
     p=argparse.ArgumentParser()
     for name in ("games","advanced","manifest","output"):
         p.add_argument("--"+name,required=True)
+    p.add_argument("--predictions-output")
     a=p.parse_args()
-    run(a.games,a.advanced,a.manifest,a.output)
+    run(a.games,a.advanced,a.manifest,a.output,a.predictions_output)

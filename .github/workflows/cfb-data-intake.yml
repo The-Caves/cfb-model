@@ -123,6 +123,7 @@ jobs:
             --advanced data/advanced/team_game_advanced_2026.csv \
             --manifest data/advanced/advanced_manifest.json \
             --output data/model_v03/creative-candidate-research.json
+            --predictions-output data/model_v03/creative-candidate-predictions.json
           python - <<'PY'
           import json,os
           p="data/model_v03/creative-candidate-research.json"
@@ -141,7 +142,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cfb-creative-candidates-${{ github.run_id }}
-          path: data/model_v03/creative-candidate-research.json
+          path: |
+            data/model_v03/creative-candidate-research.json
+            data/model_v03/creative-candidate-predictions.json
           if-no-files-found: error
           retention-days: 30
       - name: Audit retrospective backtest evidence for milestones 3-6

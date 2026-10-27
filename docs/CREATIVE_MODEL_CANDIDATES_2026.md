@@ -21,3 +21,7 @@ These research experiments are implemented in `scripts/creative_model_features.p
 ## Automated execution
 
 `.github/workflows/cfb-data-intake.yml` now runs this research module with real 2026 data on every scheduled or explicitly triggered ingestion, after it completes the normal advanced PBP ingest and earlier matchup ablations. It uploads `cfb-creative-candidates-<run-id>` with every held-out fold's exact train/test ESPN game IDs, skipped components, candidate metrics and baseline comparisons. Failure to load required real data fails the research job (it cannot silently invent a passing result). Unit tests run in the validation job first. This module never reads or rewrites pre-existing immutable model forecasts.
+
+## Game-by-game audit files
+
+Every full intake additionally writes \`creative-candidate-predictions.json\` with the held-out forecast margin and total beside the observed final, keyed by exact ESPN game ID and model version. It is research-only, not historical sportsbook quotes. Unit tests exercise every measured experimental variant and confirm that changing held-out outcomes does not alter pregame forecasts.
