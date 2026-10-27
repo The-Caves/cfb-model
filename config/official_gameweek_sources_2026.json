@@ -60,7 +60,7 @@
       "kickoff_utc": "2026-10-28T00:00:00Z",
       "published_date": "2026-10-25",
       "preview_url": "https://gobearkats.com/news/2026/10/25/football-game-8-preview-at-missouri-state",
-      "game_notes_url": "https://gobearkats.com/documents/2026/10/26/Game_8_at_MOST.pdf",
+      "game_notes_url": "https://s3.us-east-2.amazonaws.com/sidearm.nextgen.sites/gobearkats.com/documents/2026/10/26/Game_8_at_MOST.pdf?timestamp=20261026013412",
       "evidence_type": "OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM",
       "starter_confirmed": false,
       "qb_context": {
@@ -69,7 +69,8 @@
         "summary": "The October 25 official preview describes season passing production, not the named starter for the Missouri State game.",
         "quote": "Landyn Locke was one of 15 quarterbacks added",
         "source_url": "https://gobearkats.com/news/2026/10/25/football-game-8-preview-at-missouri-state"
-      }
+      },
+      "game_notes_landing_url": "https://gobearkats.com/documents/2026/10/26/Game_8_at_MOST.pdf"
     },
     {
       "game_id": "401862812",
