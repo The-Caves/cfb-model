@@ -10,6 +10,9 @@ on:
       - 'tests/test_qb_official_notes_watch.py'
       - 'scripts/qb_source_watch_archive.py'
       - 'tests/test_qb_source_watch_archive.py'
+      - 'scripts/qb_media_notes_index_watch.py'
+      - 'tests/test_qb_media_notes_index_watch.py'
+      - 'config/official_football_media_index_pilot_2026.json'
       - 'config/official_gameweek_sources_2026.json'
       - '.github/workflows/cfb-qb-gameweek-watch.yml'
   schedule:
@@ -88,6 +91,14 @@ jobs:
           print(json.dumps(data["summary"],sort_keys=True))
           PY
           cp data/qb_review/official_gameweek_notes_watch.json .qb-watch/previous-notes.json
+      - name: Test exact fixture-specific football media-center note discovery
+        run: python -m unittest discover -s tests -p 'test_qb_media_notes_index_watch.py' -v
+      - name: Check official media center for current game-note link publication
+        run: |
+          set -euo pipefail
+          python -m scripts.qb_media_notes_index_watch \
+            --config config/official_football_media_index_pilot_2026.json \
+            --output data/qb_review/official_game_notes_media_index_leads.json
       - name: Test strict archived QB-source observation clocks
         run: python -m unittest discover -s tests -p 'test_qb_source_watch_archive.py' -v
       - name: Preserve immutable observed source evidence on context-state branch
