@@ -67,7 +67,7 @@ def plan(html,notes,now,run_id,media_index=None):
                 raise ValueError("Untrusted index source")
             if any(not str(link).startswith("https://") for link in row.get("links",[])):
                 raise ValueError("Untrusted document lead")
-    capture=max(parse_time(html["captured_at_utc"]),parse_time(notes["captured_at_utc"]))
+    capture=max(parse_time(html["captured_at_utc"]),parse_time(notes["captured_at_utc"]),parse_time(media_index["captured_at_utc"]) if media_index is not None else parse_time(html["captured_at_utc"]))
     return {"status":STATUS,"season":2026,"run_id":str(run_id),
         "archive_created_at_utc":now.isoformat(),"latest_source_capture_utc":capture.isoformat(),
         "betting_status":"PASS_UNVALIDATED","safe_for_betting":False,
