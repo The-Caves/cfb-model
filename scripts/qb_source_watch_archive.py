@@ -13,7 +13,7 @@ from scripts.game_context import parse_time
 STATUS="QB_OFFICIAL_SOURCE_WATCH_IMMUTABLE_RESEARCH_ONLY"
 ROOT="research_2026/qb_source_watch"
 MAX_CAPTURE_LAG_SECONDS=1800
-def plan(html,notes,now,run_id):
+def plan(html,notes,now,run_id,media_index=None):
     if not str(run_id).isdigit():raise ValueError("GitHub workflow ID missing")
     if html.get("status")!="OFFICIAL_GAMEWEEK_QB_LANGUAGE_REVIEW_ONLY" or notes.get("status")!="OFFICIAL_QB_NOTES_DOCUMENT_REVIEW_ONLY":
         raise ValueError("Unexpected official-source audit kind")
@@ -45,6 +45,28 @@ def plan(html,notes,now,run_id):
             sha=row.get("content_sha256")
             if sha is not None and (not isinstance(sha,str) or len(sha)!=64 or any(c not in "0123456789abcdef" for c in sha)):
                 raise ValueError("Invalid source fingerprint")
+    if media_index is not None:
+        if (media_index.get("status")!="OFFICIAL_FOOTBALL_MEDIA_INDEX_GAME_NOTE_LEADS_ONLY"
+            or media_index.get("season")!=2026
+            or media_index.get("betting_status")!="PASS_UNVALIDATED"
+            or media_index.get("starter_confirmations_added")!=0
+            or media_index.get("predictions_changed") is not False):
+            raise ValueError("Invalid research-only notes media-center scan")
+        observed=parse_time(media_index["captured_at_utc"])
+        if observed>now or (now-observed).total_seconds()>MAX_CAPTURE_LAG_SECONDS:
+            raise ValueError("Stale/currently future media-index observation")
+        seen_media=set()
+        for row in media_index.get("entries",[]):
+            key=(str(row["game_id"]),row["team"])
+            if key in seen_media or row.get("confirmed_starter") is not False:
+                raise ValueError("Duplicated/promoted media index result")
+            seen_media.add(key)
+            if parse_time(row["kickoff_utc"])<=observed or parse_time(row["captured_at_utc"])!=observed:
+                raise ValueError("Historical or retimed media lead")
+            if not str(row.get("source_url","")).startswith("https://"):
+                raise ValueError("Untrusted index source")
+            if any(not str(link).startswith("https://") for link in row.get("links",[])):
+                raise ValueError("Untrusted document lead")
     capture=max(parse_time(html["captured_at_utc"]),parse_time(notes["captured_at_utc"]))
     return {"status":STATUS,"season":2026,"run_id":str(run_id),
         "archive_created_at_utc":now.isoformat(),"latest_source_capture_utc":capture.isoformat(),
@@ -57,6 +79,9 @@ def plan(html,notes,now,run_id):
                    "full_text_source_rows":html["summary"].get("full_articles_fetched",0)+notes["summary"].get("direct_pdf_extracted",0),
                    "verified_starter_game_slots":0},
         "html_observations":html["entries"],"official_pdf_observations":notes["entries"],
+        "media_index_sha256":(hashlib.sha256(store.encode(media_index)).hexdigest() if media_index is not None else None),
+        "media_index_observations":media_index["entries"] if media_index is not None else [],
+        "media_index_summary":media_index["summary"] if media_index is not None else None,
         "warning":"Immutable historical source-capture audit, NOT authenticated report publication time, source approval, or pregame starting QB evidence."}
 
 def archive(report):
@@ -71,17 +96,19 @@ def archive(report):
     sha=_commit_material({path:blob},report["run_id"])
     return {"status":"ARCHIVED","path":path,"github_commit_sha":sha,"summary":report["summary"]}
 
-def run(html_path,notes_path,run_id=None,now=None,persist=True):
+def run(html_path,notes_path,run_id=None,now=None,persist=True,index_path=None):
     now=now or dt.datetime.now(dt.timezone.utc)
     run_id=run_id or os.environ.get("GITHUB_RUN_ID","")
     html=json.loads(Path(html_path).read_text(encoding="utf-8"))
     notes=json.loads(Path(notes_path).read_text(encoding="utf-8"))
-    snapshot=plan(html,notes,now,run_id)
+    media_index=json.loads(Path(index_path).read_text(encoding="utf-8")) if index_path else None
+    snapshot=plan(html,notes,now,run_id,media_index=media_index)
     return archive(snapshot) if persist else snapshot
 
 if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--html",required=True)
     p.add_argument("--notes",required=True)
+    p.add_argument("--index")
     args=p.parse_args()
-    print(json.dumps(run(args.html,args.notes),sort_keys=True))
+    print(json.dumps(run(args.html,args.notes,index_path=args.index),sort_keys=True))
