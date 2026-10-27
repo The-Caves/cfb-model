@@ -108,7 +108,8 @@ jobs:
           set -euo pipefail
           python -m scripts.qb_source_watch_archive \
             --html data/qb_review/official_gameweek_language_watch.json \
-            --notes data/qb_review/official_gameweek_notes_watch.json | tee /tmp/qb-source-archive-result.json
+            --notes data/qb_review/official_gameweek_notes_watch.json \
+            --index data/qb_review/official_game_notes_media_index_leads.json | tee /tmp/qb-source-archive-result.json
           cat /tmp/qb-source-archive-result.json >> "$GITHUB_STEP_SUMMARY"
           echo "Stored source change observations only; no confirmed starting QBs or modified picks." >> "$GITHUB_STEP_SUMMARY"
       - name: Cache page fingerprints for next scheduled scan
