@@ -45,8 +45,8 @@ jobs:
           assert data["status"]=="QB_STARTER_MANUAL_REVIEW_WORKLIST_RESEARCH_ONLY"
           assert data["betting_status"]=="PASS_UNVALIDATED"
           assert data["summary"]["team_slots"]==122
-          assert data["summary"]["reviewed_official_gameweek_preview_links"]==5
-          assert data["summary"]["linked_official_gameweek_notes"]==3
+          assert data["summary"]["reviewed_official_gameweek_preview_links"]==6
+          assert data["summary"]["linked_official_gameweek_notes"]==4
           assert data["summary"]["official_contextual_qb_mentions_not_starting_confirmations"]==4
           assert data["game_specific_QB_confirmations_added"]==0
           assert all(row["starter_status"]!="VERIFIED_SOURCE" for row in data["rows"])
