@@ -147,6 +147,8 @@ def _features(home, away, day):
         "recency_epa_shift_diff": _delta(h_epa, a_epa),
         "recency_coverage_diff": _delta(h_cover, a_cover)
     }
+    f["latent_strength_diff"]=None
+    f["latent_uncertainty_sum"]=None
     if set(f)!=set(CREATIVE_FIELDS):raise ValueError("Feature schema mismatch")
     # Includes defense/special-team points. This is NOT observed offensive drive EPA.
     if all(f[k] is not None for k in ("possessions_proxy", "home_attack_ppd",

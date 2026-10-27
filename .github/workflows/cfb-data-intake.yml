@@ -115,6 +115,35 @@ jobs:
             --advanced data/advanced/team_game_advanced_2026.csv \
             --manifest data/advanced/advanced_manifest.json \
             --output data/model_v03/matchup_experiments
+      - name: Run preregistered creative feature and ensemble research (never live picks)
+        run: |
+          set -euo pipefail
+          python -m scripts.creative_model_research \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --manifest data/advanced/advanced_manifest.json \
+            --output data/model_v03/creative-candidate-research.json
+          python - <<'PY'
+          import json,os
+          p="data/model_v03/creative-candidate-research.json"
+          d=json.load(open(p,encoding="utf-8"))
+          assert d["status"]=="CREATIVE_ENSEMBLE_CHRONOLOGICAL_RESEARCH_ONLY"
+          assert d["candidate"]=="CREATIVE_CFB_CANDIDATE_2026_V1"
+          assert d["active_model_unchanged"] and d["model_promoted"] is False
+          assert d["historical_pbp_publication_verified"] is False
+          assert d["no_authenticated_historical_market_odds"] is True
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+              f.write("### Creative model research candidates (NOT live picks)\\n\\n")
+              f.write("Experiments use retrospectively revised inputs; prospective improvement unverified.\\n\\n")
+              f.write("\\x60\\x60\\x60json\\n"+json.dumps(d["aggregate"],indent=2)+"\\n\\x60\\x60\\x60\\n")
+          PY
+      - name: Publish creative candidate tests, folds and missingness (research only)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-creative-candidates-${{ github.run_id }}
+          path: data/model_v03/creative-candidate-research.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Audit retrospective backtest evidence for milestones 3-6
         run: |
           python -m scripts.backtest_evidence_gate \
