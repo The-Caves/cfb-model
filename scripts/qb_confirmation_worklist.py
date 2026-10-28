@@ -74,7 +74,15 @@ def build(queue,source_registry,gameweek_sources=None):
         team=school["team"]
         if team in idx:raise ValueError("Duplicate canonical school")
         idx[team]=school
-    official_week=_gameweek_index(gameweek_sources)
+    # The registry is an audit of dated original releases, including games
+    # now completed. Keep those entries in the source archive but exclude
+    # them from the *future-game* QB worklist as of its real capture instant.
+    # Future unmatched fixtures still fail closed as a possible identity error.
+    official_all=_gameweek_index(gameweek_sources)
+    decision=parse_time(queue["asof_utc"])
+    official_week={key:entry for key,entry in official_all.items()
+                   if parse_time(entry["kickoff_utc"])>decision}
+    retired=len(official_all)-len(official_week)
     ranked=[];seen=set()
     for row in queue["rows"]:
         gid=str(row["game_id"]);team=row["team"];kickoff=parse_time(row["kickoff_utc"])
@@ -150,6 +158,7 @@ def build(queue,source_registry,gameweek_sources=None):
         "asof_utc":queue["asof_utc"],"safe_for_betting":False,
         "game_specific_QB_confirmations_added":0,"trained_replacement_points":False,
         "summary":{"future_games":n//2,"team_slots":n,
+                   "historical_gameweek_sources_excluded":retired,
                    "unreviewed_or_unknown_slots":sum(r["starter_status"]!="VERIFIED_SOURCE" for r in ranked),
                    "school_homepage_candidates":sum(bool(r["official_athletics_homepage"]) for r in ranked),
                    "rss_school_links":sum(bool(r["official_rss_url"]) for r in ranked),

@@ -78,6 +78,26 @@ class WorklistTests(unittest.TestCase):
         self.assertEqual(record["starter_status"],"UNKNOWN")
         entry["qb_context"]["mention_type"]="OFFICIAL_STARTER_CONFIRMED"
         with self.assertRaises(ValueError):build(qb,s,config)
+    def test_past_gameweek_source_is_archived_not_reused_for_future_queue(self):
+        qb,s=fixtures()
+        old={"game_id":"400","team":"Alpha University","opponent":"Beta College",
+             "kickoff_utc":"2026-10-25T16:00:00Z","published_date":"2026-10-24",
+             "preview_url":"https://example.edu/past-preview","game_notes_url":None,
+             "starter_confirmed":False,
+             "evidence_type":"OFFICIAL_GAMEWEEK_PREVIEW_NO_QB1_CLAIM"}
+        r=build(qb,s,{"status":"REVIEWED_OFFICIAL_GAMEWEEK_LINKS_NOT_QB_STARTERS",
+                       "season":2026,"entries":[old]})
+        self.assertEqual(r["summary"]["historical_gameweek_sources_excluded"],1)
+        self.assertEqual(r["summary"]["reviewed_official_gameweek_preview_links"],0)
+        self.assertEqual(r["game_specific_QB_confirmations_added"],0)
+        self.assertTrue(all(x["reviewed_official_preview_url"] is None for x in r["rows"]))
+        # Archive remains strict: an *unmatched future* game is not silently skipped.
+        future=dict(old,game_id="999",kickoff_utc="2026-10-29T16:00:00Z",
+                    published_date="2026-10-28")
+        with self.assertRaisesRegex(ValueError,"unrecognized future game"):
+            build(qb,s,{"status":"REVIEWED_OFFICIAL_GAMEWEEK_LINKS_NOT_QB_STARTERS",
+                        "season":2026,"entries":[future]})
+
     def test_gameweek_mismatch_or_claim_rejected(self):
         qb,s=fixtures()
         entry={"game_id":"401","team":"Alpha University","opponent":"Beta College",
