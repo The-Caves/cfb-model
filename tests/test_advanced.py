@@ -70,6 +70,36 @@ class AdvancedTests(unittest.TestCase):
         rows,qa=per_game_features(self.make(home=25,away=3),self.ledger(),"2026-10-20")
         self.assertEqual(len(rows),0)
         self.assertEqual(qa["games_quarantined"],1)
+    def test_accepted_pbp_creates_player_history_without_invented_starter(self):
+        plays=self.make()
+        for p in plays:
+            if p["pass"] and p["pos_team_id"]==1:
+                p["passer_player_name"]="Nick Minicucci"
+            elif p["pass"] and p["pos_team_id"]==2:
+                p["passer_player_name"]="Opponent QB"
+        observed=[]
+        rows,qa=per_game_features(
+            plays,self.ledger(),"2026-10-20",
+            qb_out=observed,qb_observed_at="2026-09-03T14:00:00Z")
+        self.assertEqual(len(rows),2)
+        self.assertEqual(len(observed),2)
+        self.assertEqual(qa["qb_passer_attribution"]["accepted_team_games"],2)
+        h=next(row for row in observed if row["team"]=="Home")
+        self.assertEqual(h["player"],"Nick Minicucci")
+        self.assertEqual(h["passer_identity_status"],"POSTGAME_PASSER_NOT_STARTER_VERIFIED")
+        self.assertFalse(qa["qb_passer_attribution"]["qb1_known_from_pbp"])
+
+    def test_quarantined_pbp_does_not_create_fake_player_history(self):
+        plays=self.make(hs=31)
+        for p in plays:p["passer_player_name"]="Any Quarterback"
+        observed=[]
+        rows,qa=per_game_features(
+            plays,self.ledger(),"2026-10-20",
+            qb_out=observed,qb_observed_at="2026-09-03T14:00:00Z")
+        self.assertEqual(rows,[])
+        self.assertEqual(observed,[])
+        self.assertEqual(qa["games_quarantined"],1)
+
     def test_future_cutoff(self):
         games=self.ledger()
         games["77"]["date"]="2026-10-21"
