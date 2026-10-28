@@ -77,7 +77,7 @@ jobs:
         run: python scripts/reconcile_scores.py --archive data/archive/2026_v09_scores_unverified.csv --live data/games_2026.csv --aliases data/archive/2026_team_aliases.csv --output data/reconciliation
       - name: Ingest provider 2026 PBP and advanced-drive releases (research only)
         id: advanced
-        run: python scripts/ingest_advanced.py --games data/games_2026.csv --registry data/archive/2026_team_aliases.csv --output data/advanced
+        run: python -m scripts.ingest_advanced --games data/games_2026.csv --registry data/archive/2026_team_aliases.csv --output data/advanced
       - name: Merge scoreboard and advanced 2026 team profiles
         run: python scripts/combine_profiles.py --scores data/team_profiles_2026.csv --advanced data/advanced/team_profiles_advanced_2026.csv --expected-teams 138 --output data/enriched
       - name: Build checksummed retrospective weekly profiles (v0.4 step 1)
