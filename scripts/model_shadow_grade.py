@@ -94,13 +94,26 @@ def evaluate(shadows, grades, asof_utc):
                 "margin_abs_error":round(abs(m-truth),5),
                 "signed_error":round(m-truth,5),
                 "su_correct":int((m>0)==(truth>0)) if m!=0 and truth!=0 else None}
+        control=row.get("latent_ablation_control")
+        ablation=None
+        if (control is not None and
+            control["status"]=="SHADOW_FROZEN_RESEARCH" and
+            "recency_plus_latent" in available):
+            combo=available["recency_plus_latent"]
+            control_err=abs(control["predicted_home_margin"]-truth)
+            ablation={"matched_recency_margin":control["predicted_home_margin"],
+                "matched_recency_abs_error":round(control_err,5),
+                "combined_abs_error":combo["margin_abs_error"],
+                "delta_mae_combo_minus_cohort_control":round(
+                    combo["margin_abs_error"]-control_err,5)}
         per_game.append({"game_id":str(grade["game_id"]),"home":grade["home"],
             "away":grade["away"],"kickoff_utc":grade["kickoff_utc"],
             "shadow_run_id":run,
             "shadow_observed_utc":frozen["shadow_observed_utc"],
             "selected_v03_grade_sha256":sha256(grade),
             "reference_grade_policy":grade["observation_policy"],
-            "actual_margin":truth,"models":available})
+            "actual_margin":truth,"matched_cohort_latent_ablation":ablation,
+            "models":available})
     metrics={}
     for name in MODELS:
         matched=[r for r in per_game if name in r["models"]]
@@ -123,6 +136,14 @@ def evaluate(shadows, grades, asof_utc):
             "signed_home_margin_error":round(sum(signed)/len(signed),5),
             "winner_accuracy":round(sum(correct)/len(correct),5) if correct else None,
             "non_tie_game_count":len(correct)}
+    incremental=[r["matched_cohort_latent_ablation"] for r in per_game
+                 if r["matched_cohort_latent_ablation"] is not None]
+    incremental_metrics=({"games":len(incremental),
+        "matched_cohort_recency_mae":round(sum(r["matched_recency_abs_error"] for r in incremental)/len(incremental),5),
+        "matched_cohort_plus_latent_mae":round(sum(r["combined_abs_error"] for r in incremental)/len(incremental),5),
+        "delta_mae_latent_feature_only":round(sum(r["delta_mae_combo_minus_cohort_control"]
+                                                 for r in incremental)/len(incremental),5)}
+        if incremental else {"games":0,"status":"NO_MATCHED_FROZEN_ABLATION_YET"})
     complete_rows=[r for r in per_game if all(k in r["models"] for k in MODELS)]
     complete=len(complete_rows)
     four_way={}
@@ -166,7 +187,8 @@ def evaluate(shadows, grades, asof_utc):
                           "shadow_linked_eligible_games":len(per_game),
                           "four_way_matched_games":complete,
                           "unmatched_reasons":dict(reasons)},
-        "metrics":metrics,"four_way_paired":four_way,
+        "metrics":metrics,"latent_feature_incremental_ablation":incremental_metrics,
+        "four_way_paired":four_way,
         "weekly_paired":per_week,"per_game":per_game,
         "market_ats_ou_grades_available":False,
         "historical_pbp_publication_verified":False,

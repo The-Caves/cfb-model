@@ -41,6 +41,7 @@ class ShadowGradeTests(unittest.TestCase):
         self.assertEqual(report["metrics"]["recency_plus_latent"]["games"],1)
         self.assertEqual(report["four_way_paired"]["active_v03"]["games"],1)
         self.assertEqual(report["four_way_paired"]["recency_plus_latent"]["games"],1)
+        self.assertEqual(report["latent_feature_incremental_ablation"]["games"],1)
         self.assertTrue(all("paired_v03_mae" in week["models"]["recency_14d"]
                             for week in report["weekly_paired"].values()))
         self.assertFalse(report["model_promoted"])

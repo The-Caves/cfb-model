@@ -64,10 +64,14 @@ class ShadowModelsTests(unittest.TestCase):
         self.assertTrue(all(row["models"][n]["version"]==VERSIONS[n] for n in MODELS))
         self.assertTrue(all(row["models"][n]["predicted_total"]==54. for n in MODELS))
         self.assertTrue(all(row["models"][n]["status"]=="SHADOW_FROZEN_RESEARCH" for n in MODELS))
+        self.assertEqual(row["latent_ablation_control"]["status"],"SHADOW_FROZEN_RESEARCH")
+        self.assertEqual(row["latent_ablation_control"]["training_games"],
+                         shadow["latent_train_games"])
         missing=shadow["games"][1]
         self.assertEqual(missing["models"]["latent_only"]["status"],"PASS")
         self.assertEqual(missing["models"]["recency_plus_latent"]["status"],"PASS")
         self.assertFalse(missing["latent_evidence_present"])
+        self.assertEqual(missing["latent_ablation_control"]["status"],"PASS")
 
     def test_no_same_game_outcome_or_future_feature_used(self):
         original,frozen,games,training=self.make()

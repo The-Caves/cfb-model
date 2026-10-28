@@ -97,6 +97,9 @@ def build_shadow(frozen,games,advanced,training_rows,observed_at_utc):
         and all(r.get(k) is not None for k in LATENT)]
     latent_params=fit_ridge(available_latent,BASE_FIELDS+LATENT) if len(available_latent)>=MIN_LATENT_TRAIN else None
     combined_params=fit_candidate(available_latent,BASE_FIELDS+LATENT,cutoff) if latent_params else None
+    # Identical-training-cohort recency-only control isolates whether latent
+    # variables add predictive signal beyond sample-selection differences.
+    matched_recency_params=fit_candidate(available_latent,BASE_FIELDS,cutoff) if latent_params else None
     states={}
     for _,group in group_by_date([g for g in games if dt.date.fromisoformat(g["date"])<cutoff]):
         _advance_latent(states,group)
@@ -134,11 +137,21 @@ def build_shadow(frozen,games,advanced,training_rows,observed_at_utc):
             combined_margin=float(predict_candidate([source],BASE_FIELDS+LATENT,combined_params)[0])
             record("latent_only",latent_margin)
             record("recency_plus_latent",combined_margin)
+        control_margin=(float(predict_candidate([source],BASE_FIELDS,matched_recency_params)[0])
+                        if extra is not None and matched_recency_params is not None else None)
+        control={"version":"RECENCY14D_SAME_LATENT_ELIGIBLE_COHORT_CONTROL_V1",
+                 "training_games":len(available_latent),
+                 "status":"SHADOW_FROZEN_RESEARCH" if control_margin is not None else "PASS",
+                 "predicted_home_margin":_clip_margin(control_margin,total)
+                    if control_margin is not None and total is not None else None,
+                 "pass_reason":None if control_margin is not None and total is not None
+                    else "LATENT_TRAINING_OR_TEAM_HISTORY_INSUFFICIENT"}
         rows.append({"game_id":str(game["game_id"]),"home":game["home"],"away":game["away"],
                      "kickoff_utc":game["kickoff_utc"],"baseline_row_sha256":game["row_sha256"],
                      "lead_hours_at_shadow":round((t(game["kickoff_utc"])-observed).total_seconds()/3600,5),
                      "policy_24_to_72h_eligible":24<=(t(game["kickoff_utc"])-observed).total_seconds()/3600<=72,
                      "latent_evidence_present":extra is not None,
+                     "latent_ablation_control":control,
                      "models":options})
     record={"status":STATUS,"season":2026,"run_id":str(frozen["run_id"]),
         "baseline_model":VERSIONS["active_v03"],
@@ -192,6 +205,22 @@ def verify_shadow(record):
                     or not math.isfinite(margin) or not 0<=total<=110 or abs(margin)>min(55,total)):
                     raise ValueError("Invalid shadow prediction")
             else:raise ValueError("Unsupported shadow status")
+        ctrl=row.get("latent_ablation_control")
+        if ctrl is not None:
+            if (ctrl.get("version")!="RECENCY14D_SAME_LATENT_ELIGIBLE_COHORT_CONTROL_V1"
+                or ctrl.get("training_games")!=record["latent_train_games"]):
+                raise ValueError("Wrong latent matched-cohort control identity")
+            if ctrl.get("status")=="PASS":
+                if ctrl.get("predicted_home_margin") is not None or not ctrl.get("pass_reason"):
+                    raise ValueError("Missing latent evidence was fabricated")
+            elif ctrl.get("status")=="SHADOW_FROZEN_RESEARCH":
+                m=ctrl.get("predicted_home_margin")
+                if (not row["latent_evidence_present"] or
+                    row["models"]["recency_plus_latent"]["status"]!="SHADOW_FROZEN_RESEARCH" or
+                    type(m) not in (float,int) or not math.isfinite(m) or
+                    abs(m)>min(55,row["models"]["active_v03"]["predicted_total"])):
+                    raise ValueError("Invalid matched latent control")
+            else:raise ValueError("Unsupported matched-cohort control")
         base_total=row["models"]["active_v03"]["predicted_total"]
         if any(v["predicted_total"] not in (None,base_total) for v in row["models"].values()):
             raise ValueError("Shadow prediction changed totals")
