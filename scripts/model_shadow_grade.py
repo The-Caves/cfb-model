@@ -13,6 +13,7 @@ import math
 import os
 from collections import defaultdict
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from scripts import context_archive as store
 from scripts.personnel_features import sha256
@@ -122,7 +123,41 @@ def evaluate(shadows, grades, asof_utc):
             "signed_home_margin_error":round(sum(signed)/len(signed),5),
             "winner_accuracy":round(sum(correct)/len(correct),5) if correct else None,
             "non_tie_game_count":len(correct)}
-    complete=sum(all(k in r["models"] for k in MODELS) for r in per_game)
+    complete_rows=[r for r in per_game if all(k in r["models"] for k in MODELS)]
+    complete=len(complete_rows)
+    four_way={}
+    if complete:
+        for name in MODELS:
+            values=[r["models"][name]["margin_abs_error"] for r in complete_rows]
+            signed=[r["models"][name]["signed_error"] for r in complete_rows]
+            su=[r["models"][name]["su_correct"] for r in complete_rows
+                if r["models"][name]["su_correct"] is not None]
+            four_way[name]={"games":complete,
+                            "margin_mae":round(sum(values)/complete,5),
+                            "signed_bias":round(sum(signed)/complete,5),
+                            "winner_accuracy":round(sum(su)/len(su),5) if su else None}
+    weekly={}
+    for row in per_game:
+        local=at(row["kickoff_utc"]).astimezone(ZoneInfo("America/New_York")).date()
+        monday=local-dt.timedelta(days=local.weekday())
+        week=monday.isoformat()
+        weekly.setdefault(week,[]).append(row)
+    per_week={}
+    for week,group in sorted(weekly.items()):
+        cohorts={}
+        for name in MODELS:
+            paired=[r for r in group if name in r["models"]]
+            if not paired:
+                cohorts[name]={"games":0}
+                continue
+            n=len(paired)
+            error=sum(r["models"][name]["margin_abs_error"] for r in paired)/n
+            reference=sum(r["models"]["active_v03"]["margin_abs_error"] for r in paired)/n
+            cohorts[name]={"games":n,"margin_mae":round(error,5),
+                "paired_v03_mae":round(reference,5),
+                "paired_delta_mae":round(error-reference,5)}
+        per_week[week]={"games":len(group),"four_way_games":sum(
+            all(k in r["models"] for k in MODELS) for r in group),"models":cohorts}
     return {"status":STATUS,"season":2026,
         "evaluated_at_utc":now.isoformat(),
         "reference_policy":"SAME_SELECTED_IMMUTABLE_24_TO_72_HOUR_STEP3G_GRADE",
@@ -131,7 +166,8 @@ def evaluate(shadows, grades, asof_utc):
                           "shadow_linked_eligible_games":len(per_game),
                           "four_way_matched_games":complete,
                           "unmatched_reasons":dict(reasons)},
-        "metrics":metrics,"per_game":per_game,
+        "metrics":metrics,"four_way_paired":four_way,
+        "weekly_paired":per_week,"per_game":per_game,
         "market_ats_ou_grades_available":False,
         "historical_pbp_publication_verified":False,
         "model_promoted":False,"safe_for_betting":False,
