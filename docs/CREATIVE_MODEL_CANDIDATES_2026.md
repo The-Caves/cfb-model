@@ -35,3 +35,24 @@ This connects injury context to a future **model candidate**, not to the live da
 ## October 28 automated-intake time rollover repair
 
 The first overnight scheduled [Data Intake run 40619856776](https://github.com/The-Caves/cfb-model/actions/runs/40619856776) successfully ran the creative research model against completed 2026 games and produced an actual per-game prediction artifact, but **the later QB-source review worklist failed** because it treated the now-completed October 27 games in the curated school-source archive as future unmatched fixtures. The worklist now uses its original `queue.asof_utc` to exclude already-started school/game source rows from the future queue; their provenance remains in the historical source registry, and unmatched **future** fixtures still trigger an error. A regression test covers both cases. No QB starter, injury status or betting clearance is inferred. The candidate research job still does not update live picks.
+
+## October 28 real-data walk-forward acceptance
+
+Observed [scheduled intake 40619856776](https://github.com/The-Caves/cfb-model/actions/runs/40619856776): the research-stage job succeeded and uploaded `cfb-creative-candidates-40619856776`, containing the full source-timestamp-limited research report and per-model per-game predictions. **The entire intake later failed at the separate stale gameweek-source worklist step**; that was not a failure of the creative-model run. Five game-disjoint weekly folds (Sept 26 through Oct 24) held out **293 games**, with 266–522 earlier training games per fold. All columns are reconstructed from earlier 2026 game dates but advanced PBP's *historical publication timing is not verified*; these are exploratory results, not independent pregame-only deployment evidence.
+
+| Variant | Heldout games | Margin MAE | Total MAE | SU accuracy | Signed home margin bias |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Active V03 (reference) | 293 | 15.7266 | **13.6251** | 61.09% | +10.2411 |
+| Home recency (margin only) | 293 | **13.5053** | 13.6251 | 63.82% | +3.3783 |
+| Evolving latent and recency strength | 293 | 14.1743 | 15.7005 | **64.51%** | +4.9739 |
+| All creative features | 293 | 14.3796 | 16.4991 | 62.80% | +5.2724 |
+| Fixed-weight ensemble | 293 | 14.1603 | 13.8308 | 62.46% | +6.6854 |
+| Possession-context ridge | 293 | 16.1619 | 13.6887 | 59.73% | +10.866 |
+| Score–EPA/field-position quality proxies | 293 | 15.7703 | 13.6647 | 61.09% | +10.3001 |
+| Pressure/pass-rate matchup vulnerability | 293 | 15.6341 | 13.7294 | 61.09% | +10.2115 |
+| Third/fourth-down and explosive resilience | 293 | 15.6171 | 13.998 | 60.41% | +10.1139 |
+| Mechanistic possession proxy | **101 only** | 11.9725 | 13.4182 | 63.37% | +4.1836 |
+
+**Critical comparisons:** The possession proxy's 101-game selected subset is **not paired** to the all-games V03 aggregate; its lower apparent MAE must not be treated as improvement. On the 293 comparable games, the recency margin candidate improves margin MAE by 2.2213 points versus baseline, without changing its total forecast. The latent model improves SU but worsens total MAE by 2.0754; the full creative model worsens total MAE by 2.874. The fixed ensemble also slightly worsens totals MAE (+0.2057). No blanket promotion is justified.
+
+The active V03's nominal 80% past-only residual intervals achieved approximately **83.3% margin** and **75.8% total** empirical coverage across these folds; mean total-interval width ~42.2 points. These intervals should be considered exploratory and *not independently calibrated*. No verified prospective historical market ATS/O-U results or learned injury penalties were included. The next milestones are properly sourced drive starts and turnover attribution, independently confirmed QB/player participation and position impact, fresh future evaluation, separate total-calibration fixes, and fair market comparisons before any model is promoted.
