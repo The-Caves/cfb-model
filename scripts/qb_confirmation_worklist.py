@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 from scripts.game_context import parse_time
 
 STATUS="QB_STARTER_MANUAL_REVIEW_WORKLIST_RESEARCH_ONLY"
-FIELDS=("game_id","kickoff_utc","team","opponent","review_priority",
+FIELDS=("game_id","kickoff_utc","team","opponent","national_source_registry_membership","review_priority",
         "starter_status","feed_status","candidate_count","official_rss_url",
         "official_athletics_homepage","homepage_verified","game_notes_url",
         "game_notes_verified","personnel_evidence_verified",
@@ -90,7 +90,15 @@ def build(queue,source_registry,gameweek_sources=None):
         if key in seen:raise ValueError("Duplicate QB roster slot")
         seen.add(key)
         school=idx.get(team)
-        if school is None:raise ValueError("Team missing national source registry")
+        # ESPN may legitimately schedule non-registry opponents. Preserve those
+        # game slots as UNKNOWN and do not manufacture FBS source coverage.
+        # This is not proof the unlisted school is FCS or its players healthy.
+        in_registry=school is not None
+        if school is None:
+            school={"team":team,"official_rss_url":None,
+                "official_athletics_homepage":None,"homepage_verified":False,
+                "game_notes_url":None,"official_rss_registry_reviewed":False,
+                "personnel_evidence_verified":False}
         source=school.get("official_rss_url")
         homepage=school.get("official_athletics_homepage")
         notes=school.get("game_notes_url")
@@ -128,6 +136,8 @@ def build(queue,source_registry,gameweek_sources=None):
             follow="FIND_AND_REVIEW_CURRENT_SCHOOL_GAME_NOTES_OR_COACH_STATEMENT"
         ranked.append({
             "game_id":gid,"kickoff_utc":kickoff.isoformat(),"team":team,
+            "national_source_registry_membership":("FBS_138_INCLUDED" if in_registry else
+                                                   "NOT_IN_138_REGISTRY_SOURCE_UNKNOWN"),
             "opponent":row["opponent"],"review_priority":row.get("review_priority","UNKNOWN_NEEDS_SOURCE"),
             "starter_status":row.get("starter_status","UNKNOWN"),
             "feed_status":row.get("feed_status","NOT_CONFIGURED"),
@@ -158,6 +168,9 @@ def build(queue,source_registry,gameweek_sources=None):
         "asof_utc":queue["asof_utc"],"safe_for_betting":False,
         "game_specific_QB_confirmations_added":0,"trained_replacement_points":False,
         "summary":{"future_games":n//2,"team_slots":n,
+                   "team_slots_not_in_138_source_registry":sum(
+                       r["national_source_registry_membership"]=="NOT_IN_138_REGISTRY_SOURCE_UNKNOWN"
+                       for r in ranked),
                    "historical_gameweek_sources_excluded":retired,
                    "unreviewed_or_unknown_slots":sum(r["starter_status"]!="VERIFIED_SOURCE" for r in ranked),
                    "school_homepage_candidates":sum(bool(r["official_athletics_homepage"]) for r in ranked),

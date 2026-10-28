@@ -29,7 +29,14 @@ class WorklistTests(unittest.TestCase):
         qb,s=fixtures();qb["rows"].append(copy.deepcopy(qb["rows"][0]))
         with self.assertRaises(ValueError):build(qb,s)
         qb,s=fixtures();s["schools"].pop()
-        with self.assertRaises(ValueError):build(qb,s)
+        missing=build(qb,s)
+        self.assertEqual(missing["summary"]["team_slots_not_in_138_source_registry"],1)
+        unlisted=next(r for r in missing["rows"] if r["team"]=="Beta College")
+        self.assertEqual(unlisted["national_source_registry_membership"],
+                         "NOT_IN_138_REGISTRY_SOURCE_UNKNOWN")
+        self.assertIsNone(unlisted["official_athletics_homepage"])
+        self.assertFalse(unlisted["personnel_evidence_verified"])
+        self.assertEqual(unlisted["starter_status"],"UNKNOWN")
     def test_untrusted_or_non_https_url_fails(self):
         qb,s=fixtures()
         s["schools"][0]["official_athletics_homepage"]="http://bad.example/path"
