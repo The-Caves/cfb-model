@@ -47,6 +47,19 @@ class QBPasserHistoryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Duplicate"):
             prior_qb_form(old+old,"Delaware","Nick Minicucci",
                           "2026-10-27","2026-10-26T23:00:00Z")
+    def test_csv_string_false_preserves_missing_publication_attestation(self):
+        old,_=collect(self.game(),"Delaware","Missouri State",
+                      [play("Nick Minicucci",.5)]*20,
+                      "2026-10-21T04:00:00Z")
+        old[0]["historical_source_time_verified"]="False"
+        p=prior_qb_form(old,"Delaware","Nick Minicucci",
+                        "2026-10-27","2026-10-26T23:00:00Z")
+        self.assertEqual(p["player_epa_per_pass_tagged_play"],.5)
+        old[0]["historical_source_time_verified"]="True"
+        with self.assertRaisesRegex(ValueError,"Untrusted"):
+            prior_qb_form(old,"Delaware","Nick Minicucci",
+                          "2026-10-27","2026-10-26T23:00:00Z")
+
     def test_observation_must_not_postdate_target_day(self):
         with self.assertRaisesRegex(ValueError,"later"):
             prior_qb_form([],"Delaware","Nick Minicucci",

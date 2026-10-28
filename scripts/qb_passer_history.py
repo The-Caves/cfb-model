@@ -109,7 +109,9 @@ def prior_qb_form(rows,team,player,game_date,asof_utc,minimum_pass_plays=15):
             row["source_retrieved_at_utc"].replace("Z","+00:00"))
         if retrieved.tzinfo is None:raise ValueError("Unzoned source receipt")
         if retrieved>observed:continue
-        if row.get("betting_status")!="PASS_UNVALIDATED" or row.get("historical_source_time_verified") is not False:
+        provenance=row.get("historical_source_time_verified")
+        if (row.get("betting_status")!="PASS_UNVALIDATED" or
+            provenance not in (False,"False","false")):
             raise ValueError("Untrusted historical player source")
         key=(row["game_id"]," ".join(row["player"].split()).casefold())
         if key in ids:raise ValueError("Duplicate team/game/QB attribution")
