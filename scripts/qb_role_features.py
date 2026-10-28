@@ -120,6 +120,12 @@ def build(games,passers,registry,asof_utc,reviewed_starters=None):
                 "team":team,"opponent":other,"kickoff_utc":g["kickoff_utc"],
                 "asof_utc":decision.isoformat(),
                 **profile,"official_recent_return_context":official,
+                "returning_previous_game_passer_role_signal":(
+                    "PRIOR_GAME_RETURN_OF_SEASON_LEADING_PASSER_PROXY"
+                    if official and profile["season_leading_passer_proxy"] and
+                       official["player"].casefold()==profile["season_leading_passer_proxy"].casefold()
+                    else "PRIOR_GAME_RETURN_OTHER_PASSER"
+                    if official else None),
                 "current_qb_status":("CONFIRMED_REVIEWED_PREKICKOFF" if confirmed else "UNKNOWN"),
                 "current_starting_qb":confirmed,
                 "confirmed_starter_matches_season_passer_leader_proxy":(

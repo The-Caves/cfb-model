@@ -37,6 +37,8 @@ class RoleTests(unittest.TestCase):
         self.assertFalse(d["observed_recent_qb_switch"])
         self.assertEqual(d["official_recent_return_context"]["signal"],
                          "RETURNED_IN_PRIOR_GAME_NOT_CONFIRMED_THIS_GAME")
+        self.assertEqual(d["returning_previous_game_passer_role_signal"],
+                         "PRIOR_GAME_RETURN_OF_SEASON_LEADING_PASSER_PROXY")
         self.assertEqual(d["current_qb_status"],"UNKNOWN")
         self.assertIsNone(d["current_qb_conditional_history"])
         self.assertIsNone(d["confirmed_starter_matches_season_passer_leader_proxy"])
