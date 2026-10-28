@@ -7,6 +7,8 @@ Historical PBP is not publication-authenticated for past game replays.
 import argparse,csv,datetime as dt,json
 from collections import defaultdict
 from pathlib import Path
+from zoneinfo import ZoneInfo
+from scripts.personnel_features import verify_joined
 
 from scripts.game_context import parse_time
 from scripts.qb_passer_history import prior_qb_form
@@ -95,7 +97,7 @@ def build(games,passers,registry,asof_utc,reviewed_starters=None):
         seen.add(gid)
         for team,other in ((g["home"],g["away"]),(g["away"],g["home"])):
             history=_past_games(passers,team,kickoff.astimezone(
-                dt.timezone(dt.timedelta(hours=-4))).date().isoformat(),decision)
+                ZoneInfo("America/New_York")).date().isoformat(),decision)
             profile=_profile(history)
             key=(gid,team)
             reviewed=starters.get(key)
@@ -131,11 +133,38 @@ def build(games,passers,registry,asof_utc,reviewed_starters=None):
             "rows":out,"model_promoted":False,"betting_status":"PASS_UNVALIDATED",
             "safe_for_betting":False}
 
-def run(games_path,passers_path,registry_path,output_path):
+def reviewed_starters_from_joined(joined,context):
+    """Use only the independently reviewed current-game starter snapshot."""
+    verify_joined(joined)
+    if parse_time(joined["captured_at_utc"])<parse_time(context["asof_utc"]):
+        raise ValueError("Historical personnel snapshot before current context")
+    idx={}
+    games={str(g["game_id"]):g for g in context["games"]}
+    for row in joined["games"]:
+        gid=str(row["game_id"])
+        expected=games.get(gid)
+        if expected is None:raise ValueError("Future QB fixture absent from context")
+        if ((row["home"],row["away"],parse_time(row["kickoff_utc"]))!=
+            (expected["home"],expected["away"],parse_time(expected["kickoff_utc"]))):
+            raise ValueError("QB joined matchup identity mismatch")
+        for side in ("home","away"):
+            info=row["personnel_by_side"][side]
+            if info["qb_status"]=="CONFIRMED_REVIEWED_PREKICKOFF":
+                idx[(gid,row[side])]={
+                    "status":"CONFIRMED_REVIEWED_PREKICKOFF",
+                    "player":info["reviewed_qb_player"],
+                    "observed_at_utc":info["qb_observed_at_utc"]}
+    return idx
+
+def run(games_path,passers_path,registry_path,output_path,joined_path=None):
     context=json.loads(Path(games_path).read_text())
     with open(passers_path,newline="",encoding="utf-8") as f:rows=list(csv.DictReader(f))
     config=json.loads(Path(registry_path).read_text())
-    result=build(context["games"],rows,config,context["asof_utc"])
+    verified={}
+    if joined_path:
+        joined=json.loads(Path(joined_path).read_text())
+        verified=reviewed_starters_from_joined(joined,context)
+    result=build(context["games"],rows,config,context["asof_utc"],verified)
     target=Path(output_path);target.parent.mkdir(parents=True,exist_ok=True)
     with target.open("x") as f:json.dump(result,f,indent=2,allow_nan=False);f.write("\n")
     print(json.dumps({k:v for k,v in result.items() if k not in ("rows",)}))
@@ -145,5 +174,6 @@ if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--context",required=True);p.add_argument("--passers",required=True)
     p.add_argument("--registry",required=True);p.add_argument("--output",required=True)
+    p.add_argument("--joined")
     a=p.parse_args()
-    run(a.context,a.passers,a.registry,a.output)
+    run(a.context,a.passers,a.registry,a.output,a.joined)
