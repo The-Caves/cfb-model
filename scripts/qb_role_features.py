@@ -161,10 +161,12 @@ def run(games_path,passers_path,registry_path,output_path,joined_path=None):
     with open(passers_path,newline="",encoding="utf-8") as f:rows=list(csv.DictReader(f))
     config=json.loads(Path(registry_path).read_text())
     verified={}
+    decision=context["asof_utc"]
     if joined_path:
         joined=json.loads(Path(joined_path).read_text())
         verified=reviewed_starters_from_joined(joined,context)
-    result=build(context["games"],rows,config,context["asof_utc"],verified)
+        decision=joined["captured_at_utc"]
+    result=build(context["games"],rows,config,decision,verified)
     target=Path(output_path);target.parent.mkdir(parents=True,exist_ok=True)
     with target.open("x") as f:json.dump(result,f,indent=2,allow_nan=False);f.write("\n")
     print(json.dumps({k:v for k,v in result.items() if k not in ("rows",)}))

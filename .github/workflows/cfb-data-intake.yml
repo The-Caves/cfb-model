@@ -255,6 +255,21 @@ jobs:
             --capture "data/pregame_evidence/capture-${{ github.run_id }}.json" \
             --context data/context/upcoming_game_context_2026.json \
             --output data/pregame_evidence
+      - name: Build QB-conditioned historical passer profiles (not starter projections)
+        run: |
+          python -m scripts.qb_role_features \
+            --context data/context/upcoming_game_context_2026.json \
+            --passers data/advanced/qb_passer_game_history_2026.csv \
+            --registry config/official_gameweek_sources_2026.json \
+            --joined "data/pregame_evidence/personnel-joined-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/qb-role-features-${{ github.run_id }}.json"
+      - name: Upload QB role and conditional offensive profile audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-qb-role-profiles-${{ github.run_id }}
+          path: data/pregame_evidence/qb-role-features-*.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Freeze observed weather-style and replacement-count matchup features
         run: |
           python -m scripts.weather_matchups \
