@@ -15,6 +15,10 @@ Four prospective margin-forecast versions are now wired into the existing Data I
 
 The opponent latent filter updates only AFTER an entire Eastern-calendar football date finishes. The filter's variances are heuristic, not validated Bayesian uncertainty. The model's original numeric game total is reused in every candidate; this experiment cannot improve total scoring predictions by construction.
 
+## Matched-training cohort control for incremental latent value
+
+In addition to the four headline versions, each eligible future matchup freezes a research-only recency control trained on the **identical latent-eligible historical game cohort** as recency_plus_latent, but excluding the latent inputs. The resulting shadow report records the paired margin errors and the incremental MAE delta of combined minus matched-cohort recency. This avoids confusing a smaller training set with actual added latent predictive power. The diagnostic is not promoted to a fifth public betting model. Missing latent evidence produces an explicit PASS.
+
 ## Prospective operation and archive
 
 * scripts/model_shadow_forecast.py requires the immutable Step3G V03 record produced in the same GitHub run, matches its complete original training IDs and feature SHA, and uses strictly earlier completed football dates for every candidate fit. It runs within 20 minutes of original forecast observation; no postkickoff or invented historical shadow predictions are accepted.
