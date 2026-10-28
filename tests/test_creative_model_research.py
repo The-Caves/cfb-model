@@ -99,6 +99,23 @@ class CreativeModelResearch(unittest.TestCase):
         after,_=_predictions(train,modified,cutoff)
         self.assertEqual(before,after)
 
+    def test_mechanistic_partial_coverage_uses_identical_baseline_game_subset(self):
+        rows=synthetic_rows(240)
+        for row in rows:
+            if row["date"] >= "2026-09-05":
+                row["possession_score_estimate"]=(3.,50.)
+        report,preds=validate(rows,start="2026-08-29",weeks=5,min_train=90)
+        target=report["aggregate"]["possession_mechanistic"]
+        self.assertLess(target["games"],report["aggregate"]["active_v03"]["games"])
+        self.assertEqual(target["comparison"],"PAIRED_SUBSET_ONLY_NOT_FULL_SLATE")
+        self.assertEqual(len(preds["possession_mechanistic"]),target["games"])
+        subset={row["game_id"] for row in preds["possession_mechanistic"]}
+        baseline=[r for r in preds["active_v03"] if r["game_id"] in subset]
+        ma=sum(abs(r["pred_margin"]-r["actual_margin"]) for r in baseline)/len(baseline)
+        self.assertAlmostEqual(target["paired_subset_reference_margin_mae"],ma,places=4)
+        self.assertAlmostEqual(target["paired_subset_delta_margin_mae_vs_v03"],
+                               target["margin_mae"]-ma,places=4)
+
     def test_duplicate_identity_and_bad_status_fail_closed(self):
         rows=synthetic_rows(150)
         with self.assertRaises(ValueError):validate(rows+[rows[0]])

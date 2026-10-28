@@ -268,7 +268,27 @@ def validate(rows,start="2026-09-26",weeks=12,min_train=MIN_TRAIN):
             summary["paired_delta_margin_mae_vs_v03"]=round(summary["margin_mae"]-baseline["margin_mae"],4)
             summary["paired_delta_total_mae_vs_v03"]=round(summary["total_mae"]-baseline["total_mae"],4)
         elif name!="active_v03":
-            summary["comparison"]="NOT_PAIRED_ALL_BASELINE_GAMES"
+            # A candidate with missing drive evidence can appear to beat the
+            # full-slate baseline just because it sees easier games. Compare
+            # EXACT same ESPN IDs and outcomes, or fail closed.
+            reference={str(r["game_id"]):r for r in scores["active_v03"]}
+            current={str(r["game_id"]):r for r in scores[name]}
+            if len(current)!=len(scores[name]) or not current or not set(current)<=set(reference):
+                raise ValueError("Cannot pair candidate to same-game V03")
+            paired=[reference[gid] for gid in sorted(current)]
+            for gid,row in current.items():
+                other=reference[gid]
+                if (row["date"]!=other["date"] or
+                    row["actual_margin"]!=other["actual_margin"] or
+                    row["actual_total"]!=other["actual_total"]):
+                    raise ValueError("Mismatched candidate/baseline settlement")
+            baseline_margin=float(np.mean([abs(r["pred_margin"]-r["actual_margin"]) for r in paired]))
+            baseline_total=float(np.mean([abs(r["pred_total"]-r["actual_total"]) for r in paired]))
+            summary["comparison"]="PAIRED_SUBSET_ONLY_NOT_FULL_SLATE"
+            summary["paired_subset_reference_margin_mae"]=round(baseline_margin,4)
+            summary["paired_subset_reference_total_mae"]=round(baseline_total,4)
+            summary["paired_subset_delta_margin_mae_vs_v03"]=round(summary["margin_mae"]-baseline_margin,4)
+            summary["paired_subset_delta_total_mae_vs_v03"]=round(summary["total_mae"]-baseline_total,4)
     return {"status":STATUS,"candidate":VERSION,"season":2026,
             "forecast_promotion":False,"model_promoted":False,
             "active_model_unchanged":True,"safe_for_betting":False,
