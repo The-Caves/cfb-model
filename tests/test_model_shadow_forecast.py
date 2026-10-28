@@ -94,8 +94,10 @@ class ShadowModelsTests(unittest.TestCase):
         with patch("scripts.model_shadow_forecast.verify_baseline"):
             with self.assertRaisesRegex(ValueError,"promptly"):
                 build_shadow(frozen,games,{},training,"2026-10-28T13:00:00Z")
+            frozen_late=copy.deepcopy(frozen)
+            frozen_late["forecast_observed_utc"]="2026-11-01T00:00:00Z"
             with self.assertRaisesRegex(ValueError,"after all kickoffs"):
-                build_shadow(frozen,games,{},training,"2026-11-01T00:00:00Z")
+                build_shadow(frozen_late,games,{},training,"2026-11-01T00:05:00Z")
 
     def test_tampering_and_future_start_rejected(self):
         result,*_=self.make()
