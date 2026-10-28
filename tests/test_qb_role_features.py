@@ -39,6 +39,8 @@ class RoleTests(unittest.TestCase):
                          "RETURNED_IN_PRIOR_GAME_NOT_CONFIRMED_THIS_GAME")
         self.assertEqual(d["current_qb_status"],"UNKNOWN")
         self.assertIsNone(d["current_qb_conditional_history"])
+        self.assertIsNone(d["confirmed_starter_matches_season_passer_leader_proxy"])
+        self.assertIsNone(d["confirmed_starter_matches_recent_return_context"])
         self.assertIsNone(d["model_qb_points_adjustment"])
     def test_future_pbp_observation_not_used_to_reconstruct_pregame(self):
         late=[passer("5","2026-10-20","New Guy",100,
@@ -53,6 +55,8 @@ class RoleTests(unittest.TestCase):
         r=build([game()],data(),config(),"2026-10-26T20:00:00Z",starters)
         d=next(x for x in r["rows"] if x["team"]=="Delaware Blue Hens")
         self.assertEqual(d["current_qb_status"],"CONFIRMED_REVIEWED_PREKICKOFF")
+        self.assertTrue(d["confirmed_starter_matches_season_passer_leader_proxy"])
+        self.assertTrue(d["confirmed_starter_matches_recent_return_context"])
         self.assertIsNotNone(d["current_qb_conditional_history"])
         self.assertIsNotNone(d["current_qb_conditional_history"]["within_team_player_minus_other_epa"])
     def test_unverified_qb_or_future_review_rejected(self):

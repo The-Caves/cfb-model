@@ -122,6 +122,12 @@ def build(games,passers,registry,asof_utc,reviewed_starters=None):
                 **profile,"official_recent_return_context":official,
                 "current_qb_status":("CONFIRMED_REVIEWED_PREKICKOFF" if confirmed else "UNKNOWN"),
                 "current_starting_qb":confirmed,
+                "confirmed_starter_matches_season_passer_leader_proxy":(
+                    confirmed.casefold()==profile["season_leading_passer_proxy"].casefold()
+                    if confirmed and profile["season_leading_passer_proxy"] else None),
+                "confirmed_starter_matches_recent_return_context":(
+                    confirmed.casefold()==official["player"].casefold()
+                    if confirmed and official else None),
                 "current_qb_conditional_history":form,
                 "model_qb_points_adjustment":None,
                 "eligible_to_adjust_live_model":False})
