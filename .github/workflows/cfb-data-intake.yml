@@ -306,6 +306,22 @@ jobs:
             --advanced-manifest data/advanced/advanced_manifest.json \
             --score-manifest data/manifest.json \
             --output "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json"
+      - name: Freeze four independent pregame margin shadow forecasts (no live promotion)
+        run: |
+          python -m scripts.model_shadow_forecast \
+            --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --advanced-manifest data/advanced/advanced_manifest.json \
+            --score-manifest data/manifest.json \
+            --output "data/pregame_evidence/shadow-forecast-${{ github.run_id }}.json"
+      - name: Upload immutable shadow forecast audit for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-shadow-forecast-${{ github.run_id }}
+          path: data/pregame_evidence/shadow-forecast-*.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Export frozen research projections for private dashboard preview
         run: |
           python -m scripts.site_forecast_export \
@@ -357,6 +373,17 @@ jobs:
         run: |
           python -m scripts.personnel_forecast_grade \
             --output "data/pregame_evidence/step3g-grading-${{ github.run_id }}.json"
+      - name: Grade archived shadow forecasts against exact selected V03 grades
+        run: |
+          python -m scripts.model_shadow_grade \
+            --output "data/pregame_evidence/shadow-grading-${{ github.run_id }}.json"
+      - name: Upload paired shadow model performance audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-shadow-grades-${{ github.run_id }}
+          path: data/pregame_evidence/shadow-grading-*.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Archive independently verified completed game scores for market settlement
         run: |
           python -m scripts.market_finals_archive \

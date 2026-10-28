@@ -156,7 +156,6 @@ def read_evidence():
         record=store.unpack(raw)
         verify_shadow(record)
         if (str(record["run_id"])!=run or checksum(record)!=entry["sha256"] or
-            checksum(record)!=checksum(record) or
             len(record["games"])!=entry["games"] or
             record["baseline_forecast_sha256"]!=entry["baseline_forecast_sha256"]):
             raise ValueError("Tampered shadow index")
