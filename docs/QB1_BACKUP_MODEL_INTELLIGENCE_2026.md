@@ -33,3 +33,9 @@ Unit tests check mixed-QB passing usage, untagged passer plays, fail-closed scor
 4. Obtain enough prospectively verified QB1→backup→QB1 changes across teams before estimating/validating replacement impact. Promotion requires independent paired out-of-sample gains; V03 remains live for now.
 
 No QB adjustments are claimed on the public site from these source/audit changes. All forecasts, frozen predictions and existing bet-readiness policy remain unchanged.
+
+## First real QB role profile capture: October 28
+
+The first real integration [Data Intake run 40708463588](https://github.com/The-Caves/cfb-model/actions/runs/40708463588) passed its advanced PBP extraction and `Build QB-conditioned historical passer profiles` steps. Its artifact `cfb-qb-role-profiles-40708463588` observed **234 future team-game slots**, of which **213** had enough historical named passer evidence to identify a season passing-play leader **proxy**. It flagged **33 team-game slots** where the last game's observed leading passer was different from the historical season leader. There were **0 game-specific verified upcoming starters**. Never treat those 213 historical leader proxies as 213 confirmed QB1s, nor treat those 33 switches as certain injuries or backups.
+
+Delaware's first post-Oct27 future fixture (at Kennesaw State, Nov 7) had Nick Minicucci as both the historical season passing-play leader proxy and latest-game passer proxy. This is a **historical participation observation**, not proof he will start Nov 7, and not a result of any learned point adjustment. The model has a new source-side distinction between historical team offense under different passers; V03 still pools them for its live score predictions.
