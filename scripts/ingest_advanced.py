@@ -7,6 +7,7 @@ Provider release files are retrospectively mutable; retrieved_at != published_at
 import argparse,csv,datetime as dt,hashlib,json,math,urllib.request
 from collections import Counter,defaultdict
 from pathlib import Path
+from scripts.qb_passer_history import collect as collect_qb_passers, FIELDS as QB_PASSER_FIELDS
 
 PBP_URL="https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_cfb_pbp/play_by_play_2026.parquet"
 DRIVE_URL="https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_cfb_adv_drives/adv_drives_2026.parquet"
@@ -81,10 +82,13 @@ def metric(row,field):
     v=number(row.get(field))
     return v if v is not None and -40<=v<=40 else None
 
-def per_game_features(play_rows,games,asof,min_plays=20):
+def per_game_features(play_rows,games,asof,min_plays=20,qb_out=None,qb_observed_at=None):
     """Rows are produced only for both-sided PBP-complete games with valid ESPN final scores."""
     buffs=defaultdict(lambda:defaultdict(list));ids={};issues=defaultdict(Counter);seen=Counter()
     cutoff=dt.date.fromisoformat(asof)
+    if qb_out is not None and (not isinstance(qb_out,list) or not qb_observed_at):
+        raise ValueError("QB attribution requires actual observation time and output list")
+    qb_qa=Counter()
     for p in play_rows:
         gid=key(p.get("game_id"))
         if gid not in games or key(p.get("season"))!="2026":continue
@@ -163,6 +167,14 @@ def per_game_features(play_rows,games,asof,min_plays=20):
                 if epa is None:epa=metric(p,"EPA_scrimmage")
                 if epa is not None:stats["def_epa_plays"]+=1;stats["def_epa_sum"]+=epa
             hid,aid=ids[gid]
+            if qb_out is not None:
+                passer_rows,audit=collect_qb_passers(g,team,opp,offensive,qb_observed_at)
+                qb_out.extend(passer_rows)
+                qb_qa["accepted_team_games"]+=1
+                qb_qa["named_passer_rows"]+=len(passer_rows)
+                qb_qa["named_pass_tagged_plays"]+=audit["named_pass_tagged_plays"]
+                qb_qa["unnamed_pass_tagged_plays"]+=audit["unnamed_pass_tagged_plays"]
+                qb_qa["team_games_without_passer_names"]+=int(not passer_rows)
             rows.append({"game_id":gid,"date":g["date"],"team":team,"opponent":opp,
                         "team_id":hid if team==g["home"] else aid,
                         "opponent_team_id":aid if team==g["home"] else hid,
@@ -171,6 +183,12 @@ def per_game_features(play_rows,games,asof,min_plays=20):
         "games_quarantined":len(quarantine),"team_game_rows":len(rows),
         "quarantine":quarantine[:300],
         "reason":"Accepted game requires score match, consistent ESPN team ids and both offenses >=20 plays"}
+    if qb_out is not None:
+        qa["qb_passer_attribution"]={
+            **dict(qb_qa),
+            "status":"POSTGAME_PASSER_NOT_STARTER_VERIFIED",
+            "source_time_authentic_for_old_games":False,
+            "qb1_known_from_pbp":False}
     return rows,qa
 
 def merge_drives(team_games,drive_rows,games):
@@ -321,7 +339,11 @@ def execute(games_path,registry_path,output,asof,offline_pbp=None,offline_drives
         required={"game_id","season","pos_team_id","homeTeamId","awayTeamId",
                   "homeFinalScore","awayFinalScore","pass","rush"}
         if not required.issubset(cols):raise ValueError("PBP missing required fields: "+str(sorted(required-cols)))
-        team_games,qa=per_game_features(read_parquet(pbp,COLS),games,asof)
+        qb_records=[]
+        qb_observed_at=dt.datetime.now(dt.timezone.utc).isoformat()
+        team_games,qa=per_game_features(
+            read_parquet(pbp,COLS),games,asof,
+            qb_out=qb_records,qb_observed_at=qb_observed_at)
         manifest["pbp_qa"]=qa
         if not team_games:raise ValueError("No scoreboard-verified games in PBP release")
         if drives.exists():
@@ -330,6 +352,16 @@ def execute(games_path,registry_path,output,asof,offline_pbp=None,offline_drives
         with (output/"team_game_advanced_2026.csv").open("w",newline="") as f:
             fields=["game_id","date","team","opponent","team_id","opponent_team_id","plays_for","plays_against"]+TEAM_FIELDS
             w=csv.DictWriter(f,fieldnames=fields,extrasaction="ignore");w.writeheader();w.writerows(team_games)
+        # This records historical player usage; never infer game-specific QB1.
+        with (output/"qb_passer_game_history_2026.csv").open("w",newline="") as f:
+            w=csv.DictWriter(f,fieldnames=QB_PASSER_FIELDS,extrasaction="raise")
+            w.writeheader();w.writerows(qb_records)
+        manifest["qb_passer_history"]={
+            "rows":len(qb_records),
+            "source_observed_at_utc":qb_observed_at,
+            "historical_original_publication_verified":False,
+            "starter_identity_inferred":False,
+            "status":"POSTGAME_PASSER_ATTRIBUTION_RESEARCH_ONLY"}
         profile=aggregate_team_profiles(team_games,registry,asof,timestamp)
         with (output/"team_profiles_advanced_2026.csv").open("w",newline="") as f:
             w=csv.DictWriter(f,fieldnames=FIELDS);w.writeheader();w.writerows(profile)
