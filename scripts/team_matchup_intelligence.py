@@ -160,7 +160,9 @@ def augment(games,advanced,turnover=None):
             base[gid].update(matchup(h,a))
             snapshots.append({"game_id":gid,"date":g["date"],
                 "home_profile_prior":h,"away_profile_prior":a})
-        # Advance only after the entire football day was evaluated.
+        # Compute BOTH teams' pregame adjustments before appending ANY
+        # result from this Eastern calendar date to avoid same-day leakage.
+        pending=[]
         for g in group:
             for team in (g["home"],g["away"]):
                 prior_opponent=_profile(history[g["away"] if team==g["home"] else g["home"]])
@@ -174,7 +176,8 @@ def augment(games,advanced,turnover=None):
                     record[kind+"_def_adj"]=(
                         diff(record[kind+"_def_allowed"],opp_off)
                         if prior_opponent[kind+"_off_games"]>=MIN_OPPONENT_ADJUST_GAMES else None)
-                history[team].append(record)
+                pending.append((team,record))
+        for team,record in pending:history[team].append(record)
     return list(base.values())
 
 def build_profile_board(games,advanced,turnover,upcoming,asof):

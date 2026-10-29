@@ -68,6 +68,14 @@ class MatchupTests(unittest.TestCase):
         x=augment([g1,g2],all_)
         self.assertIsNone(x[0]["home_run_edge"])
         self.assertAlmostEqual(x[1]["home_run_edge"],0.,places=5)
+    def test_same_date_results_do_not_modify_other_matchups(self):
+        g1=game(1,"2026-09-01",home="A",away="B")
+        g2=game(2,"2026-09-01",home="B",away="C")
+        advanced={**adv(g1),**adv(g2,home_run=3,away_run=-1)}
+        rows=augment([g1,g2],advanced)
+        self.assertIsNone(rows[1]["home_run_edge"])
+        self.assertIsNone(rows[1]["home_run_adj_edge"])
+
     def test_turnover_missing_not_zero_or_healthy(self):
         g=game(1,"2026-09-01")
         no=_team_game(g,"A",adv(g))
