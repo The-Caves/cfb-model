@@ -26,7 +26,12 @@ def api(method,path,payload=None):
         with urllib.request.urlopen(request,timeout=20) as resp:return json.loads(resp.read())
     except urllib.error.HTTPError as exc:
         if exc.code==404:return None
-        raise RuntimeError(f"GitHub {method} {path} failed with HTTP {exc.code}") from exc
+        # Git tree 422 can mean eventual blob indexing or a permanent schema
+        # error; expose the bounded public validation message, never headers
+        # or request data containing the GitHub auth token.
+        detail=(exc.read(900).decode("utf-8","replace") if exc.code==422 and
+                method=="POST" and path.endswith("/git/trees") else "")
+        raise RuntimeError(f"GitHub {method} {path} failed with HTTP {exc.code}: {detail}") from exc
 def repo_path():
     repo=os.environ.get("GITHUB_REPOSITORY","")
     if repo.count("/")!=1:raise ValueError("GITHUB_REPOSITORY not set")
