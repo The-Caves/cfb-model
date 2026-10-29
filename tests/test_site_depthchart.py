@@ -26,6 +26,7 @@ class DepthTests(unittest.TestCase):
         self.assertEqual(extract_chart(html),[])
         self.assertEqual(extract_chart("<tr><td>RB</td><td>24</td><td>Bothwell, Fluff SO</td></tr>"),[])
     def test_unambiguous_school_name_aliases(self):
+        self.assertEqual(candidate_name("Massachusetts"),"umass")
         self.assertEqual(candidate_name("Florida International"),"fiu")
         self.assertEqual(candidate_name("Central Florida"),"ucf")
         self.assertEqual(candidate_name("South Florida"),"usf")

@@ -23,6 +23,7 @@ HOST="www.ourlads.com"
 SOURCE="OURLADS_THIRD_PARTY_PROJECTED_DEPTH_CHART"
 ALIASES={
     "mississippi":"ole miss",
+    "massachusetts":"umass",
     "miami":"miami (fl)",
     "miami fl":"miami (fl)",
     "north carolina state":"nc state",
