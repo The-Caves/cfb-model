@@ -24,7 +24,7 @@ STYLE_FIELDS=("home_run_edge","away_run_edge","home_pass_edge","away_pass_edge",
 SITUATIONAL_FIELDS=("home_pressure_exposure","away_pressure_exposure",
                     "home_redzone_conversion","away_redzone_conversion",
                     "home_drive_tempo","away_drive_tempo")
-TURNOVER_FIELDS=("home_giveaway_minus_away_takeaway","away_giveaway_minus_home_takeaway")
+TURNOVER_FIELDS=("home_turnover_risk_proxy","away_turnover_risk_proxy")
 MIN_OPPONENT_ADJUST_GAMES=2
 def mean(values):
     xs=[float(x) for x in values if x is not None and math.isfinite(float(x))]
@@ -92,15 +92,24 @@ def _profile(hist):
     # The same team can be good when run stopped; negative is allowed.
     return result
 def matchup(home,away):
+    # Defensive EPA *allowed* is sign-aligned with offensive EPA:
+    # +0.2 offensive and +0.3 allowed both describe a favorable offensive
+    # environment. Subtraction spuriously rewarded stingy defenses.
+    # This is a blended descriptive interaction, NOT predicted play EPA.
+    def blend(a,b):
+        return (a+b)/2 if a is not None and b is not None else None
     def edge(off,defender,kind):
-        return diff(off.get(kind+"_off"),defender.get(kind+"_def_allowed"))
+        return blend(off.get(kind+"_off"),defender.get(kind+"_def_allowed"))
     def success(off,defender,kind):
-        return diff(off.get(kind+"_success_off"),defender.get(kind+"_success_allowed"))
+        return (blend(off.get(kind+"_success_off"),
+                      defender.get(kind+"_success_allowed"))-.5
+                if blend(off.get(kind+"_success_off"),
+                         defender.get(kind+"_success_allowed")) is not None else None)
     return {
-      "home_run_adj_edge":diff(home.get("run_off_adj"),away.get("run_def_adj")),
-      "away_run_adj_edge":diff(away.get("run_off_adj"),home.get("run_def_adj")),
-      "home_pass_adj_edge":diff(home.get("pass_off_adj"),away.get("pass_def_adj")),
-      "away_pass_adj_edge":diff(away.get("pass_off_adj"),home.get("pass_def_adj")),
+      "home_run_adj_edge":blend(home.get("run_off_adj"),away.get("run_def_adj")),
+      "away_run_adj_edge":blend(away.get("run_off_adj"),home.get("run_def_adj")),
+      "home_pass_adj_edge":blend(home.get("pass_off_adj"),away.get("pass_def_adj")),
+      "away_pass_adj_edge":blend(away.get("pass_off_adj"),home.get("pass_def_adj")),
       "home_run_edge":edge(home,away,"run"),"away_run_edge":edge(away,home,"run"),
       "home_pass_edge":edge(home,away,"pass"),"away_pass_edge":edge(away,home,"pass"),
       "home_run_success_edge":success(home,away,"run"),
@@ -108,18 +117,18 @@ def matchup(home,away):
       "home_pass_success_edge":success(home,away,"pass"),
       "away_pass_success_edge":success(away,home,"pass"),
       "pass_rate_difference":diff(home["pass_rate"],away["pass_rate"]),
-      "home_explosive_pass_edge":diff(home["pass_explosive_off"],away["pass_explosive_allowed"]),
-      "away_explosive_pass_edge":diff(away["pass_explosive_off"],home["pass_explosive_allowed"]),
+      "home_explosive_pass_edge":blend(home["pass_explosive_off"],away["pass_explosive_allowed"]),
+      "away_explosive_pass_edge":blend(away["pass_explosive_off"],home["pass_explosive_allowed"]),
       "home_rush_disruption_dependency":home["run_disruption_dependency"],
       "away_rush_disruption_dependency":away["run_disruption_dependency"],
-      "home_pressure_exposure":diff(home["pressure_allowed"],away["pressure_generated"]),
-      "away_pressure_exposure":diff(away["pressure_allowed"],home["pressure_generated"]),
+      "home_pressure_exposure":blend(home["pressure_allowed"],away["pressure_generated"]),
+      "away_pressure_exposure":blend(away["pressure_allowed"],home["pressure_generated"]),
       "home_redzone_conversion":home["redzone_success"],
       "away_redzone_conversion":away["redzone_success"],
       "home_drive_tempo":home["plays_per_drive"],
       "away_drive_tempo":away["plays_per_drive"],
-      "home_giveaway_minus_away_takeaway":diff(home["turnovers_committed"],away["takeaways"]),
-      "away_giveaway_minus_home_takeaway":diff(away["turnovers_committed"],home["takeaways"])}
+      "home_turnover_risk_proxy":blend(home["turnovers_committed"],away["takeaways"]),
+      "away_turnover_risk_proxy":blend(away["turnovers_committed"],home["takeaways"])}
 def validated_turnovers(bundle,scoreboard):
     if bundle is None:return {}
     if (bundle.get("status")!="ESPN_COMPLETED_BOXSCORE_TURNOVERS_RESEARCH_ONLY" or

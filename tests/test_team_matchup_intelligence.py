@@ -33,8 +33,29 @@ class MatchupTests(unittest.TestCase):
         self.assertEqual(a["run_off"],.2)
         self.assertEqual(b["run_def_allowed"],.2)
         self.assertEqual(a["run_def_allowed"],-.5)
-        self.assertEqual(matchup(_profile([a]),_profile([b]))["home_run_edge"],0.)
-        self.assertEqual(matchup(_profile([a]),_profile([b]))["away_run_edge"],0.)
+        self.assertEqual(matchup(_profile([a]),_profile([b]))["home_run_edge"],.2)
+        self.assertEqual(matchup(_profile([a]),_profile([b]))["away_run_edge"],-.5)
+    def test_strong_run_offense_plus_weak_run_defense_is_favorable(self):
+        # This guard explicitly catches the earlier incorrect subtraction.
+        home={"run_off":0.30,"run_def_allowed":-.25,
+              "pass_off":0.10,"pass_def_allowed":-.20,
+              "run_success_off":.58,"pass_success_off":.55,
+              "pass_explosive_off":.13,"pressure_allowed":.1,
+              "turnovers_committed":1.7,"takeaways":1.5}
+        away={"run_off":-.25,"run_def_allowed":.40,
+              "pass_off":.05,"pass_def_allowed":-.15,
+              "run_success_allowed":.60,"pass_success_allowed":.35,
+              "pass_explosive_allowed":.14,"pressure_generated":.08,
+              "turnovers_committed":.8,"takeaways":2.0}
+        x=matchup(home,away)
+        self.assertAlmostEqual(x["home_run_edge"],.35)
+        self.assertAlmostEqual(x["home_pass_edge"],-.025)
+        self.assertAlmostEqual(x["home_run_success_edge"],.09)
+        self.assertAlmostEqual(x["home_turnover_risk_proxy"],1.85)
+        self.assertIsNone(x["away_turnover_risk_proxy"])
+    def test_missing_run_defense_is_unknown_not_inferred_from_offense(self):
+        self.assertIsNone(matchup({"run_off":.2},{"run_def_allowed":None})["home_run_edge"])
+
     def test_team_can_struggle_when_run_stopped_without_assuming_cause(self):
         xs=[]
         for i,v in enumerate((-.2,-.3,.2,.3)):
@@ -67,7 +88,7 @@ class MatchupTests(unittest.TestCase):
         all_={**adv(g1),**adv(g2,home_run=10,home_pass=10)}
         x=augment([g1,g2],all_)
         self.assertIsNone(x[0]["home_run_edge"])
-        self.assertAlmostEqual(x[1]["home_run_edge"],0.,places=5)
+        self.assertAlmostEqual(x[1]["home_run_edge"],.2,places=5)
     def test_same_date_results_do_not_modify_other_matchups(self):
         g1=game(1,"2026-09-01",home="A",away="B")
         g2=game(2,"2026-09-01",home="B",away="C")
@@ -90,7 +111,7 @@ class MatchupTests(unittest.TestCase):
         upcoming=[game(2,"2026-10-30")]
         board=build_profile_board([g],adv(g),None,upcoming,"2026-10-29")
         self.assertEqual(board["summary"]["games"],1)
-        self.assertIsNone(board["games"][0]["matchup"]["home_giveaway_minus_away_takeaway"])
+        self.assertIsNone(board["games"][0]["matchup"]["home_turnover_risk_proxy"])
         self.assertFalse(board["games"][0]["total_projection_generated_from_profile"])
         self.assertEqual(board["status"],STATUS)
 if __name__=="__main__":unittest.main()
