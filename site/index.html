@@ -151,6 +151,29 @@ footer{border-top:1px solid var(--line);color:#879fb5;font-size:11px;margin-top:
  .dayButton:hover,.tab:hover{border-color:#49728a}
 }
 
+
+/* Mobile-first density: get to the actual games without a screen of branding */
+@media(max-width:580px){
+ .wrap{padding:13px 15px}
+ .hero{padding:15px 0 12px;display:flex;flex-direction:column;align-items:stretch;gap:9px}
+ .kicker{font-size:9px;letter-spacing:.12em}
+ .hero h1{font-size:26px;line-height:1.12;margin:5px 0 0;letter-spacing:-.045em}
+ .hero .intro{display:none}
+ .heroStats{width:100%;gap:7px}
+ .heroStat{display:flex;align-items:center;gap:9px;min-width:0;flex:1;text-align:left;padding:8px 12px}
+ .heroStat b{font-size:19px}
+ .heroStat small{font-size:10px;margin:0}
+ .dayShell{padding:0 15px 11px}
+ .dayButton{padding:7px 9px;min-width:64px}
+ .warning{padding:8px 10px;font-size:10px;line-height:1.4}
+ .meta{font-size:10px;gap:8px;margin:9px 0 0}
+ nav[role=tablist]{margin:10px 0 14px;padding-bottom:7px}
+ .tab{padding:8px 11px}
+ .row{margin-bottom:2px}
+ .tool{margin:9px 0 11px}
+ .teamSub{white-space:normal}
+}
+
 </style></head>
 <body>
 <header><div class="wrap">
@@ -161,7 +184,7 @@ footer{border-top:1px solid var(--line);color:#879fb5;font-size:11px;margin-top:
   </div>
 </div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
 <main class="wrap">
-<div class="warning"><b>Experimental model · not validated for betting.</b> Predicted scores come from the frozen research model; ATS/O-U comparisons use separately observed market lines. QB and scouting updates may be newer and do not recalculate the forecast.</div>
+<div class="warning"><b>Research only · unvalidated.</b> Scores are frozen model estimates; market lines and QB updates may be newer and do not recalculate picks.</div>
 <div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span></div>
 <nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Matchups</button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Performance</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Data &amp; sources</button></nav>
 <section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern. Scores are model estimates, not live results.</p>
@@ -332,7 +355,7 @@ function scoutingPanel(g){
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
-            node("span","modelTag","Research · V03"));
+            node("span","modelTag","Model · research"));
  el.append(top);
  const teams=node("div","teamStack");
  teams.append(teamDisplayRow(g,"away"),teamDisplayRow(g,"home"));
@@ -343,7 +366,7 @@ function gameCard(g){
  summary.append(node("div","favorite",lead));
  const secondary=node("div","underStats");
  secondary.append(node("strong","","Total "+num(g.model_total)),node("span",""," · "+(Number.isFinite(g.research_home_win_probability)?
-   num(g.research_home_win_probability*100,0)+"% home win chance*":"Win probability unavailable")));
+   num(g.research_home_win_probability*100,0)+"% home win (uncal.)":"Win probability unavailable")));
  summary.append(secondary);el.append(summary);
  const tiles=node("div","marketTiles");
  let spreadLine="No line",atsPick=null,totalLine="No line",ouPick=null;
