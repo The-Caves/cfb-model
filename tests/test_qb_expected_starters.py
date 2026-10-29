@@ -102,7 +102,7 @@ class StarterSourceTests(unittest.TestCase):
         self.assertEqual(x["starter_status"],"PROJECTED_TWO_GAME_PASSER_VS_UNDATED_CHART")
         self.assertEqual(x["confidence"],"LOW_UNCONFIRMED")
         self.assertFalse(x["is_confirmed_starter"])
-        self.assertEqual([x["player"]]+[y["player"] for y in x["scenarios"][:1]],["A Backup","A First"])
+        self.assertEqual([x["starter"]]+[y["player"] for y in x["scenarios"][:1]],["A Backup","A First"])
 
     def test_explicit_updated_chart_still_blocks_two_game_conflict(self):
         ctx,role=fixtures()
