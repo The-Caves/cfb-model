@@ -1,0 +1,55 @@
+name: CFB Publish Verified Team Matchup Research
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-matchup-publish.yml'
+permissions:
+  contents: write
+  actions: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cfb-context-state
+      cancel-in-progress: false
+    timeout-minutes: 12
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Test matchup profile source schema and website projection isolation
+        run: |
+          python -m unittest discover -s tests -p 'test_team_matchup_intelligence.py' -v
+          python -m unittest discover -s tests -p 'test_site_matchup.py' -v
+      - name: Retrieve captured 2026 two-sided PBP and turnover research board
+        uses: actions/download-artifact@v4
+        with:
+          repository: The-Caves/cfb-model
+          run-id: 40966132935
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: cfb-team-matchup-intelligence-40966132935
+          path: .captured
+      - name: Write append-only source-labelled team matchup profile to research storage
+        run: |
+          python -m scripts.matchup_profile_archive \
+            --board .captured/team_matchup_intelligence/team_profiles_and_matchups.json
+      - name: Request immediate dashboard rebuild from saved source research
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request
+          url=f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/workflows/cfb-site.yml/dispatches"
+          req=urllib.request.Request(url,method="POST",headers={
+              "Authorization":"Bearer "+os.environ["GITHUB_TOKEN"],
+              "Accept":"application/vnd.github+json",
+              "Content-Type":"application/json"},
+              data=json.dumps({"ref":"main"}).encode())
+          with urllib.request.urlopen(req,timeout=15) as response:
+              assert response.status==204
+          print("Research dashboard rebuild dispatched; live V03 forecasts remain unchanged.")
+          PY
