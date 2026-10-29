@@ -290,8 +290,19 @@ def _commit_material(material, run_id):
         blob = store.api("POST",repo+"/git/blobs",{
             "content":base64.b64encode(content).decode(),"encoding":"base64"})
         entries.append({"path":path,"mode":"100644","type":"blob","sha":blob["sha"]})
-    tree = store.api("POST",repo+"/git/trees",{
-        "base_tree":commit["tree"]["sha"],"tree":entries})
+    # GitHub can expose a freshly uploaded Git blob to the blob endpoint
+    # before the tree endpoint's replicas have indexed that SHA. Retry only
+    # the exact same tree payload, without rewriting previous forecast data.
+    import time
+    tree=None
+    for attempt in range(4):
+        try:
+            tree = store.api("POST",repo+"/git/trees",{
+                "base_tree":commit["tree"]["sha"],"tree":entries})
+            break
+        except RuntimeError as error:
+            if "HTTP 422" not in str(error) or attempt==3:raise
+            time.sleep(1+attempt)
     new = store.api("POST",repo+"/git/commits",{
         "message":"Save as-of pregame and observed finals, run "+run_id,
         "tree":tree["sha"],"parents":[parent]})
