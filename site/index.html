@@ -84,6 +84,14 @@ footer{border-top:1px solid var(--line);margin-top:35px;padding-top:23px;color:v
 .depthFoot{font-size:10px;color:#a9bbcc;line-height:1.5;margin-top:9px}
 .depthFoot a{color:#9adfd0;margin-left:5px}
 .marginAlert{margin:12px 0 4px;padding:10px 12px;color:#f7deb4;border:1px solid #7d673e;background:#2b281e;border-radius:10px;font-size:12px;line-height:1.5}
+.scouting{margin:12px 0;border:1px solid #3c5269;border-radius:11px;background:#102032;padding:11px}
+.scouting summary{cursor:pointer;color:#b6e8d9;font-weight:760;font-size:13px}
+.scoutGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.scoutSide{border:1px solid #37516a;border-radius:9px;padding:10px;min-width:0;background:#0b1b2c}
+.scoutSide strong{display:block;font-size:12px;margin-bottom:6px}
+.scoutSide p{font-size:11px;color:#b9cada;margin:5px 0;line-height:1.55}
+.scoutFoot{color:#9fbbd0;font-size:10px;line-height:1.5;margin-top:10px}
+@media(max-width:520px){.scoutGrid{grid-template-columns:1fr}.scoutSide{padding:8px}}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top"><div class="brand">🏈 CFB <span>LAB</span> / 2026</div><div class="pill">Research model</div></div>
@@ -204,6 +212,38 @@ function hasQBRisk(game){
  return ["home","away"].some(side=>(game["qb_availability_"+side]||[]).some(r=>
    ["QUESTIONABLE","DOUBTFUL","OUT","SUSPENDED","LIMITED","GAME_TIME_DECISION","CONFLICT_REVIEW"].includes(r.status)));
 }
+function scoutingPanel(g){
+ const info=g.matchup_intelligence;if(!info)return null;
+ const details=node("details","scouting");
+ details.append(node("summary","","Team scouting · Run / Pass / Defense / Turnovers"));
+ const grid=node("div","scoutGrid"),m=info.matchup||{};
+ for(const [side,team] of [["away",g.away_team],["home",g.home_team]]){
+  const p=info[side]||{},box=node("div","scoutSide");
+  box.append(node("strong","",team+" · Recent form"));
+  const items=[
+    ["Rush offense EPA/play",p.run_off,3],
+    ["Pass offense EPA/play",p.pass_off,3],
+    ["Run defense EPA allowed",p.run_def_allowed,3],
+    ["Pass defense EPA allowed",p.pass_def_allowed,3],
+    ["Pass tendency",Number.isFinite(p.pass_rate)?100*p.pass_rate:null,1],
+    ["Turnovers committed/game",p.turnovers_committed,2],
+    ["Takeaways/game",p.takeaways,2]];
+  for(const [name,val,places] of items)box.append(node("p","",name+": "+(Number.isFinite(val)?num(val,places)+(name==="Pass tendency"?"%":""):"Unknown")));
+  if(Number.isFinite(p.run_disruption_dependency))
+   box.append(node("p","","Scored "+num(p.run_disruption_dependency,1)+" more points when rushing EPA was positive versus nonpositive (observational, not causal)."));
+  box.append(node("p","","Profile: "+(p.prior_games??0)+" games · Pass "+(p.pass_off_games??0)+" · Run "+(p.run_off_games??0)));
+  grid.append(box);
+ }
+ details.append(grid);
+ const hr=m.home_run_edge,ar=m.away_run_edge,hp=m.home_pass_edge,ap=m.away_pass_edge;
+ details.append(node("div","scoutFoot","Offense versus opponent defense — positive favors offense: "+
+   g.home_team+" rush "+num(hr,3)+" / pass "+num(hp,3)+" · "+
+   g.away_team+" rush "+num(ar,3)+" / pass "+num(ap,3)));
+ if([hr,ar,hp,ap].every(Number.isFinite)&&[hr,ar,hp,ap].every(x=>x<0))
+   details.append(node("div","scoutFoot","Both offenses face unfavorable run and pass matchups: possible defensive battle for research, NOT an automatic UNDER."));
+ details.append(node("div","scoutFoot","Source: 2026 PBP + audited ESPN team turnovers. Historical publication times unverified. This scouting view does not change frozen model picks."));
+ return details;
+}
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("b","small",fmtDate.format(dateOf(g.kickoff_utc))),node("span","small","ESPN "+g.game_id));el.append(top);
@@ -213,6 +253,7 @@ function gameCard(g){
  qbPanel.append(qbCard(g.away_team,g.qb_away,g.qb_depth_away,g.qb_availability_away),qbCard(g.home_team,g.qb_home,g.qb_depth_home,g.qb_availability_home));el.append(qbPanel);
  const availability=officialQBPanel(g);
  if(availability)el.append(availability);
+ const scouting=scoutingPanel(g);if(scouting)el.append(scouting);
  if(hasQBRisk(g))el.append(node("div","qbRisk","QB status alert: this frozen model projection has NOT been recomputed for the reported quarterback situation."));
 
  const scores=node("div","scoreline"),away=node("div"),home=node("div","scoreHome");
