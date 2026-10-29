@@ -81,6 +81,20 @@ class VenueTravelTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Incomplete"):
             predict(model,case,travel=True)
 
+    def test_matched_training_control_uses_same_cohort_and_prevents_false_lift(self):
+        from scripts.venue_travel_candidate import paired_comparison,VENUE_SOURCE
+        rows=samples(480)
+        for r in rows:
+            if r["date"]>="2026-09-01":
+                r["travel_evidence_status"]=VENUE_SOURCE
+                r["audited_travel_features"]=travel_inputs(venue())
+        report=paired_comparison(rows,{},[dt.date(2026,9,26)])
+        fold=report["folds"][0]
+        self.assertTrue(fold["travel_paired"]["available"])
+        self.assertEqual(fold["travel_paired"]["games"],
+            len([r for r in fold["same_game_details"] if "travel_prediction" in r]))
+        self.assertIn("matched_cohort_no_travel_mae",fold["travel_paired"])
+
     def test_no_sample_historical_travel_training_never_invents_coefficient(self):
         result=fit(samples(),"2026-09-20",travel=True)
         self.assertEqual(result["status"],"PASS_INSUFFICIENT_HISTORICAL_TRAVEL")

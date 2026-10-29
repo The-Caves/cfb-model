@@ -94,8 +94,8 @@ def _records(rows,cutoff):
         out.append(row)
     return out
 
-def _weighted_fit(rows,cutoff,include_travel=False):
-    minimum=MIN_TRAVEL_GAMES if include_travel else MIN_GAMES
+def _weighted_fit(rows,cutoff,include_travel=False,matched_cohort=False):
+    minimum=MIN_TRAVEL_GAMES if (include_travel or matched_cohort) else MIN_GAMES
     if len(rows)<minimum:raise ValueError("Insufficient past 2026 games")
     teams=sorted({r["home"] for r in rows}|{r["away"] for r in rows})
     ids={x:i for i,x in enumerate(teams)}
@@ -258,7 +258,15 @@ def paired_comparison(games,advanced,cutoffs):
         classic=fit_ridge(before,BASE_FIELDS)
         recency=fit_candidate(before,BASE_FIELDS,first)
         neutral=fit([known[str(r["game_id"])] for r in complete],first)
-        travel_fit=fit([known[str(r["game_id"])] for r in complete],first,travel=True)
+        complete_games=[known[str(r["game_id"])] for r in complete]
+        travel_fit=fit(complete_games,first,travel=True)
+        travel_cohort=[r for r in complete_games if
+            r.get("travel_evidence_status")==VENUE_SOURCE and
+            r.get("audited_travel_features") is not None]
+        # This no-travel control is fitted on IDENTICAL 80+ historical
+        # trips and the same predecision cutoff as the travel model.
+        control_fit=(_weighted_fit(travel_cohort,first,matched_cohort=True)
+                     if travel_fit.get("status")==STATUS else None)
         baseline=ridge_predict(future,BASE_FIELDS,classic)[0][:,0]
         recent=predict_candidate(future,BASE_FIELDS,recency)
         rows=[]
@@ -275,8 +283,10 @@ def paired_comparison(games,advanced,cutoffs):
                 "venue_adjustment":rating["home_field_points"]})
             if travel_fit.get("status")==STATUS:
                 travel_prediction=predict(travel_fit,g,travel=True)
-                if travel_prediction is not None:
+                same_training_baseline=predict(control_fit,g) if control_fit else None
+                if travel_prediction is not None and same_training_baseline is not None:
                     rows[-1]["travel_prediction"]=travel_prediction["predicted_home_margin"]
+                    rows[-1]["matched_training_no_travel_prediction"]=same_training_baseline["predicted_home_margin"]
         if not rows:continue
         metrics={}
         for k in ("v03","recency","neutral_rating"):
@@ -297,6 +307,9 @@ def paired_comparison(games,advanced,cutoffs):
                               for r in travel_pairs)/len(travel_pairs),5),
                 "same_game_neutral_rating_mae":round(sum(abs(r["neutral_rating"]-r["actual"])
                               for r in travel_pairs)/len(travel_pairs),5),
+                "matched_cohort_no_travel_mae":round(sum(abs(
+                     r["matched_training_no_travel_prediction"]-r["actual"])
+                     for r in travel_pairs)/len(travel_pairs),5),
                 "same_game_v03_mae":round(sum(abs(r["v03"]-r["actual"])
                               for r in travel_pairs)/len(travel_pairs),5)})
         folds.append({"cutoff":first.isoformat(),
