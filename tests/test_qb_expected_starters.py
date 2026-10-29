@@ -92,4 +92,58 @@ class StarterSourceTests(unittest.TestCase):
         role["asof_utc"]="2026-11-01T00:00:00Z"
         with self.assertRaisesRegex(ValueError,"after target"):
             build(ctx,role,{},AT)
+    def test_two_game_backup_takeover_uses_uncertain_expected_player(self):
+        ctx,role=fixtures()
+        role["rows"][0]["recent_two_game_leading_passer_proxy"]="A Backup"
+        r=build(ctx,role,{"Team A":source(["A First","A Backup","A Third"])},AT)
+        x=self.a(r)
+        self.assertEqual(x["starter"],"A Backup")
+        self.assertEqual(x["depth_label"],"QB2")
+        self.assertEqual(x["starter_status"],"PROJECTED_TWO_GAME_PASSER_VS_UNDATED_CHART")
+        self.assertEqual(x["confidence"],"LOW_UNCONFIRMED")
+        self.assertFalse(x["is_confirmed_starter"])
+        self.assertEqual([x["starter"]]+[y["player"] for y in x["scenarios"][:1]],["A Backup","A First"])
+
+    def test_explicit_updated_chart_still_blocks_two_game_conflict(self):
+        ctx,role=fixtures()
+        role["rows"][0]["recent_two_game_leading_passer_proxy"]="A Backup"
+        chart=source(["A First","A Backup"])
+        chart["source_updated_et"]="2026-10-28T19:02:00-04:00"
+        x=self.a(build(ctx,role,{"Team A":chart},AT))
+        self.assertIsNone(x["starter"])
+        self.assertEqual(x["starter_status"],"CONFLICT_CHART_VS_RECENT_QB")
+
+    def test_qb1_explicit_out_chart_backup_used_as_low_confidence_scenario(self):
+        ctx,role=fixtures(latest=None,availability=[{
+          "team":"Team A","player":"A First","position":"QB","status":"OUT",
+          "published_at_utc":"2026-10-29T13:00:00Z",
+          "captured_at_utc":"2026-10-29T14:00:00Z"}])
+        x=self.a(build(ctx,role,{"Team A":source(["A First","A Backup","A Third"])},AT))
+        self.assertEqual(x["starter"],"A Backup")
+        self.assertEqual(x["starter_status"],"PROJECTED_AVAILABLE_BACKUP_AFTER_QB1_OUT")
+        self.assertEqual(x["confidence"],"LOW_UNCONFIRMED")
+        self.assertFalse(x["is_confirmed_starter"])
+        self.assertEqual([s["player"] for s in x["scenarios"]],["A Backup","A Third"])
+
+    def test_stale_chart_does_not_override_reported_absence_for_recent_qb(self):
+        ctx,role=fixtures(latest="A Backup",availability=[{
+          "team":"Team A","player":"A Backup","position":"QB","status":"OUT",
+          "published_at_utc":"2026-10-29T13:00:00Z",
+          "captured_at_utc":"2026-10-29T14:00:00Z"}])
+        chart=source(["A First","A Backup"])
+        chart["source_updated_et"]="2026-10-23T19:02:00-04:00"
+        x=self.a(build(ctx,role,{"Team A":chart},AT))
+        self.assertIsNone(x["starter"])
+        self.assertEqual(x["starter_status"],"CONFLICT_CHART_VS_RECENT_QB")
+
+    def test_no_chart_cannot_project_recent_passer_with_source_confirmed_out(self):
+        ctx,role=fixtures(latest="A Backup",availability=[{
+          "team":"Team A","player":"A Backup","position":"QB","status":"OUT",
+          "published_at_utc":"2026-10-29T13:00:00Z",
+          "captured_at_utc":"2026-10-29T14:00:00Z"}])
+        x=self.a(build(ctx,role,{},AT))
+        self.assertIsNone(x["starter"])
+        self.assertEqual(x["starter_status"],"UNKNOWN")
+        self.assertFalse(x["is_confirmed_starter"])
+
 if __name__=="__main__":unittest.main()

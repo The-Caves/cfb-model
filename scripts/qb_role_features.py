@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from scripts.personnel_features import verify_joined
 
 from scripts.game_context import parse_time
-from scripts.qb_passer_history import prior_qb_form
+from scripts.qb_passer_history import prior_qb_form,player_key
 
 STATUS="QB_PERSONNEL_ROLE_CHANGE_RESEARCH_ONLY"
 MIN_NAMED_SEASON_PLAYS=35
@@ -39,6 +39,8 @@ def _profile(rows):
     if not rows:return {"season_leading_passer_proxy":None,"prior_games":0,
                         "last_game_leading_passer_proxy":None,
                         "last_game_passer_date":None,
+                        "last_game_passer_share_named":None,
+                        "recent_two_game_leading_passer_proxy":None,
                         "observed_recent_qb_switch":None,
                         "source":"NO_PRIOR_QB_PASSER_EVIDENCE"}
     totals=defaultdict(int);games=defaultdict(list)
@@ -52,14 +54,39 @@ def _profile(rows):
     lead=(ordered[0][0] if ordered and total>=MIN_NAMED_SEASON_PLAYS
           and ordered[0][1]/total>=MIN_SEASON_LEAD_SHARE else None)
     latest_day=max(games)
-    last=sorted(games[latest_day],key=lambda r:(-int(r["pass_tagged_plays"]),r["player"]))
-    game_total=sum(int(r["pass_tagged_plays"]) for r in last)
-    last_leader=(last[0]["player"] if game_total and
-                 int(last[0]["pass_tagged_plays"])/game_total>=MIN_GAME_SHARE else None)
+    def game_leader(items):
+        ranked=sorted(items,key=lambda r:(-int(r["pass_tagged_plays"]),r["player"]))
+        named_total=sum(int(r["pass_tagged_plays"]) for r in ranked)
+        if not named_total:return None,None
+        # A QB with 90% of *named* plays may only own a small fraction of
+        # real attempts if the upstream passer tags are sparse. Refuse to
+        # identify a dominant QB from that incomplete source.
+        source_totals={int(r["team_pass_tagged_plays"])
+                       for r in ranked if r.get("team_pass_tagged_plays") not in ("",None)}
+        if len(source_totals)>1:raise ValueError("Conflicting team pass totals")
+        if source_totals:
+            whole=next(iter(source_totals))
+            if whole<named_total:raise ValueError("Passer attribution exceeds team total")
+            if not whole or named_total/whole<.70:return None,None
+        share=int(ranked[0]["pass_tagged_plays"])/named_total
+        return (ranked[0]["player"] if share>=MIN_GAME_SHARE else None),round(share,6)
+    last_leader,last_share=game_leader(games[latest_day])
+    # A two-game takeover is stronger provisional next-game evidence than
+    # one appearance. It is still NOT a verified start: garbage-time use,
+    # injury recovery and rotations can change the next game's plan.
+    last_two=sorted(games,reverse=True)[:2]
+    repeat=None
+    if len(last_two)==2 and last_two[0][0]!=last_two[1][0]:
+        previous,_=game_leader(games[last_two[1]])
+        if (last_leader and previous
+            and player_key(last_leader)==player_key(previous)):
+            repeat=last_leader
     return {"season_leading_passer_proxy":lead,
             "prior_games":len(games),
             "last_game_leading_passer_proxy":last_leader,
             "last_game_passer_date":latest_day[0],
+            "last_game_passer_share_named":last_share,
+            "recent_two_game_leading_passer_proxy":repeat,
             "observed_recent_qb_switch":(lead!=last_leader if lead and last_leader else None),
             "source":"PRIOR_OBSERVED_PASSER_USAGE_NOT_DEPTH_CHART"}
 
