@@ -28,6 +28,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_venue_travel*.py' -v
           python -m unittest discover -s tests -p 'test_game_context.py' -v
+          python -m unittest discover -s tests -p 'test_city_timezone_refresh.py' -v
       - name: Download last completed, independently archived 2026 snapshot
         uses: actions/download-artifact@v4
         with:
@@ -36,12 +37,17 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           name: cfb-2026-data-40916372983
           path: .research-intake
+      - name: Enrich previously captured city IDs with verified IANA zones
+        run: |
+          python -m scripts.city_timezone_refresh \
+            --cache .research-intake/context/geo_cache.json \
+            --output data/model_v03/city_geocodes_verified_zones.json
       - name: Reconstruct historical geospatial travel from past-only home locations
         run: |
           python -m scripts.venue_travel_history \
             --games .research-intake/games_2026.csv \
             --raw-dir .research-intake/raw \
-            --geo-cache .research-intake/context/geo_cache.json \
+            --geo-cache data/model_v03/city_geocodes_verified_zones.json \
             --output data/model_v03/venue-travel-history-research.json
       - name: Run same-game V03, recency, neutral venue, and travel ablations
         run: |
@@ -77,6 +83,7 @@ jobs:
         with:
           name: cfb-venue-travel-validation-${{ github.run_id }}
           path: |
+            data/model_v03/city_geocodes_verified_zones.json.audit.json
             data/model_v03/venue-travel-history-research.json
             data/model_v03/venue-travel-candidate-research.json
           retention-days: 30
