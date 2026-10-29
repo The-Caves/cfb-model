@@ -95,7 +95,8 @@ def _records(rows,cutoff):
     return out
 
 def _weighted_fit(rows,cutoff,include_travel=False):
-    if len(rows)<MIN_GAMES:raise ValueError("Insufficient past 2026 games")
+    minimum=MIN_TRAVEL_GAMES if include_travel else MIN_GAMES
+    if len(rows)<minimum:raise ValueError("Insufficient past 2026 games")
     teams=sorted({r["home"] for r in rows}|{r["away"] for r in rows})
     ids={x:i for i,x in enumerate(teams)}
     width=len(teams)+1+(len(TRAVEL_KEYS) if include_travel else 0)
