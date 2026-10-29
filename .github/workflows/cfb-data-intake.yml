@@ -80,6 +80,11 @@ jobs:
         run: python -m scripts.ingest_advanced --games data/games_2026.csv --registry data/archive/2026_team_aliases.csv --output data/advanced
       - name: Merge scoreboard and advanced 2026 team profiles
         run: python scripts/combine_profiles.py --scores data/team_profiles_2026.csv --advanced data/advanced/team_profiles_advanced_2026.csv --expected-teams 138 --output data/enriched
+      - name: Collect two-sided ESPN boxscore turnovers with explicit source gaps
+        run: |
+          python -m scripts.turnover_boxscore \
+            --games data/games_2026.csv \
+            --output data/model_v03/espn-verified-turnovers.json
       - name: Build checksummed retrospective weekly profiles (v0.4 step 1)
         run: |
           python -m scripts.weekly_profiles \
@@ -154,6 +159,24 @@ jobs:
             --output data/model_v03/backtest-evidence-gate.json
       - name: Collect timestamped upcoming schedules, rest, travel proxies, weather and reviewed personnel
         run: python -m scripts.ingest_game_context --raw-dir data/raw --availability-csv data/manual/availability_2026.csv --output data/context --horizon-days 10 --auto-official
+      - name: Build opponent-style team profiles and grade run/pass/turnover matchups
+        run: |
+          python -m scripts.team_matchup_intelligence \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --manifest data/advanced/advanced_manifest.json \
+            --context data/context/upcoming_game_context_2026.json \
+            --turnovers data/model_v03/espn-verified-turnovers.json \
+            --output data/model_v03/team_matchup_intelligence
+      - name: Upload opponent-specific team profiles, turnovers and walk-forward score audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-team-matchup-intelligence-${{ github.run_id }}
+          path: |
+            data/model_v03/espn-verified-turnovers.json
+            data/model_v03/team_matchup_intelligence/
+          if-no-files-found: error
+          retention-days: 30
       - name: Verify named city time zones for the prospective travel source
         run: |
           python -m scripts.city_timezone_refresh \
@@ -300,6 +323,13 @@ jobs:
             --role "data/pregame_evidence/qb-role-features-${{ github.run_id }}.json" \
             --aliases data/archive/2026_team_aliases.csv \
             --output "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json"
+      - name: Prioritize QB confirmation source review by kickoff and disagreement
+        run: |
+          python -m scripts.qb_confirmation_coverage \
+            --expected "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json" \
+            --worklist data/context/qb-starter-source-review-worklist.json \
+            --output "data/pregame_evidence/qb-confirmation-coverage-${{ github.run_id }}.json" \
+            --csv "data/pregame_evidence/qb-confirmation-review-${{ github.run_id }}.csv"
       - name: Upload QB role and conditional offensive profile audit
         uses: actions/upload-artifact@v4
         with:
@@ -307,6 +337,8 @@ jobs:
           path: |
             data/pregame_evidence/qb-role-features-*.json
             data/pregame_evidence/qb-expected-starters-*.json
+            data/pregame_evidence/qb-confirmation-coverage-*.json
+            data/pregame_evidence/qb-confirmation-review-*.csv
           retention-days: 30
           if-no-files-found: error
       - name: Freeze observed weather-style and replacement-count matchup features
