@@ -157,6 +157,14 @@ def fit(rows,cutoff,travel=False):
         return _weighted_fit(complete,cutoff,include_travel=True)
     return _weighted_fit(historical,cutoff)
 
+def _eligible_trip(game):
+    vals=game.get("audited_travel_features")
+    if game.get("travel_evidence_status")==VENUE_SOURCE and vals is not None:
+        if not all(_finite(vals.get(k)) for k in TRAVEL_KEYS):
+            raise ValueError("Incomplete audited game travel")
+        return {k:float(vals[k]) for k in TRAVEL_KEYS}
+    return travel_inputs(game)
+
 def predict(model,game,travel=False):
     if model.get("status")!=STATUS:return None
     home,away=game["home"],game["away"]
@@ -169,7 +177,7 @@ def predict(model,game,travel=False):
     impact=0.
     if travel:
         if model.get("travel_coefficients") is None:return None
-        source=travel_inputs(game)
+        source=_eligible_trip(game)
         if source is None:return None
         impact=sum(model["travel_coefficients"][k]*source[k] for k in TRAVEL_KEYS)
     return {"predicted_home_margin":round(neutral_margin+h+impact,5),
@@ -245,6 +253,7 @@ def paired_comparison(games,advanced,cutoffs):
         classic=fit_ridge(before,BASE_FIELDS)
         recency=fit_candidate(before,BASE_FIELDS,first)
         neutral=fit([known[str(r["game_id"])] for r in complete],first)
+        travel_fit=fit([known[str(r["game_id"])] for r in complete],first,travel=True)
         baseline=ridge_predict(future,BASE_FIELDS,classic)[0][:,0]
         recent=predict_candidate(future,BASE_FIELDS,recency)
         rows=[]
@@ -259,6 +268,10 @@ def paired_comparison(games,advanced,cutoffs):
                 "neutral_rating":rating["predicted_home_margin"],
                 "neutral_rating_component":rating["neutral_strength_difference"],
                 "venue_adjustment":rating["home_field_points"]})
+            if travel_fit.get("status")==STATUS:
+                travel_prediction=predict(travel_fit,g,travel=True)
+                if travel_prediction is not None:
+                    rows[-1]["travel_prediction"]=travel_prediction["predicted_home_margin"]
         if not rows:continue
         metrics={}
         for k in ("v03","recency","neutral_rating"):
@@ -269,7 +282,20 @@ def paired_comparison(games,advanced,cutoffs):
                "signed_home_bias":round(sum(y-a for y,a in zip(margin,truth))/n,5),
                "su_accuracy":round(sum((y>0)==(a>0) for y,a in zip(margin,truth))/n,5),
                "home_pick_fraction":round(sum(y>0 for y in margin)/n,5)}
+        travel_pairs=[r for r in rows if "travel_prediction" in r]
+        travel_metrics={"games":len(travel_pairs),"available":len(travel_pairs)>0,
+            "training_status":travel_fit["status"],
+            "train_games":travel_fit.get("travel_training_games",0)}
+        if travel_pairs:
+            travel_metrics.update({
+                "travel_model_mae":round(sum(abs(r["travel_prediction"]-r["actual"])
+                              for r in travel_pairs)/len(travel_pairs),5),
+                "same_game_neutral_rating_mae":round(sum(abs(r["neutral_rating"]-r["actual"])
+                              for r in travel_pairs)/len(travel_pairs),5),
+                "same_game_v03_mae":round(sum(abs(r["v03"]-r["actual"])
+                              for r in travel_pairs)/len(travel_pairs),5)})
         folds.append({"cutoff":first.isoformat(),
+            "travel_paired":travel_metrics,
             "training_games_all_v03":len(before),
             "training_games_dual_profile":len(complete),
             "home_field_points":round(neutral["home_field_points"],5),
@@ -292,9 +318,34 @@ def paired_comparison(games,advanced,cutoffs):
         "scoring_system":"NEUTRAL_TEAM_RATINGS_PLUS_REGULARIZED_HOME_FIELD",
         "folds":folds,"aggregate":aggregate}
 
-def run_paired(games_csv,advanced_csv,manifest,output):
+def run_paired(games_csv,advanced_csv,manifest,output,travel_history=None):
     from scripts.model_v03 import load_inputs
     games,advanced,_=load_inputs(games_csv,advanced_csv,manifest)
+    cleaned=[]
+    for g in games:
+        v=str(g["neutral"]).strip().lower()
+        if v not in ("true","false"):raise ValueError("Unknown neutral-site designation")
+        cleaned.append({**g,"neutral":v=="true"})
+    games=cleaned
+    if travel_history:
+        historic=json.loads(Path(travel_history).read_text())
+        if (historic.get("status")!="RETROSPECTIVE_2026_VENUE_TRAVEL_GEOGRAPHY_NOT_ASOF_ATTESTED"
+            or historic.get("historical_location_published_before_games") is not False
+            or historic.get("betting_status")!="PASS_UNVALIDATED"):
+            raise ValueError("Untrusted historical travel metadata")
+        idx={}
+        for row in historic["rows"]:
+            gid=str(row["game_id"])
+            if gid in idx:raise ValueError("Duplicate historical travel slot")
+            idx[gid]=row
+        for g in games:
+            extra=idx.get(str(g["game_id"]))
+            if extra is None:continue
+            if (g["home"],g["away"],g["date"],g["kickoff_utc"])!=(
+                extra["home"],extra["away"],extra["date"],extra["kickoff_utc"]):
+                raise ValueError("Historical travel/game identity mismatch")
+            g["audited_travel_features"]=extra["audited_travel_features"]
+            g["travel_evidence_status"]=extra["travel_evidence_status"]
     report=paired_comparison(games,advanced,
         [dt.date(2026,9,26)+dt.timedelta(days=7*i) for i in range(7)])
     path=Path(output);path.parent.mkdir(parents=True,exist_ok=True)
@@ -326,7 +377,8 @@ if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--games",required=True);p.add_argument("--output",required=True)
     p.add_argument("--advanced");p.add_argument("--manifest")
+    p.add_argument("--travel-history")
     a=p.parse_args()
     if bool(a.advanced)!=bool(a.manifest):p.error("Advanced + manifest are required together")
-    if a.advanced:run_paired(a.games,a.advanced,a.manifest,a.output)
+    if a.advanced:run_paired(a.games,a.advanced,a.manifest,a.output,a.travel_history)
     else:run(a.games,a.output)

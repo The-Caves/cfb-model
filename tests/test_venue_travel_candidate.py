@@ -67,6 +67,20 @@ class VenueTravelTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"geographic"):
             travel_inputs(trip)
 
+    def test_historical_travel_is_separate_and_requires_measured_cohort(self):
+        from scripts.venue_travel_candidate import VENUE_SOURCE
+        rows=samples(150)
+        for x in rows:
+            x["travel_evidence_status"]=VENUE_SOURCE
+            x["audited_travel_features"]=travel_inputs(venue())
+        model=fit(rows,"2026-09-20",travel=True)
+        self.assertEqual(model["status"],STATUS)
+        case=dict(rows[0])
+        self.assertIsNotNone(predict(model,case,travel=True))
+        case["audited_travel_features"]["away_eastward_hours"]=None
+        with self.assertRaisesRegex(ValueError,"Incomplete"):
+            predict(model,case,travel=True)
+
     def test_no_sample_historical_travel_training_never_invents_coefficient(self):
         result=fit(samples(),"2026-09-20",travel=True)
         self.assertEqual(result["status"],"PASS_INSUFFICIENT_HISTORICAL_TRAVEL")
