@@ -168,6 +168,10 @@ jobs:
             --context data/context/upcoming_game_context_2026.json \
             --turnovers data/model_v03/espn-verified-turnovers.json \
             --output data/model_v03/team_matchup_intelligence
+      - name: Preserve source-audited team scouting board for website inspection
+        run: |
+          python -m scripts.matchup_profile_archive \
+            --board data/model_v03/team_matchup_intelligence/team_profiles_and_matchups.json
       - name: Upload opponent-specific team profiles, turnovers and walk-forward score audit
         uses: actions/upload-artifact@v4
         with:
