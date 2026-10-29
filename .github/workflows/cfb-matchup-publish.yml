@@ -31,14 +31,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           repository: The-Caves/cfb-model
-          run-id: 40966132935
+          run-id: 40968000342
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          name: cfb-team-matchup-intelligence-40966132935
+          name: cfb-opponent-adjusted-matchup-research-40968000342
           path: .captured
       - name: Write append-only source-labelled team matchup profile to research storage
         run: |
           python -m scripts.matchup_profile_archive \
-            --board .captured/team_matchup_intelligence/team_profiles_and_matchups.json
+            --board .captured/team_profiles_and_matchups.json
       - name: Request immediate dashboard rebuild from saved source research
         run: |
           python - <<'PY'
