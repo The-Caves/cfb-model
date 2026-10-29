@@ -477,11 +477,17 @@ jobs:
         run: |
           python -m scripts.model_shadow_grade \
             --output "data/pregame_evidence/shadow-grading-${{ github.run_id }}.json"
+      - name: Grade immutable QB and venue/travel shadows on exactly selected pregame V03 finals
+        run: |
+          python -m scripts.candidate_shadow_grade \
+            --output "data/pregame_evidence/qb-venue-grading-${{ github.run_id }}.json"
       - name: Upload paired shadow model performance audit
         uses: actions/upload-artifact@v4
         with:
           name: cfb-shadow-grades-${{ github.run_id }}
-          path: data/pregame_evidence/shadow-grading-*.json
+          path: |
+            data/pregame_evidence/shadow-grading-*.json
+            data/pregame_evidence/qb-venue-grading-*.json
           retention-days: 30
           if-no-files-found: error
       - name: Archive independently verified completed game scores for market settlement
