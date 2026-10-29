@@ -154,12 +154,17 @@ jobs:
             --output data/model_v03/backtest-evidence-gate.json
       - name: Collect timestamped upcoming schedules, rest, travel proxies, weather and reviewed personnel
         run: python -m scripts.ingest_game_context --raw-dir data/raw --availability-csv data/manual/availability_2026.csv --output data/context --horizon-days 10 --auto-official
+      - name: Verify named city time zones for the prospective travel source
+        run: |
+          python -m scripts.city_timezone_refresh \
+            --cache data/context/geo_cache.json \
+            --output data/model_v03/city_geocodes_verified_zones.json
       - name: Reconstruct historical travel conservatively from archived ESPN venues
         run: |
           python -m scripts.venue_travel_history \
             --games data/games_2026.csv \
             --raw-dir data/raw \
-            --geo-cache data/context/geo_cache.json \
+            --geo-cache data/model_v03/city_geocodes_verified_zones.json \
             --output data/model_v03/venue-travel-history-research.json
       - name: Compare venue-separated opponent ratings and travel against V03/recency
         run: |
@@ -174,6 +179,7 @@ jobs:
         with:
           name: cfb-venue-travel-research-${{ github.run_id }}
           path: |
+            data/model_v03/city_geocodes_verified_zones.json.audit.json
             data/model_v03/venue-travel-history-research.json
             data/model_v03/venue-travel-candidate-research.json
           if-no-files-found: error
@@ -387,6 +393,23 @@ jobs:
         with:
           name: cfb-qb-conditional-shadow-${{ github.run_id }}
           path: data/pregame_evidence/qb-conditional-shadow-*.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Freeze venue and lightly-weighted travel predictions as a second shadow
+        run: |
+          python -m scripts.venue_travel_forecast \
+            --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" \
+            --context data/context/upcoming_game_context_2026.json \
+            --games data/games_2026.csv \
+            --history data/model_v03/venue-travel-history-research.json \
+            --geo data/model_v03/city_geocodes_verified_zones.json \
+            --raw data/raw \
+            --output "data/pregame_evidence/venue-travel-shadow-${{ github.run_id }}.json"
+      - name: Upload immutable venue and travel forecast audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-venue-travel-shadow-${{ github.run_id }}
+          path: data/pregame_evidence/venue-travel-shadow-*.json
           retention-days: 30
           if-no-files-found: error
       - name: Export frozen research projections for private dashboard preview
