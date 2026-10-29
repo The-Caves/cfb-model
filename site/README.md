@@ -26,20 +26,19 @@ This is a mobile-friendly front end to real, frozen 2026 college-football model 
 
 The overall model does **not** yet forecast player propositions (passing/rushing/receiving/receptions) or calculate player-prop edges. There is no validated individual-player usage/rate distribution model or reliable prop quote pipeline. A separate model milestone is needed rather than using team score forecasts to fabricate player bets.
 
-## Opening the website today
+## Public dashboard and offline preview (October 29)
 
-The GitHub Actions `CFB Research Dashboard` workflow creates an artifact called `cfb-website-preview-<run number>`. On a phone, download the ZIP from the most recent successful Actions run, extract it in Files, then open the HTML file. The exported HTML has its data embedded, so it does not require GitHub Pages for an offline preview. Note that its static forecasts will not update while the local file is open.
+The public GitHub Pages dashboard is live at **https://the-caves.github.io/cfb-model/**. Its source code, frozen model forecast and research disclosures are published via `.github/workflows/cfb-site.yml`. GitHub Pages is public, not a private/authenticated site.
 
-### Optional public web address
+Each successful workflow also builds a standalone zipped HTML preview with its then-current data embedded: `cfb-website-preview-RUNID`. Opening that exported HTML offline will not refresh lines or games.
 
-Earlier project instructions requested a private preview. **GitHub Pages creates a publicly accessible website**, so the workflow does not enable it automatically. If the owner chooses to make this research site public:
+### Compact UI version
 
-1. Go to repository **Settings > Pages**.
-2. Under **Build and deployment > Source**, select **GitHub Actions**.
-3. Open **Actions > CFB Research Dashboard > Run workflow** or let its next scheduled build complete.
-4. Confirm an actual successful Pages deployment. The expected standard address, once live, is `https://the-caves.github.io/cfb-model/`.
+The redesigned game cards use two team rows, with model-projected score, one compact **QB rank + player name** line and its evidence caveat. Three-deep depth charts, medical availability and link provenance remain available in a secondary expandable **QB depth, availability & sources** panel; **Team scouting** remains separately expandable with run/pass/defense and turnovers. Never relabel a statistical passer or third-party depth-chart QB1 as an official starter.
 
-Do not call that address live before verification. The Actions deploy job records when Pages is disabled; the preview ZIP remains available regardless. For a restricted-access website, use an authenticated hosting provider instead of public GitHub Pages.
+The color palette is a restrained navy/slate/teal design with a responsive mobile-first header. Where the exact ESPN game ID, opponents, kickoff and team metadata match, source-labelled school color and a logo URL from ESPN's `a.espncdn.com` CDN are displayed. Logos are **third-party trademarks and art** belonging to their respective owners; the ESPN API does not itself grant license to redistribute or repurpose them. Images are hotlinked to their source, not saved or rehosted, and a neutral text monogram renders if any image fails. Do not generate fake official color palettes. School branding is an optional display enhancement, never a model signal.
+
+The original archived forecast model and market source safeguards are unchanged by this redesign. New tests in `tests/test_site_ui_compact.py` and `tests/test_site_team_branding.py`, plus a JavaScript syntax check, protect the mobile layout's data contract and fallback behavior.
 
 ## Remaining model limitations
 
@@ -49,12 +48,12 @@ For official personnel-source verification and milestone exit rules, see `docs/M
 
 ## Game-specific quarterback labels and official availability (October 24)
 
-QB names shown as `RECENT_GAME_PASSER` are only past-game statistical context. **Starter not confirmed** stays prominent until the independent, time-safe `CONFIRMED_OFFICIAL` review gate passes. Named players, official report statuses and cited source links appear on each game widget. The game can be filtered by confirmed QB, names available, or official QB status uncertainty. The headline `Model pick · experimental` means genuine computed projections, **not** validated betting picks.
+QB names shown as `RECENT_GAME_PASSER` are only past-game statistical context. **Starter not confirmed** stays distinguishable until the independent, time-safe `CONFIRMED_OFFICIAL` review gate passes. A compact QB name and provenance label appear on each card; full chart ranks, official report statuses and cited source links live in the collapsed QB details panel. The game can be filtered by confirmed QB, names available, or official QB status uncertainty. The headline `Model pick · experimental` means genuine computed projections, **not** validated betting picks.
 
 A supplementary, read-only official conference availability overlay runs in `scripts/site_availability.py` after `scripts/site_qb.py`. It matches timestamped public SEC, B10, ACC, B12 reports to the exact scheduled game before displaying per-QB `OUT`, `QUESTIONABLE`, `AVAILABLE`, etc. A missing or rejected report remains unknown, not healthy. Official availability and current name overlays **do not retroactively adjust** the existing frozen forecast; the live model still fits 14 base features and must pass leakage-safe validation before a new QB-weighted model can be promoted. Progress and acceptance blockers are in `docs/QB_WIDGET_SOURCES_2026.md`.
 
-## QB1–QB3 chart ranks on every upcoming game (October 24)
+## QB1–QB3 chart evidence (October 24 collection, October 29 compact display)
 
-Every ranked QB in a matchup is shown as `QB1`, `QB2`, or `QB3` based on a dated 2026 Ourlads college-football depth chart, with an outbound source link and its update date. `QB1` means **first on the third-party depth chart**, not guaranteed to start today. Real, date-matched *official* availability is overlaid beside the named player (for example, Taylor `QUESTIONABLE` at Mississippi State) and confirmed game-specific starter evidence is a separate stronger source class. A player whose only evidence is last week's box score remains labeled as last week's passer, not a QB1.
+QB1–QB3 chart ranks for each matchup are available inside a collapsed source panel based on a dated 2026 Ourlads college-football depth chart, with an outbound source link and its update date. `QB1` means **first on the third-party depth chart**, not guaranteed to start today. Real, date-matched *official* availability is overlaid beside the named player (for example, Taylor `QUESTIONABLE` at Mississippi State) and confirmed game-specific starter evidence is a separate stronger source class. A player whose only evidence is last week's box score remains labeled as last week's passer, not a QB1.
 
 Verified [successful final site build 40108010413](https://github.com/The-Caves/cfb-model/actions/runs/40108010413): all 102 upcoming matchups have both teams' chart-rank slots, covering 135 distinct teams and 570 listed quarterback entries. This does **not** mean 102 verified starting-QB matchups, and the model is **not** injury/replacement adjusted simply because names/ranks are displayed. `scripts/site_depthchart.py` and `tests/test_site_depthchart.py` implement source validation and daily caching.
