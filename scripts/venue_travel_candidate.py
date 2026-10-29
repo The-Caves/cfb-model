@@ -325,7 +325,8 @@ def run_paired(games_csv,advanced_csv,manifest,output,travel_history=None):
     for g in games:
         v=str(g["neutral"]).strip().lower()
         if v not in ("true","false"):raise ValueError("Unknown neutral-site designation")
-        cleaned.append({**g,"neutral":v=="true"})
+        cleaned.append({**g,"neutral":v=="true",
+            "home_score":int(g["home_score"]),"away_score":int(g["away_score"])})
     games=cleaned
     if travel_history:
         historic=json.loads(Path(travel_history).read_text())
