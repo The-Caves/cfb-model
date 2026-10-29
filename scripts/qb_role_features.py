@@ -58,6 +58,16 @@ def _profile(rows):
         ranked=sorted(items,key=lambda r:(-int(r["pass_tagged_plays"]),r["player"]))
         named_total=sum(int(r["pass_tagged_plays"]) for r in ranked)
         if not named_total:return None,None
+        # A QB with 90% of *named* plays may only own a small fraction of
+        # real attempts if the upstream passer tags are sparse. Refuse to
+        # identify a dominant QB from that incomplete source.
+        source_totals={int(r["team_pass_tagged_plays"])
+                       for r in ranked if r.get("team_pass_tagged_plays") not in ("",None)}
+        if len(source_totals)>1:raise ValueError("Conflicting team pass totals")
+        if source_totals:
+            whole=next(iter(source_totals))
+            if whole<named_total:raise ValueError("Passer attribution exceeds team total")
+            if not whole or named_total/whole<.70:return None,None
         share=int(ranked[0]["pass_tagged_plays"])/named_total
         return (ranked[0]["player"] if share>=MIN_GAME_SHARE else None),round(share,6)
     last_leader,last_share=game_leader(games[latest_day])
