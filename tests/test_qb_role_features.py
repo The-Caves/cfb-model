@@ -70,4 +70,28 @@ class RoleTests(unittest.TestCase):
             build([game()],data(),config(),"2026-10-26T20:00:00Z",starters)
     def test_current_game_excluded(self):
         self.assertEqual(build([game()],[],config(),"2026-10-28T12:00:00Z")["team_game_slots"],0)
+    def test_two_consecutive_dominate_passers_create_nonconfirmed_continuity(self):
+        games=[game()]
+        # Last two distinct football dates feature a backup dominating attempts.
+        history=[passer("1","2026-09-06","QB One",35),
+                 passer("2","2026-09-13","QB One",30),
+                 passer("3","2026-10-18","QB Two",27),
+                 passer("4","2026-10-24","QB Two",31)]
+        row=next(x for x in build(games,history,config(),"2026-10-26T20:00:00Z")["rows"]
+                 if x["team"]=="Delaware Blue Hens")
+        self.assertEqual(row["last_game_leading_passer_proxy"],"QB Two")
+        self.assertEqual(row["recent_two_game_leading_passer_proxy"],"QB Two")
+        self.assertEqual(row["last_game_passer_share_named"],1.)
+        self.assertEqual(row["current_qb_status"],"UNKNOWN")
+        # One dominant game alone or insufficient last-game share must not do so.
+        history[-2]["player"]="QB One"
+        row=next(x for x in build(games,history,config(),"2026-10-26T20:00:00Z")["rows"]
+                 if x["team"]=="Delaware Blue Hens")
+        self.assertIsNone(row["recent_two_game_leading_passer_proxy"])
+        history[-1]["pass_tagged_plays"]=10
+        history.append(passer("4","2026-10-24","QB One",30))
+        row=next(x for x in build(games,history,config(),"2026-10-26T20:00:00Z")["rows"]
+                 if x["team"]=="Delaware Blue Hens")
+        self.assertIsNone(row["last_game_leading_passer_proxy"])
+
 if __name__=="__main__":unittest.main()
