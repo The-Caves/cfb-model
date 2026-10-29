@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/cfb-matchup-publish.yml'
+      - 'scripts/personnel_results_archive.py'
+      - 'scripts/context_archive.py'
 permissions:
   contents: write
   actions: write
