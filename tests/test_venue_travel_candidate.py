@@ -43,6 +43,23 @@ class VenueTravelTests(unittest.TestCase):
         self.assertEqual(n["home_field_points"],0)
         self.assertEqual(h["travel_adjustment"],0)
 
+    def test_travel_modifier_is_intentionally_small_and_never_an_extra_home_bonus(self):
+        from scripts.venue_travel_candidate import TRAVEL_FORECAST_MAX_ABS_POINTS
+        base=fit(samples(),"2026-09-20")
+        original=predict(base,{"home":"Team-0","away":"Team-1","neutral":False})
+        noisy=dict(base)
+        noisy["travel_coefficients"]={
+            "away_minus_home_travel_1000mi":99.,
+            "away_minus_home_abs_shift":0.,
+            "away_eastward_hours":0.,
+            "away_body_clock_early_hours":0.,
+            "home_minus_away_rest_days":0.}
+        trip=venue("Team-0","Team-1")
+        fitted=predict(noisy,trip,travel=True)
+        self.assertLessEqual(abs(fitted["travel_adjustment"]),TRAVEL_FORECAST_MAX_ABS_POINTS)
+        self.assertAlmostEqual(fitted["predicted_home_margin"]-original["predicted_home_margin"],
+                               fitted["travel_adjustment"],places=4)
+
     def test_missing_team_and_venue_flag_cannot_claim_points(self):
         trained=fit(samples(),"2026-09-20")
         self.assertIsNone(predict(trained,{"home":"Unknown","away":"Team-1","neutral":False}))

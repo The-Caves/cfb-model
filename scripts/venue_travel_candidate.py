@@ -29,6 +29,9 @@ HALF_LIFE_DAYS=21.
 TEAM_PENALTY=6.
 HOME_PRIOR_PENALTY=160.
 TRAVEL_PENALTY=120.
+# Research forecast guard: travel is a SMALL modifier, not a second home bonus.
+TRAVEL_FORECAST_SHRINK=.25
+TRAVEL_FORECAST_MAX_ABS_POINTS=1.25
 TRAVEL_KEYS=("away_minus_home_travel_1000mi","away_minus_home_abs_shift",
              "away_eastward_hours","away_body_clock_early_hours",
              "home_minus_away_rest_days")
@@ -185,9 +188,16 @@ def predict(model,game,travel=False):
         source=_eligible_trip(game)
         if source is None:return None
         impact=sum(model["travel_coefficients"][k]*source[k] for k in TRAVEL_KEYS)
+    raw_impact=impact
+    if travel:
+        impact=max(-TRAVEL_FORECAST_MAX_ABS_POINTS,
+                   min(TRAVEL_FORECAST_MAX_ABS_POINTS,raw_impact*TRAVEL_FORECAST_SHRINK))
     return {"predicted_home_margin":round(neutral_margin+h+impact,5),
             "neutral_strength_difference":round(neutral_margin,5),
             "home_field_points":h,"travel_adjustment":round(impact,5),
+            "travel_raw_regression_points":round(raw_impact,5),
+            "travel_shrink_factor":TRAVEL_FORECAST_SHRINK if travel else None,
+            "travel_adjustment_cap_points":TRAVEL_FORECAST_MAX_ABS_POINTS if travel else None,
             "travel_evidence_observed":travel and source is not None,
             "model_version":model["model_version"],"status":STATUS,
             "model_promoted":False,"betting_status":"PASS_UNVALIDATED"}
