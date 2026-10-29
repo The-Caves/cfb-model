@@ -5,6 +5,8 @@ falls back to a neutral monogram. Asset URLs MUST be ESPN's own CDN and never
 transformed or rehosted. This does not change the frozen research forecast.
 """
 import argparse,datetime as dt,json,re,urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from urllib.parse import urlsplit
 from scripts.game_context import parse_time
@@ -68,20 +70,35 @@ def capture(dashboard,payload):
         "logo_source":"ESPN CDN only; third-party team marks belong to their respective owners",
         "missing_brand_fallback":"Neutral text monogram; never guess licensed identity"}
     return dashboard
-def fetch_board(board):
+def fetch_board(board,opener=urllib.request.urlopen):
     now=dt.datetime.now(dt.timezone.utc)
-    upcoming=[parse_time(g["kickoff_utc"]) for g in board["games"]
-              if parse_time(g["kickoff_utc"])>now]
-    if not upcoming:return {"events":[]}
-    earliest=min(upcoming).date()-dt.timedelta(days=1)
-    latest=max(upcoming).date()+dt.timedelta(days=1)
-    # Bound request so an accidental long-range fixture doesn't fetch seasons.
-    latest=min(latest,earliest+dt.timedelta(days=15))
-    url=BASE+"?dates="+earliest.strftime("%Y%m%d")+"-"+latest.strftime("%Y%m%d")+"&groups=80&limit=500"
-    req=urllib.request.Request(url,headers={"User-Agent":"cfb-lab-team-identity/1.0",
-                                            "Accept":"application/json"})
-    with urllib.request.urlopen(req,timeout=14) as response:
-        return json.load(response)
+    et=ZoneInfo("America/New_York")
+    days=sorted({parse_time(g["kickoff_utc"]).astimezone(et).date()
+                 for g in board["games"] if parse_time(g["kickoff_utc"])>now})
+    if not days:return {"events":[],"failed_days":[]}
+    if len(days)>16:
+        days=days[:16]
+    def one(day):
+        # The ESPN scoreboard API accepts individual YYYYMMDD dates. A dashed
+        # start-end date sent as one string returned 4xx and hid ALL logos.
+        url=BASE+"?dates="+day.strftime("%Y%m%d")+"&groups=80&limit=500"
+        req=urllib.request.Request(url,headers={"User-Agent":"cfb-lab-team-identity/1.0",
+                                                "Accept":"application/json"})
+        try:
+            with opener(req,timeout=14) as response:
+                payload=json.load(response)
+            if not isinstance(payload.get("events"),list):
+                raise ValueError("No event list")
+            return payload["events"],None
+        except (OSError,ValueError,TimeoutError,json.JSONDecodeError) as exc:
+            return [],{"date":day.isoformat(),"error":type(exc).__name__}
+    events=[];errors=[]
+    with ThreadPoolExecutor(max_workers=5) as workers:
+        for found,err in workers.map(one,days):
+            events.extend(found)
+            if err:errors.append(err)
+    return {"events":events,"failed_days":errors}
+
 def run(dashboard_path,fetcher=fetch_board):
     path=Path(dashboard_path);board=json.loads(path.read_text())
     try:payload=fetcher(board)
@@ -91,6 +108,7 @@ def run(dashboard_path,fetcher=fetch_board):
     else:failure=None
     board=capture(board,payload)
     board["team_brand_display"]["fetch_error_type"]=failure
+    board["team_brand_display"]["failed_days"]=payload.get("failed_days",[])
     path.write_text(json.dumps(board,indent=2,allow_nan=False)+"\n")
     print(json.dumps(board["team_brand_display"]))
     return board

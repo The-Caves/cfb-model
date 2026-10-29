@@ -29,6 +29,28 @@ class BrandTests(unittest.TestCase):
         self.assertIsNone(logo_url({"logo":"https://a.espncdn.com/i/teamlogos/ncaa/500/2.svg"}))
         self.assertIsNone(parse_brand({"color":"nothex","logo":"https://bad.example/logo.png"})["color"])
         self.assertIsNone(parse_brand({"color":"nothex","logo":"https://bad.example/logo.png"})["logo_url"])
+    def test_fetches_individual_espn_scoreboard_dates(self):
+        from scripts.site_team_branding import fetch_board
+        from unittest.mock import patch
+        import io,json,datetime as dt
+        import scripts.site_team_branding as branded
+        captured=[]
+        class R:
+            def __init__(self,raw):self.raw=raw
+            def __enter__(self):return self
+            def __exit__(self,*args):return False
+            def read(self,*args):return self.raw
+        def open_(req,timeout=14):
+            captured.append(req.full_url)
+            return R(json.dumps(payload()).encode())
+        with patch.object(branded.dt,"datetime",wraps=dt.datetime) as mocked:
+            mocked.now.return_value=dt.datetime(2026,10,29,14,tzinfo=dt.timezone.utc)
+            result=fetch_board(copy.deepcopy(BASE),opener=open_)
+        self.assertEqual(len(captured),1)
+        self.assertIn("dates=20261031",captured[0])
+        self.assertNotIn("20261031-",captured[0])
+        self.assertEqual(len(result["events"]),1)
+
     def test_missing_source_is_explicit_neutral_fallback(self):
         r=capture(copy.deepcopy(BASE),{"events":[]})
         self.assertIsNone(r["games"][0]["team_brand_away"])
