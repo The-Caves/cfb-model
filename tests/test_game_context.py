@@ -28,6 +28,39 @@ class GameContextTests(unittest.TestCase):
         geo=geocode_match(options,"Raleigh","NC")
         self.assertEqual(geo["latitude"],35.78)
         self.assertEqual(geo["precision"],"CITY_CENTROID_NOT_STADIUM_COORDINATE")
+    def test_geocode_preserves_valid_city_timezone_and_rejects_unsupported(self):
+        base={"name":"Tucson","admin1":"Arizona","country_code":"US",
+              "latitude":32.22,"longitude":-110.97}
+        good=geocode_match([dict(base,timezone="America/Phoenix")],"Tucson","AZ")
+        self.assertEqual(good["timezone"],"America/Phoenix")
+        bad=geocode_match([dict(base,timezone="PST")],"Tucson","AZ")
+        self.assertIsNone(bad["timezone"])
+
+    def test_long_haul_direction_and_body_clock_from_observed_named_zones(self):
+        old=[]
+        for i in (1,2):
+            old.append(extract_game(evt("la"+str(i),"2026-10-0"+str(i)+"T17:00:00Z",
+                   home="B",hid="2",away="X",aid="7",city="Los Angeles",state="CA",completed=True)))
+            old.append(extract_game(evt("nc"+str(i),"2026-10-0"+str(i)+"T17:00:00Z",
+                   home="A",hid="1",away="Z",aid="8",city="Raleigh",state="NC",completed=True)))
+        new=extract_game(evt("long","2026-10-24T16:00:00Z",home="A",away="B"))
+        def geocode(city,state,country):
+            return {"latitude":34.05 if city=="Los Angeles" else 35.78,
+                    "longitude":-118.24 if city=="Los Angeles" else -78.64,
+                    "timezone":"America/Los_Angeles" if city=="Los Angeles" else "America/New_York",
+                    "precision":"CITY_CENTROID_NOT_STADIUM_COORDINATE"}
+        def injury(g,when):
+            return {"coverage_status":"UNKNOWN","confirmed_qb_starters":{},"injuries":[],"warnings":[]}
+        rows,coverage=build_context([new],old,"2026-10-22T12:00:00Z",geocode,
+                                     lambda geo,kickoff:None,injury)
+        r=rows[0]
+        self.assertEqual(r["away_timezone_shift_hours"],3)
+        self.assertEqual(r["away_travel_direction"],"EAST")
+        self.assertEqual(r["away_body_clock_kickoff_hour"],9)
+        self.assertEqual(r["home_timezone_shift_hours"],0)
+        self.assertGreater(r["away_approx_straight_line_miles"],2000)
+        self.assertEqual(coverage["away_cross_zone_trips"],1)
+
     def test_weather_missing_does_not_mean_no_rain(self):
         hourly={"time":["2026-10-24T16:00"],
                 "temperature_2m":[None],"wind_speed_10m":[None]}

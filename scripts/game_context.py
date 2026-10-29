@@ -106,8 +106,16 @@ def geocode_match(results,city,state,country="USA"):
     lat,lon=p.get("latitude"),p.get("longitude")
     if not isinstance(lat,(int,float)) or not isinstance(lon,(int,float)):return None
     if not (-90<=lat<=90 and -180<=lon<=180):return None
+    # Open-Meteo geocoder may provide a named IANA zone. Never infer from a
+    # whole state; AZ/IN/TX/FL/ID etc may cross boundaries and DST matters.
+    tz=p.get("timezone")
+    try:
+        tz=tz if isinstance(tz,str) and "/" in tz and ZoneInfo(tz) else None
+    except (ValueError,KeyError):
+        tz=None
     return {"latitude":float(lat),"longitude":float(lon),"geonames_id":p.get("id"),
             "name":p.get("name"),"admin1":p.get("admin1"),"country_code":country_code,
+            "timezone":tz,
             "precision":"CITY_CENTROID_NOT_STADIUM_COORDINATE"}
 
 def parse_forecast(hourly,kickoff):
@@ -164,6 +172,8 @@ def build_context(upcoming,completed,issued_at,geolocate,forecast,personnel_for_
                 "personnel_warnings":injury["warnings"],
                 "forecast_issue_utc":issued.isoformat().replace("+00:00","Z"),
                 "safe_for_betting":False,"betting_status":"PASS_UNVALIDATED"}
+        record["venue_timezone"]=geo.get("timezone") if geo else None
+        record["travel_source"]="INFERRED_PRIOR_HOME_CITY_TO_GEOCODED_VENUE_CITY"
         for side in ("away","home"):
             team_id=g[side+"_id"]
             last=last_completed(completed,team_id,issued)
@@ -171,6 +181,24 @@ def build_context(upcoming,completed,issued_at,geolocate,forecast,personnel_for_
             base=homes.get(team_id)
             from_geo=geolocate(base["city"],base["state"],base["country"]) if base else None
             record[side+"_home_base_verified_by_games"]=base["home_games_supporting"] if base else 0
+            record[side+"_home_base_timezone"]=from_geo.get("timezone") if from_geo else None
+            # Difference in *actual* UTC offset on kickoff day is DST aware.
+            # Positive => eastward destination; negative => westward.
+            origin_tz=record[side+"_home_base_timezone"]
+            venue_tz=record["venue_timezone"]
+            if origin_tz and venue_tz:
+                origin_offset=kickoff.astimezone(ZoneInfo(origin_tz)).utcoffset().total_seconds()/3600
+                venue_offset=kickoff.astimezone(ZoneInfo(venue_tz)).utcoffset().total_seconds()/3600
+                shift=round(venue_offset-origin_offset,2)
+                record[side+"_timezone_shift_hours"]=shift
+                record[side+"_travel_direction"]=(
+                    "EAST" if shift>0 else "WEST" if shift<0 else "NO_TIMEZONE_SHIFT")
+                local=kickoff.astimezone(ZoneInfo(origin_tz))
+                record[side+"_body_clock_kickoff_hour"]=local.hour+local.minute/60
+            else:
+                record[side+"_timezone_shift_hours"]=None
+                record[side+"_travel_direction"]="UNKNOWN"
+                record[side+"_body_clock_kickoff_hour"]=None
             record[side+"_approx_straight_line_miles"]=round(distance_miles(
                 (from_geo["latitude"],from_geo["longitude"]),
                 (geo["latitude"],geo["longitude"])),1) if from_geo and geo else None
@@ -183,5 +211,7 @@ def build_context(upcoming,completed,issued_at,geolocate,forecast,personnel_for_
                                   r["away_days_since_last_game"] is not None for r in rows),
         "both_travel_approximations_available":sum(r["home_approx_straight_line_miles"] is not None and
                                                 r["away_approx_straight_line_miles"] is not None for r in rows),
+        "away_timezone_shifts_observed":sum(r["away_timezone_shift_hours"] is not None for r in rows),
+        "away_cross_zone_trips":sum(r["away_timezone_shift_hours"] not in (None,0) for r in rows),
         "personnel_verified_both_teams":sum(r["injury_report_status"]=="BOTH_TEAMS_VERIFIED" for r in rows),
         "errors":issues,"betting_status":"PASS_UNVALIDATED"}
