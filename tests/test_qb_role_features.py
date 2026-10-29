@@ -94,4 +94,20 @@ class RoleTests(unittest.TestCase):
                  if x["team"]=="Delaware Blue Hens")
         self.assertIsNone(row["last_game_leading_passer_proxy"])
 
+    def test_low_named_play_coverage_cannot_prove_two_game_qb_takeover(self):
+        history=[passer("1","2026-10-18","QB Two",5),
+                 passer("2","2026-10-24","QB Two",6)]
+        for row in history:
+            row["team_pass_tagged_plays"]=40
+            row["team_named_passer_plays"]=row["pass_tagged_plays"]
+        slot=next(x for x in build([game()],history,config(),"2026-10-26T20:00:00Z")["rows"]
+                  if x["team"]=="Delaware Blue Hens")
+        self.assertIsNone(slot["recent_two_game_leading_passer_proxy"])
+        self.assertIsNone(slot["last_game_leading_passer_proxy"])
+        history[0]["team_pass_tagged_plays"]=5
+        history[1]["team_pass_tagged_plays"]=6
+        slot=next(x for x in build([game()],history,config(),"2026-10-26T20:00:00Z")["rows"]
+                  if x["team"]=="Delaware Blue Hens")
+        self.assertEqual(slot["recent_two_game_leading_passer_proxy"],"QB Two")
+
 if __name__=="__main__":unittest.main()
