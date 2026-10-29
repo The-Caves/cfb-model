@@ -176,6 +176,11 @@ def run(raw_dir,output,reports=None,horizon_days=10,now=None,geo_cache=None,
           "neutral","venue_indoor","home_days_since_last_game","away_days_since_last_game",
           "home_approx_straight_line_miles","away_approx_straight_line_miles",
           "home_home_base_verified_by_games","away_home_base_verified_by_games",
+          "home_home_base_timezone","away_home_base_timezone","venue_timezone",
+          "home_timezone_shift_hours","away_timezone_shift_hours",
+          "home_travel_direction","away_travel_direction",
+          "home_body_clock_kickoff_hour","away_body_clock_kickoff_hour",
+          "travel_source","venue_location_quality",
           "weather_status","temperature_f","wind_mph","gust_mph","precip_probability_pct",
           "injury_report_status","verified_qb_starters","personnel_warnings","betting_status"]
         with (output/"upcoming_game_context_2026.csv").open("w",newline="") as handle:

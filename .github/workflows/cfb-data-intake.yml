@@ -102,6 +102,20 @@ jobs:
             --features data/model_v03/weekly_pregame_features.csv \
             --labels data/model_v03/weekly_postgame_labels.csv \
             --output data/model_v03/home-bias-candidate-research.json
+      - name: Evaluate venue-separated opponent ratings against V03 and recency on paired weeks
+        run: |
+          python -m scripts.venue_travel_candidate \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --manifest data/advanced/advanced_manifest.json \
+            --output data/model_v03/venue-travel-candidate-research.json
+      - name: Upload venue/HFA and travel candidate research audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-venue-travel-research-${{ github.run_id }}
+          path: data/model_v03/venue-travel-candidate-research.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Compare 2026 model features across chronological test weeks (research only)
         run: |
           python -m scripts.feature_consistency_audit \
