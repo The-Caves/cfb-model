@@ -13,6 +13,7 @@ def samples(n=150):
         if home==away:away=clubs[(i*5+2)%16]
         neutral=(i%9==0)
         out.append({"game_id":str(i),"date":(start+dt.timedelta(days=i//8)).isoformat(),
+            "kickoff_utc":(start+dt.timedelta(days=i//8)).isoformat()+"T16:00:00Z",
             "home":home,"away":away,"neutral":neutral,
             "home_score":30+(i%5)+int(not neutral)*2,"away_score":27+(i%5)})
     return out
