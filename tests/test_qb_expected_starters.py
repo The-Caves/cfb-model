@@ -136,4 +136,14 @@ class StarterSourceTests(unittest.TestCase):
         self.assertIsNone(x["starter"])
         self.assertEqual(x["starter_status"],"CONFLICT_CHART_VS_RECENT_QB")
 
+    def test_no_chart_cannot_project_recent_passer_with_source_confirmed_out(self):
+        ctx,role=fixtures(latest="A Backup",availability=[{
+          "team":"Team A","player":"A Backup","position":"QB","status":"OUT",
+          "published_at_utc":"2026-10-29T13:00:00Z",
+          "captured_at_utc":"2026-10-29T14:00:00Z"}])
+        x=self.a(build(ctx,role,{},AT))
+        self.assertIsNone(x["starter"])
+        self.assertEqual(x["starter_status"],"UNKNOWN")
+        self.assertFalse(x["is_confirmed_starter"])
+
 if __name__=="__main__":unittest.main()
