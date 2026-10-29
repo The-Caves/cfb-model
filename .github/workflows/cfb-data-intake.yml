@@ -287,11 +287,20 @@ jobs:
             --registry config/official_gameweek_sources_2026.json \
             --joined "data/pregame_evidence/personnel-joined-${{ github.run_id }}.json" \
             --output "data/pregame_evidence/qb-role-features-${{ github.run_id }}.json"
+      - name: Collect source-ranked expected starter and QB1/QB2/QB3 scenarios
+        run: |
+          python -m scripts.qb_expected_starters \
+            --context data/context/upcoming_game_context_2026.json \
+            --role "data/pregame_evidence/qb-role-features-${{ github.run_id }}.json" \
+            --aliases data/archive/2026_team_aliases.csv \
+            --output "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json"
       - name: Upload QB role and conditional offensive profile audit
         uses: actions/upload-artifact@v4
         with:
           name: cfb-qb-role-profiles-${{ github.run_id }}
-          path: data/pregame_evidence/qb-role-features-*.json
+          path: |
+            data/pregame_evidence/qb-role-features-*.json
+            data/pregame_evidence/qb-expected-starters-*.json
           retention-days: 30
           if-no-files-found: error
       - name: Freeze observed weather-style and replacement-count matchup features
@@ -359,6 +368,25 @@ jobs:
         with:
           name: cfb-shadow-forecast-${{ github.run_id }}
           path: data/pregame_evidence/shadow-forecast-*.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Freeze player-conditioned QB performance research predictions (not V03)
+        run: |
+          python -m scripts.qb_conditional_forecast \
+            --forecast "data/pregame_evidence/step3g-forecast-${{ github.run_id }}.json" \
+            --joined "data/pregame_evidence/personnel-joined-${{ github.run_id }}.json" \
+            --expected "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json" \
+            --passers data/advanced/qb_passer_game_history_2026.csv \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --advanced-manifest data/advanced/advanced_manifest.json \
+            --score-manifest data/manifest.json \
+            --output "data/pregame_evidence/qb-conditional-shadow-${{ github.run_id }}.json"
+      - name: Upload immutable QB-conditioned shadow forecast audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-qb-conditional-shadow-${{ github.run_id }}
+          path: data/pregame_evidence/qb-conditional-shadow-*.json
           retention-days: 30
           if-no-files-found: error
       - name: Export frozen research projections for private dashboard preview
