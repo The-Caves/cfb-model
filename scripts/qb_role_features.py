@@ -114,7 +114,7 @@ def build(games,passers,registry,asof_utc,reviewed_starters=None):
                 # Current verified game-specific starter is required; never
                 # treat the historical passing-play leader as next-game QB.
                 form=prior_qb_form(history,team,selected,
-                    kickoff.astimezone(dt.timezone(dt.timedelta(hours=-4))).date().isoformat(),
+                    kickoff.astimezone(ZoneInfo("America/New_York")).date().isoformat(),
                     decision.isoformat())
             out.append({"game_id":gid,"home":g["home"],"away":g["away"],
                 "team":team,"opponent":other,"kickoff_utc":g["kickoff_utc"],
