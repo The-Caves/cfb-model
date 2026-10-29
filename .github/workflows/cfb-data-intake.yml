@@ -388,6 +388,11 @@ jobs:
             --advanced-manifest data/advanced/advanced_manifest.json \
             --score-manifest data/manifest.json \
             --output "data/pregame_evidence/qb-conditional-shadow-${{ github.run_id }}.json"
+      - name: Persist QB-conditional shadow forecast to immutable GitHub history
+        run: |
+          python -m scripts.candidate_shadow_archive \
+            --kind qb \
+            --input "data/pregame_evidence/qb-conditional-shadow-${{ github.run_id }}.json"
       - name: Upload immutable QB-conditioned shadow forecast audit
         uses: actions/upload-artifact@v4
         with:
@@ -405,6 +410,11 @@ jobs:
             --geo data/model_v03/city_geocodes_verified_zones.json \
             --raw data/raw \
             --output "data/pregame_evidence/venue-travel-shadow-${{ github.run_id }}.json"
+      - name: Persist venue and travel shadow forecast to immutable GitHub history
+        run: |
+          python -m scripts.candidate_shadow_archive \
+            --kind venue \
+            --input "data/pregame_evidence/venue-travel-shadow-${{ github.run_id }}.json"
       - name: Upload immutable venue and travel forecast audit
         uses: actions/upload-artifact@v4
         with:
