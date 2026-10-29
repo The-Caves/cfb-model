@@ -1,0 +1,82 @@
+name: CFB Venue and Travel Model Research Evaluation
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/venue_travel_candidate.py'
+      - 'scripts/venue_travel_history.py'
+      - 'scripts/game_context.py'
+      - 'tests/test_venue_travel_candidate.py'
+      - 'tests/test_venue_travel_history.py'
+      - '.github/workflows/cfb-venue-travel-eval.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Test home-field and travel model source guards
+        run: |
+          python -m unittest discover -s tests -p 'test_venue_travel*.py' -v
+          python -m unittest discover -s tests -p 'test_game_context.py' -v
+      - name: Download last completed, independently archived 2026 snapshot
+        uses: actions/download-artifact@v4
+        with:
+          repository: The-Caves/cfb-model
+          run-id: 40916372983
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: cfb-2026-data-40916372983
+          path: .research-intake
+      - name: Reconstruct historical geospatial travel from past-only home locations
+        run: |
+          python -m scripts.venue_travel_history \
+            --games .research-intake/games_2026.csv \
+            --raw-dir .research-intake/raw \
+            --geo-cache .research-intake/context/geo_cache.json \
+            --output data/model_v03/venue-travel-history-research.json
+      - name: Run same-game V03, recency, neutral venue, and travel ablations
+        run: |
+          python -m scripts.venue_travel_candidate \
+            --games .research-intake/games_2026.csv \
+            --advanced .research-intake/advanced/team_game_advanced_2026.csv \
+            --manifest .research-intake/advanced/advanced_manifest.json \
+            --travel-history data/model_v03/venue-travel-history-research.json \
+            --output data/model_v03/venue-travel-candidate-research.json
+      - name: Enforce nonpromotion and auditable same-game evaluation
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("data/model_v03/venue-travel-candidate-research.json")
+          report=json.loads(p.read_text())
+          assert report["status"]=="VENUE_SEPARATED_HOME_TRAVEL_RESEARCH_ONLY"
+          assert report["model_promoted"] is False
+          assert report["historical_pbp_publication_authenticated"] is False
+          assert report["folds"] and report["aggregate"]
+          for fold in report["folds"]:
+              numbers=[fold["metrics"][model]["games"] for model in
+                       ("v03","recency","neutral_rating")]
+              assert len(set(numbers))==1
+              assert fold["home_field_points"]<=4.5
+              assert fold["home_field_points"]>=0
+          print(json.dumps({"aggregate":report["aggregate"],
+             "folds":len(report["folds"]),
+             "travel_paired":[x["travel_paired"] for x in report["folds"]]},
+             indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cfb-venue-travel-validation-${{ github.run_id }}
+          path: |
+            data/model_v03/venue-travel-history-research.json
+            data/model_v03/venue-travel-candidate-research.json
+          retention-days: 30
