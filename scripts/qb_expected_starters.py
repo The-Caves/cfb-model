@@ -102,6 +102,13 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                         # Recently active QB2/3 becomes an expected, NOT confirmed starter.
                         current={"player":latest,"source_class":"PROJECTED_FROM_QB1_OUT_AND_LAST_GAME_PASSER",
                                  "confidence":"MEDIUM_UNCONFIRMED","reason":"INACTIVE_CHART_QB1_AND_LATEST_PASSER"}
+                    elif alternatives:
+                        # Chart position is only a provisional replacement prior;
+                        # its rank is not proof that this player will start.
+                        current={"player":alternatives[0]["player"],
+                                 "source_class":"PROJECTED_AVAILABLE_BACKUP_AFTER_QB1_OUT",
+                                 "confidence":"LOW_UNCONFIRMED",
+                                 "reason":"QB1_OUT_QB2_CHART_ALTERNATIVE_NO_STARTER_STATEMENT"}
                     else:
                         current={"player":None,"source_class":"UNKNOWN",
                                  "confidence":"UNKNOWN","reason":"CHART_QB1_OUT_WITH_NO_VERIFIED_REPLACEMENT"}
@@ -120,12 +127,25 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                     if updated and last:
                         at=parse_time(updated)
                         chart_stale=dt.date.fromisoformat(last)>at.date()
-                    if chart_stale:
+                    same_two=(historical.get("recent_two_game_leading_passer_proxy")
+                              and _name(historical["recent_two_game_leading_passer_proxy"])==_name(latest))
+                    latest_status=availability.get(_name(latest),{}).get("status")
+                    if chart_stale and latest_status not in INACTIVE|{"CONFLICT"}:
                         current={"player":latest,
                                  "source_class":"PROJECTED_RECENT_PASSER_AFTER_STALE_CHART",
                                  "confidence":"MEDIUM_UNCONFIRMED",
                                  "reason":"LAST_GAME_PASSER_NEWER_THAN_DEPTH_CHART_UPDATE"}
+                    elif not updated and same_two and latest_status not in INACTIVE|{"CONFLICT"}:
+                        # The provider chart was fetched recently, but without
+                        # a dated chart update that is NOT evidence it superseded
+                        # two consecutive actual games of passing usage.
+                        current={"player":latest,
+                                 "source_class":"PROJECTED_TWO_GAME_PASSER_VS_UNDATED_CHART",
+                                 "confidence":"LOW_UNCONFIRMED",
+                                 "reason":"TWO_CONSECUTIVE_DOMINANT_PASSER_GAMES_CHART_UNDATED"}
                     else:
+                        # Explicitly updated postgame charts override usage-only
+                        # inference. One recent game may be a spot substitution.
                         current={"player":None,"source_class":"CONFLICT_CHART_VS_RECENT_QB",
                                  "confidence":"UNKNOWN","reason":"QB1_CHART_DIFFERS_FROM_RECENT_GAME_PASSER"}
                 elif qb1:
@@ -160,6 +180,8 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                 "depth_rank":depth_rank,"depth_label":f"QB{depth_rank}" if depth_rank else "UNKNOWN",
                 "chart_status":chart_status,"depth_chart":ranked,
                 "last_game_passer_date":historical.get("last_game_passer_date"),
+                "last_game_passer_share_named":historical.get("last_game_passer_share_named"),
+                "recent_two_game_leading_passer_proxy":historical.get("recent_two_game_leading_passer_proxy"),
                 "depth_chart_updated_et":source.get("source_updated_et") if source else None,
                 "chart_source_url":source.get("source_url") if source else None,
                 "official_recent_return_context":historical.get("official_recent_return_context"),
