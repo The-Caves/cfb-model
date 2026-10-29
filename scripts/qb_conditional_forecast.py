@@ -91,6 +91,29 @@ def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
         candidates[side]=evaluated
         chosen[side]=(evaluated.get(slot["starter"]) if slot["starter"] else None)
     home=chosen["home"];away=chosen["away"]
+    # Every QB1/2/3 chart member gets a separate *conditional score margin*,
+    # not merely a depth ranking or a vague positive/negative annotation.
+    # The opposite side is held to its selected expected QB scenario, or
+    # baseline if still UNKNOWN, with uncertainty explicitly retained.
+    player_scenarios={}
+    limit=min(55.,float(total))
+    for side,players in candidates.items():
+        opposite=(away if side=="home" else home)
+        opposite_points=opposite["margin_impact"] if opposite else 0.
+        scenarios={}
+        for name,item in players.items():
+            delta=(item["margin_impact"]-opposite_points if side=="home"
+                   else opposite_points-item["margin_impact"])
+            adjusted_scenario=max(-limit,min(limit,float(baseline_margin)+delta))
+            scenarios[name]={**item,
+                "conditional_predicted_home_margin":round(adjusted_scenario,5)
+                    if item["status"]=="PLAYER_CONDITIONED_RESEARCH_ONLY" else None,
+                "conditional_status":("PLAYER_EPA_MODEL_FORECAST" if item["status"]==
+                    "PLAYER_CONDITIONED_RESEARCH_ONLY" else "PASS_NO_PLAYER_EPA"),
+                "opponent_qb_source_status":source_by_side[
+                    "away" if side=="home" else "home"]["starter_status"]}
+        player_scenarios[side]=scenarios
+    home=chosen["home"];away=chosen["away"]
     corrections=sum((home["margin_impact"] if home else 0.,
                      -(away["margin_impact"] if away else 0.)))
     limit=min(55.,float(total))
@@ -111,7 +134,7 @@ def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
                "depth_rank":source_by_side[k]["depth_rank"],
                "source_url":source_by_side[k].get("chart_source_url")}
             for k in ("home","away")},
-        "player_scenarios_by_side":candidates,
+        "player_scenarios_by_side":player_scenarios,
         "expected_player_adjustments":chosen,
         "adjusted_side_count":adjusted_sides,
         "confidence":"RESEARCH_ONLY_NOT_CALIBRATED",
