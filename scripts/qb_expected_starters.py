@@ -97,7 +97,7 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                 latest_rank=next((r["rank"] for r in ranked
                                   if _name(r["player"])==_name(latest)),None)
                 if qb1 and qb1_status in INACTIVE:
-                    alternatives=[r for r in ranked[1:] if availability.get(_name(r["player"]),{}).get("status") not in INACTIVE]
+                    alternatives=[r for r in ranked[1:] if availability.get(_name(r["player"]),{}).get("status") not in INACTIVE|{"CONFLICT"}]
                     if latest_rank and latest_rank>1 and any(_name(r["player"])==_name(latest) for r in alternatives):
                         # Recently active QB2/3 becomes an expected, NOT confirmed starter.
                         current={"player":latest,"source_class":"PROJECTED_FROM_QB1_OUT_AND_LAST_GAME_PASSER",
@@ -151,7 +151,7 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                 elif qb1:
                     current={"player":qb1,"source_class":"PROJECTED_DEPTH_CHART_ONLY",
                              "confidence":"LOW_UNCONFIRMED","reason":"CHART_QB1_NO_RECENT_USAGE_CONFIRMATION"}
-                elif latest:
+                elif latest and availability.get(_name(latest),{}).get("status") not in INACTIVE|{"CONFLICT"}:
                     current={"player":latest,"source_class":"PROJECTED_LAST_GAME_PASSER_ONLY",
                              "confidence":"LOW_UNCONFIRMED","reason":"LAST_GAME_PASSER_NOT_GAME_WEEK_STARTER"}
                 else:
