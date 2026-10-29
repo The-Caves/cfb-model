@@ -24,3 +24,11 @@
 - No change to the public website's live V03 picks as a result of this research commit.
 
 This document was committed with `[run-intake]` to force a **real** immediate data intake and audit run rather than counting unit tests as end-to-end source verification.
+
+## October 29 integration hardening
+
+- Prospectively generated QB1/QB2/QB3 scenarios now include **individual projected margin values** rather than only labels.
+- Confirmed starting quarterbacks still require source reviews. A last-game player who appeared **after** a stale depth chart's update becomes a *projected recent passer* instead of being overwritten by stale QB1; named-player initials are normalized to match PBP.
+- Forecast scripts now load the real Step3G immutable `record` envelope, not a bare JSON object.
+- Experimental QB and venue/travel forecast records are additionally persisted to an append-only GitHub archive with exact baseline source identity; models remain nonpromoted.
+- Run-intake tag on this docs commit triggers the repaired full pipeline and source-coverage audit.
