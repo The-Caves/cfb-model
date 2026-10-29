@@ -88,8 +88,8 @@ class RoleTests(unittest.TestCase):
         row=next(x for x in build(games,history,config(),"2026-10-26T20:00:00Z")["rows"]
                  if x["team"]=="Delaware Blue Hens")
         self.assertIsNone(row["recent_two_game_leading_passer_proxy"])
-        history[-1]["pass_tagged_plays"]=10
-        history.append(passer("4","2026-10-24","QB One",30))
+        history[-1]["pass_tagged_plays"]=20
+        history.append(passer("4","2026-10-24","QB One",20))
         row=next(x for x in build(games,history,config(),"2026-10-26T20:00:00Z")["rows"]
                  if x["team"]=="Delaware Blue Hens")
         self.assertIsNone(row["last_game_leading_passer_proxy"])
