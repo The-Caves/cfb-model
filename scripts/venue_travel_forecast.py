@@ -104,7 +104,7 @@ def build(frozen,context,games,historical,geocodes,events,observed_at):
          "model_promoted":False,"historical_publication_authenticated":False}
 
 def run(forecast,context,games,history,geo,raw,output):
-    frozen=json.loads(Path(forecast).read_text())
+    frozen=json.loads(Path(forecast).read_text())["record"]
     ctx=json.loads(Path(context).read_text())
     with open(games,newline="",encoding="utf-8") as f:past=list(csv.DictReader(f))
     hist=json.loads(Path(history).read_text())
