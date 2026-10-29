@@ -43,9 +43,8 @@ class BrandTests(unittest.TestCase):
         def open_(req,timeout=14):
             captured.append(req.full_url)
             return R(json.dumps(payload()).encode())
-        with patch.object(branded.dt,"datetime",wraps=dt.datetime) as mocked:
-            mocked.now.return_value=dt.datetime(2026,10,29,14,tzinfo=dt.timezone.utc)
-            result=fetch_board(copy.deepcopy(BASE),opener=open_)
+        result=fetch_board(copy.deepcopy(BASE),opener=open_,
+                           now=dt.datetime(2026,10,29,14,tzinfo=dt.timezone.utc))
         self.assertEqual(len(captured),1)
         self.assertIn("dates=20261031",captured[0])
         self.assertNotIn("20261031-",captured[0])

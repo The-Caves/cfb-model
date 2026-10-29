@@ -70,8 +70,8 @@ def capture(dashboard,payload):
         "logo_source":"ESPN CDN only; third-party team marks belong to their respective owners",
         "missing_brand_fallback":"Neutral text monogram; never guess licensed identity"}
     return dashboard
-def fetch_board(board,opener=urllib.request.urlopen):
-    now=dt.datetime.now(dt.timezone.utc)
+def fetch_board(board,opener=urllib.request.urlopen,now=None):
+    now=now or dt.datetime.now(dt.timezone.utc)
     et=ZoneInfo("America/New_York")
     days=sorted({parse_time(g["kickoff_utc"]).astimezone(et).date()
                  for g in board["games"] if parse_time(g["kickoff_utc"])>now})
