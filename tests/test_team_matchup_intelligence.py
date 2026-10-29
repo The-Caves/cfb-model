@@ -52,7 +52,7 @@ class MatchupTests(unittest.TestCase):
         self.assertAlmostEqual(x["home_pass_edge"],-.025)
         self.assertAlmostEqual(x["home_run_success_edge"],.09)
         self.assertAlmostEqual(x["home_turnover_risk_proxy"],1.85)
-        self.assertIsNone(x["away_turnover_risk_proxy"])
+        self.assertAlmostEqual(x["away_turnover_risk_proxy"],1.15)
     def test_missing_run_defense_is_unknown_not_inferred_from_offense(self):
         self.assertIsNone(matchup({"run_off":.2},{"run_def_allowed":None})["home_run_edge"])
 
