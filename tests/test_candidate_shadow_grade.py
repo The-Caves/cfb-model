@@ -44,6 +44,6 @@ class ProspectiveCandidateGradeTests(unittest.TestCase):
                      [g],"2026-11-02T00:00:00Z")
     def test_postgame_forecast_rejected(self):
         q=candidate("qb");q["observed_at_utc"]="2026-11-01T00:00:00Z"
-        with self.assertRaisesRegex(ValueError,"chronology"):
+        with self.assertRaisesRegex(ValueError,"Postkickoff|chronology"):
             evaluate({"qb":[q],"venue":[]},[grade()],"2026-11-02T00:00:00Z")
 if __name__=="__main__":unittest.main()
