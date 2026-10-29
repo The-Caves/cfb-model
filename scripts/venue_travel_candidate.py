@@ -22,7 +22,11 @@ VERSION="2026_OPPONENT_NEUTRAL_STRENGTH_HOME_ADVANTAGE_V1"
 PRIOR_HOME_POINTS=2.5
 HOME_RANGE=(0.,4.5)
 HALF_LIFE_DAYS=21.
-TEAM_PENALTY=55.
+# Each school has only a handful of 2026 games. Large penalties collapse
+# ratings toward zero so an otherwise reasonable +2.5 venue effect wins every
+# prediction. An exploratory, predeclared stronger team-signal fit is tested
+# here; it is NOT an independently validated production tuning.
+TEAM_PENALTY=6.
 HOME_PRIOR_PENALTY=160.
 TRAVEL_PENALTY=120.
 TRAVEL_KEYS=("away_minus_home_travel_1000mi","away_minus_home_abs_shift",
