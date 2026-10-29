@@ -17,6 +17,17 @@ class AdvancedTests(unittest.TestCase):
         return rows
     def test_true_values(self):
         self.assertIsNone(truth(None));self.assertFalse(truth("false"));self.assertTrue(truth("true"))
+    def test_run_and_pass_success_are_separate_by_validated_play_type(self):
+        rows,_=per_game_features(self.make(),self.ledger(),"2026-10-20")
+        home=next(x for x in rows if x["team"]=="Home")
+        self.assertEqual(home["pass_success_plays"]+home["rush_success_plays"],
+                         home["success_plays"])
+        self.assertEqual(home["pass_success_count"]+home["rush_success_count"],
+                         home["success_count"])
+        away=next(x for x in rows if x["team"]=="Away")
+        self.assertEqual(away["pass_success_count"],0)
+        self.assertEqual(away["rush_success_count"],0)
+
     def test_two_sides_and_epa(self):
         rows,qa=per_game_features(self.make(),self.ledger(),"2026-10-20")
         self.assertEqual(qa["games_accepted"],1)

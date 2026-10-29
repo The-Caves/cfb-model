@@ -19,7 +19,9 @@ DRIVE_COLS=["season","game_id","pos_team","drives","yards_per_drive","plays_per_
             "avg_field_position","drive_total_gained_yards_rate"]
 TEAM_FIELDS=["games_covered","scrimmage_plays","pass_plays","rush_plays","epa_plays","off_epa_sum",
              "def_epa_plays","def_epa_sum","pass_epa_plays","pass_epa_sum","rush_epa_plays",
-             "rush_epa_sum","success_plays","success_count","pass_yards_plays","pass_yards_sum",
+             "rush_epa_sum","success_plays","success_count",
+             "pass_success_plays","pass_success_count","rush_success_plays","rush_success_count",
+             "pass_yards_plays","pass_yards_sum",
              "rush_yards_plays","rush_yards_sum","explosive_pass","explosive_rush",
              "third_plays","third_success","fourth_plays","fourth_success",
              "redzone_plays","redzone_success","pressure_observed","pressure_count",
@@ -149,6 +151,8 @@ def per_game_features(play_rows,games,asof,min_plays=20,qb_out=None,qb_observed_
                 if success is None:success=truth(p.get("success"))
                 if success is not None:
                     stats["success_plays"]+=1;stats["success_count"]+=int(success)
+                    stats[kind+"_success_plays"]+=1
+                    stats[kind+"_success_count"]+=int(success)
                     down=number(p.get("down"))
                     if down==3:stats["third_plays"]+=1;stats["third_success"]+=int(success)
                     if down==4:stats["fourth_plays"]+=1;stats["fourth_success"]+=int(success)
