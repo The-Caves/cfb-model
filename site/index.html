@@ -195,82 +195,99 @@ function marketTile(label,line,selection,edge){
  if(selection&&selection!=="PASS"&&Number.isFinite(edge))box.append(node("div","small","Model difference: "+num(edge)+" pts"));
  return box;
 }
-function qbCard(team,side,depth,availability){
- const slot=node("div","qbSlot"+(side&&side.status==="CONFIRMED_OFFICIAL"?" confirmed":""));
- slot.append(node("div","qbSlotHeader",team+" · Quarterback"));
- slot.append(node("div","qbName",side&&side.status==="CONFIRMED_OFFICIAL"&&side.player?side.player:"Starter not confirmed"));
- const states={CONFIRMED_OFFICIAL:"Confirmed · reviewed official game statement",
-  RECENT_GAME_PASSER:"Recent game's passer only · NOT confirmed today",
-  CONFLICT_REVIEW:"Conflicting QB evidence · under review",
-  UNKNOWN:"No verified game-specific starter"};
- slot.append(node("div","qbStatus",states[side&&side.status]||states.UNKNOWN));
- if(Array.isArray(depth)&&depth.length){
-   const list=node("div","qbDepth");
-   list.append(node("div","qbDepthHeading","Listed depth-chart order · not a start confirmation"));
-   for(const q of depth){
-     if(![1,2,3].includes(q.rank)||!q.player)continue;
-     const line=node("div","qbRankRow"+(q.rank===1?" rankOne":""));
-     line.append(node("span","qbRank","QB"+q.rank),node("span","qbNameSmall",q.player));
-     const key=x=>String(x||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
-     const status=(availability||[]).find(r=>key(r.player)===key(q.player));
-     if(status&&status.status&&status.status!=="AVAILABLE"){
-       const note=node("span","availTag"+(["OUT","SUSPENDED","DOUBTFUL"].includes(status.status)?" out":""),status.status.replaceAll("_"," "));
-       line.append(note);
-     }
-     if(side&&side.status==="CONFIRMED_OFFICIAL"&&key(side.player)===key(q.player)){
-       line.append(node("span","availTag available","Confirmed starter"));
-     }
-     list.append(line);
-   }
-   const update=depth[0]?.source_updated_et?
-     " · updated "+new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"}).format(dateOf(depth[0].source_updated_et)):"";
-   const source=node("div","depthFoot","Ourlads projected depth chart"+update+" · not official starter news");
-   const first=depth[0];
-   if(first&&first.source_url){
-     try{const url=new URL(first.source_url);if(url.protocol==="https:"&&url.hostname==="www.ourlads.com"){
-       const link=node("a","","View depth chart");link.href=url.href;
-       link.target="_blank";link.rel="noopener noreferrer";source.append(link);
-     }}catch(_){}
-   }
-   list.append(source);slot.append(list);
- }else{
-   slot.append(node("div","depthFoot","QB1–QB3 ranking: not verified from a current chart"));
- }
- if(side&&side.status==="RECENT_GAME_PASSER"&&side.player){
-   slot.append(node("div","small","Last game's passer: "+side.player));
- }
- if(side&&side.status==="RECENT_GAME_PASSER"&&side.last_game_utc){
-   slot.append(node("div","small","Previous game: "+fmtDate.format(dateOf(side.last_game_utc))));
- }
- if(side&&side.source_url){
-   try{const url=new URL(side.source_url);if(url.protocol==="https:"){
-     const a=node("a","","View "+(side.status==="CONFIRMED_OFFICIAL"?"official QB1 source":"previous-game source"));
-     a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";slot.append(a);
-   }}catch(_){}
- }
- return slot;
+
+function identityKey(value){return String(value||"").toLowerCase().replace(/[^a-z0-9]+/g,"").trim()}
+function qbIdentity(side,depth,availability){
+ const chart=Array.isArray(depth)?depth.filter(p=>[1,2,3].includes(p.rank)&&p.player):[];
+ const confirmed=side?.status==="CONFIRMED_OFFICIAL"&&Boolean(side?.player);
+ const recent=side?.status==="RECENT_GAME_PASSER"&&Boolean(side?.player);
+ // Official confirmed name wins. Otherwise recent game participation can
+ // identify a different QB from a potentially stale QB1 chart.
+ const player=confirmed||recent?side.player:(chart[0]?.player||null);
+ const found=chart.find(p=>identityKey(p.player)===identityKey(player));
+ const role=found?"QB"+found.rank:player?"QB":"QB?";
+ const badge=confirmed?"Confirmed":recent?"Last game":"Chart only";
+ const noCurrent=!confirmed;
+ const reported=(availability||[]).find(a=>identityKey(a.player)===identityKey(player));
+ return {player,role,badge,noCurrent,source:confirmed?"official":recent?"recent":"chart",
+         medical:reported?.status||null};
 }
-function officialQBPanel(game){
- const records=[...(game.qb_availability_away||[]).map(r=>({...r,team:game.away_team})),
-                ...(game.qb_availability_home||[]).map(r=>({...r,team:game.home_team}))];
- if(!records.length)return null;
- const panel=node("section","availPanel");
- panel.append(node("div","availTitle","Official QB availability · this matchup"));
- for(const r of records){
-   const line=node("div","availRow");
-   line.append(node("strong","",r.team+": "+r.player));
-   const cls=["OUT","SUSPENDED","DOUBTFUL","CONFLICT_REVIEW"].includes(r.status)?" out":r.status==="AVAILABLE"?" available":"";
-   line.append(node("span","availTag"+cls,r.status.replaceAll("_"," ")));
+function shortQB(side,depth,availability){
+ const q=qbIdentity(side,depth,availability),label=node("div","teamSub");
+ label.append(node("span","qbRank"+(q.role==="QB?"?" qbWarn":""),q.role));
+ label.append(node("span","",q.player||"Not available"));
+ label.append(node("span","qbSourceMini"," · "+(q.player?q.badge+" · unconfirmed": "Unknown")));
+ // The confirmation label should be unambiguously different.
+ if(q.player&&q.badge==="Confirmed")label.lastChild.textContent=" · Confirmed";
+ if(q.player&&q.medical&&q.medical!=="AVAILABLE")
+   label.append(node("span","qbWarn"," · "+q.medical.replaceAll("_"," ")));
+ label.title=q.badge==="Confirmed"?"Reviewed official game-specific starter":
+   q.badge==="Last game"?"Previous game's passer, not confirmed next-game starter":
+   q.badge==="Chart only"?"Third-party QB depth chart projection, not confirmed starter":
+   "No reliable quarterback name";
+ return label;
+}
+function logoBadge(team,brand){
+ const monogram=brand?.monogram||team.split(" ").filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase();
+ const badge=node("div","schoolBadge",monogram.slice(0,4));
+ if(brand?.logo_url){
+  try{
+   const u=new URL(brand.logo_url);
+   if(u.protocol==="https:"&&["a.espncdn.com","a1.espncdn.com"].includes(u.hostname)&&u.pathname.startsWith("/i/teamlogos/")&&u.pathname.endsWith(".png")){
+    const img=node("img");img.src=u.href;img.alt="";img.loading="lazy";img.decoding="async";
+    img.addEventListener("error",()=>img.remove());badge.append(img);
+   }
+  }catch(_){}
+ }
+ return badge;
+}
+function teamDisplayRow(game,side){
+ const team=game[side+"_team"],brand=game["team_brand_"+side],row=node("div","teamRow");
+ if(/^#[0-9a-f]{6}$/i.test(brand?.color||""))row.style.setProperty("--school-color",brand.color);
+ const left=node("div","teamIdentity"),name=node("div","teamLabel");
+ name.append(node("div","teamName",team));
+ name.append(shortQB(game["qb_"+side],game["qb_depth_"+side],game["qb_availability_"+side]));
+ left.append(logoBadge(team,brand),name);
+ const score=node("div","scoreBox"),n=game["model_"+side+"_points"];
+ score.append(node("div","score",num(n,0)),node("div","scoreHint","Projected"));
+ row.append(left,score);return row;
+}
+function qbDetails(game){
+ const fold=node("details","detailFold");
+ fold.append(node("summary","","QB depth, availability & sources"));
+ const body=node("div","detailBody");
+ for(const side of ["away","home"]){
+  const team=game[side+"_team"],depth=game["qb_depth_"+side]||[],
+   player=game["qb_"+side],availability=game["qb_availability_"+side]||[];
+  body.append(node("div","sourceLine",team+": "+(player?.status==="CONFIRMED_OFFICIAL"?"Official starter confirmed":"Starter not officially confirmed")));
+  if(depth.length){
+   body.append(node("div","sourceLine","Depth (third-party): "+depth.map(p=>"QB"+p.rank+" "+p.player).join(" · ")));
+   const url=depth[0]?.source_url;
+   if(url){
+    try{const u=new URL(url);if(u.hostname==="www.ourlads.com"&&u.protocol==="https:"){
+     const link=node("a","","View depth chart");link.href=u.href;link.target="_blank";link.rel="noopener noreferrer";body.append(link);
+    }}catch(_){}
+   }
+  }
+  for(const r of availability){
+   body.append(node("div","availabilityLine",r.player+" · "+String(r.status||"UNKNOWN").replaceAll("_"," ")));
    if(r.source_url){
-     try{const u=new URL(r.source_url);if(u.protocol==="https:"){
-       const a=node("a","","Official report");a.href=u.href;a.rel="noopener noreferrer";a.target="_blank";line.append(a);
-     }}catch(_){}
+    try{const u=new URL(r.source_url);if(u.protocol==="https:"){
+     const link=node("a","","Official availability report");link.href=u.href;link.target="_blank";link.rel="noopener noreferrer";body.append(link);
+    }}catch(_){}
    }
-   panel.append(line);
+  }
+  if(player?.source_url){
+   try{const u=new URL(player.source_url);if(u.protocol==="https:"){
+    const link=node("a","",player.status==="CONFIRMED_OFFICIAL"?"Official starter evidence":"Previous-game passer evidence");
+    link.href=u.href;link.target="_blank";link.rel="noopener noreferrer";body.append(link);
+   }}catch(_){}
+  }
  }
- panel.append(node("div","availFoot","This official availability designation is NOT confirmation of who will start. It may be newer than the original model prediction."));
- return panel;
+ body.append(node("div","sourceLine","QB lists and injury updates do not change the original frozen model score. Ranks are third-party chart labels, not verified starters."));
+ fold.append(body);return fold;
 }
+
 function hasQBRisk(game){
  return ["home","away"].some(side=>(game["qb_availability_"+side]||[]).some(r=>
    ["QUESTIONABLE","DOUBTFUL","OUT","SUSPENDED","LIMITED","GAME_TIME_DECISION","CONFLICT_REVIEW"].includes(r.status)));
@@ -314,52 +331,46 @@ function scoutingPanel(g){
 }
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
- top.append(node("b","small",fmtDate.format(dateOf(g.kickoff_utc))),node("span","small","ESPN "+g.game_id));el.append(top);
- el.append(node("span","modelTag","Model pick · experimental"));
- const teams=node("div","teams");teams.append(node("span","team",g.away_team),node("span","at","@"),node("span","team",g.home_team));el.append(teams);
- const qbPanel=node("div","qbPanel");
- qbPanel.append(qbCard(g.away_team,g.qb_away,g.qb_depth_away,g.qb_availability_away),qbCard(g.home_team,g.qb_home,g.qb_depth_home,g.qb_availability_home));el.append(qbPanel);
- const availability=officialQBPanel(g);
- if(availability)el.append(availability);
- const scouting=scoutingPanel(g);if(scouting)el.append(scouting);
- if(hasQBRisk(g))el.append(node("div","qbRisk","QB status alert: this frozen model projection has NOT been recomputed for the reported quarterback situation."));
-
- const scores=node("div","scoreline"),away=node("div"),home=node("div","scoreHome");
- away.append(node("div","projected","Away · model"),node("div","score",num(g.model_away_points)));
- home.append(node("div","projected","Home · model"),node("div","score",num(g.model_home_points)));
- scores.append(away,node("span","at","—"),home);el.append(scores);
- const m=g.model_home_margin,lead=Number.isFinite(m)?m===0?"Projected tie":(m>0?g.home_team:g.away_team)+" by "+num(Math.abs(m)):"No numeric model projection";
- el.append(node("div","favorite",lead));
- const stats=node("div","stats");
- for(const [v,label] of [[num(g.model_total),"Model projected total"],[Number.isFinite(g.research_home_win_probability)?num(g.research_home_win_probability*100,0)+"%":"—","Home win probability · uncalibrated"]]){
- const s=node("div","stat");s.append(node("b","",v),node("small","",label));stats.append(s);
- }el.append(stats);
+ top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
+            node("span","modelTag","Research · V03"));
+ el.append(top);
+ const teams=node("div","teamStack");
+ teams.append(teamDisplayRow(g,"away"),teamDisplayRow(g,"home"));
+ el.append(teams);
+ const summary=node("div","modelSummary");
+ const margin=g.model_home_margin;
+ const lead=Number.isFinite(margin)?margin===0?"Model: even":(margin>0?g.home_team:g.away_team)+" by "+num(Math.abs(margin)):"No model margin available";
+ summary.append(node("div","favorite",lead));
+ const secondary=node("div","underStats");
+ secondary.append(node("strong","","Total "+num(g.model_total)),node("span",""," · "+(Number.isFinite(g.research_home_win_probability)?
+   num(g.research_home_win_probability*100,0)+"% home win chance*":"Win probability unavailable")));
+ summary.append(secondary);el.append(summary);
  const tiles=node("div","marketTiles");
- let spreadLine="Unavailable",atsPick=null,totalLine="Unavailable",ouPick=null;
+ let spreadLine="No line",atsPick=null,totalLine="No line",ouPick=null;
  if(Number.isFinite(g.market_home_spread)){
-  const homeLine=(g.market_home_spread>0?"+":"")+num(g.market_home_spread);
-  spreadLine=g.home_team+" "+homeLine;
-  if(g.model_ats_side)atsPick=g.model_ats_side==="PASS"?"Model: PASS":("Model: "+(g.model_ats_side==="HOME"?g.home_team:g.away_team)+" ATS");
+  spreadLine=g.home_team+" "+(g.market_home_spread>0?"+":"")+num(g.market_home_spread);
+  if(g.model_ats_side)atsPick=g.model_ats_side==="PASS"?"Model: PASS":
+   (g.model_ats_side==="HOME"?g.home_team:g.away_team)+" ATS";
  }
  if(Number.isFinite(g.market_total)){
   totalLine=num(g.market_total);
   if(g.model_ou_side)ouPick=g.model_ou_side==="PASS"?"Model: PASS":"Model: "+g.model_ou_side;
  }
  tiles.append(marketTile("Observed spread",spreadLine,atsPick,g.ats_edge_points),
-              marketTile("Observed O/U",totalLine,ouPick,g.ou_edge_points));el.append(tiles);
+              marketTile("Observed O/U",totalLine,ouPick,g.ou_edge_points));
+ el.append(tiles);
+ if(hasQBRisk(g))el.append(node("div","warningMini","QB availability alert · check the source details"));
  if(Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
-   el.append(node("div","marginAlert","Calibration warning: model differs from observed spread by "+num(g.ats_edge_points)+" points. This is not a validated betting edge; review this matchup after the final."));
+  el.append(node("div","marginAlert","Large model / spread difference ("+num(g.ats_edge_points)+" pts). Research only; not a validated edge."));
  }
- el.append(node("div","marketMeta",g.market_provider?
-  "Source: ESPN / "+g.market_provider+" · observed "+fmtDate.format(dateOf(g.market_observed_utc))+". Quote is not independently publication-time authenticated.":
-  "No verified pregame ESPN quote currently available. ATS and O/U comparisons withheld."));
- const badges=node("div","badges");
- badges.append(node("span","badge"+(g.qb_starters_verified<2?" low":""),"At forecast QB verified "+g.qb_starters_verified+"/2"),
-               node("span","badge"+(g.official_team_reports_verified<2?" low":""),"Reports "+g.official_team_reports_verified+"/2"),
-               node("span","badge","Model-computed · unvalidated"));el.append(badges);
- el.append(node("div","bottom","Original frozen forecast: "+fmtDate.format(dateOf(data.forecast_observed_utc))+" · Not validated for betting"));
+ const scouting=scoutingPanel(g);if(scouting)el.append(scouting);
+ el.append(qbDetails(g));
+ el.append(node("div","marketMeta",
+  g.market_provider?"Market: ESPN / "+g.market_provider+" · "+fmtDate.format(dateOf(g.market_observed_utc))+" · independently observed":
+  "Market line unavailable · ATS/O-U comparisons withheld"));
  return el;
 }
+
 function updateDayNav(){
  if(!data)return;
  const keys=[...new Set(data.games.map(g=>dateKey(dateOf(g.kickoff_utc))))].sort((a,b)=>new Date(a)-new Date(b));
