@@ -1,0 +1,65 @@
+name: CFB Opponent-Adjusted Team Matchup Research
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/team_matchup_intelligence.py'
+      - 'tests/test_team_matchup_intelligence.py'
+      - '.github/workflows/cfb-opponent-matchup-eval.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Verify no-lookahead two-way run/pass, opponent adjustment, boxscore turnovers
+        run: |
+          python -m unittest discover -s tests -p 'test_team_matchup_intelligence.py' -v
+          python -m unittest discover -s tests -p 'test_turnover_boxscore.py' -v
+      - name: Download vetted completed-game research snapshot
+        uses: actions/download-artifact@v4
+        with:
+          repository: The-Caves/cfb-model
+          run-id: 40966132935
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: cfb-2026-data-40966132935
+          path: .snapshot
+      - name: Evaluate pass/run opponent-adjusted profiles on same past-only weeks
+        run: |
+          python -m scripts.team_matchup_intelligence \
+            --games .snapshot/games_2026.csv \
+            --advanced .snapshot/advanced/team_game_advanced_2026.csv \
+            --manifest .snapshot/advanced/advanced_manifest.json \
+            --context .snapshot/context/upcoming_game_context_2026.json \
+            --turnovers .snapshot/model_v03/espn-verified-turnovers.json \
+            --output data/researched-matchups
+      - name: Check data source coverage and train/holdout boundaries
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('data/researched-matchups/walkforward_matchup_ablation.json'))
+          p=json.load(open('data/researched-matchups/team_profiles_and_matchups.json'))
+          assert d['model_promoted'] is False
+          assert d['status']=='TEAM_OPPONENT_MATCHUP_STYLE_RESEARCH_ONLY'
+          assert d['folds'] and p['games']
+          assert d['aggregate']['baseline_14']['games']==d['aggregate']['opponent_adjusted_run_pass']['games']
+          for f in d['folds']:
+              assert f['cutoff']<'2026-12-31'
+              assert f['training']>=90
+              assert f['held']>0
+          print(json.dumps({'aggregate':d['aggregate'],'board':p['summary']},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cfb-opponent-adjusted-matchup-research-${{ github.run_id }}
+          path: data/researched-matchups/
+          retention-days: 30
