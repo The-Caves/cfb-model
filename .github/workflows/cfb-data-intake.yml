@@ -102,20 +102,6 @@ jobs:
             --features data/model_v03/weekly_pregame_features.csv \
             --labels data/model_v03/weekly_postgame_labels.csv \
             --output data/model_v03/home-bias-candidate-research.json
-      - name: Evaluate venue-separated opponent ratings against V03 and recency on paired weeks
-        run: |
-          python -m scripts.venue_travel_candidate \
-            --games data/games_2026.csv \
-            --advanced data/advanced/team_game_advanced_2026.csv \
-            --manifest data/advanced/advanced_manifest.json \
-            --output data/model_v03/venue-travel-candidate-research.json
-      - name: Upload venue/HFA and travel candidate research audit
-        uses: actions/upload-artifact@v4
-        with:
-          name: cfb-venue-travel-research-${{ github.run_id }}
-          path: data/model_v03/venue-travel-candidate-research.json
-          if-no-files-found: error
-          retention-days: 30
       - name: Compare 2026 model features across chronological test weeks (research only)
         run: |
           python -m scripts.feature_consistency_audit \
@@ -168,6 +154,30 @@ jobs:
             --output data/model_v03/backtest-evidence-gate.json
       - name: Collect timestamped upcoming schedules, rest, travel proxies, weather and reviewed personnel
         run: python -m scripts.ingest_game_context --raw-dir data/raw --availability-csv data/manual/availability_2026.csv --output data/context --horizon-days 10 --auto-official
+      - name: Reconstruct historical travel conservatively from archived ESPN venues
+        run: |
+          python -m scripts.venue_travel_history \
+            --games data/games_2026.csv \
+            --raw-dir data/raw \
+            --geo-cache data/context/geo_cache.json \
+            --output data/model_v03/venue-travel-history-research.json
+      - name: Compare venue-separated opponent ratings and travel against V03/recency
+        run: |
+          python -m scripts.venue_travel_candidate \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --manifest data/advanced/advanced_manifest.json \
+            --travel-history data/model_v03/venue-travel-history-research.json \
+            --output data/model_v03/venue-travel-candidate-research.json
+      - name: Upload venue/HFA and travel model research evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-venue-travel-research-${{ github.run_id }}
+          path: |
+            data/model_v03/venue-travel-history-research.json
+            data/model_v03/venue-travel-candidate-research.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Inventory nationwide 2026 personnel sources
         run: |
           python -m scripts.personnel_source_inventory \
