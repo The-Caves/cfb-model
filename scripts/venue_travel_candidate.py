@@ -225,6 +225,84 @@ def compare(rows,cutoffs):
             "historical_pbp_publication_authenticated":False,
             "estimated_home_field_prior_points":PRIOR_HOME_POINTS,
             "folds":results}
+def paired_comparison(games,advanced,cutoffs):
+    """Research ablation: V03, recency and neutral-field rating on identical IDs."""
+    from scripts.model_v03 import build_weekly_games,fit_ridge,predict as ridge_predict
+    from scripts.home_bias_candidate import fit_candidate,predict_candidate
+    from scripts.personnel_features import BASE_FIELDS
+    weekly=build_weekly_games(games,advanced)
+    known={str(r["game_id"]):r for r in games}
+    enriched={str(r["game_id"]):r for r in weekly}
+    if set(known)!=set(enriched):raise ValueError("Baseline ID mismatch")
+    folds=[]
+    for d in cutoffs:
+        first=when(d);end=first+dt.timedelta(days=7)
+        before=[r for r in weekly if when(r["date"])<first]
+        complete=[r for r in before if r["home_games_prior"]>=1 and r["away_games_prior"]>=1]
+        future=[r for r in weekly if first<=when(r["date"])<end
+                and r["home_games_prior"]>=1 and r["away_games_prior"]>=1]
+        if not future or len(complete)<MIN_GAMES:continue
+        classic=fit_ridge(before,BASE_FIELDS)
+        recency=fit_candidate(before,BASE_FIELDS,first)
+        neutral=fit([known[str(r["game_id"])] for r in complete],first)
+        baseline=ridge_predict(future,BASE_FIELDS,classic)[0][:,0]
+        recent=predict_candidate(future,BASE_FIELDS,recency)
+        rows=[]
+        for i,r in enumerate(future):
+            g=known[str(r["game_id"])]
+            rating=predict(neutral,g)
+            if rating is None:continue
+            # Every candidate is evaluated on precisely the same games.
+            rows.append({"game_id":str(r["game_id"]),
+                "date":r["date"],"actual":float(r["home_score"]-r["away_score"]),
+                "v03":float(baseline[i]),"recency":float(recent[i]),
+                "neutral_rating":rating["predicted_home_margin"],
+                "neutral_rating_component":rating["neutral_strength_difference"],
+                "venue_adjustment":rating["home_field_points"]})
+        if not rows:continue
+        metrics={}
+        for k in ("v03","recency","neutral_rating"):
+            n=len(rows);truth=[x["actual"] for x in rows]
+            margin=[x[k] for x in rows]
+            metrics[k]={"games":n,
+               "margin_mae":round(sum(abs(y-a) for y,a in zip(margin,truth))/n,5),
+               "signed_home_bias":round(sum(y-a for y,a in zip(margin,truth))/n,5),
+               "su_accuracy":round(sum((y>0)==(a>0) for y,a in zip(margin,truth))/n,5),
+               "home_pick_fraction":round(sum(y>0 for y in margin)/n,5)}
+        folds.append({"cutoff":first.isoformat(),
+            "training_games_all_v03":len(before),
+            "training_games_dual_profile":len(complete),
+            "home_field_points":round(neutral["home_field_points"],5),
+            "metrics":metrics,"same_game_details":rows})
+    aggregate={}
+    for k in ("v03","recency","neutral_rating"):
+        game_rows=[g for f in folds for g in f["same_game_details"]]
+        if not game_rows:continue
+        n=len(game_rows)
+        aggregate[k]={"games":n,
+            "margin_mae":round(sum(abs(r[k]-r["actual"]) for r in game_rows)/n,5),
+            "signed_home_bias":round(sum(r[k]-r["actual"] for r in game_rows)/n,5),
+            "su_accuracy":round(sum((r[k]>0)==(r["actual"]>0) for r in game_rows)/n,5),
+            "home_pick_fraction":round(sum(r[k]>0 for r in game_rows)/n,5)}
+    return {"status":STATUS,"research_only":True,"model_promoted":False,
+        "betting_status":"PASS_UNVALIDATED",
+        "historical_pbp_publication_authenticated":False,
+        "no_historical_venue_timezones_attested":True,
+        "travel_impact_trained":False,
+        "scoring_system":"NEUTRAL_TEAM_RATINGS_PLUS_REGULARIZED_HOME_FIELD",
+        "folds":folds,"aggregate":aggregate}
+
+def run_paired(games_csv,advanced_csv,manifest,output):
+    from scripts.model_v03 import load_inputs
+    games,advanced,_=load_inputs(games_csv,advanced_csv,manifest)
+    report=paired_comparison(games,advanced,
+        [dt.date(2026,9,26)+dt.timedelta(days=7*i) for i in range(7)])
+    path=Path(output);path.parent.mkdir(parents=True,exist_ok=True)
+    path.write_text(json.dumps(report,indent=2,allow_nan=False)+"\n")
+    print(json.dumps({"status":STATUS,"aggregate":report["aggregate"],
+         "folds":len(report["folds"]),"model_promoted":False}))
+    return report
+
 def run(games_csv,output):
     import csv
     with open(games_csv,newline="",encoding="utf-8") as f:
@@ -247,4 +325,8 @@ def run(games_csv,output):
 if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--games",required=True);p.add_argument("--output",required=True)
-    a=p.parse_args();run(a.games,a.output)
+    p.add_argument("--advanced");p.add_argument("--manifest")
+    a=p.parse_args()
+    if bool(a.advanced)!=bool(a.manifest):p.error("Advanced + manifest are required together")
+    if a.advanced:run_paired(a.games,a.advanced,a.manifest,a.output)
+    else:run(a.games,a.output)

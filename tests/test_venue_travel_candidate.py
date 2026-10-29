@@ -79,6 +79,32 @@ class VenueTravelTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Duplicate"):
             fit(copied,"2026-09-20")
 
+    def test_exact_same_game_pairing_and_no_future_fold_outcome(self):
+        from scripts.venue_travel_candidate import paired_comparison
+        from scripts.model_v03 import build_weekly_games
+        base=samples(480)
+        # All history must be in 2026 and sufficient previous games.
+        report=paired_comparison(base,{},[dt.date(2026,9,26),dt.date(2026,10,3)])
+        self.assertTrue(report["folds"])
+        for fold in report["folds"]:
+            assert set(fold["metrics"])=={"v03","recency","neutral_rating"}
+            self.assertEqual(len(fold["same_game_details"]),fold["metrics"]["v03"]["games"])
+            self.assertEqual(fold["metrics"]["recency"]["games"],
+                             fold["metrics"]["neutral_rating"]["games"])
+            self.assertTrue(all(row["date"]>=fold["cutoff"] for row in fold["same_game_details"]))
+        changed=[dict(r) for r in base]
+        for row in changed:
+            if row["date"]>="2026-09-26":
+                row["home_score"]=100
+        repeat=paired_comparison(changed,{},[dt.date(2026,9,26)])
+        first=report["folds"][0]
+        same=repeat["folds"][0]
+        original={r["game_id"]:r for r in first["same_game_details"]}
+        for new in same["same_game_details"]:
+            old=original[new["game_id"]]
+            for key in ("v03","recency","neutral_rating"):
+                self.assertAlmostEqual(old[key],new[key],places=4)
+
     def test_walk_forward_only_earlier_games_and_travel_pass(self):
         data=samples(200)
         out=compare(data,[dt.date(2026,8,18),dt.date(2026,8,25)])
