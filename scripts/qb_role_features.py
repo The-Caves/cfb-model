@@ -38,6 +38,7 @@ def _past_games(rows,team,game_date,decision):
 def _profile(rows):
     if not rows:return {"season_leading_passer_proxy":None,"prior_games":0,
                         "last_game_leading_passer_proxy":None,
+                        "last_game_passer_date":None,
                         "observed_recent_qb_switch":None,
                         "source":"NO_PRIOR_QB_PASSER_EVIDENCE"}
     totals=defaultdict(int);games=defaultdict(list)
@@ -58,6 +59,7 @@ def _profile(rows):
     return {"season_leading_passer_proxy":lead,
             "prior_games":len(games),
             "last_game_leading_passer_proxy":last_leader,
+            "last_game_passer_date":latest_day[0],
             "observed_recent_qb_switch":(lead!=last_leader if lead and last_leader else None),
             "source":"PRIOR_OBSERVED_PASSER_USAGE_NOT_DEPTH_CHART"}
 

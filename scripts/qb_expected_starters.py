@@ -7,6 +7,7 @@ Do not invent injury status from missing player reports or make QB2 worse than Q
 import argparse
 import datetime as dt
 import json
+import re
 from pathlib import Path
 from scripts.game_context import parse_time
 from scripts.site_depthchart import chart_for_teams,normalized,allowed,SOURCE
@@ -18,7 +19,10 @@ WARN={"QUESTIONABLE","DOUBTFUL","GAME_TIME_DECISION","LIMITED"}
 MAX_CHART_AGE_DAYS=21
 
 def _name(x):
-    return normalized(x) if x else None
+    if not x:return None
+    # E.J. Archield and EJ Archield are the same initials, not two QB IDs.
+    cleaned=re.sub(r"\b([A-Za-z])\.\s*(?=[A-Za-z]\.)",r"\1",x)
+    return normalized(cleaned)
 
 def _availability(game,team,decision):
     out={}
@@ -105,9 +109,25 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                     current={"player":qb1,"source_class":"PROJECTED_CHART_QB1_AND_LAST_GAME",
                              "confidence":"MEDIUM_UNCONFIRMED" if qb1_status not in WARN else "LOW_UNCONFIRMED",
                              "reason":"CHART_AND_RECENT_PASSING_USAGE_AGREE"}
-                elif qb1 and latest and latest_rank and latest_rank>1:
-                    current={"player":None,"source_class":"CONFLICT_CHART_VS_RECENT_QB",
-                             "confidence":"UNKNOWN","reason":"QB1_CHART_DIFFERS_FROM_RECENT_GAME_PASSER"}
+                elif qb1 and latest and _name(qb1)!=_name(latest):
+                    # Ourlads charts can predate an actual QB return (Delaware
+                    # Oct23 chart versus Oct27 observed player participation).
+                    # In that case recent real play is a more current
+                    # *expectation* than the stale order, not confirmation.
+                    updated=source.get("source_updated_et") if source else None
+                    last=historical.get("last_game_passer_date")
+                    chart_stale=False
+                    if updated and last:
+                        at=parse_time(updated)
+                        chart_stale=dt.date.fromisoformat(last)>at.date()
+                    if chart_stale:
+                        current={"player":latest,
+                                 "source_class":"PROJECTED_RECENT_PASSER_AFTER_STALE_CHART",
+                                 "confidence":"MEDIUM_UNCONFIRMED",
+                                 "reason":"LAST_GAME_PASSER_NEWER_THAN_DEPTH_CHART_UPDATE"}
+                    else:
+                        current={"player":None,"source_class":"CONFLICT_CHART_VS_RECENT_QB",
+                                 "confidence":"UNKNOWN","reason":"QB1_CHART_DIFFERS_FROM_RECENT_GAME_PASSER"}
                 elif qb1:
                     current={"player":qb1,"source_class":"PROJECTED_DEPTH_CHART_ONLY",
                              "confidence":"LOW_UNCONFIRMED","reason":"CHART_QB1_NO_RECENT_USAGE_CONFIRMATION"}
@@ -139,6 +159,8 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                 "confidence":current["confidence"],"reason":current["reason"],
                 "depth_rank":depth_rank,"depth_label":f"QB{depth_rank}" if depth_rank else "UNKNOWN",
                 "chart_status":chart_status,"depth_chart":ranked,
+                "last_game_passer_date":historical.get("last_game_passer_date"),
+                "depth_chart_updated_et":source.get("source_updated_et") if source else None,
                 "chart_source_url":source.get("source_url") if source else None,
                 "official_recent_return_context":historical.get("official_recent_return_context"),
                 "last_game_leading_passer_proxy":historical.get("last_game_leading_passer_proxy"),

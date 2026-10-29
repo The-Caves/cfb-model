@@ -6,7 +6,15 @@ is today's data retrieval, not the historical pregame publication instant.
 """
 import datetime as dt
 import math
+import re
 from collections import Counter
+
+def player_key(value):
+    raw=" ".join(value.split()).casefold()
+    # Normalize compact versus punctuated initials (E.J. vs EJ).
+    raw=re.sub(r"\b([a-z])\.\s*(?=[a-z]\.)",r"\1",raw)
+    return re.sub(r"[^a-z0-9]+"," ",raw).strip()
+
 
 STATUS="QB_PBP_POSTGAME_PASSER_ATTRIBUTION_RESEARCH_ONLY"
 FIELDS=("game_id","date","team","opponent","player","pass_tagged_plays",
@@ -45,7 +53,7 @@ def collect(game,team,opponent,accepted_offensive,observed_at):
         if not 2<=len(name)<=120:
             missing+=1
             continue
-        norm=name.casefold()
+        norm=player_key(name)
         bucket=by_player.setdefault(norm,{"name":name,"plays":0,"epa_plays":0,"epa":0.})
         bucket["plays"]+=1
         epa=_epa(p)
@@ -95,7 +103,7 @@ def prior_qb_form(rows,team,player,game_date,asof_utc,minimum_pass_plays=15):
     observed=dt.datetime.fromisoformat(asof_utc.replace("Z","+00:00"))
     if observed.tzinfo is None or observed.date()>cutoff:
         raise ValueError("QB source observed later than the target football date")
-    wanted=" ".join(player.split()).casefold() if isinstance(player,str) else ""
+    wanted=player_key(player) if isinstance(player,str) else ""
     if len(wanted)<2:raise ValueError("Expected QB name is required")
     related=[]
     ids=set()
@@ -113,12 +121,12 @@ def prior_qb_form(rows,team,player,game_date,asof_utc,minimum_pass_plays=15):
         if (row.get("betting_status")!="PASS_UNVALIDATED" or
             provenance not in (False,"False","false")):
             raise ValueError("Untrusted historical player source")
-        key=(row["game_id"]," ".join(row["player"].split()).casefold())
+        key=(row["game_id"],player_key(row["player"]))
         if key in ids:raise ValueError("Duplicate team/game/QB attribution")
         ids.add(key)
         related.append(row)
-    player_rows=[r for r in related if " ".join(r["player"].split()).casefold()==wanted]
-    other=[r for r in related if " ".join(r["player"].split()).casefold()!=wanted]
+    player_rows=[r for r in related if player_key(r["player"])==wanted]
+    other=[r for r in related if player_key(r["player"])!=wanted]
     def rate(subset):
         n=sum(_numeric(r,"pass_epa_plays") for r in subset)
         if n<minimum_pass_plays:return None

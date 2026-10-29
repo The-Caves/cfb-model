@@ -18,6 +18,15 @@ class QBPasserHistoryTests(unittest.TestCase):
         self.assertFalse(qa["starter_verified"])
         self.assertEqual(r[0]["passer_identity_status"],"POSTGAME_PASSER_NOT_STARTER_VERIFIED")
         self.assertFalse(r[0]["historical_source_time_verified"])
+    def test_initials_are_same_player_as_chart_even_if_punctuation_differs(self):
+        from scripts.qb_passer_history import player_key
+        self.assertEqual(player_key("E.J. Archield Jr."),player_key("EJ Archield Jr."))
+        rows,_=collect(self.game(),"Delaware","Missouri State",
+            [play("E.J. Archield Jr.",.4)]*22,"2026-10-21T04:00:00Z")
+        form=prior_qb_form(rows,"Delaware","EJ Archield Jr.",
+                          "2026-10-27","2026-10-26T23:00:00Z")
+        self.assertEqual(form["player_epa_per_pass_tagged_play"],.4)
+
     def test_bad_game_date_rejected(self):
         with self.assertRaisesRegex(ValueError,"future"):
             collect({"game_id":"1","date":"2026-10-22"},"A","B",

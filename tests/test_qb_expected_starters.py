@@ -19,6 +19,7 @@ def fixtures(latest="A Backup",official=None,availability=None):
         records.append({"game_id":"100","team":team,"opponent":opp,"kickoff_utc":KICK,
             "current_starting_qb":official if team=="Team A" else None,
             "last_game_leading_passer_proxy":latest if team=="Team A" else None,
+            "last_game_passer_date":"2026-10-27" if team=="Team A" else None,
             "season_leading_passer_proxy":"A First" if team=="Team A" else None,
             "official_recent_return_context":None})
     role={"status":ROLE,"asof_utc":"2026-10-29T14:00:00Z",
@@ -51,6 +52,25 @@ class StarterSourceTests(unittest.TestCase):
         self.assertEqual(x["confidence"],"HIGH_OFFICIAL")
         self.assertTrue(x["is_confirmed_starter"])
         self.assertEqual(x["depth_rank"],2)
+    def test_revised_chart_stale_after_actual_return_prioritizes_recent_passer(self):
+        ctx,role=fixtures(latest="A Returned")
+        chart=source(["A First","A Backup","A Third"])
+        chart["source_updated_et"]="2026-10-23T19:02:00-04:00"
+        result=build(ctx,role,{"Team A":chart},AT)
+        qb=self.a(result)
+        self.assertEqual(qb["starter"],"A Returned")
+        self.assertEqual(qb["depth_label"],"UNKNOWN")
+        self.assertEqual(qb["starter_status"],"PROJECTED_RECENT_PASSER_AFTER_STALE_CHART")
+        self.assertFalse(qb["is_confirmed_starter"])
+        self.assertIn("A Returned",[s["player"] for s in qb["scenarios"]])
+
+    def test_conflict_chart_newer_than_recent_game_is_unknown(self):
+        ctx,role=fixtures(latest="A Backup")
+        chart=source(["A First","A Backup"])
+        chart["source_updated_et"]="2026-10-28T19:02:00-04:00"
+        result=build(ctx,role,{"Team A":chart},AT)
+        self.assertIsNone(self.a(result)["starter"])
+
     def test_chart_plus_latest_passer_is_medium_projected(self):
         ctx,role=fixtures(latest="A First")
         x=self.a(build(ctx,role,{"Team A":source(["A First","A Backup"])},AT))

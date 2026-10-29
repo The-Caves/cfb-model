@@ -34,6 +34,7 @@ class RoleTests(unittest.TestCase):
         d=next(r for r in result["rows"] if r["team"]=="Delaware Blue Hens")
         self.assertEqual(d["season_leading_passer_proxy"],"Nick Minicucci")
         self.assertEqual(d["last_game_leading_passer_proxy"],"Nick Minicucci")
+        self.assertEqual(d["last_game_passer_date"],"2026-10-20")
         self.assertFalse(d["observed_recent_qb_switch"])
         self.assertEqual(d["official_recent_return_context"]["signal"],
                          "RETURNED_IN_PRIOR_GAME_NOT_CONFIRMED_THIS_GAME")
