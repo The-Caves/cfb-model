@@ -32,3 +32,14 @@ This document was committed with `[run-intake]` to force a **real** immediate da
 - Forecast scripts now load the real Step3G immutable `record` envelope, not a bare JSON object.
 - Experimental QB and venue/travel forecast records are additionally persisted to an append-only GitHub archive with exact baseline source identity; models remain nonpromoted.
 - Run-intake tag on this docs commit triggers the repaired full pipeline and source-coverage audit.
+
+## First full actual source-and-forecast acceptance run (October 29)
+
+[Successful full Data Intake 40949692804](https://github.com/The-Caves/cfb-model/actions/runs/40949692804) completed all original downstream workflow steps, including automatic expected-starter collection, all original research shadows and the new QB-conditional and venue/travel shadow prediction stages, durable GitHub archives and original baseline grading. The source collection found **115 future games / 230 team slots**, Ourlads matched 137 of 139 listed schools, 187 projected-or-confirmed named expected QBs, 228 chart-covered team slots, **0** officially confirmed game-week starters, and 42 chart-versus-recent-passer conflicts. Subsequent source repairs include stale-chart-overridden recent participation and UMass alias handling.
+
+Two independently saved, correctly timestamped **114-game** research candidate archives were produced and checked as real files:
+
+- QB-conditioned forecast: 111/114 games had at least one player-specific statistical change; 205/228 team slots had enough expected-QB passer history. 190 of 228 side projections were medium-confidence but **unconfirmed**; 23 remained UNKNOWN. Maximum **combined** change relative to V03 was approximately **0.3293 points**. These small impacts reveal that the existing 14-feature ridge passes relatively little quarterback-specific signal into margin; numerical correctness is **not** the same as an effective QB replacement model. Better calibrated player-replacement modeling remains a priority before promotion.
+- Venue-only produced 114/114 research forecasts; venue+travel produced 65/114 due missing verified trip inputs or historical coverage. Travel output was capped at ±1.25 points, with 49 games not modified for travel.
+
+All forecasts are retained separately from the site's V03, and cannot be retroactively rewritten. Follow-up runs on the latest code additionally include independently audited candidate grading against the frozen 24–72-hour V03 reference scores. This first acceptance run preceded that grading-code commit, so it does not establish the candidate grader has already passed its first live full ingestion.
