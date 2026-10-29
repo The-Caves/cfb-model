@@ -200,7 +200,7 @@ def build(frozen,joined,expected,passers,training_rows,observed_at_utc):
 
 def run(forecast_file,joined_file,expected_file,passers_file,games_file,
         advanced_file,advanced_manifest,score_manifest,output):
-    frozen=json.loads(Path(forecast_file).read_text())
+    frozen=json.loads(Path(forecast_file).read_text())["record"]
     joined=json.loads(Path(joined_file).read_text())
     expected=json.loads(Path(expected_file).read_text())
     with open(passers_file,newline="",encoding="utf-8") as f:passers=list(csv.DictReader(f))
