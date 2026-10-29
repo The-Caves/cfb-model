@@ -46,6 +46,22 @@ class MatchupTests(unittest.TestCase):
         self.assertEqual(p["run_disruption_dependency"],20.)
         self.assertEqual(p["run_stopped_games"],2)
         self.assertEqual(_profile(xs[:2])["run_disruption_dependency"],None)
+    def test_opponent_adjusted_run_pass_uses_only_previous_opponent_strength(self):
+        games=[]
+        records={}
+        for k in range(1,5):
+            g=game(k,(dt.date(2026,9,1)+dt.timedelta(days=7*k)).isoformat())
+            games.append(g);records.update(adv(g,home_run=.4,away_run=-.1))
+        rows=augment(games,records)
+        self.assertIsNone(rows[0]["home_run_adj_edge"])
+        # The first two opponent matchups don't yet meet the prior-history gate.
+        self.assertIsNone(rows[1]["home_run_adj_edge"])
+        self.assertIsNotNone(rows[3]["home_run_adj_edge"])
+        future=[game(22,"2026-10-29")]
+        board=build_profile_board(games,records,None,future,"2026-10-29")
+        self.assertIsNotNone(board["games"][0]["matchup"]["home_run_adj_edge"])
+        self.assertFalse(board["games"][0]["total_projection_generated_from_profile"])
+
     def test_future_game_does_not_enter_its_own_matchup(self):
         g1=game(1,"2026-09-01");g2=game(2,"2026-09-08")
         all_={**adv(g1),**adv(g2,home_run=10,home_pass=10)}

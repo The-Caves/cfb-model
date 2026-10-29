@@ -14,6 +14,8 @@ from scripts.model_v03 import load_inputs,build_weekly_games,fit_ridge,predict,r
 from scripts.personnel_features import BASE_FIELDS
 
 STATUS="TEAM_OPPONENT_MATCHUP_STYLE_RESEARCH_ONLY"
+ADJUSTED_FIELDS=("home_run_adj_edge","away_run_adj_edge",
+                 "home_pass_adj_edge","away_pass_adj_edge")
 STYLE_FIELDS=("home_run_edge","away_run_edge","home_pass_edge","away_pass_edge",
               "home_run_success_edge","away_run_success_edge",
               "home_pass_success_edge","away_pass_success_edge",
@@ -23,7 +25,7 @@ SITUATIONAL_FIELDS=("home_pressure_exposure","away_pressure_exposure",
                     "home_redzone_conversion","away_redzone_conversion",
                     "home_drive_tempo","away_drive_tempo")
 TURNOVER_FIELDS=("home_giveaway_minus_away_takeaway","away_giveaway_minus_home_takeaway")
-MIN_QB_MATCHUP_SAMPLE_GAMES=2
+MIN_OPPONENT_ADJUST_GAMES=2
 def mean(values):
     xs=[float(x) for x in values if x is not None and math.isfinite(float(x))]
     return sum(xs)/len(xs) if xs else None
@@ -64,6 +66,7 @@ def _team_game(g,team,advanced,turnover=None):
 def _profile(hist):
     last=hist[-6:]
     names=("run_off","pass_off","run_def_allowed","pass_def_allowed",
+           "run_off_adj","pass_off_adj","run_def_adj","pass_def_adj",
            "run_success_off","pass_success_off","run_success_allowed",
            "pass_success_allowed","pass_rate","run_explosive_off",
            "pass_explosive_off","pass_explosive_allowed",
@@ -94,6 +97,10 @@ def matchup(home,away):
     def success(off,defender,kind):
         return diff(off.get(kind+"_success_off"),defender.get(kind+"_success_allowed"))
     return {
+      "home_run_adj_edge":diff(home.get("run_off_adj"),away.get("run_def_adj")),
+      "away_run_adj_edge":diff(away.get("run_off_adj"),home.get("run_def_adj")),
+      "home_pass_adj_edge":diff(home.get("pass_off_adj"),away.get("pass_def_adj")),
+      "away_pass_adj_edge":diff(away.get("pass_off_adj"),home.get("pass_def_adj")),
       "home_run_edge":edge(home,away,"run"),"away_run_edge":edge(away,home,"run"),
       "home_pass_edge":edge(home,away,"pass"),"away_pass_edge":edge(away,home,"pass"),
       "home_run_success_edge":success(home,away,"run"),
@@ -151,12 +158,23 @@ def augment(games,advanced,turnover=None):
             gid=str(g["game_id"])
             h=_profile(history[g["home"]]);a=_profile(history[g["away"]])
             base[gid].update(matchup(h,a))
-            snapshots.append({"game_id":gid,"date":g["date"],"home":g["home"],"away":g["away"],
-                   "home":h,"away":a})
+            snapshots.append({"game_id":gid,"date":g["date"],
+                "home_profile_prior":h,"away_profile_prior":a})
         # Advance only after the entire football day was evaluated.
         for g in group:
             for team in (g["home"],g["away"]):
-                history[team].append(_team_game(g,team,advanced,turnovers))
+                prior_opponent=_profile(history[g["away"] if team==g["home"] else g["home"]])
+                record=_team_game(g,team,advanced,turnovers)
+                for kind in ("run","pass"):
+                    opp_def=prior_opponent.get(kind+"_def_allowed")
+                    opp_off=prior_opponent.get(kind+"_off")
+                    record[kind+"_off_adj"]=(
+                        diff(record[kind+"_off"],opp_def)
+                        if prior_opponent[kind+"_def_games"]>=MIN_OPPONENT_ADJUST_GAMES else None)
+                    record[kind+"_def_adj"]=(
+                        diff(record[kind+"_def_allowed"],opp_off)
+                        if prior_opponent[kind+"_off_games"]>=MIN_OPPONENT_ADJUST_GAMES else None)
+                history[team].append(record)
     return list(base.values())
 
 def build_profile_board(games,advanced,turnover,upcoming,asof):
@@ -166,9 +184,22 @@ def build_profile_board(games,advanced,turnover,upcoming,asof):
         raise ValueError("Future-game source leak")
     turns=validated_turnovers(turnover,games)
     hist=defaultdict(list)
-    for g in historic:
-        for team in (g["home"],g["away"]):
-            hist[team].append(_team_game(g,team,advanced,turns))
+    for _,day in group_by_date(historic):
+        pending=[]
+        for g in day:
+            for team in (g["home"],g["away"]):
+                opp=g["away"] if team==g["home"] else g["home"]
+                opponent=_profile(hist[opp])
+                r=_team_game(g,team,advanced,turns)
+                for kind in ("run","pass"):
+                    r[kind+"_off_adj"]=(
+                        diff(r[kind+"_off"],opponent.get(kind+"_def_allowed"))
+                        if opponent[kind+"_def_games"]>=MIN_OPPONENT_ADJUST_GAMES else None)
+                    r[kind+"_def_adj"]=(
+                        diff(r[kind+"_def_allowed"],opponent.get(kind+"_off"))
+                        if opponent[kind+"_off_games"]>=MIN_OPPONENT_ADJUST_GAMES else None)
+                pending.append((team,r))
+        for team,r in pending:hist[team].append(r)
     names=sorted(set(hist)|{g[side] for g in upcoming for side in ("home","away")})
     profiles={name:_profile(hist[name]) for name in names}
     matches=[]
@@ -198,6 +229,8 @@ def build_profile_board(games,advanced,turnover,upcoming,asof):
 VARIANTS={
  "baseline_14":list(BASE_FIELDS),
  "run_pass_vs_defense":list(BASE_FIELDS)+list(STYLE_FIELDS[:8]),
+ "opponent_adjusted_run_pass":list(BASE_FIELDS)+list(ADJUSTED_FIELDS),
+ "raw_plus_adjusted_run_pass":list(BASE_FIELDS)+list(STYLE_FIELDS[:8])+list(ADJUSTED_FIELDS),
  "run_pass_style_and_dependency":list(BASE_FIELDS)+list(STYLE_FIELDS),
  "situational":list(BASE_FIELDS)+list(SITUATIONAL_FIELDS),
  "turnovers":list(BASE_FIELDS)+list(TURNOVER_FIELDS),
