@@ -54,6 +54,8 @@ def build(joined, context):
                         "partially_covered_games": partial_games,
                         "observed_absences": sum(sum(s["absences"].values()) for s in verified_sides),
                         "observed_uncertain": sum(sum(s["uncertain"].values()) for s in verified_sides),
+                        "observed_first_half_out": sum(sum(s["partial_absences"].values())
+                                                       for s in verified_sides),
                         "live_injury_adjustments_applied": 0},
             "trained_replacement_points": False, "safe_for_betting": False,
             "betting_status": "PASS_UNVALIDATED"}

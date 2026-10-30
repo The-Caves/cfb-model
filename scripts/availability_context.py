@@ -9,7 +9,7 @@ from scripts.game_context import parse_time
 
 POSITIONS={"QB","RB","WR","TE","OL","DL","EDGE","LB","CB","DB","S","K","P","OTHER","TEAM"}
 STATUSES={"AVAILABLE","PROBABLE","QUESTIONABLE","DOUBTFUL","OUT","SUSPENDED",
-          "LIMITED","GAME_TIME_DECISION","UNKNOWN","CONFIRMED","VERIFIED"}
+          "LIMITED","OUT_FIRST_HALF","GAME_TIME_DECISION","UNKNOWN","CONFIRMED","VERIFIED"}
 KINDS={"INJURY","AVAILABILITY","QB_STARTER","TEAM_REPORT"}
 FIELDS=["season","game_id","team","kind","player","position","status",
         "kickoff_utc","published_at_utc","captured_at_utc","source_url","reviewed_by"]
@@ -97,7 +97,7 @@ def evaluate(game,issue,records,attestation_age_hours=30):
             # Contradictions from any accepted source must not be silently
             # promoted into a confirmed starter, regardless of capture order.
             all_names={r["player"].casefold() for r in qbs}
-            conflict_statuses={"OUT","SUSPENDED","DOUBTFUL","LIMITED"}
+            conflict_statuses={"OUT","OUT_FIRST_HALF","SUSPENDED","DOUBTFUL","LIMITED"}
             unavailable={r["player"].casefold():r["status"] for r in injury_by_player.values()
                          if r["position"]=="QB" and r["status"] in conflict_statuses}
             if len(all_names)>1:

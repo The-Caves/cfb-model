@@ -109,7 +109,7 @@ def _side(game_id, team, qb_snapshots, injury_snapshots, instant):
     qb_out = sum(r["position"] == "QB" and r["reported_status"] == "OUT" for r in players)
     if covered and reviewed and any(
         r["player"].casefold() == qb["player"].casefold() and
-        r["reported_status"] in ("OUT", "SUSPENDED", "DOUBTFUL", "LIMITED")
+        r["reported_status"] in ("OUT", "OUT_FIRST_HALF", "SUSPENDED", "DOUBTFUL", "LIMITED")
         for r in players):
         # Do not turn a cross-feed contradictory claim into a reliable starter.
         reviewed = False

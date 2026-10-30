@@ -45,6 +45,19 @@ class StarterSourceTests(unittest.TestCase):
         self.assertEqual(x["depth_label"],"QB2")
         self.assertFalse(x["is_confirmed_starter"])
         self.assertEqual(len(x["scenarios"]),2)
+    def test_first_half_out_qb1_cannot_be_projected_to_start_but_might_return(self):
+        absence={"team":"Team A","player":"A First","position":"QB",
+            "status":"OUT_FIRST_HALF",
+            "published_at_utc":"2026-10-29T13:00:00Z",
+            "captured_at_utc":"2026-10-29T14:00:00Z"}
+        ctx,role=fixtures(availability=[absence])
+        x=self.a(build(ctx,role,{"Team A":source(["A First","A Backup","A Third"])},AT))
+        self.assertEqual(x["starter"],"A Backup")
+        self.assertFalse(x["is_confirmed_starter"])
+        first=next(r for r in x["scenarios"] if r["player"]=="A First")
+        self.assertFalse(first["opening_start_eligible"])
+        self.assertTrue(first["out_first_half"])
+
     def test_qb2_officially_confirmed_is_not_assumed_worse_than_qb1(self):
         ctx,role=fixtures(official="A Backup")
         r=build(ctx,role,{"Team A":source(["A First","A Backup","A Third"])},AT)

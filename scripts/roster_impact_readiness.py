@@ -24,7 +24,7 @@ def _check_side(side):
         if side.get("coverage") != "UNKNOWN" or side.get("absences") is not None or side.get("uncertain") is not None:
             raise ValueError("Unknown coverage cannot imply zero absences")
         return False
-    for name in ("absences", "uncertain"):
+    for name in ("absences", "uncertain", "partial_absences"):
         values = side.get(name)
         if not isinstance(values, dict) or set(values) != set(POSITIONS):
             raise ValueError("Incomplete positional status map")
@@ -63,6 +63,7 @@ def evaluate(bundle, decision_utc):
                 "unlisted_players": "UNKNOWN",
                 "reported_out_or_suspended": original["absences"] if known else None,
                 "reported_uncertain": original["uncertain"] if known else None,
+                "reported_out_first_half": original["partial_absences"] if known else None,
                 "injury_source_is_participation_proof": False,
                 "verified_individual_replacement_value": False,
             }
@@ -87,6 +88,8 @@ def evaluate(bundle, decision_utc):
         position: {
             "reported_absent": sum(s["reported_out_or_suspended"][position] for s in known_sides),
             "reported_uncertain": sum(s["reported_uncertain"][position] for s in known_sides),
+            "reported_out_first_half": sum(s["reported_out_first_half"][position]
+                                            for s in known_sides),
         } for position in POSITIONS
     }
     return {

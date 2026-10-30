@@ -106,6 +106,14 @@ class PersonnelFeaturesTests(unittest.TestCase):
         self.assertFalse(joined["model_validated"])
         self.assertNotIn("home_score", row)
 
+    def test_first_half_qb_out_not_full_game_out_count(self):
+        ctx=context(reports=[signal(status="OUT_FIRST_HALF")])
+        joined=personnel(ctx)
+        row=joined["games"][0]
+        self.assertEqual(row["features"]["availability_out_diff"],0)
+        self.assertEqual(row["features"]["availability_qb_out_diff"],0)
+        self.assertTrue(verify_joined(joined))
+
     def test_missing_report_not_zero_inferred(self):
         ctx = context(reports=[signal()], coverage={HOME: "VERIFIED_REPORT_REVIEWED",
                                                      AWAY: "UNKNOWN"})

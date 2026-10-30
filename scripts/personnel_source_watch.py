@@ -10,6 +10,8 @@ from pathlib import Path
 SOURCES={
 "SEC_FOOTBALL_OFFICIAL":"https://www.secsports.com/fbreports",
 "BIG_TEN_FOOTBALL_OFFICIAL":"https://bigten.org/sports/2026/9/10/FB_Availability_Reports.aspx",
+"ACC_FOOTBALL_OFFICIAL":"https://theacc.com/sports/2025/8/28/availability-reporting-football.aspx",
+"BIG12_FOOTBALL_OFFICIAL":"https://big12sports.com/sports/2025/8/14/FBreporting.aspx?lv=true",
 }
 def fetch(source,url,timeout=9):
     req=urllib.request.Request(url,headers={"User-Agent":"CFB-2026-research-availability-watcher/0.1"})

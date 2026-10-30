@@ -14,7 +14,8 @@ def side(coverage="VERIFIED_REPORT_REVIEWED",position="OL"):
     return {
         "coverage":coverage,
         "absences":counts if coverage=="VERIFIED_REPORT_REVIEWED" else None,
-        "uncertain":{p:0 for p in POSITIONS} if coverage=="VERIFIED_REPORT_REVIEWED" else None
+        "uncertain":{p:0 for p in POSITIONS} if coverage=="VERIFIED_REPORT_REVIEWED" else None,
+        "partial_absences":{p:0 for p in POSITIONS} if coverage=="VERIFIED_REPORT_REVIEWED" else None
     }
 
 def bundle(away=None):
@@ -39,6 +40,14 @@ class RosterImpactReadinessTests(unittest.TestCase):
         self.assertEqual(report["summary"]["valid_learned_player_impacts"],0)
         self.assertIsNone(report["games"][0]["candidate_home_margin_adjustment"])
         self.assertFalse(report["model_promoted"])
+
+    def test_first_half_out_not_counted_as_full_absence(self):
+        b=bundle()
+        b["games"][0]["home_report_by_position"]["partial_absences"]["OL"]=1
+        r=evaluate(b,NOW)
+        self.assertEqual(r["summary"]["position_report_counts"]["OL"]["reported_out_first_half"],1)
+        self.assertEqual(r["summary"]["position_report_counts"]["OL"]["reported_absent"],2)
+        self.assertIsNone(r["games"][0]["candidate_home_margin_adjustment"])
 
     def test_unknown_opponent_is_not_zero_absences(self):
         report=evaluate(bundle(side("UNKNOWN")), NOW)

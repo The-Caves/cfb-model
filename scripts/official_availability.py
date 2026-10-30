@@ -21,7 +21,7 @@ SOURCE_PAGE={
   "B12":"https://big12sports.com/sports/2025/8/14/FBreporting.aspx?lv=true"}
 TIMEZONES={"CT":"America/Chicago","ET":"America/New_York",
            "MT":"America/Denver","PT":"America/Los_Angeles"}
-STATUS_MAP={"Out":"OUT","Out - (1st Half)":"LIMITED","Out (1st Half)":"LIMITED",
+STATUS_MAP={"Out":"OUT","Out - (1st Half)":"OUT_FIRST_HALF","Out (1st Half)":"OUT_FIRST_HALF",
  "Questionable":"QUESTIONABLE","Doubtful":"DOUBTFUL",
  "Probable":"PROBABLE","Game Time Decision":"GAME_TIME_DECISION",
  "Available":"AVAILABLE"}
