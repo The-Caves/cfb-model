@@ -34,7 +34,7 @@ class Visible(HTMLParser):
 # tag can be malformed or nested in provider HTML; a stateful skip counter
 # inadvertently masked the entire starters section in live October pages.
 # Remove COMPLETE non-content blocks first, then tokenize remaining HTML.
-NOISE=re.compile(r"<(script|style|noscript|svg)\\b[^>]*>.*?</\\1\\s*>",re.I|re.S)
+NOISE=re.compile(r"<(script|style|noscript|svg)\b[^>]*>.*?</\1\s*>",re.I|re.S)
 def visible_tokens(html):
     stripped=NOISE.sub(" ",html)
     parser=Visible();parser.feed(stripped)
