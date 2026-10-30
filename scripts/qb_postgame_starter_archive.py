@@ -117,10 +117,17 @@ def plan(old,snapshot,run_id):
                 "starter_player":row["starter_player"] if row["label_status"]==LABEL else None}
         else:
             prior["observations"].append(entry)
-            # Once a source flips or contradicts its prior interpretation,
-            # require independent adjudication; never auto-correct training labels.
-            prior["effective_status"]=DANGER
-            prior["starter_player"]=None
+            # UNKNOWN -> first genuine explicit label is useful new evidence,
+            # not a contradiction. Any later removal/change of an accepted
+            # explicit label or an existing conflict is quarantined.
+            if prior["effective_status"]==UNKNOWN and row["label_status"]==LABEL:
+                prior["effective_status"]=LABEL
+                prior["starter_player"]=row["starter_player"]
+            elif prior["effective_status"]==DANGER:
+                prior["starter_player"]=None
+            else:
+                prior["effective_status"]=DANGER
+                prior["starter_player"]=None
         fresh.append(row)
     if fresh:
         run={"status":STATUS,"season":2026,"run_id":str(run_id),
