@@ -9,6 +9,7 @@ from pathlib import Path
 from scripts import context_archive as store
 from scripts.site_performance import compute,run,BOARD_INDEX,FINAL_INDEX,GRADE_INDEX
 from scripts.site_decision_archive import STATUS as BOARD_STATUS
+from scripts.weekly_profiles import canonical
 
 NOW="2026-10-29T20:00:00Z"
 KICK="2026-10-24T19:00:00Z"
@@ -38,7 +39,7 @@ class SitePerformanceTests(unittest.TestCase):
         self.gpath="research_2026/forecast_grades/2026/10/24/100.json.gz"
         self.grade_index={"status":"STEP3G_OBSERVED_PROSPECTIVE_GRADING_RESEARCH_ONLY",
             "season":2026,"safe_for_betting":False,"betting_status":"PASS_UNVALIDATED",
-            "games":{"100":{"path":self.gpath,"grade_sha256":sha(self.grade),
+            "games":{"100":{"path":self.gpath,"grade_sha256":hashlib.sha256(canonical(self.grade)).hexdigest(),
                 "forecast_row_sha256":"a"*64,"final_record_sha256":"b"*64,
                 "forecast_run_id":"1"}}}
         self.final={"status":"OBSERVED_INDEPENDENT_MARKET_FINAL",
