@@ -36,10 +36,17 @@ class PostgameQBArchiveTests(unittest.TestCase):
         old["slots"][GAME["game_id"]+"|"+GAME["home"]]["starter_player"]="A School B Starter"
         last=old["slots"][GAME["game_id"]+"|"+GAME["home"]]["observations"][-1]
         last["starter_player"]="A School B Starter"
-        # This is only a fixture; all source, game, name and original SHA must agree.
+        school_url="https://rolltide.com/sports/football/stats/2026/example/boxscore/100"
+        last["source_url"]=school_url
+        last["source_class"]="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML"
+        # Mimic a second official university gamebook capture, independent of ESPN.
         actual=snapshot()
         new_player=next(x for x in actual["rows"] if x["team"]==GAME["home"])
-        new_player["source_url"]=last["source_url"]
+        actual["source"]="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML"
+        actual["rows"]=[new_player]
+        actual["team_slots"]=1
+        new_player["source_class"]=actual["source"]
+        new_player["source_url"]=school_url
         reviewed={GAME["game_id"]+"|"+GAME["home"]:{
             "old_player":"A School B Starter",
             "new_player":"A Starter",
