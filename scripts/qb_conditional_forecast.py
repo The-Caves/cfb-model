@@ -18,6 +18,9 @@ from scripts.personnel_features import BASE_FIELDS,verify_joined,sha256
 from scripts.qb_passer_history import prior_qb_form
 from scripts.qb_expected_starters import STATUS as EXPECTED_STATUS
 from scripts.qb_scenario_exposure import mixture as qb_exposure,STATUS as EXPOSURE_STATUS
+from scripts.qb_defense_adjusted_peer import (
+    build_context as defense_context,peer_effect as defense_peer_effect,
+    STATUS as DEFENSE_PEER_STATUS)
 
 STATUS="QB_CONDITIONAL_PLAYER_EPA_FROZEN_SHADOW_RESEARCH_ONLY"
 MODEL="QB_EXPECTED_PLAYER_PASS_EPA_CONDITIONAL_V1"
@@ -63,7 +66,7 @@ def _condition(passer_rows,team,player,game_date,decision,team_epa,coefficient):
             "margin_impact":round(points,5),
             "no_depth_chart_rank_penalty":True}
 
-def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
+def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision,opponent_context=None):
     projection=forecast["projection"]
     baseline_margin=projection["predicted_home_margin"]
     total=projection["predicted_total_points"]
@@ -74,8 +77,14 @@ def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
     coefficient=float(coefs[index+1,0]/stds[index])
     if not math.isfinite(coefficient):raise ValueError("Invalid learned QB coefficient")
     day=_asof_day(forecast)
+    context=(opponent_context if opponent_context is not None else
+             defense_context(passer_rows,day,decision.isoformat()))
     candidates={}
     chosen={}
+    peer_scenarios={}
+    peer_chosen={}
+    peer_exposure_points={}
+    peer_exposure_sample={}
     empirical={}
     exposure_impact={}
     sample_exposure={}
@@ -94,6 +103,11 @@ def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
                                              if r["depth_rank"] else "UNKNOWN")}
         candidates[side]=evaluated
         chosen[side]=(evaluated.get(slot["starter"]) if slot["starter"] else None)
+        peer_scenarios[side]={
+            name:defense_peer_effect(context,team,name,coefficient)
+            for name in evaluated}
+        peer_chosen[side]=(peer_scenarios[side].get(slot["starter"])
+                           if slot["starter"] else None)
         exposure=qb_exposure(passer_rows,team,slot,day,decision.isoformat())
         empirical[side]=exposure
         weighted_points=0.
@@ -107,6 +121,12 @@ def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
                 valid_sample_mass+=weight
         exposure_impact[side]=weighted_points
         sample_exposure[side]=round(valid_sample_mass,8)
+        peer_exposure_points[side]=sum(
+            weight*peer_scenarios[side][name]["margin_impact"]
+            for name,weight in exposure["weights"].items())
+        peer_exposure_sample[side]=round(sum(
+            weight for name,weight in exposure["weights"].items()
+            if peer_scenarios[side][name]["status"]=="QB_OPPONENT_ADJUSTED_PEER_SHADOW"),8)
     home=chosen["home"];away=chosen["away"]
     # Every QB1/2/3 chart member gets a separate *conditional score margin*,
     # not merely a depth ranking or a vague positive/negative annotation.
@@ -147,7 +167,31 @@ def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
     usage_status=("QB_EMPIRICAL_EXPOSURE_SHADOW" if
                   any(v>0 for v in sample_exposure.values()) else
                   "PASS_NO_RELIABLE_QB_EXPOSURE_AND_PASS_EPA")
+    peer_qualified=sum(
+        p is not None and p["status"]=="QB_OPPONENT_ADJUSTED_PEER_SHADOW"
+        for p in peer_chosen.values())
+    peer_points=lambda side:(peer_chosen[side]["margin_impact"]
+        if peer_chosen[side] is not None and
+        peer_chosen[side]["status"]=="QB_OPPONENT_ADJUSTED_PEER_SHADOW" else 0.)
+    peer_home_margin=max(-limit,min(limit,
+        float(baseline_margin)+peer_points("home")-peer_points("away")))
+    peer_exp_delta=peer_exposure_points["home"]-peer_exposure_points["away"]
+    peer_exp_qualified=sum(v>0 for v in peer_exposure_sample.values())
+    peer_exp_margin=max(-limit,min(limit,float(baseline_margin)+peer_exp_delta))
     return {"status":status,"baseline_margin":baseline_margin,"adjusted_home_margin":round(adjusted,5),
+        "opponent_peer_home_margin":round(peer_home_margin,5),
+        "opponent_peer_status":("QB_OPPONENT_PEER_EPA_SHADOW" if peer_qualified
+                               else "PASS_NO_OPPONENT_ADJUSTED_QB_PEER_SAMPLE"),
+        "opponent_peer_qualified_sides":peer_qualified,
+        "opponent_peer_player_scenarios_by_side":peer_scenarios,
+        "opponent_peer_expected_player_adjustments":peer_chosen,
+        "opponent_peer_exposure_home_margin":round(peer_exp_margin,5),
+        "opponent_peer_exposure_status":("QB_OPPONENT_PEER_EXPOSURE_SHADOW"
+                                        if peer_exp_qualified else
+                                        "PASS_NO_OPPONENT_ADJUSTED_QB_PEER_EXPOSURE"),
+        "opponent_peer_exposure_sample_by_side":peer_exposure_sample,
+        "opponent_peer_method":DEFENSE_PEER_STATUS,
+        "opponent_peer_historical_publication_authenticated":False,
         "usage_weighted_home_margin":round(usage_margin,5),
         "usage_weighted_margin_delta":round(usage_margin-float(baseline_margin),5),
         "usage_weighted_status":usage_status,
@@ -192,6 +236,7 @@ def build(frozen,joined,expected,passers,training_rows,observed_at_utc):
     if len(training_rows)<90:raise ValueError("Insufficient score training")
     params=fit_ridge(training_rows,BASE_FIELDS)
     outputs=[]
+    peer_contexts={}
     for forecast in frozen["games"]:
         gid=str(forecast["game_id"])
         if parse_time(forecast["kickoff_utc"])<=decision:continue
@@ -209,7 +254,11 @@ def build(frozen,joined,expected,passers,training_rows,observed_at_utc):
                 raise ValueError("Missing expected QB team slot")
             if parse_time(slot["observed_at_utc"])>decision:raise ValueError("Postdecision QB player")
             side[k]=slot
-        result=scenario(forecast,current,side,passers,params,decision)
+        day=_asof_day(forecast)
+        if day not in peer_contexts:
+            peer_contexts[day]=defense_context(passers,day,decision.isoformat())
+        result=scenario(forecast,current,side,passers,params,decision,
+                        opponent_context=peer_contexts[day])
         outputs.append({"game_id":gid,"home":forecast["home"],"away":forecast["away"],
           "kickoff_utc":forecast["kickoff_utc"],"baseline_row_sha256":forecast["row_sha256"],
           "candidate":result})
@@ -229,6 +278,12 @@ def build(frozen,joined,expected,passers,training_rows,observed_at_utc):
                 for x in outputs),
             "sides_with_empirical_player_samples":sum(
                 sum(v>0 for v in x["candidate"]["evaluated_player_sample_exposure_by_side"].values())
+                for x in outputs),
+            "games_with_opponent_peer_shadow":sum(
+                x["candidate"]["opponent_peer_status"]=="QB_OPPONENT_PEER_EPA_SHADOW"
+                for x in outputs),
+            "games_with_opponent_peer_exposure_shadow":sum(
+                x["candidate"]["opponent_peer_exposure_status"]=="QB_OPPONENT_PEER_EXPOSURE_SHADOW"
                 for x in outputs)},
          "games":outputs,"model_promoted":False,
          "historical_pbp_publication_authenticated":False,
