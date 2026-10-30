@@ -19,6 +19,8 @@ on:
       - 'tests/test_site_ui_compact.py'
       - 'scripts/site_matchup.py'
       - 'scripts/site_player_props.py'
+      - 'scripts/site_player_projection_archive.py'
+      - 'tests/test_site_player_projection_archive.py'
       - 'scripts/player_prop_workload.py'
       - 'tests/test_player_prop_workload.py'
       - 'tests/test_site_player_props.py'
@@ -78,6 +80,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_player_prop_workload.py' -v
       - name: Test independently sourced PlayerForm research overlays
         run: python -m unittest discover -s tests -p 'test_site_player_props.py' -v
+      - name: Test independently archived pre-kickoff conditional player research predictions
+        run: python -m unittest discover -s tests -p 'test_site_player_projection_archive.py' -v
       - name: Test source-matched market comparisons
         run: python -m unittest discover -s tests -p 'test_site_market.py' -v
       - name: Test game-specific QB status and season-passer fallback
@@ -253,6 +257,14 @@ jobs:
           python -m scripts.site_decision_archive --dashboard site/data/dashboard.json | tee /tmp/displayed-decisions.txt
           cat /tmp/displayed-decisions.txt >> "$GITHUB_STEP_SUMMARY"
           echo "Persisted research display snapshots are NOT synchronized model/market pre-decision backtests or wager records." >> "$GITHUB_STEP_SUMMARY"
+      - name: Freeze append-only source-captured conditional player yard forecasts for future validation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          python -m scripts.site_player_projection_archive --dashboard site/data/dashboard.json | tee /tmp/displayed-player-stats.txt
+          cat /tmp/displayed-player-stats.txt >> "$GITHUB_STEP_SUMMARY"
+          echo "Player stat research snapshots are not sportsbook lines, probabilistic forecasts, or validated profit expectations." >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
     needs: build

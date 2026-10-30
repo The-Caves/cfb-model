@@ -8,6 +8,8 @@ on:
       - 'scripts/player_prop_workload.py'
       - 'tests/test_player_prop_workload.py'
       - 'tests/test_site_player_props.py'
+      - 'scripts/site_player_projection_archive.py'
+      - 'tests/test_site_player_projection_archive.py'
       - 'tests/test_site_ui_compact.py'
       - '.github/workflows/cfb-site-playerform-pr-check.yml'
   workflow_dispatch:
@@ -35,6 +37,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_site_player_props.py' -v
           python -m unittest discover -s tests -p 'test_site_availability.py' -v
           python -m unittest discover -s tests -p 'test_player_prop_workload.py' -v
+          python -m unittest discover -s tests -p 'test_site_player_projection_archive.py' -v
           python - <<'PY'
           import re
           from pathlib import Path

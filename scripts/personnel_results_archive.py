@@ -280,6 +280,7 @@ def _commit_material(material, run_id):
                         ROOT+"/free_market_comparisons/index.json",
                         ROOT+"/market_finals/index.json",
                         ROOT+"/site_board_snapshots/index.json",
+                        ROOT+"/player_projection_snapshots/index.json",
                         ROOT+"/candidate_shadow_qb/index.json",
                         ROOT+"/candidate_shadow_venue/index.json",
                         ROOT+"/candidate_shadow_grades/index.json",

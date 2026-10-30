@@ -128,3 +128,15 @@ retrospective same-player recorded-game competition tests their statistical
 usefulness against the previous-four player workload baseline, with
 same-football-date withholding and explicit source-timing caveats.
 Live V03 scores and PlayerForm yard projections remain unpromoted.
+
+## Prospective player-stat performance archive (same-day game/week)
+
+Each successfully built PlayerForm game board now also freezes its exact
+conditionally displayed research-yard prediction before kickoff into
+`context-state/research_2026/player_projection_snapshots/`. It includes the
+player/game/metric ESPN ID, original score V03 hash and model ID, role-share
+and official availability evidence, and the observation/capture times.
+Prior snapshots are immutable and cannot be quietly replaced by postgame
+forecasts. This is essential groundwork for credible independent later
+per-player model performance grades. Nothing in this mechanism adds a real
+sportsbook prop line, a market over/under selection or an injury diagnosis.
