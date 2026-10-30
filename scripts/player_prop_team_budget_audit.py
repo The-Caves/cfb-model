@@ -42,6 +42,7 @@ def audit(snapshot):
         receptions=aggregate("receptions")
         receiving_yards=aggregate("receiving_yards")
         rush_attempts=aggregate("rushing_attempts")
+        rush_yards=aggregate("rushing_yards")
         recorded_pass_catch=(completions is not None and receptions is not None)
         recorded_pass_yards=(passing_yards is not None and receiving_yards is not None)
         if passing_attempts is not None and completions is not None and completions>passing_attempts:
@@ -55,6 +56,7 @@ def audit(snapshot):
             "reported_passing_yards":passing_yards,
             "reported_receiving_yards":receiving_yards,
             "reported_rushing_attempts":rush_attempts,
+            "reported_rushing_yards":rush_yards,
             "completion_minus_receptions":completions-receptions if recorded_pass_catch else None,
             "passing_minus_receiving_yards":passing_yards-receiving_yards if recorded_pass_yards else None,
             "observed_completion_reception_exact_match":completions==receptions if recorded_pass_catch else None,
