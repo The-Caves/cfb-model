@@ -64,6 +64,38 @@ class Tests(unittest.TestCase):
         rows=[status(designation="AVAILABLE"),status(designation="OUT")]
         r=merge(board(),rows,NOW)
         self.assertEqual(r["games"][0]["qb_availability_home"][0]["status"],"CONFLICT_REVIEW")
+    def test_non_qb_official_reports_cover_every_position_without_inference(self):
+        b=board()
+        rows=[status("Starting RB","OUT",position="RB"),
+              status("Receiver One","QUESTIONABLE",position="WR"),
+              status("Left Tackle","AVAILABLE",position="OL"),
+              status("Edge One","GAME_TIME_DECISION",position="EDGE")]
+        d=merge(b,rows,NOW)
+        g=d["games"][0]
+        reports=g["player_availability_home"]
+        self.assertEqual([(r["position"],r["status"]) for r in reports],
+                         [("EDGE","GAME_TIME_DECISION"),("RB","OUT"),("WR","QUESTIONABLE")])
+        self.assertEqual(g["qb_availability_home"],[])
+        self.assertEqual(d["qb_availability_display"]["official_all_position_designations"],4)
+        self.assertEqual(d["qb_availability_display"]["actionable_non_qb_designations"],3)
+        self.assertEqual(d["qb_availability_display"]["games_with_actionable_non_qb_reports"],1)
+        self.assertFalse(d["qb_availability_display"]["not_listed_player_is_assumed_available"])
+        self.assertEqual(g["model_home_margin"],3.0)
+
+    def test_non_qb_conflicting_reports_are_not_silently_resolved(self):
+        rows=[status("Starting RB","OUT",position="RB"),
+              status("Starting RB","QUESTIONABLE",position="RB")]
+        d=merge(board(),rows,NOW)
+        self.assertEqual(d["games"][0]["player_availability_home"][0]["status"],"CONFLICT_REVIEW")
+
+    def test_non_qb_postkickoff_or_unknown_status_is_excluded(self):
+        rows=[status("Receiver One","OUT",position="WR",
+                     captured_at_utc="2026-10-24T21:00:00Z"),
+              status("Receiver Two","HEALTHY",position="WR"),
+              status("Receiver Three","OUT",position="WR",team="LSU Tigers")]
+        d=merge(board(),rows,NOW)
+        self.assertEqual(d["games"][0]["player_availability_home"],[])
+
     def test_live_fetch_cutoff_advances_past_report_capture(self):
         # A live request is captured *after* the initial run() invocation.
         # Latest source must be accepted without hindsight or future input.

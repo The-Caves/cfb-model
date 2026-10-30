@@ -73,6 +73,34 @@ class SitePlayerFormTests(unittest.TestCase):
         self.assertFalse(any(p["player"]=="QB One" for p in out["games"][0]["player_props"]["entries"]))
         self.assertFalse(out["player_prop_display"]["all_player_participation_verified"])
 
+    def test_all_position_injuries_suppress_out_and_flag_questionable(self):
+        src=board()
+        src["games"][0]["player_availability_home"]=[
+            {"player":"RB One","position":"RB","status":"OUT"},
+            {"player":"WR One","position":"WR","status":"QUESTIONABLE"}]
+        out=overlay(src,boxes(2026),boxes(2025),schedule(2026),schedule(2025),OBS)
+        entries=out["games"][0]["player_props"]["entries"]
+        self.assertFalse(any(p["player"]=="RB One" for p in entries))
+        receiver=next(p for p in entries if p["player"]=="WR One")
+        self.assertEqual(receiver["official_reported_status"],"QUESTIONABLE")
+        self.assertEqual(receiver["player_participation_status"],
+                         "RECENT_GAME_PARTICIPANT_NOT_CONFIRMED")
+        self.assertIsNone(receiver["real_bookmaker_line"])
+        self.assertEqual(out["games"][0]["model_home_margin"],4.3)
+        self.assertGreaterEqual(out["player_prop_display"]["official_status_flagged_entries"],1)
+        self.assertFalse(out["player_prop_display"]["role_shares_changed_yard_projections"])
+
+    def test_recent_recorded_workload_is_present_but_not_snap_share(self):
+        r=overlay(board(),boxes(2026),boxes(2025),schedule(2026),schedule(2025),OBS)
+        qb=next(p for p in r["games"][0]["player_props"]["entries"]
+                if p["player"]=="QB One" and p["metric"]=="passing_yards")
+        role=qb["workload_role_evidence"]
+        self.assertEqual(role["role_basis"],"TEAM_RECORDED_PASS_ATTEMPT_SHARE")
+        self.assertEqual(role["recorded_opportunity_share"],1.0)
+        self.assertTrue(role["share_is_not_snap_or_target_percentage"])
+        self.assertFalse(qb["workload_share_used_to_change_yard_projection"])
+        self.assertFalse(r["player_prop_display"]["all_player_participation_verified"])
+
     def test_mismatch_is_unavailable_and_no_score_tampering(self):
         src=board()
         src["games"][0]["home_team"]="Wrong University"

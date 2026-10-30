@@ -82,6 +82,11 @@ jobs:
           python -m scripts.player_prop_walkforward \
             --input data/player_props/espn_player_game_history.json \
             --output data/player_props/retrospective_matchup_prop_baselines.json
+      - name: Evaluate source-recorded player opportunity shares against last-four baseline
+        run: |
+          python -m scripts.player_prop_workload \
+            --input data/player_props/espn_player_game_history.json \
+            --output data/player_props/role_opportunity_retrospective_ablation.json
       - name: Evaluate opponent-specific passing and rushing defense adjustments
         run: |
           python -m scripts.player_prop_matchup_walkforward \
