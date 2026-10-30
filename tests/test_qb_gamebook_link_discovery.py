@@ -100,6 +100,27 @@ class SchoolGamebookLinkTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             discover([target()],sites(),AT,fetch=fetch,max_schools=0)
 
+    def test_daily_bounded_scan_rotates_through_all_remaining_schools(self):
+        directory=sites()
+        directory["schools"].append({
+            "team":"Alabama Crimson Tide",
+            "source_host":"rolltide.com",
+            "athletics_homepage":"https://rolltide.com/"})
+        directory["expected_teams"]=3
+        targets=[target(team="Texas Longhorns",game="401856732"),
+                 target(team="Ole Miss Rebels",opponent="Texas Longhorns",game="401856732"),
+                 target(team="Alabama Crimson Tide",opponent="Texas Longhorns",game="401856727")]
+        def empty_schedule(page,host):return "<html><body>Schedules only</body></html>"
+        days=["2026-11-01T12:00:00Z","2026-11-02T12:00:00Z",
+              "2026-11-03T12:00:00Z"]
+        reports=[discover(targets,directory,day,fetch=empty_schedule,max_schools=1)
+                 for day in days]
+        self.assertEqual(sum(x["school_sites_scanned"] for x in reports),3)
+        self.assertEqual({x["scanned_team_names"][0] for x in reports},
+                         {x["team"] for x in directory["schools"]})
+        self.assertEqual(reports[0]["scanned_team_names"],
+             discover(targets,directory,days[0],fetch=empty_schedule,max_schools=1)["scanned_team_names"])
+
     def test_nonmatching_opponent_and_external_hyperlink_do_not_create_candidate(self):
         def alien(page,host):
             return ('<a href="/sports/football/stats/2026/alabama/boxscore/3">Score</a>'
