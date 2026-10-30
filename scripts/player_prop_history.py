@@ -78,12 +78,14 @@ def load_schedule(csv_path):
                      "home":row["home"],"away":row["away"]}
     return result
 
-def from_box_rows(box_rows, schedule, observed_at_utc):
+def from_box_rows(box_rows, schedule, observed_at_utc, season=2026):
+    if type(season) is not int or not 2004<=season<=2026:
+        raise ValueError("Unsupported ESPN player box football season")
     observed=parse_time(observed_at_utc)
     ledger={}; quarantined=defaultdict(int);seen=set()
     for row in box_rows:
         try:
-            if int(row.get("season") or 0)!=2026:
+            if int(row.get("season") or 0)!=season:
                 quarantined["WRONG_SEASON"]+=1;continue
             gid=_id(row.get("game_id"))
             team=_id(row.get("team_id"))
@@ -97,6 +99,9 @@ def from_box_rows(box_rows, schedule, observed_at_utc):
                 quarantined["UNVERIFIED_PLAYER_OR_TEAM_ID"]+=1;continue
             if parse_time(schedule[gid]["kickoff_utc"])>=observed:
                 quarantined["NOT_A_COMPLETED_HISTORICAL_GAME"]+=1;continue
+            fixture=schedule[gid]
+            if "home_id" in fixture and "away_id" in fixture and team not in (str(fixture["home_id"]),str(fixture["away_id"])):
+                quarantined["NO_MATCHED_ESPN_GAME_TEAM_ID"]+=1;continue
             identity=(gid,team,player,category)
             if identity in seen:
                 raise ValueError("Duplicate player/category/game; quarantine source")
@@ -107,7 +112,7 @@ def from_box_rows(box_rows, schedule, observed_at_utc):
                   "player_name":str(row["athlete_name"]).strip(),
                   "date":schedule[gid]["date"],"kickoff_utc":schedule[gid]["kickoff_utc"],
                   "observed_at_utc":observed.isoformat(),
-                  "source_uri":SOURCE+"/"+ASSET,
+                  "source_uri":SOURCE+"/espn_cfb_player_box/player_box_"+str(season)+".parquet",
                   "source_status":"RETROSPECTIVE_REVISED_PLAYER_BOX_ONLY",
                   "values":{k:None for k in STATS},"categories":[]}
             obj=ledger[key]
@@ -124,8 +129,8 @@ def from_box_rows(box_rows, schedule, observed_at_utc):
             if "Duplicate" in str(ex) or "Conflicting" in str(ex):raise
             quarantined["SOURCE_DECODE_FAILURE"]+=1
     result=sorted(ledger.values(),key=lambda x:(x["date"],x["game_id"],x["player_id"]))
-    return {"status":STATUS,"season":2026,"observed_at_utc":observed.isoformat(),
-            "source_uri":SOURCE+"/"+ASSET,"recorded_player_games":len(result),
+    return {"status":STATUS,"season":season,"observed_at_utc":observed.isoformat(),
+            "source_uri":SOURCE+"/espn_cfb_player_box/player_box_"+str(season)+".parquet","recorded_player_games":len(result),
             "rejected_by_reason":dict(quarantined),
             "rows":result,"unlisted_player_game_means_zero":False,
             "retrospective_first_publication_authenticated":False,

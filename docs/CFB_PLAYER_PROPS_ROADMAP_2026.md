@@ -45,3 +45,20 @@ will be rejected.
 Sources:
 https://js.sportsdataverse.org/docs/cfb/reference/loaders
 https://the-odds-api.com/sports/ncaaf-odds
+
+## Historical player PERFORMANCE data expansion
+
+`player_prop_prior_seasons.py` now captures **2024 and 2025 football-season**
+player-game passing, rushing and receiving box stats, joined to completed
+ESPN game schedules using the season-year identifier. January 2026 bowl and
+playoff results properly belong to the **2025 football season**. Player IDs
+are matched within each game to ESPN home/away team IDs and missing categories
+stay unknown rather than zero. The downloader reports distinct actual
+provider-observation dates and SHA-256 source hashes.
+
+An ESPN athlete ID seen on different teams in 2024 and 2025 is a **team-ID
+association change**, not a verified transfer date or proof of roster
+eligibility/availability. These previous-season rows provide research
+priors, not independently frozen 2024/2025 pregame information.
+The true sportsbook historical player-prop archive remains a separate
+missing-data problem addressed by `player_prop_historical_market.py`.
