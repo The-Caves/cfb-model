@@ -31,6 +31,16 @@ class CompactSiteTests(unittest.TestCase):
         self.assertNotIn('model_home_margin =',self.html)
         self.assertNotIn('model_total =',self.html)
         self.assertIn('Experimental',self.html) if False else self.assertIn('Research only',self.html)
+    def test_player_glance_research_is_compact_and_does_not_infer_betting_lines(self):
+        self.assertIn('function playerOutlook(g)',self.html)
+        self.assertIn('el.append(playerOutlook(g));',self.html)
+        self.assertIn('Player props · stat outlook',self.html)
+        self.assertIn('No sportsbook prop lines',self.html)
+        self.assertIn('playerPick',self.html)
+        self.assertIn('player-performance',self.html)
+        self.assertIn('With player projections',self.html)
+        self.assertNotIn('model_home_margin =',self.html)
+
     def test_mobile_and_logo_fallback(self):
         self.assertIn('@media(max-width:580px)',self.html)
         self.assertIn('logoBadge(team,brand)',self.html)
