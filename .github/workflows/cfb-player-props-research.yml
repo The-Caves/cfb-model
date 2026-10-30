@@ -41,6 +41,22 @@ jobs:
           python -m scripts.player_prop_history \
             --games .source/games_2026.csv \
             --output data/player_props/espn_player_game_history.json
+      - name: Audit historical bookmaker prop coverage without any API calls
+        run: |
+          python -m scripts.player_prop_historical_market \
+            --history data/player_props/espn_player_game_history.json \
+            --asof "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --output data/player_props/historical_book_prop_coverage.json
+          python - <<'PY'
+          import json
+          r=json.load(open("data/player_props/historical_book_prop_coverage.json"))
+          assert r["status"]=="NCAAF_HISTORICAL_PROP_MARKET_COVERAGE_RESEARCH_ONLY"
+          assert r["historical_two_sided_quote_snapshots"]==0
+          assert r["true_historical_market_coverage_fraction"] is None
+          assert r["paid_api_calls_executed"]==0
+          assert r["model_promoted"] is False
+          print("Historical sportsbook player prop archive NOT yet sourced; 2026 player box stats retained separately.")
+          PY
       - name: Audit real player-game team passing-receiving stat budgets
         run: |
           python -m scripts.player_prop_team_budget_audit \
