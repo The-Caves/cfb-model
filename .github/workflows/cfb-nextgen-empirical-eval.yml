@@ -1,0 +1,80 @@
+name: CFB Next-Generation Same-Game Model Research
+on:
+  pull_request:
+    paths:
+      - 'scripts/nextgen_walkforward.py'
+      - 'scripts/verified_player_impact.py'
+      - 'scripts/qb_multidimensional_form.py'
+      - 'scripts/observed_drive_fit.py'
+      - 'scripts/game_simulation_research.py'
+      - 'tests/test_nextgen_walkforward.py'
+      - 'tests/test_verified_player_impact.py'
+      - 'tests/test_qb_multidimensional_form.py'
+      - 'tests/test_observed_drive_fit.py'
+      - 'tests/test_game_simulation_research.py'
+      - '.github/workflows/cfb-nextgen-empirical-eval.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/nextgen_walkforward.py'
+      - '.github/workflows/cfb-nextgen-empirical-eval.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  paired-retrospective-evaluation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Validate no-future/unknown-player/no-invented-scores tests
+        run: |
+          python -m unittest discover -s tests -p 'test_nextgen_walkforward.py' -v
+          python -m unittest discover -s tests -p 'test_verified_player_impact.py' -v
+          python -m unittest discover -s tests -p 'test_qb_multidimensional_form.py' -v
+          python -m unittest discover -s tests -p 'test_observed_drive_fit.py' -v
+          python -m unittest discover -s tests -p 'test_game_simulation_research.py' -v
+      - name: Download archived real ESPN 2026 final/PBP research source
+        uses: actions/download-artifact@v4
+        with:
+          repository: The-Caves/cfb-model
+          run-id: 40966132935
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: cfb-2026-data-40966132935
+          path: .source
+      - name: Run same-cohort chronological opponent and nonlinear challenger backtests
+        run: |
+          python -m scripts.nextgen_walkforward \
+            --games .source/games_2026.csv \
+            --advanced .source/advanced/team_game_advanced_2026.csv \
+            --manifest .source/advanced/advanced_manifest.json \
+            --turnovers .source/model_v03/espn-verified-turnovers.json \
+            --output data/nextgen-real-history/research.json
+      - name: Verify explicit research clearance and publish actual paired metrics
+        run: |
+          python - <<'PY'
+          import json,os
+          r=json.load(open("data/nextgen-real-history/research.json",encoding="utf-8"))
+          assert r["status"]=="NEXTGEN_MATCHED_WALKFORWARD_RESEARCH_ONLY"
+          assert r["model_promoted"] is False and r["betting_status"]=="PASS_UNVALIDATED"
+          assert r["source_timing"]=="RETROSPECTIVE_PBP_REVISED_NOT_ORIGINAL_POINT_IN_TIME"
+          assert r["summary"] and r["folds"]
+          print(json.dumps({"source_run_id":"40966132935","models":r["summary"],
+             "total_folds":len(r["folds"]),"historical_publication_authenticated":False},indent=2))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+              f.write("### Next-generation historical SAME-COHORT football model research\n\n")
+              f.write("**Retrospective revised advanced release: NOT point-in-time validated.**\n\n")
+              f.write("```json\n"+json.dumps(r["summary"],indent=2)+"\n```\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cfb-nextgen-real-2026-backtest-${{ github.run_id }}
+          path: data/nextgen-real-history/research.json
+          if-no-files-found: error
+          retention-days: 30
