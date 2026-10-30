@@ -41,6 +41,10 @@ jobs:
           python -m scripts.player_prop_history \
             --games .source/games_2026.csv \
             --output data/player_props/espn_player_game_history.json
+      - name: Capture actual 2024 and 2025 player-game form and team-change associations
+        run: |
+          python -m scripts.player_prop_prior_seasons \
+            --output data/player_props/2024_2025_player_game_history.json
       - name: Audit historical bookmaker prop coverage without any API calls
         run: |
           python -m scripts.player_prop_historical_market \
