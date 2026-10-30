@@ -40,6 +40,17 @@ jobs:
           python -m unittest discover -s tests -p 'test_qb_multidimensional_form.py' -v
           python -m unittest discover -s tests -p 'test_observed_drive_fit.py' -v
           python -m unittest discover -s tests -p 'test_game_simulation_research.py' -v
+      - name: Inspect potential player ID, usage and drive data feeds (research-only)
+        run: |
+          python -m unittest discover -s tests -p 'test_nextgen_source_readiness.py' -v
+          python -m scripts.nextgen_source_readiness --output data/nextgen-sources/source-coverage.json
+      - name: Archive explicit source-coverage and schema gaps
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-nextgen-2026-source-readiness-${{ github.run_id }}
+          path: data/nextgen-sources/source-coverage.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Download archived real ESPN 2026 final/PBP research source
         uses: actions/download-artifact@v4
         with:
