@@ -19,6 +19,42 @@
       "reviewed_official_publisher": true,
       "source_section": "Starters > [Team] Offense > QB",
       "reference": "Official University of Texas Athletics 2026 football game-specific boxscore"
+    },
+    {
+      "season": 2026,
+      "game_id": "401856727",
+      "game_date_et": "2026-10-24",
+      "home": "Alabama Crimson Tide",
+      "away": "Texas A&M Aggies",
+      "home_score": 31,
+      "away_score": 20,
+      "kickoff_utc": "2026-10-24T19:30:00Z",
+      "home_source_label": "Alabama",
+      "away_source_label": "Texas A&M",
+      "source_url": "https://rolltide.com/sports/football/stats/2026/texas-am/boxscore/21645",
+      "publisher_hostname": "rolltide.com",
+      "reviewed_official_publisher": true,
+      "scoreboard_first_side": "away",
+      "source_section": "Starters > Team Offense > QB",
+      "reference": "Official Alabama Athletics 2026 football game-specific boxscore"
+    },
+    {
+      "season": 2026,
+      "game_id": "401856840",
+      "game_date_et": "2026-10-24",
+      "home": "Cincinnati Bearcats",
+      "away": "Texas Tech Red Raiders",
+      "home_score": 37,
+      "away_score": 24,
+      "kickoff_utc": "2026-10-24T16:00:00Z",
+      "home_source_label": "Cincinnati",
+      "away_source_label": "Texas Tech",
+      "source_url": "https://texastech.com/sports/football/stats/2026/cincinnati/boxscore/21731",
+      "publisher_hostname": "texastech.com",
+      "reviewed_official_publisher": true,
+      "scoreboard_first_side": "home",
+      "source_section": "Starters > Team Offense > QB",
+      "reference": "Official Texas Tech Athletics 2026 football game-specific boxscore"
     }
   ]
 }
