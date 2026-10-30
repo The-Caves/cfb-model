@@ -1,5 +1,6 @@
 """Official university HTML boxscore's STARTERS is stronger than passer-leading proxy."""
-import unittest
+import unittest,json
+from pathlib import Path
 from scripts.qb_official_school_boxscores import parse,collect,SOURCE,valid_source
 from scripts.qb_postgame_starter_labels import LABEL
 from scripts.qb_postgame_starter_archive import empty,plan,DANGER
@@ -154,4 +155,38 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
         self.assertIsNone(changes)
         self.assertEqual(stats["eligible_provider_flag_starter_labels"],2)
         self.assertEqual(stats["quarantined_conflicts"],0)
+    def test_four_new_independently_reviewed_october_24_gamebooks(self):
+        manifest=json.loads(Path("config/official_school_qb_boxscores_2026.json").read_text())
+        self.assertEqual(manifest["season"],2026)
+        entries={str(e["game_id"]):e for e in manifest["entries"]}
+        self.assertEqual(len(entries),len(manifest["entries"]))
+        expected={
+          "401858495":("Illinois Fighting Illini","Oregon Ducks",21,10,
+                        "Michael Clayton II","Dylan Raiola",
+                        "https://fightingillini.com/sports/football/stats/2026/oregon/boxscore/29212"),
+          "401858497":("Minnesota Golden Gophers","Iowa Hawkeyes",13,10,
+                        "Drake Lindsey","Jeremy Hecklinski",
+                        "https://gophersports.com/sports/football/stats/2026/iowa/boxscore/22839"),
+          "401858499":("UCLA Bruins","Michigan State Spartans",28,10,
+                        "Ty Dieffenbach","Kayd Coffman",
+                        "https://msuspartans.com/sports/football/stats/2026/-9-ucla/boxscore/20509"),
+          "401858500":("Wisconsin Badgers","USC Trojans",24,7,
+                        "Colton Joseph","Jayden Maiava",
+                        "https://uwbadgers.com/sports/football/stats/2026/usc/boxscore/17147"),
+        }
+        for gid,(home,away,h,a,hqb,aqb,url) in expected.items():
+            with self.subTest(game_id=gid):
+                self.assertIn(gid,entries)
+                e=entries[gid]
+                self.assertEqual((e["home"],e["away"],e["home_score"],e["away_score"],
+                                  e["home_starting_qb_name"],e["away_starting_qb_name"],
+                                  e["source_url"]), (home,away,h,a,hqb,aqb,url))
+                self.assertEqual(e["game_date_et"],"2026-10-24")
+                self.assertTrue(e["reviewed_official_publisher"])
+                self.assertIn("/sports/football/stats/2026/",valid_source(e))
+                self.assertEqual(e["kickoff_utc"],{
+                  "401858495":"2026-10-24T19:00:00Z",
+                  "401858497":"2026-10-24T19:30:00Z",
+                  "401858499":"2026-10-24T19:30:00Z",
+                  "401858500":"2026-10-24T23:30:00Z"}[gid])
 if __name__=="__main__":unittest.main()
