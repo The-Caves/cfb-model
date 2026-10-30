@@ -41,6 +41,19 @@ jobs:
         run: |
           START="$(date -u -d '28 days ago' +%F)"
           python scripts/ingest_espn.py --start "$START" --output data/settlement_scores
+      - name: Collect explicitly flagged completed-game QB starters (UNKNOWN unless source says starter)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.qb_postgame_starter_labels \
+            --games data/settlement_scores/games_2026.csv \
+            --output "data/settlement_scores/qb-postgame-evidence-${{ github.run_id }}.json"
+      - name: Append postgame QB labels with source hashes and conflict quarantine
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.qb_postgame_starter_archive \
+            --input "data/settlement_scores/qb-postgame-evidence-${{ github.run_id }}.json" \
+            --output "data/settlement_scores/qb-postgame-ledger-${{ github.run_id }}.json" | tee /tmp/qb-starter-ledger.txt
+          cat /tmp/qb-starter-ledger.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Link only existing pregame captures to observed finals (no new pregame input)
         if: steps.gate.outputs.run == 'true'
         run: |
@@ -80,6 +93,8 @@ jobs:
           path: |
             data/settlement_scores/manifest.json
             data/settlement_scores/settlement-*.json
+            data/settlement_scores/qb-postgame-evidence-*.json
+            data/settlement_scores/qb-postgame-ledger-*.json
             data/settlement_scores/step3g-grading-*.json
             data/settlement_scores/model-finishline-*.json
             data/settlement_scores/step3e-*/
