@@ -32,6 +32,7 @@ class TeamStatAuditTests(unittest.TestCase):
         self.assertEqual(r["summary"]["all_players_participation_verified"],0)
         self.assertIsNone(r["per_team_game"][0]["all_player_participation_verified"] if False else None)
         self.assertFalse(r["per_team_game"][0]["all_player_participation_verified"])
+        self.assertEqual(r["per_team_game"][0]["reported_rushing_yards"],82)
 
     def test_missing_receivers_are_unknown_not_zero(self):
         r=box()
