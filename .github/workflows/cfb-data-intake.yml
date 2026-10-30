@@ -381,6 +381,11 @@ jobs:
             --joined "data/pregame_evidence/personnel-joined-${{ github.run_id }}.json" \
             --context data/context/upcoming_game_context_2026.json \
             --output "data/pregame_evidence/replacement-counts-${{ github.run_id }}.json"
+      - name: Audit full-roster injury and uncertain-player coverage (no score adjustments)
+        run: |
+          python -m scripts.roster_impact_readiness \
+            --input "data/pregame_evidence/replacement-counts-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/roster-impact-readiness-${{ github.run_id }}.json"
       - name: Persist observed pregame context and link completed results (Step 3D)
         run: |
           python -m scripts.personnel_results_archive \
