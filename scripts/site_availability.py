@@ -1,4 +1,4 @@
-"""Overlay time-verified *official* QB availability reports on the CFB board.
+"""Overlay time-verified *official* all-position availability reports on the CFB board.
 
 Availability designations are NOT game-specific starter confirmations, and
 do not update already-frozen model coefficients, picks, or training data.
@@ -14,8 +14,10 @@ from scripts.game_context import parse_time
 from scripts.official_availability import fetch_and_match
 
 ET=ZoneInfo("America/New_York")
-VALID={"OUT","QUESTIONABLE","DOUBTFUL","PROBABLE","AVAILABLE",
+VALID={"OUT","OUT_FIRST_HALF","QUESTIONABLE","DOUBTFUL","PROBABLE","AVAILABLE",
        "GAME_TIME_DECISION","LIMITED","SUSPENDED"}
+POSITIONS={"QB","RB","WR","TE","OL","DL","EDGE","LB","CB","DB","S","K","P"}
+
 
 def merge(board,rows,now,manifest=None):
     if board.get("schema_version")!=2 or board.get("betting_status")!="PASS_UNVALIDATED":
@@ -23,7 +25,7 @@ def merge(board,rows,now,manifest=None):
     indexed={str(g["game_id"]):g for g in board["games"]}
     picked={}
     for row in rows:
-        if row.get("kind")!="AVAILABILITY" or row.get("position")!="QB":
+        if row.get("kind")!="AVAILABILITY" or row.get("position") not in POSITIONS:
             continue
         gid=str(row.get("game_id",""));g=indexed.get(gid)
         if not g:continue
@@ -43,8 +45,9 @@ def merge(board,rows,now,manifest=None):
             (captured-pub).total_seconds()>36*3600 or
             not str(row.get("source_url") or "").startswith("https://")):
             continue
-        key=(gid,team,name.casefold())
-        record={"player":name,"status":status,"published_at_utc":row["published_at_utc"],
+        position=row["position"]
+        key=(gid,team,name.casefold(),position)
+        record={"player":name,"position":position,"status":status,"published_at_utc":row["published_at_utc"],
                 "observed_at_utc":row["captured_at_utc"],
                 "source_url":row["source_url"],
                 "source_type":"OFFICIAL_CONFERENCE_AVAILABILITY",
@@ -57,22 +60,38 @@ def merge(board,rows,now,manifest=None):
                  (pub,captured)>(parse_time(prev["published_at_utc"]),
                                   parse_time(prev["observed_at_utc"])) )):
             picked[key]=record
-    counts={"official_qb_designations":0,"actionable_qb_designations":0,
+    counts={"official_all_position_designations":0,
+            "actionable_non_qb_designations":0,
+            "games_with_actionable_non_qb_reports":0,
+            "official_qb_designations":0,"actionable_qb_designations":0,
             "games_with_qb_designations":0,"games_with_actionable_qb_designations":0,
             "starter_conflicts":0}
     for g in board["games"]:
         has_qb=False
+        non_qb=False
         for side in ("home","away"):
             team=g[side+"_team"]
             all_designations=sorted(
-                (v for (gid,t,_),v in picked.items()
-                 if gid==str(g["game_id"]) and t==team),
+                (v for (gid,t,_,position),v in picked.items()
+                 if gid==str(g["game_id"]) and t==team and position=="QB"),
                 key=lambda r:(r["player"],r["status"]))
             # Do not flood cards with all listed backup QBs marked AVAILABLE.
             # Available/probable is not confirmation of QB1 or even playing time.
             designations=[r for r in all_designations
                           if r["status"] not in ("AVAILABLE","PROBABLE")]
             g["qb_availability_"+side]=designations
+            all_players=sorted(
+                (v for (gid,t,_,position),v in picked.items()
+                 if gid==str(g["game_id"]) and t==team and position!="QB"),
+                key=lambda r:(r["position"],r["player"],r["status"]))
+            # Keep only actionable non-QB reports on the display, never
+            # infer that omission or AVAILABLE guarantees playing time.
+            actionable=[r for r in all_players if r["status"] not in
+                        ("AVAILABLE","PROBABLE")]
+            g["player_availability_"+side]=actionable
+            counts["official_all_position_designations"]+=len(all_designations)+len(all_players)
+            counts["actionable_non_qb_designations"]+=len(actionable)
+            non_qb |= bool(actionable)
             counts["official_qb_designations"]+=len(all_designations)
             counts["actionable_qb_designations"]+=len(designations)
             has_qb|=bool(all_designations)
@@ -85,6 +104,7 @@ def merge(board,rows,now,manifest=None):
                     g["qb_"+side]={**claimed,"status":"CONFLICT_REVIEW",
                                    "description":"New official availability conflicts with an earlier starter confirmation"}
                     counts["starter_conflicts"]+=1
+        counts["games_with_actionable_non_qb_reports"]+=int(non_qb)
         counts["games_with_qb_designations"]+=int(has_qb)
         counts["games_with_actionable_qb_designations"]+=int(g.pop("_qb_has_actionable",False))
     board["qb_availability_display"]={
@@ -93,8 +113,11 @@ def merge(board,rows,now,manifest=None):
         "observed_at_utc":now.isoformat(),
         "evidence_is_game_specific":True,
         "confirms_starting_qb":False,
+        "all_player_positions_covered_when_officially_published":True,
+        "not_listed_player_is_assumed_available":False,
+        "not_a_medical_diagnosis":True,
         "changes_frozen_model_picks":False,
-        "warning":"Official availability is distinct from confirmed starting QB1. Questionable does not mean OUT. These statuses may be newer than the original frozen model prediction.",
+        "warning":"Source-reviewed current official reports for ALL player positions, not only QB; not a starter or health clearance. An unlisted player remains UNKNOWN. Questionable does not mean OUT; reports may postdate frozen scores.",
         "fetch_status":{k:{"status":v.get("status","FETCHED"),
                           "accepted_reports":v.get("official_reports_accepted",0),
                           "card_decisions":sorted([
