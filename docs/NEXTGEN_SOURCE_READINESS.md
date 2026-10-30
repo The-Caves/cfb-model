@@ -23,3 +23,18 @@ References:
 https://py.sportsdataverse.org/docs/cfb/reference/loaders/usage
 https://py.sportsdataverse.org/docs/cfb/reference/loaders/rosters
 https://py.sportsdataverse.org/docs/cfb/reference/loaders/other
+
+## Source-observed athlete roles and transfer-ID reconciliation
+
+The new `role_usage_crosswalk.py` joins *currently observed* ESPN athlete
+IDs across the 2025/2026 season rosters and 2026 usage releases by canonical
+team IDs. RB usage is team touch share, receiver usage is team target share and
+defensive participation proxy is scrimmage tackle share. QB/OL are deliberately
+**not** awarded invented snap percentages. At least 2 observed activity games
+are required. Different previous-season team ID is recorded as a roster
+association, never proof of eligibility/actual transfer timing.
+
+The crosswalk is captured as a current timestamped research artifact. It does
+not yet become a verified injury impact or score adjustment; using this
+October snapshot to simulate earlier September game availability would leak
+later roster/usage information.
