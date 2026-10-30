@@ -1,6 +1,6 @@
 import copy
 import unittest
-from scripts.qb_postgame_starter_archive import empty,plan,validate,verify_index,DANGER,STATUS
+from scripts.qb_postgame_starter_archive import empty,plan,validate,verify_index,DANGER,STATUS,source_archive_run_id
 from scripts.qb_postgame_starter_labels import parse,collect,LABEL,UNKNOWN
 from test_qb_postgame_starter_labels import GAME,payload,AT
 
@@ -8,6 +8,28 @@ def snapshot():
     return collect([GAME],AT,lambda gid:payload(),workers=1)
 
 class PostgameQBArchiveTests(unittest.TestCase):
+    def test_two_postgame_publishers_have_distinct_numeric_run_keys(self):
+        espn=source_archive_run_id("40991919323","ESPN_SITE_GAME_SUMMARY")
+        school=source_archive_run_id("40991919323","REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML")
+        self.assertEqual(espn,"40991919323")
+        self.assertEqual(school,"409919193232")
+        self.assertNotEqual(school,espn)
+        with self.assertRaises(ValueError):
+            source_archive_run_id("40991919323","UNREVIEWED_PROVIDER")
+        with self.assertRaises(ValueError):
+            source_archive_run_id("not-numeric","ESPN_SITE_GAME_SUMMARY")
+        first,_,_=plan(empty(),snapshot(),espn)
+        # The second distinct source key remains eligible to write a new
+        # source observation in the same underlying GitHub workflow run.
+        second=snapshot()
+        away=next(x for x in second["rows"] if x["team"]==GAME["away"])
+        away.update({"label_status":LABEL,"starter_player":"B Starter",
+                     "explicit_qb_starter_flags":1,"requires_manual_review":False})
+        updated,record,counts=plan(first,second,school)
+        self.assertIsNotNone(record)
+        self.assertEqual(len(updated["runs"]),2)
+        self.assertEqual(counts["eligible_provider_flag_starter_labels"],2)
+
     def test_unknown_retained_and_one_accepted_starter(self):
         first,record,summary=plan(empty(),snapshot(),"99")
         self.assertTrue(verify_index(first))
