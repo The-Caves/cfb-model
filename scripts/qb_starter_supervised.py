@@ -317,7 +317,7 @@ def run(output,registry_path,archive_root=None,review_csv=None):
         target=Path(review_csv);target.parent.mkdir(parents=True,exist_ok=True)
         cols=("game_id","team","opponent","kickoff_utc","reason",
               "postgame_label_status","projected_qb_not_confirmation",
-              "frozen_qb_candidate_names","forecast_observed_utc","exact_school_gamebook_url")
+              "frozen_qb_candidate_names","forecast_observed_utc","exact_school_gamebook_url","review_required")
         with target.open("x",encoding="utf-8",newline="") as f:
             writer=csv.DictWriter(f,fieldnames=cols)
             writer.writeheader()
