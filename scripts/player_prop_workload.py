@@ -58,7 +58,7 @@ def evidence(rows,after=None):
                 team_totals[column]=sum(values)
         completions=[r["values"].get("passing_completions") for r in players]
         known=[x for x in completions if type(x) is int]
-        if known and team_totals["receptions"]!=sum(known):
+        if not known or team_totals["receptions"]!=sum(known):
             # Missing/extra receiving box rows can inflate a player's role.
             team_totals["receptions"]=None
             rejected["RECEPTIONS_DO_NOT_RECONCILE_RECORDED_COMPLETIONS"]+=1
