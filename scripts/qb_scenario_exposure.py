@@ -9,6 +9,7 @@ History was received before the decision and game occurred before kickoff.
 import datetime as dt
 import math
 from collections import defaultdict
+from zoneinfo import ZoneInfo
 from scripts.game_context import parse_time
 from scripts.qb_passer_history import player_key
 
@@ -30,7 +31,7 @@ def mixture(rows,team,slot,game_date,observed_at):
     """Return player weights and residual UNKNOWN; does not assert QB starter."""
     cutoff=dt.date.fromisoformat(game_date)
     decision=parse_time(observed_at)
-    if decision.date()>cutoff:
+    if decision.astimezone(ZoneInfo("America/New_York")).date()>cutoff:
         raise ValueError("QB mixture calculated after target game date")
     if slot.get("betting_status")!="PASS_UNVALIDATED":
         raise ValueError("Untrusted QB expected starter slate")
@@ -46,6 +47,15 @@ def mixture(rows,team,slot,game_date,observed_at):
     # These candidates are projected eligible, not confirmed healthy.
     for k in list(available):
         if statuses.get(k) in INACTIVE:del available[k]
+    if slot.get("is_confirmed_starter"):
+        key=player_key(slot.get("starter") or "")
+        if key not in available or statuses.get(key) in INACTIVE:
+            raise ValueError("Official starter conflicts with available candidates")
+        return {"status":"REVIEWED_GAME_SPECIFIC_STARTER_SCENARIO",
+            "source":STATUS,"weights":{name:(1. if k==key else 0.) for k,name in available.items()},
+            "unknown_weight":0.,"accepted_past_games":0,"rejected_past_games":0,
+            "not_starter_probabilities":True,"calibrated":False,
+            "assumptions":"Verified exact-game starter only, not calibrated injury or snap-share forecast."}
     grouped=defaultdict(list)
     seen=set()
     for row in rows:
