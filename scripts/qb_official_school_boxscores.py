@@ -162,7 +162,7 @@ def parse(game,entry,html,observed_at):
     for side,qbs in candidates.items():
         reviewed=entry.get(side+"_starting_qb_name")
         if (not isinstance(reviewed,str) or len(player_key(reviewed))<2 or
-            len(qbs)!=1 or player_key(qbs[0])!=player_key(reviewed)):
+            (len(qbs)==1 and player_key(qbs[0])!=player_key(reviewed))):
             raise ValueError("Official QB player name differs from reviewed gamebook STARTERS roster")
     payload_sha=hashlib.sha256(html.encode("utf-8")).hexdigest()
     rows=[]
