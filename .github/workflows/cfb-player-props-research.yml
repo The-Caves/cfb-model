@@ -41,6 +41,11 @@ jobs:
           python -m scripts.player_prop_history \
             --games .source/games_2026.csv \
             --output data/player_props/espn_player_game_history.json
+      - name: Audit real player-game team passing-receiving stat budgets
+        run: |
+          python -m scripts.player_prop_team_budget_audit \
+            --input data/player_props/espn_player_game_history.json \
+            --output data/player_props/team_stat_reconciliation.json
       - name: Compare rolling and recency player-stat forecasts on same observed games
         run: |
           python -m scripts.player_prop_walkforward \
