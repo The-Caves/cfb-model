@@ -76,6 +76,26 @@ def evaluate(candidates,grades,asof):
                     items["qb_empirical_exposure"]={"prediction":float(w),
                         "sample_coverage_home":exposure["home"],
                         "sample_coverage_away":exposure["away"]}
+                if c.get("opponent_peer_status")=="QB_OPPONENT_PEER_EPA_SHADOW":
+                    value=c.get("opponent_peer_home_margin")
+                    sides=c.get("opponent_peer_qualified_sides")
+                    if (type(value) not in (int,float) or not math.isfinite(value)
+                        or type(sides) is not int or not 1<=sides<=2):
+                        raise ValueError("Invalid archived opponent peer QB candidate")
+                    items["qb_defense_peer"]={"prediction":float(value),
+                        "covered_sides":sides}
+                if c.get("opponent_peer_exposure_status")=="QB_OPPONENT_PEER_EXPOSURE_SHADOW":
+                    value=c.get("opponent_peer_exposure_home_margin")
+                    covered=c.get("opponent_peer_exposure_sample_by_side")
+                    if (type(value) not in (int,float) or not math.isfinite(value)
+                        or not isinstance(covered,dict) or
+                        any(type(covered.get(side)) not in (int,float)
+                            or not 0<=covered[side]<=1 for side in ("home","away"))
+                        or not any(covered[side]>0 for side in ("home","away"))):
+                        raise ValueError("Invalid archived opponent QB exposure")
+                    items["qb_defense_peer_exposure"]={"prediction":float(value),
+                        "sample_coverage_home":covered["home"],
+                        "sample_coverage_away":covered["away"]}
             else:
                 for name,field in (("venue_only","venue_only_margin"),
                                    ("venue_plus_travel","venue_plus_travel_margin")):
@@ -98,7 +118,8 @@ def evaluate(candidates,grades,asof):
             "baseline_v03_abs_error":round(abs(baseline-actual),5),
             "model_results":rows})
     metrics={}
-    for name in ("qb_conditional","qb_empirical_exposure","venue_only","venue_plus_travel"):
+    for name in ("qb_conditional","qb_empirical_exposure","qb_defense_peer",
+                 "qb_defense_peer_exposure","venue_only","venue_plus_travel"):
         rows=[r for r in paired if name in r["model_results"]]
         if not rows:
             metrics[name]={"status":"INSUFFICIENT_PROSPECTIVE_GRADED_GAMES","games":0}

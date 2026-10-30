@@ -64,6 +64,48 @@ class ProspectiveCandidateGradeTests(unittest.TestCase):
             evaluate({"qb":[qb],"venue":[candidate("venue")]},
                      [grade()],"2026-11-02T00:00:00Z")
 
+    def test_opponent_adjusted_qb_shadows_grade_on_same_original_v03_games(self):
+        q=candidate("qb")
+        c=q["games"][0]["candidate"]
+        c.update({"opponent_peer_status":"QB_OPPONENT_PEER_EPA_SHADOW",
+                  "opponent_peer_home_margin":4.5,
+                  "opponent_peer_qualified_sides":1,
+                  "opponent_peer_exposure_status":"QB_OPPONENT_PEER_EXPOSURE_SHADOW",
+                  "opponent_peer_exposure_home_margin":4.25,
+                  "opponent_peer_exposure_sample_by_side":{"home":.5,"away":0.}})
+        x=evaluate({"qb":[q],"venue":[candidate("venue")]},
+                   [grade()],"2026-11-02T00:00:00Z")
+        self.assertEqual(x["metrics"]["qb_defense_peer"]["games"],1)
+        self.assertEqual(x["metrics"]["qb_defense_peer"]["margin_mae"],.5)
+        self.assertEqual(x["metrics"]["qb_defense_peer"]["same_game_baseline_v03_mae"],1.)
+        self.assertEqual(x["metrics"]["qb_defense_peer_exposure"]["margin_mae"],.25)
+        self.assertEqual(x["per_game"][0]["model_results"]["qb_defense_peer"]["covered_sides"],1)
+
+    def test_opponent_adjusted_missing_peer_sample_never_counts_as_graded(self):
+        q=candidate("qb")
+        c=q["games"][0]["candidate"]
+        c.update({"opponent_peer_status":"PASS_NO_OPPONENT_ADJUSTED_QB_PEER_SAMPLE",
+                  "opponent_peer_home_margin":5.,
+                  "opponent_peer_exposure_status":"PASS_NO_OPPONENT_ADJUSTED_QB_PEER_EXPOSURE",
+                  "opponent_peer_exposure_home_margin":5.})
+        x=evaluate({"qb":[q],"venue":[]},[grade()],"2026-11-02T00:00:00Z")
+        self.assertEqual(x["metrics"]["qb_defense_peer"]["games"],0)
+        self.assertEqual(x["metrics"]["qb_defense_peer_exposure"]["games"],0)
+
+    def test_untrusted_peer_coverage_or_nonnumeric_points_rejected(self):
+        q=candidate("qb")
+        c=q["games"][0]["candidate"]
+        c.update({"opponent_peer_status":"QB_OPPONENT_PEER_EPA_SHADOW",
+                  "opponent_peer_home_margin":4.,"opponent_peer_qualified_sides":3})
+        with self.assertRaisesRegex(ValueError,"Invalid archived opponent peer"):
+            evaluate({"qb":[q],"venue":[]},[grade()],"2026-11-02T00:00:00Z")
+        c["opponent_peer_qualified_sides"]=1
+        c["opponent_peer_exposure_status"]="QB_OPPONENT_PEER_EXPOSURE_SHADOW"
+        c["opponent_peer_exposure_home_margin"]=float("nan")
+        c["opponent_peer_exposure_sample_by_side"]={"home":.4,"away":0.}
+        with self.assertRaisesRegex(ValueError,"Invalid archived opponent QB exposure"):
+            evaluate({"qb":[q],"venue":[]},[grade()],"2026-11-02T00:00:00Z")
+
     def test_mismatched_reference_fails_closed(self):
         g=grade();g["forecast_bundle_sha256"]="z"*64
         with self.assertRaisesRegex(ValueError,"Wrong original"):
