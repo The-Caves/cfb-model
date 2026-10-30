@@ -589,6 +589,20 @@ jobs:
             --matches "data/pregame_evidence/free-market-final-matches-${{ github.run_id }}.json" \
             --grades "data/pregame_evidence/free-market-final-grades-${{ github.run_id }}.json" \
             --output "data/pregame_evidence/free-market-performance-${{ github.run_id }}.json"
+      - name: Aggregate paired prospective challenger competition and separate market benchmark
+        run: |
+          python -m scripts.unified_model_competition \
+            --shadow "data/pregame_evidence/shadow-grading-${{ github.run_id }}.json" \
+            --candidates "data/pregame_evidence/qb-venue-grading-${{ github.run_id }}.json" \
+            --market "data/pregame_evidence/free-market-performance-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/unified-model-competition-${{ github.run_id }}.json"
+      - name: Upload current same-game model competition scorecard
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-unified-model-competition-${{ github.run_id }}
+          path: data/pregame_evidence/unified-model-competition-*.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Audit full frozen-market-to-final lifecycle and cumulative performance
         run: |
           python -m scripts.free_market_acceptance \
