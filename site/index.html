@@ -439,6 +439,33 @@ function updateDayNav(){
  const all=node("button","dayButton"+(selectedDay==="all"?" selected":""),undefined);
  all.type="button";all.append(node("strong","","All"),node("span","","Dates"));all.setAttribute("aria-pressed",String(selectedDay==="all"));all.addEventListener("click",()=>{selectedDay="all";updateDayNav();render();});nav.append(all);
 }
+function resultRecord(r){return r&&Number.isInteger(r.wins)&&Number.isInteger(r.losses)?r.wins+"–"+r.losses+(r.pushes?"–"+r.pushes+" P":""):"—";}
+function resultMeta(r){return !r||!Number.isInteger(r.decisions)?"Not graded":r.decisions?(r.decisions+" decisions · "+(Number.isFinite(r.win_rate)?num(r.win_rate*100,1)+"% wins":"—")):"No eligible results";}
+function resultTable(headers,items,columns){
+ const wrap=node("div","performanceTableShell"),table=node("table","performanceTable"),head=node("thead"),tr=node("tr");
+ for(const h of headers)tr.append(node("th","",h));head.append(tr);table.append(head);
+ const body=node("tbody");for(const x of items){const row=node("tr");for(const c of columns(x))row.append(node("td","",c==null?"—":String(c)));body.append(row);}table.append(body);wrap.append(table);return wrap;
+}
+function resultSymbol(s){return s==="WIN"?"W":s==="LOSS"?"L":s==="PUSH"?"P":"—";}
+function renderPerformance(){
+ const p=data?.prospective_records;
+ if(!p||p.status!=="ARCHIVED_PROSPECTIVE_MODEL_PERFORMANCE_RESEARCH_ONLY"){
+  byId("performance-scoring").textContent="Archived grades unavailable; no outcomes inferred.";
+  byId("performance-weekly").textContent="No archived weekly results.";
+  byId("performance-games").textContent="No graded games.";return;
+ }
+ for(const k of ["su","ats","ou"]){byId(k).textContent=resultRecord(p[k]);byId(k+"-meta").textContent=resultMeta(p[k]);}
+ const score=p.scoring||{},area=byId("performance-scoring");area.replaceChildren();
+ area.append(node("div","","Frozen graded games: "+(score.frozen_games??"—")+" · Margin MAE: "+num(score.margin_mae,2)+" pts · Total MAE: "+num(score.total_mae,2)+" pts"));
+ area.append(node("div","performanceMeta","Independent final games: "+(score.verified_final_games??"—")+" · Page snapshots: "+(score.website_runs??"—")+" · Unsettled displayed games: "+(score.unsettled_site_market_games??"—")));
+ area.append(node("div","performanceMeta","Repeated snapshots excluded · ATS "+(score.duplicate_ats_snapshots_excluded??"—")+" · Totals "+(score.duplicate_ou_snapshots_excluded??"—")+" · Updated "+fmtDate.format(dateOf(p.asof_utc))));
+ const weekly=byId("performance-weekly");weekly.replaceChildren();
+ if(p.weekly?.length)weekly.append(resultTable(["Week","SU","ATS","Totals"],p.weekly,x=>[x.week,resultRecord(x.su),resultRecord(x.ats),resultRecord(x.ou)]));
+ else weekly.append(node("div","performanceMeta","No archived weekly results."));
+ const games=byId("performance-games");games.replaceChildren();
+ if(p.recent?.length)games.append(resultTable(["Away @ Home","Final A–H","SU","ATS","Totals"],p.recent,x=>[x.away+" @ "+x.home,x.score,resultSymbol(x.su),resultSymbol(x.ats),resultSymbol(x.ou)]));
+ else games.append(node("div","performanceMeta","No eligible completed games."));
+}
 function render(){
  if(!data)return;
  const now=new Date(),future=data.games.filter(g=>dateOf(g.kickoff_utc)>now);
@@ -505,7 +532,7 @@ for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id===
  const market=d.market_display||{};
  const extra=" Market source: "+(market.source||"unavailable")+". Observed spread: "+(market.usable_spreads||0)+" games; totals: "+(market.usable_totals||0)+" games. No historical publication-time authentication.";
  byId("limitations").textContent=(d.data_limitations||[]).join(" ")+extra;
- updateDayNav();render();
+ renderPerformance();updateDayNav();render();
  }catch(error){
  byId("captured").textContent="Unable to load research snapshot";byId("refreshed").textContent="See GitHub Actions";
  empty("No verified data published","The research build may have failed or no model archive was found. Games, lines and picks will not be fabricated.");
