@@ -58,7 +58,14 @@ def validate_inputs(fitted, decision_utc, market=None):
             parse_time(fitted["kickoff_utc"])):
         raise ValueError("Future-trained or postkickoff simulation inputs")
     dist = fitted["distributions"]
-    _sample(random.Random(0), dist["possessions"], "count", set(range(1, 25)))
+    for p in dist["possessions"]:
+        if "count" in p:
+            if type(p["count"]) is not int or not 1<=p["count"]<=24:
+                raise ValueError("Invalid paired possession count")
+        elif (type(p.get("home_count")) is not int or type(p.get("away_count")) is not int
+              or not 1<=p["home_count"]<=24 or not 1<=p["away_count"]<=24):
+            raise ValueError("Invalid team-specific possession count")
+    _sample(random.Random(0), dist["possessions"], "weight")
     zones = {r["zone"] for r in dist["field_position"]}
     if not zones or any(type(z) is not str or not z for z in zones):
         raise ValueError("Invalid starting field-position zones")
@@ -94,12 +101,12 @@ def simulate(fitted, decision_utc, market=None, trials=5000, seed=2026):
     home_wins = away_wins = ties = 0
     covers = unders = overs = pushes_spread = pushes_total = 0
     for _ in range(trials):
-        count = _sample(rng, dist["possessions"], "count", set(range(1, 25)))["count"]
+        possession = _sample(rng, dist["possessions"], "weight")
+        counts = {s: possession.get(s+"_count", possession.get("count")) for s in ("home", "away")}
         scores = {"home": 0, "away": 0}
         explosive_drives = 0
-        for _drive in range(count):
-            # Each matched round includes one offensive possession per team.
-            for side in ("home", "away"):
+        for side in ("home", "away"):
+            for _drive in range(counts[side]):
                 zone = _sample(rng, dist["field_position"], "zone")["zone"]
                 outcome = _sample(rng, dist["outcomes"][side][zone], "points")
                 scores[side] += outcome["points"]
@@ -143,7 +150,7 @@ def simulate(fitted, decision_utc, market=None, trials=5000, seed=2026):
         "total_push_probability": round(pushes_total/trials,6) if market else None,
         "market_quote": market,
         "assumptions": [
-            "independent conditional drive outcomes and shared sampled possession count",
+            "independent conditional drive outcomes and sampled two-team possession counts",
             "field-position and explosive distributions must be fitted from earlier sourced drives",
             "regulation only; no overtime, special-teams or defensive-score mechanism unless represented in prior drive events",
             "no evidence that the supplied distributions are calibrated without held-out grades",

@@ -96,3 +96,15 @@ accurate nationwide injury status, simulator calibration or a better model.
 
 - `evolving_team_intelligence` accepts independently observed, two-sided game metrics and builds strictly prior-date adjusted team histories; each games' historical opponent baseline must exist. A >=6-game signal is not proof of a structural change and large turnovers are surfaced as a confounder. CLI is available for an independently captured game-history feed; source adapter / first-publication audit is still needed.
 - `advanced_matchup_interactions` computes QB-less pressure/pass reliance, offense-versus-defensive run style and explosive passing interactions on the existing time-aware scouting board. Missing inputs remain null; there are no learned weights or active score changes. Data Intake exports this candidate board for independent research and future ablations.
+
+## Empirical-drive training gateway
+
+`observed_drive_fit.py` converts reviewed **complete** two-sided drive events into
+a reproducible simulator input, requiring identity, source time and observed
+offensive points. It produces a truthful `ready=false` without sufficient
+prior verified drives or team-specific field-zone coverage. It preserves observed
+home/away possession asymmetry. No existing ESPN-derived advanced drive file
+currently supplies validated per-drive scoring; this module must not be passed
+invented events, points inferred from final scores, or an unaudited drive ID map.
+The source adapter, calibrated score distribution, end-game/OT state and field-
+position transitions are still separate milestones.
