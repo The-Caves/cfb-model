@@ -161,10 +161,16 @@ def collect(games,observed_at,fetcher=fetch,workers=8):
         "model_promoted":False,"safe_for_betting":False,
         "betting_status":"PASS_UNVALIDATED"}
 
-def run(games_file,output):
+def run(games_file,output,lookback_days=0):
     with open(games_file,newline="",encoding="utf-8-sig") as handle:
         games=list(csv.DictReader(handle))
-    result=collect(games,dt.datetime.now(dt.timezone.utc).isoformat())
+    now=dt.datetime.now(dt.timezone.utc)
+    if type(lookback_days) is not int or not 0<=lookback_days<=365:
+        raise ValueError("Invalid backfill horizon")
+    if lookback_days:
+        earliest=(now-dt.timedelta(days=lookback_days)).date()
+        games=[g for g in games if dt.date.fromisoformat(g["date"])>=earliest]
+    result=collect(games,now.isoformat())
     target=Path(output);target.parent.mkdir(parents=True,exist_ok=True)
     with target.open("x",encoding="utf-8") as f:
         json.dump(result,f,indent=2,allow_nan=False);f.write("\n")
@@ -174,4 +180,5 @@ def run(games_file,output):
 if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--games",required=True);p.add_argument("--output",required=True)
-    args=p.parse_args();run(args.games,args.output)
+    p.add_argument("--lookback-days",type=int,default=0)
+    args=p.parse_args();run(args.games,args.output,args.lookback_days)
