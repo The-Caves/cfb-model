@@ -90,9 +90,9 @@ class PlayerImpactTests(unittest.TestCase):
         self.assertEqual(training["status"],"FITTED_PRIOR_EVIDENCE_RESEARCH_ONLY")
         self.assertLess(training["coefficients"]["OL_FULL_OUT"],0)
         self.assertFalse(training["prospective_accuracy_established"])
-        out=estimate(game(),training,"2026-11-15T18:00:00Z") if False else estimate(game(),training,CAP)
-        # Model fit as-of November cannot be applied to an October 30 decision.
-        self.assertIsNone(out["home_margin_adjustment"]) if out["status"]!="PLAYER_IMPACT_RESEARCH_CANDIDATE" else None
+        # A model trained in November cannot be applied to an October 30 decision.
+        with self.assertRaises(ValueError):
+            estimate(game(),training,CAP)
 
 if __name__=="__main__":
     unittest.main()
