@@ -283,7 +283,8 @@ def _commit_material(material, run_id):
                         ROOT+"/candidate_shadow_qb/index.json",
                         ROOT+"/candidate_shadow_venue/index.json",
                         ROOT+"/candidate_shadow_grades/index.json",
-                        ROOT+"/matchup_profiles/index.json"):
+                        ROOT+"/matchup_profiles/index.json",
+                        ROOT+"/qb_postgame_starters/index.json"):
             prior = store.get_blob_file(path)
             if prior is not None and prior != content:
                 raise ValueError("Immutable archive collision")
