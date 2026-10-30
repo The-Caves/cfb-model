@@ -21,12 +21,12 @@ from scripts.nextgen_source_readiness import SOURCE, fetch_asset
 STATUS="PLAYER_GAME_BOX_PROP_HISTORY_RESEARCH_ONLY"
 ASSET="espn_cfb_player_box/player_box_2026.parquet"
 STAT_FIELDS={
-    "passing":{"passing_yards":"passing_yards","passing_touchdowns":"passing_touchdowns",
+    "passing":{"passing_yards":"passingYards","passing_touchdowns":"passingTouchdowns",
                "interceptions":"interceptions"},
-    "rushing":{"rushing_attempts":"rushing_attempts","rushing_yards":"rushing_yards",
-               "rushing_touchdowns":"rushing_touchdowns"},
-    "receiving":{"receptions":"receptions","receiving_yards":"receiving_yards",
-                 "receiving_touchdowns":"receiving_touchdowns"}
+    "rushing":{"rushing_attempts":"rushingAttempts","rushing_yards":"rushingYards",
+               "rushing_touchdowns":"rushingTouchdowns"},
+    "receiving":{"receptions":"receptions","receiving_yards":"receivingYards",
+                 "receiving_touchdowns":"receivingTouchdowns"}
 }
 STATS=tuple(sorted({f for cols in STAT_FIELDS.values() for f in cols}
                    | {"passing_attempts","passing_completions"}))
@@ -34,7 +34,7 @@ COUNT_STATS={"passing_attempts","passing_completions","passing_touchdowns","inte
              "rushing_attempts","rushing_touchdowns","receptions","receiving_touchdowns"}
 YARD_STATS=set(STATS)-COUNT_STATS
 NEEDED={"game_id","season","team_id","category","athlete_id","athlete_name",
-         "completions_passing_attempts",*STATS}-{"passing_attempts","passing_completions"}
+         "completions/passingAttempts"}|{column for mapping in STAT_FIELDS.values() for column in mapping.values()}
 
 def _id(value):
     if isinstance(value,bool):return None
@@ -117,7 +117,7 @@ def from_box_rows(box_rows, schedule, observed_at_utc):
             for name,column in STAT_FIELDS[category].items():
                 obj["values"][name]=_num(row.get(column),name)
             if category=="passing":
-                c,a=_pairs(row.get("completions_passing_attempts"))
+                c,a=_pairs(row.get("completions/passingAttempts"))
                 obj["values"]["passing_attempts"]=a
                 obj["values"]["passing_completions"]=c
         except (ValueError,TypeError,OverflowError) as ex:
