@@ -160,16 +160,22 @@ def plan(old,snapshot,run_id):
        "other_slots_unresolved":len(next_index["slots"])-n-conflicts,
        "model_promoted":False,"betting_status":"PASS_UNVALIDATED"}
 
+def source_archive_run_id(actions_run_id,source):
+    """One unique index key per source within a single serial workflow."""
+    if not str(actions_run_id).isdigit():
+        raise ValueError("Missing numeric Actions run")
+    if source=="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML":
+        return str(actions_run_id)+"2"
+    if source=="ESPN_SITE_GAME_SUMMARY":
+        return str(actions_run_id)
+    raise ValueError("Unreviewed actual-starter evidence source")
+
 def run(input_file,output):
     snapshot=json.loads(Path(input_file).read_text(encoding="utf-8"))
-    run_id=os.environ.get("GITHUB_RUN_ID","")
-    # A single workflow may archive ESPN UNKNOWN observations and independently
-    # sourced official gamebook positive labels in the SAME GitHub Actions run.
-    # Keep two append-only source records under distinct numeric archive keys.
-    # Preserve the original unsuffixed ESPN run IDs for existing ledgers.
-    source=snapshot.get("source")
-    if source=="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML":
-        run_id=run_id+"2"
+    # Two source-specific archive keys per Actions run avoid index collisions.
+    # The legacy ESPN key remains unchanged for existing archived observations.
+    run_id=source_archive_run_id(os.environ.get("GITHUB_RUN_ID",""),
+                                 snapshot.get("source"))
     now=dt.datetime.now(dt.timezone.utc)
     observed=validate(snapshot)
     if (not run_id.isdigit() or store.branch_head() is None
