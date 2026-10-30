@@ -64,6 +64,18 @@ def evaluate(candidates,grades,asof):
                 if value is not None:
                     items["qb_conditional"]={"prediction":float(value),
                         "covered_sides":c["adjusted_side_count"]}
+                # Independently prospectively grade the exposure mixture
+                # against exactly the same frozen baseline and actual final.
+                if c.get("usage_weighted_status")=="QB_EMPIRICAL_EXPOSURE_SHADOW":
+                    w=c.get("usage_weighted_home_margin")
+                    exposure=c.get("evaluated_player_sample_exposure_by_side",{})
+                    if (type(w) not in (int,float) or
+                        any(type(exposure.get(side)) not in (int,float)
+                            or not 0<=exposure[side]<=1 for side in ("home","away"))):
+                        raise ValueError("Invalid prospective QB exposure candidate")
+                    items["qb_empirical_exposure"]={"prediction":float(w),
+                        "sample_coverage_home":exposure["home"],
+                        "sample_coverage_away":exposure["away"]}
             else:
                 for name,field in (("venue_only","venue_only_margin"),
                                    ("venue_plus_travel","venue_plus_travel_margin")):
@@ -86,7 +98,7 @@ def evaluate(candidates,grades,asof):
             "baseline_v03_abs_error":round(abs(baseline-actual),5),
             "model_results":rows})
     metrics={}
-    for name in ("qb_conditional","venue_only","venue_plus_travel"):
+    for name in ("qb_conditional","qb_empirical_exposure","venue_only","venue_plus_travel"):
         rows=[r for r in paired if name in r["model_results"]]
         if not rows:
             metrics[name]={"status":"INSUFFICIENT_PROSPECTIVE_GRADED_GAMES","games":0}

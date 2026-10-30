@@ -17,6 +17,7 @@ from scripts.personnel_forecast import verify as verify_baseline,checksum,_check
 from scripts.personnel_features import BASE_FIELDS,verify_joined,sha256
 from scripts.qb_passer_history import prior_qb_form
 from scripts.qb_expected_starters import STATUS as EXPECTED_STATUS
+from scripts.qb_scenario_exposure import mixture as qb_exposure,STATUS as EXPOSURE_STATUS
 
 STATUS="QB_CONDITIONAL_PLAYER_EPA_FROZEN_SHADOW_RESEARCH_ONLY"
 MODEL="QB_EXPECTED_PLAYER_PASS_EPA_CONDITIONAL_V1"
@@ -75,6 +76,9 @@ def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
     day=_asof_day(forecast)
     candidates={}
     chosen={}
+    empirical={}
+    exposure_impact={}
+    sample_exposure={}
     for side in ("home","away"):
         slot=source_by_side[side]
         team=forecast[side]
@@ -90,6 +94,19 @@ def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
                                              if r["depth_rank"] else "UNKNOWN")}
         candidates[side]=evaluated
         chosen[side]=(evaluated.get(slot["starter"]) if slot["starter"] else None)
+        exposure=qb_exposure(passer_rows,team,slot,day,decision.isoformat())
+        empirical[side]=exposure
+        weighted_points=0.
+        valid_sample_mass=0.
+        for name,weight in exposure["weights"].items():
+            if name not in evaluated:raise ValueError("Scenario exposure not matched to evaluated QB")
+            if not 0<=weight<=1:raise ValueError("Invalid empirical passer exposure")
+            item=evaluated[name]
+            weighted_points+=weight*item["margin_impact"]
+            if item["status"]=="PLAYER_CONDITIONED_RESEARCH_ONLY":
+                valid_sample_mass+=weight
+        exposure_impact[side]=weighted_points
+        sample_exposure[side]=round(valid_sample_mass,8)
     home=chosen["home"];away=chosen["away"]
     # Every QB1/2/3 chart member gets a separate *conditional score margin*,
     # not merely a depth ranking or a vague positive/negative annotation.
@@ -122,9 +139,22 @@ def scenario(forecast,joined_game,source_by_side,passer_rows,params,decision):
     adjusted_sides=sum(v=="PLAYER_CONDITIONED_RESEARCH_ONLY" for v in coverage)
     status=("QB_PLAYER_CONDITIONAL_SHADOW" if adjusted_sides else
             "PASS_NO_VERIFIED_PERFORMANCE_SAMPLE")
-    # An unconfirmed starter is only a probability / uncertainty scenario;
-    # both sides' original baseline remains independently immutable.
+    # Uncalibrated *participation-exposure* mixtures are distinct from
+    # projected-starter point estimates. Unknown/missing QBs retain the
+    # original zero-adjustment V03 reference, not a fictitious backup penalty.
+    usage_delta=exposure_impact["home"]-exposure_impact["away"]
+    usage_margin=max(-limit,min(limit,float(baseline_margin)+usage_delta))
+    usage_status=("QB_EMPIRICAL_EXPOSURE_SHADOW" if
+                  any(v>0 for v in sample_exposure.values()) else
+                  "PASS_NO_RELIABLE_QB_EXPOSURE_AND_PASS_EPA")
     return {"status":status,"baseline_margin":baseline_margin,"adjusted_home_margin":round(adjusted,5),
+        "usage_weighted_home_margin":round(usage_margin,5),
+        "usage_weighted_margin_delta":round(usage_margin-float(baseline_margin),5),
+        "usage_weighted_status":usage_status,
+        "empirical_pass_exposure_by_side":empirical,
+        "evaluated_player_sample_exposure_by_side":sample_exposure,
+        "exposure_method":EXPOSURE_STATUS,
+        "exposure_not_calibrated_next_game_starter_probabilities":True,
         "margin_delta":round(adjusted-float(baseline_margin),5),
         "unchanged_total":total,
         "expected_starters_by_side":{
@@ -193,7 +223,13 @@ def build(frozen,joined,expected,passers,training_rows,observed_at_utc):
             "games_with_qb_conditional_adjustment":sum(
                 x["candidate"]["status"]=="QB_PLAYER_CONDITIONAL_SHADOW" for x in outputs),
             "sides_with_expected_player_history":sum(
-                x["candidate"].get("adjusted_side_count",0) for x in outputs)},
+                x["candidate"].get("adjusted_side_count",0) for x in outputs),
+            "games_with_empirical_usage_margin":sum(
+                x["candidate"]["usage_weighted_status"]=="QB_EMPIRICAL_EXPOSURE_SHADOW"
+                for x in outputs),
+            "sides_with_empirical_player_samples":sum(
+                sum(v>0 for v in x["candidate"]["evaluated_player_sample_exposure_by_side"].values())
+                for x in outputs)},
          "games":outputs,"model_promoted":False,
          "historical_pbp_publication_authenticated":False,
          "safe_for_betting":False,"betting_status":"PASS_UNVALIDATED"}

@@ -21,6 +21,20 @@ This improves inference, not source attestations or historical betting validatio
 - **Unresolved:** missing/contradictory/time-invalid data; preserve plausible player-conditioned scenarios and the unmodified V03 fallback.
 - **Postgame evidence:** independently verify the actual first QB/snap share and offensive output, but never leak a postgame starting identity back to a frozen pregame forecast.
 
+## October 29: empirical QB participation-exposure shadow, milestone 2A
+
+The first automated QB mixture now runs inside the existing **frozen** `qb_conditional_forecast.py` research pipeline, without changing V03 live site scores. Its inputs are captured and sourced predecision:
+
+- Prefer reviewed exact-game starter only when that independently accepted evidence exists. No third-party rank or recent-game passer can create an official confirmation.
+- Otherwise, compute 2:1 recency-weighted *historical pass-play exposure shares* over the latest two distinct fully observed prior games, with source coverage at least 70% of all team pass plays. This is a descriptive share, **not** `P(QB starts)`. Unknown/untagged/other players and newly unavailable QBs retain an explicit UNKNOWN exposure mass.
+- Condition each candidate's points on existing sample-shrunk historical player EPA and the frozen trained V03 passing coefficient, not depth-chart ordinal rank. Missing player samples and UNKNOWN exposure contribute **zero adjustment to the original V03 baseline**, not a fabricated impact.
+- Freeze `usage_weighted_home_margin` and the original single-expected-starter `adjusted_home_margin` **side by side** in the same immutable research archive with the underlying exposure weights and qualifying sample evidence. The independent prospective candidate grader evaluates `qb_empirical_exposure` against the *same selected frozen games* as the existing QB shadow and V03.
+- A shadow is not better because it is new. It must beat the correctly time-matched V03 and other QB challengers prospectively; no automatic promotion. Historical passer usage can be a weak proxy for who will start after an injury/transfer.
+
+### What milestone 2A does not claim
+
+The new exposure share is **not trained or calibrated to true starting-quarterback outcomes**. Historical first-snap QB labels are not reliably authenticated or available for all games yet. The next phase is to collect legitimate postgame first-snap/actual-starter labels and full pregame official coaching and school evidence, freeze time-stamped model inputs, and walk-forward train + calibrate game-specific `P(QB starts)`. Only then should the UI or model display calibrated starting probabilities. For uncertainty-sensitive ATS/OU recommendations, continue research-only/PASS until those gates succeed.
+
 ## Next development milestones, in testable order
 
 1. **National QB source coverage:** expand verified official football preview/article and direct game-note PDF sources beyond the few currently readable feeds. Capture dated full text and exact fixture, not just an RSS homepage or metadata. Add a separate official availability update pipeline with conflict/review signals. Measure confirmation coverage by game week and report source failures.
