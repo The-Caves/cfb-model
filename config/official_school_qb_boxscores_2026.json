@@ -18,7 +18,9 @@
       "publisher_hostname": "texaslonghorns.com",
       "reviewed_official_publisher": true,
       "source_section": "Starters > [Team] Offense > QB",
-      "reference": "Official University of Texas Athletics 2026 football game-specific boxscore"
+      "reference": "Official University of Texas Athletics 2026 football game-specific boxscore",
+      "home_starting_qb_name": "Arch Manning",
+      "away_starting_qb_name": "Trinidad Chambliss"
     },
     {
       "season": 2026,
@@ -36,7 +38,9 @@
       "reviewed_official_publisher": true,
       "scoreboard_first_side": "away",
       "source_section": "Starters > Team Offense > QB",
-      "reference": "Official Alabama Athletics 2026 football game-specific boxscore"
+      "reference": "Official Alabama Athletics 2026 football game-specific boxscore",
+      "home_starting_qb_name": "Keelon Russell",
+      "away_starting_qb_name": "Marcel Reed"
     },
     {
       "season": 2026,
@@ -54,7 +58,9 @@
       "reviewed_official_publisher": true,
       "scoreboard_first_side": "home",
       "source_section": "Starters > Team Offense > QB",
-      "reference": "Official Texas Tech Athletics 2026 football game-specific boxscore"
+      "reference": "Official Texas Tech Athletics 2026 football game-specific boxscore",
+      "home_starting_qb_name": "JC French IV",
+      "away_starting_qb_name": "Will Hammond"
     }
   ]
 }
