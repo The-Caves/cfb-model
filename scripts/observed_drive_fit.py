@@ -29,6 +29,7 @@ def validate_record(record,decision):
         raise ValueError("Non-historical or backdated drive source")
     if (record.get("complete_drives_reviewed") is not True
         or record.get("source_status")!=SOURCE_STATUS
+        or record.get("offensive_score_ownership_verified") is not True
         or not str(record.get("source_url","")).startswith("https://")):
         raise ValueError("Incomplete or unsourced drive history")
     seen=set();counts={home:0,away:0}
@@ -67,11 +68,22 @@ def fit(bundle,game,decision_utc,minimum_games=3,minimum_drives=25):
         counts=validate_record(row,when)
         records.append((row,counts))
     sides={}
-    for side,team in (("home",home),("away",away)):
-        relevant=[r for r,c in records if team in (r["home"],r["away"])]
-        drives=[d for r in relevant for d in r["drives"] if d["team"]==team]
-        sides[side]={"game_count":len(relevant),"drives":len(drives),"rows":drives}
+    for side,team,opponent in (("home",home,away),("away",away,home)):
+        offensive_games=[r for r,c in records if team in (r["home"],r["away"])]
+        opponent_games=[r for r,c in records if opponent in (r["home"],r["away"])]
+        attack=[(str(r["game_id"]),d) for r in offensive_games for d in r["drives"]
+                if d["team"]==team]
+        defense=[(str(r["game_id"]),d) for r in opponent_games for d in r["drives"]
+                 if d["team"]!=opponent]
+        # Repeated head-to-head drives must be counted only once.
+        unique={(gid,d["team"],str(d["drive_id"])):d for gid,d in attack+defense}
+        drives=list(unique.values())
+        sides[side]={"game_count":len(offensive_games),"drives":len(drives),
+                    "opponent_defense_games":len(opponent_games),
+                    "opponent_defense_exposed_drives":len(defense),
+                    "offense_observed_drives":len(attack),"rows":drives}
     ready=all(v["game_count"]>=minimum_games and v["drives"]>=minimum_drives
+              and v["opponent_defense_exposed_drives"]>=minimum_drives//2
               for v in sides.values())
     zone_counts=Counter(d["field_zone"] for s in sides.values() for d in s["rows"])
     missing_zone=[]
@@ -84,7 +96,9 @@ def fit(bundle,game,decision_utc,minimum_games=3,minimum_drives=25):
         "status":STATUS,"game_id":str(game["game_id"]),"home":home,"away":away,
         "kickoff_utc":game["kickoff_utc"],"decision_utc":when.isoformat(),
         "historical_games_considered":len(records),
-        "sample_summary":{side:{"games":s["game_count"],"drives":s["drives"]}
+        "sample_summary":{side:{"games":s["game_count"],"drives":s["drives"],
+                                 "offensive_drives":s["offense_observed_drives"],
+                                 "opponent_defense_exposed_drives":s["opponent_defense_exposed_drives"]}
                           for side,s in sides.items()},
         "missing_conditional_zones":[{"side":side,"zone":zone} for side,zone in missing_zone],
         "simulator_input":None,
@@ -102,7 +116,10 @@ def fit(bundle,game,decision_utc,minimum_games=3,minimum_drives=25):
     possession=[{"home_count":h,"away_count":a,"weight":n}
                 for (h,a),n in sorted(pairs.items())]
     outcomes={}
+    zones_by_side={}
     for side,s in sides.items():
+        side_counts=Counter(d["field_zone"] for d in s["rows"])
+        zones_by_side[side]=[{"zone":z,"weight":n} for z,n in sorted(side_counts.items())]
         outcomes[side]={}
         for zone in sorted(zone_counts):
             values=Counter((d["points"],d["explosive"]) for d in s["rows"]
@@ -120,6 +137,7 @@ def fit(bundle,game,decision_utc,minimum_games=3,minimum_drives=25):
         "distributions":{
             "possessions":possession,
             "field_position":[{"zone":z,"weight":n} for z,n in sorted(zone_counts.items())],
+            "field_position_by_side":zones_by_side,
             "outcomes":outcomes,
         },
         "source_provenance":"OFFICIAL_COMPLETED_DRIVE_ROWS_REVIEWED",

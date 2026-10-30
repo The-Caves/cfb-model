@@ -70,7 +70,14 @@ def validate_inputs(fitted, decision_utc, market=None):
     if not zones or any(type(z) is not str or not z for z in zones):
         raise ValueError("Invalid starting field-position zones")
     _sample(random.Random(0), dist["field_position"], "zone", zones)
+    per_side=dist.get("field_position_by_side")
+    if per_side is not None and set(per_side)!={"home","away"}:
+        raise ValueError("Both team-specific field position distributions required")
     for team in ("home", "away"):
+        if per_side is not None:
+            _sample(random.Random(0), per_side[team], "zone", zones)
+            if {r["zone"] for r in per_side[team]}!=zones:
+                raise ValueError("Missing team-specific field-zone coverage")
         if set(dist["outcomes"][team]) != zones:
             raise ValueError("Missing team/field conditional outcomes")
         for zone in zones:
@@ -107,7 +114,8 @@ def simulate(fitted, decision_utc, market=None, trials=5000, seed=2026):
         explosive_drives = 0
         for side in ("home", "away"):
             for _drive in range(counts[side]):
-                zone = _sample(rng, dist["field_position"], "zone")["zone"]
+                source=(dist.get("field_position_by_side") or {}).get(side,dist["field_position"])
+                zone = _sample(rng, source, "zone")["zone"]
                 outcome = _sample(rng, dist["outcomes"][side][zone], "points")
                 scores[side] += outcome["points"]
                 explosive_drives += int(outcome["explosive"])

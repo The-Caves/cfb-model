@@ -24,7 +24,8 @@ def make_bundle():
             "source_captured_at_utc":"2026-10-20T14:00:00Z",
             "source_url":"https://example.edu/scores",
             "source_status":"OFFICIAL_POSTGAME_DRIVES_REVIEWED_RESEARCH_ONLY",
-            "complete_drives_reviewed":True,"drives":drives})
+            "complete_drives_reviewed":True,
+            "offensive_score_ownership_verified":True,"drives":drives})
     return {"status":"OFFICIAL_POSTGAME_DRIVES_REVIEWED_RESEARCH_ONLY","season":2026,
             "betting_status":"PASS_UNVALIDATED","safe_for_betting":False,"games":games}
 
@@ -39,6 +40,20 @@ class EmpiricalDriveTests(unittest.TestCase):
         self.assertGreater(out["home_points_mean"],0)
         self.assertEqual(out["away_points_mean"],0)
         self.assertFalse(out["model_promoted"])
+
+    def test_two_team_field_position_and_defensive_history_are_empirical(self):
+        result=fit(make_bundle(),game(),DECISION)
+        observed=result["simulator_input"]["distributions"]
+        self.assertEqual(set(observed["field_position_by_side"]),{"home","away"})
+        self.assertEqual(sum(x["weight"] for x in observed["field_position_by_side"]["home"]),40)
+        self.assertEqual(result["sample_summary"]["home"]["opponent_defense_exposed_drives"],40)
+        self.assertFalse(result["model_promoted"])
+
+    def test_unverified_score_ownership_rejected(self):
+        data=make_bundle()
+        data["games"][0]["offensive_score_ownership_verified"]=False
+        with self.assertRaises(ValueError):
+            fit(data,game(),DECISION)
 
     def test_missing_opponent_history_blocks_fit(self):
         g=game();g["away"]="C"
