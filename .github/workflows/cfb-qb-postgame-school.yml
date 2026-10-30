@@ -1,0 +1,91 @@
+name: CFB Official School Postgame QB Starter Evidence
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'config/official_school_qb_boxscores_2026.json'
+      - 'scripts/qb_official_school_boxscores.py'
+      - 'scripts/qb_postgame_starter_archive.py'
+      - 'tests/test_qb_official_school_boxscores.py'
+      - '.github/workflows/cfb-qb-postgame-school.yml'
+permissions:
+  contents: write
+concurrency:
+  group: cfb-context-state
+  cancel-in-progress: false
+jobs:
+  school-qb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Audit explicit starter source and game identity tests
+        run: python -m unittest discover -s tests -p 'test_qb_official_school_boxscores.py' -v
+      - name: Fetch exact dated ESPN results for source-reviewed official game IDs
+        run: |
+          python - <<'PY'
+          import csv,datetime as dt,json
+          from pathlib import Path
+          from scripts.ingest_espn import fetch_day,parse_event,FIELDS
+          src=json.loads(Path("config/official_school_qb_boxscores_2026.json").read_text())
+          entries=src["entries"]
+          dates=sorted({dt.date.fromisoformat(e["game_date_et"]) for e in entries})
+          if len(dates)>25 or any(x>dt.datetime.now(dt.timezone.utc).date() for x in dates):
+              raise ValueError("Unbounded or future official source date inventory")
+          selected={str(e["game_id"]) for e in entries}
+          games={}
+          for date in dates:
+              payload=fetch_day(date)
+              for event in payload["events"]:
+                  g=parse_event(event)
+                  if g and g["game_id"] in selected:games[g["game_id"]]=g
+          Path("data/school_qb").mkdir(parents=True,exist_ok=True)
+          with open("data/school_qb/games_2026.csv","w",newline="") as f:
+              writer=csv.DictWriter(f,fieldnames=FIELDS);writer.writeheader()
+              writer.writerows(sorted(games.values(),key=lambda x:x["game_id"]))
+          print(json.dumps({"official_entries":len(entries),"matching_completed_scoreboards":len(games),"dates_checked":len(dates)}))
+          PY
+      - name: Capture official gamebook STARTERS positions without passer inference
+        run: |
+          python -m scripts.qb_official_school_boxscores \
+            --games data/school_qb/games_2026.csv \
+            --registry config/official_school_qb_boxscores_2026.json \
+            --output data/school_qb/official-starter-evidence.json
+      - name: Display accepted labels and source-specific capture failures
+        run: |
+          python - <<'PY'
+          import json,os
+          j=json.load(open("data/school_qb/official-starter-evidence.json"))
+          lines=["### Official School Postgame QB Starters",
+                 "Matched school gamebooks: "+str(j["verified_game_identities"]),
+                 "Explicit QB starter labels: "+str(j["explicit_starter_labels"]),
+                 "Review/unknown slots: "+str(j["unknown_or_conflict_starter_labels"]),
+                 "Fetch/parse failures: "+str(j["missing_or_rejected_games"])]
+          lines.extend("Source error: "+str(e["game_id"])+" "+e["reason"]+" "+e.get("detail","") for e in j["errors"])
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:f.write("\n\n".join(lines)+"\n")
+          print("\n".join(lines))
+          PY
+      - name: Preserve newly observed official QB ground truth in append-only ledger
+        run: |
+          python -m scripts.qb_postgame_starter_archive \
+            --input data/school_qb/official-starter-evidence.json \
+            --output data/school_qb/official-starter-ledger.json
+      - name: Preserve raw evidence status and archive report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-official-school-starter-evidence-${{ github.run_id }}
+          path: |
+            data/school_qb/games_2026.csv
+            data/school_qb/official-starter-evidence.json
+            data/school_qb/official-starter-ledger.json
+          retention-days: 30
+          if-no-files-found: warn
