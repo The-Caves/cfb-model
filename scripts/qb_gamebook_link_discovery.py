@@ -126,7 +126,11 @@ def discover(targets,directory,asof_utc,fetch=default_fetch,max_schools=MAX_SCHO
     # background scanning of all 138 schools on every settlement.
     order=sorted({team for _,team in selected},
                  key=lambda team:(min(parse_time(x["kickoff_utc"]) for (gid,t),x in selected.items() if t==team),team))
-    scheduled=order[:max_schools]
+    # Rotate deterministic daily batches. Otherwise the same earliest
+    # eight inaccessible schools would starve the remaining national queue.
+    # Re-running the same date yields the same audit cohort.
+    offset=((now.date()-dt.date(2026,8,1)).days*max_schools)%len(order) if order else 0
+    scheduled=(order[offset:]+order[:offset])[:max_schools]
     discovered=[];errors=[]
     for team in scheduled:
         site=sites[team]
@@ -169,6 +173,7 @@ def discover(targets,directory,asof_utc,fetch=default_fetch,max_schools=MAX_SCHO
         "source":"ATHLETICS_DIRECTORY_CANDIDATE_SCHEDULE_LINKS",
         "review_targets":len(selected),"school_sites_scanned":len(scheduled),
         "school_sites_deferred":len(order)-len(scheduled),
+        "scan_offset":offset,"scanned_team_names":scheduled,
         "source_errors":errors[:MAX_SCHOOLS],
         "candidate_links_found":len(discovered),"candidates":discovered,
         "ready_to_be_starter_labels":False,
