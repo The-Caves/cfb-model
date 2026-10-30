@@ -15,8 +15,8 @@ def fixture():
 def passing(game,attempts="20/30",yards="220"):
     return {"game_id":game,"team_id":10,"athlete_id":77,
         "athlete_name":"Research QB","season":2026,"category":"passing",
-        "passing_yards":yards,"passing_touchdowns":"2","interceptions":"1",
-        "completions_passing_attempts":attempts}
+        "passingYards":yards,"passingTouchdowns":"2","interceptions":"1",
+        "completions/passingAttempts":attempts}
 
 class PlayerPropHistoryTests(unittest.TestCase):
     def test_player_game_identity_and_passing_pair(self):
