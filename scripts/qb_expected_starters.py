@@ -29,7 +29,7 @@ def _availability(game,team,decision):
     out={}
     for row in game.get("qb_availability_reports") or []:
         if row.get("team")!=team or row.get("position")!="QB":continue
-        if row.get("status") not in INACTIVE|WARN|{"AVAILABLE","PROBABLE","UNKNOWN"}:
+        if row.get("status") not in START_UNAVAILABLE|WARN|{"AVAILABLE","PROBABLE","UNKNOWN"}:
             continue
         if not row.get("player"):continue
         try:
