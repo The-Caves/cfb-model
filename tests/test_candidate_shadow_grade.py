@@ -37,6 +37,33 @@ class ProspectiveCandidateGradeTests(unittest.TestCase):
         self.assertEqual(report["summary"]["graded_games"],1)
         self.assertEqual(report["metrics"]["qb_conditional"]["games"],1)
         self.assertEqual(report["metrics"]["venue_plus_travel"]["margin_mae"],2.5)
+    def test_qb_usage_mixture_has_separate_identical_game_prospective_metric(self):
+        qb=candidate("qb")
+        c=qb["games"][0]["candidate"]
+        c.update({"usage_weighted_status":"QB_EMPIRICAL_EXPOSURE_SHADOW",
+                  "usage_weighted_home_margin":4.5,
+                  "evaluated_player_sample_exposure_by_side":{"home":.70,"away":.35}})
+        report=evaluate({"qb":[qb],"venue":[candidate("venue")]},
+                        [grade()],"2026-11-02T00:00:00Z")
+        self.assertEqual(report["metrics"]["qb_empirical_exposure"]["games"],1)
+        self.assertEqual(report["metrics"]["qb_empirical_exposure"]["margin_mae"],.5)
+        self.assertEqual(report["metrics"]["qb_empirical_exposure"]["same_game_baseline_v03_mae"],1.)
+        self.assertEqual(report["metrics"]["qb_conditional"]["margin_mae"],1.)
+        self.assertEqual(report["per_game"][0]["model_results"]["qb_empirical_exposure"]["sample_coverage_home"],.7)
+    def test_missing_qualified_usage_exposure_not_artificially_counted(self):
+        report=evaluate({"qb":[candidate("qb")],"venue":[candidate("venue")]},
+                        [grade()],"2026-11-02T00:00:00Z")
+        self.assertEqual(report["metrics"]["qb_empirical_exposure"]["games"],0)
+    def test_invalid_empirical_exposure_probability_mass_rejected(self):
+        qb=candidate("qb")
+        qb["games"][0]["candidate"].update({
+            "usage_weighted_status":"QB_EMPIRICAL_EXPOSURE_SHADOW",
+            "usage_weighted_home_margin":4.5,
+            "evaluated_player_sample_exposure_by_side":{"home":1.3,"away":0.}})
+        with self.assertRaisesRegex(ValueError,"Invalid prospective"):
+            evaluate({"qb":[qb],"venue":[candidate("venue")]},
+                     [grade()],"2026-11-02T00:00:00Z")
+
     def test_mismatched_reference_fails_closed(self):
         g=grade();g["forecast_bundle_sha256"]="z"*64
         with self.assertRaisesRegex(ValueError,"Wrong original"):
