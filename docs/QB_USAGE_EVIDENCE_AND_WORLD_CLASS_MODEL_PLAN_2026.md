@@ -72,6 +72,10 @@ A daily final-settlement job checks out the immutable `context-state` Git tree *
 
 **Current important blocker:** at the October 29 audit, the ledger contained 6 accepted observations out of 1,140 team-game slots, three of which had an already-detected team-logo alt-text name corruption pending its append-only reviewed correction. All six concerned October 24 games, but the available prospective QB shadow records begin October 29. Therefore the **initial matched supervised sample is zero**, not six. Future independently labeled outcomes and reviewed school sources are required before a calibrated starter model can honestly be trained.
 
+## October 30: prioritize actual-starter source review using frozen pregame forecasts
+
+The daily settlement's `qb_starter_supervised.py` now also writes a `qb-starter-source-review-<run>.csv` artifact. Only completed game/team slots that have **both** an independently archived postgame score-evidence slot and an immutable 24–72-hour pregame QB scenario enter this prioritized worklist. Unknown/conflicted/uncorrected official source names or verified actual starters missing from the pregame roster remain explicit reason-coded targets, never new training labels. Already trainable slots and games without reliable postgame completion evidence do not appear. Candidate names on the list are only names present in the old frozen prediction, not an inferred true starter. Exact gamebook URLs stay blank until individually reviewed. This makes the source-review workload relevant to prospective starter classification and avoids retrospective fabrication.
+
 ## Next development milestones, in testable order
 
 1. **National QB source coverage:** expand verified official football preview/article and direct game-note PDF sources beyond the few currently readable feeds. Capture dated full text and exact fixture, not just an RSS homepage or metadata. Add a separate official availability update pipeline with conflict/review signals. Measure confirmation coverage by game week and report source failures.

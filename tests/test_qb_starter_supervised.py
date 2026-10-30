@@ -104,6 +104,40 @@ class SupervisedQBTests(unittest.TestCase):
         index["slots"]["401856727|A"]["starter_player"]=None
         out=build([snapshot()],index,registry(),NOW)
         self.assertEqual(out["summary"]["labeled_trainable_slots"],0)
+    def test_unknown_postgame_starter_creates_targeted_review_not_train_label(self):
+        index=ledger()
+        slot=index["slots"]["401856727|A"]
+        slot["starter_player"]=None
+        slot["effective_status"]=UNKNOWN
+        slot["observations"][0]["label_status"]=UNKNOWN
+        slot["observations"][0]["starter_player"]=None
+        out=build([snapshot()],index,registry(),NOW)
+        self.assertEqual(out["summary"]["labeled_trainable_slots"],0)
+        self.assertEqual(out["summary"]["postgame_manual_source_review_targets"],1)
+        t=out["review_targets"][0]
+        self.assertEqual((t["game_id"],t["team"]),("401856727","A"))
+        self.assertEqual(t["reason"],"NOT_REVIEWED_ACTUAL_STARTER")
+        self.assertIsNone(t["exact_school_gamebook_url"])
+        self.assertEqual(t["frozen_qb_candidate_names"],["A One","A Two"])
+        self.assertTrue(t["do_not_guess_gamebook_url"])
+
+    def test_verified_but_unlisted_actual_qb_still_requires_roster_review(self):
+        out=build([snapshot(players=("A One","A Three"))],ledger(),registry(),NOW)
+        self.assertEqual(out["summary"]["postgame_manual_source_review_targets"],1)
+        t=out["review_targets"][0]
+        self.assertEqual(t["reason"],"VERIFIED_STARTER_NOT_IN_FROZEN_CANDIDATES")
+        self.assertEqual(t["actual_starter"],"A Two")
+        self.assertEqual(out["summary"]["labeled_trainable_slots"],0)
+
+    def test_verified_trainable_source_does_not_emit_unneeded_review(self):
+        out=build([snapshot()],ledger(),registry(),NOW)
+        self.assertEqual(out["summary"]["postgame_manual_source_review_targets"],0)
+
+    def test_no_completed_evidence_is_not_targeted_for_source_review(self):
+        idx=ledger();idx["slots"]={}
+        out=build([snapshot()],idx,registry(),NOW)
+        self.assertEqual(out["summary"]["postgame_manual_source_review_targets"],0)
+
     def test_duplicate_frozen_run_rejected(self):
         r=snapshot()
         with self.assertRaisesRegex(ValueError,"Repeated immutable"):

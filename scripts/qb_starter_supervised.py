@@ -5,7 +5,7 @@ example requires an independently captured real postgame QB starter, the exact
 pre-kickoff team/fixture, and an archived QB candidate observation 24–72h
 before kickoff. School parser correction mismatches are quarantined.
 """
-import argparse,datetime as dt,hashlib,json,math,re
+import argparse,csv,datetime as dt,hashlib,json,math,re
 from collections import Counter
 from pathlib import Path
 from scripts import context_archive as store
@@ -131,6 +131,38 @@ def build(shadows,ledger,reviewed_registry,asof_utc,verify_sources=False):
                 priority=(observed,rid)
                 if slot_key in selected and priority<=selected[slot_key][0]:continue
                 selected[slot_key]=(priority,row,side,team_info,player_scenarios,data)
+    # Prioritize independently completed team-games with frozen pregame QB
+    # candidates that still cannot yield a verified labeled example.
+    # This is a REVIEW WORKLIST, never an automatically confirmed QB.
+    review_targets=[]
+    for (gid,team),(_,game,side,slot,candidates,shadow) in sorted(selected.items()):
+        archived=ledger["slots"].get(gid+"|"+team)
+        if archived is None:
+            continue  # No independently completed game/ESPN label observation.
+        kickoff=parse_time(game["kickoff_utc"])
+        if kickoff>=asof or archived.get("team")!=team or archived.get("game_id")!=gid:
+            raise ValueError("Invalid completed QB review game identity")
+        positive,reason=_maybe_positive(archived,gid,team,reviewed,asof)
+        if positive:
+            actual=positive[0]
+            if player_key(actual) not in {player_key(name) for name in candidates}:
+                reason="VERIFIED_STARTER_NOT_IN_FROZEN_CANDIDATES"
+            else:
+                continue  # Already trainable: don't waste future review effort.
+        review_targets.append({
+            "game_id":gid,"team":team,
+            "opponent":game["away"] if side=="home" else game["home"],
+            "home":game["home"],"away":game["away"],
+            "kickoff_utc":game["kickoff_utc"],
+            "forecast_observed_utc":shadow["observed_at_utc"],
+            "reason":reason,
+            "postgame_label_status":archived["effective_status"],
+            "projected_qb_not_confirmation":slot.get("player"),
+            "frozen_qb_candidate_names":sorted(candidates),
+            "review_required":True,
+            "actual_starter":positive[0] if positive else None,
+            "exact_school_gamebook_url":None,
+            "do_not_guess_gamebook_url":True})
     examples=[]
     accepted_labels=0;unmatched=0
     for (gid,team),(_,game,side,slot,candidates,shadow) in sorted(selected.items()):
@@ -210,7 +242,9 @@ def build(shadows,ledger,reviewed_registry,asof_utc,verify_sources=False):
             "distinct_game_dates":len(distinct_dates),
             "all_archived_verified_labels":sum(v["effective_status"]==LABEL for v in ledger["slots"].values()),
             "quarantined_labels":sum(v["effective_status"]==DANGER for v in ledger["slots"].values()),
-            "skip_reasons":dict(sorted(reasons.items()))},
+            "skip_reasons":dict(sorted(reasons.items())),
+            "postgame_manual_source_review_targets":len(review_targets)},
+        "review_targets":review_targets,
         "examples":examples,
         "can_estimate_calibrated_starter_probabilities":False,
         "historical_pbp_publication_authenticated":False,
@@ -272,13 +306,24 @@ def read_archives(archive_root=None):
                 raise ValueError("Label index mutated independently of immutable source")
     return shadows,li
 
-def run(output,registry_path,archive_root=None):
+def run(output,registry_path,archive_root=None,review_csv=None):
     registry=json.loads(Path(registry_path).read_text(encoding="utf-8"))
     shadows,ledger=read_archives(archive_root)
     report=build(shadows,ledger,registry,dt.datetime.now(dt.timezone.utc).isoformat())
     p=Path(output);p.parent.mkdir(parents=True,exist_ok=True)
     with p.open("x",encoding="utf-8") as f:
         json.dump(report,f,indent=2,allow_nan=False);f.write("\n")
+    if review_csv is not None:
+        target=Path(review_csv);target.parent.mkdir(parents=True,exist_ok=True)
+        cols=("game_id","team","opponent","kickoff_utc","reason",
+              "postgame_label_status","projected_qb_not_confirmation",
+              "frozen_qb_candidate_names","forecast_observed_utc","exact_school_gamebook_url")
+        with target.open("x",encoding="utf-8",newline="") as f:
+            writer=csv.DictWriter(f,fieldnames=cols)
+            writer.writeheader()
+            for row in report["review_targets"]:
+                writer.writerow({**{k:row.get(k) for k in cols},
+                    "frozen_qb_candidate_names":"; ".join(row["frozen_qb_candidate_names"])})
     print(json.dumps({"status":STATUS,**report["summary"],
         "ready_for_calibrated_starter_training":report["ready_for_calibrated_starter_training"],
         "model_promoted":False}))
@@ -289,5 +334,6 @@ if __name__=="__main__":
     p.add_argument("--registry",required=True)
     p.add_argument("--output",required=True)
     p.add_argument("--archive-root",default=None)
+    p.add_argument("--review-csv",default=None)
     args=p.parse_args()
-    run(args.output,args.registry,args.archive_root)
+    run(args.output,args.registry,args.archive_root,args.review_csv)
