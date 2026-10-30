@@ -44,11 +44,13 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_nextgen_source_readiness.py' -v
           python -m scripts.nextgen_source_readiness --output data/nextgen-sources/source-coverage.json
+          python -m unittest discover -s tests -p 'test_role_usage_crosswalk.py' -v
+          python -m scripts.role_usage_crosswalk --output data/nextgen-sources/athlete-id-role-crosswalk.json
       - name: Archive explicit source-coverage and schema gaps
         uses: actions/upload-artifact@v4
         with:
           name: cfb-nextgen-2026-source-readiness-${{ github.run_id }}
-          path: data/nextgen-sources/source-coverage.json
+          path: data/nextgen-sources/
           retention-days: 30
           if-no-files-found: error
       - name: Download archived real ESPN 2026 final/PBP research source
