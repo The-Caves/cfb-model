@@ -2,7 +2,7 @@ import copy
 import unittest
 from scripts.qb_postgame_starter_archive import empty,plan,validate,verify_index,DANGER,STATUS
 from scripts.qb_postgame_starter_labels import parse,collect,LABEL,UNKNOWN
-from tests.test_qb_postgame_starter_labels import GAME,payload,AT
+from test_qb_postgame_starter_labels import GAME,payload,AT
 
 def snapshot():
     return collect([GAME],AT,lambda gid:payload(),workers=1)
