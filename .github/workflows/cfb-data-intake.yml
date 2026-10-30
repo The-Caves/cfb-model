@@ -85,6 +85,20 @@ jobs:
           python -m scripts.turnover_boxscore \
             --games data/games_2026.csv \
             --output data/model_v03/espn-verified-turnovers.json
+      - name: Backfill explicit postgame QB1 labels without treating passing leaders as starters
+        run: |
+          LOOKBACK=35
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then LOOKBACK=120; fi
+          python -m scripts.qb_postgame_starter_labels \
+            --games data/games_2026.csv \
+            --lookback-days "$LOOKBACK" \
+            --output "data/pregame_evidence/qb-postgame-evidence-${{ github.run_id }}.json"
+      - name: Archive non-retroactive postgame QB actual-starter observations
+        run: |
+          python -m scripts.qb_postgame_starter_archive \
+            --input "data/pregame_evidence/qb-postgame-evidence-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/qb-postgame-label-ledger-${{ github.run_id }}.json" | tee /tmp/qb-postgame-ledger.txt
+          cat /tmp/qb-postgame-ledger.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Build checksummed retrospective weekly profiles (v0.4 step 1)
         run: |
           python -m scripts.weekly_profiles \
