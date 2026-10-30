@@ -140,10 +140,22 @@ def compute(root,now=None):
             seen_games.add(gid)
             kickoff=parse_time(x["kickoff_utc"])
             observed=parse_time(x["frozen_forecast_observed_utc"])
-            if (not observed<=captured<kickoff or
-                x["forecast_model_version"]!=board["model_version"] or
-                x["frozen_forecast_sha256"]!=board["model_forecast_sha256"]):
+            # Early Oct 24 snapshots predate the model-version schema
+            # addition. Do not invent a version for them or reject genuine
+            # immutable research decisions. Require matched presence in later
+            # versions, but preserve the archived model digest in all cases.
+            board_model=board.get("model_version")
+            row_model=x.get("forecast_model_version")
+            if ((board_model is None)!=(row_model is None) or
+                (board_model is not None and
+                 (not isinstance(board_model,str) or not board_model or
+                  row_model!=board_model)) or
+                not observed<=captured<kickoff or
+                x["frozen_forecast_sha256"]!=board["model_forecast_sha256"] or
+                not isinstance(x.get("frozen_forecast_run_id"),str) or
+                not x["frozen_forecast_run_id"].isdigit()):
                 raise ValueError("Invalid pregame website decision chronology")
+            x["forecast_model_version"]=row_model or "LEGACY_MODEL_VERSION_NOT_CAPTURED"
             line_at=x.get("market_observed_utc")
             spread=x.get("market_home_spread");total=x.get("market_total")
             if spread is not None or total is not None:
