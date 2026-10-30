@@ -25,7 +25,8 @@ class Visible(HTMLParser):
         if tag=="img":
             alt=dict(attrs).get("alt")
             if alt and 2<=len(alt)<120:
-                self.parts.append(" ".join(alt.split()))
+                # Distinguish non-player image labels from literal roster text.
+                self.parts.append("TEAM_IMAGE_ALT:"+ " ".join(alt.split()))
     def handle_data(self,value):
         part=" ".join(value.split())
         if part:self.parts.append(part)
@@ -48,9 +49,9 @@ def _heading(tokens,label):
     name=_norm(label)
     for i,t in enumerate(tokens):
         low=_norm(t)
-        if low==name+" offense":
+        if low==name+" offense" or low=="team_image_alt:"+name+" offense":
             matched.append(i+1)
-        elif low=="offense" and any(_norm(p)==name for p in tokens[max(0,i-2):i]):
+        elif low=="offense" and any(_norm(p) in (name,"team_image_alt:"+name) for p in tokens[max(0,i-2):i]):
             matched.append(i+1)
     if len(matched)!=1:raise ValueError("School starters team offensive heading absent or duplicated")
     return matched[0]
@@ -63,7 +64,9 @@ def _reorder(raw):
     return b.strip()+" "+a.strip()
 
 def _qbs(tokens,start,end):
-    section=tokens[start:end];qbs=[]
+    # Team logos or flags can appear inside an athlete cell in Sidearm SSR.
+    # Their alt text must NEVER be interpolated into the QB's legal name.
+    section=[t for t in tokens[start:end] if not t.startswith("TEAM_IMAGE_ALT:")];qbs=[]
     for i,t in enumerate(section):
         if _norm(t)!="qb":continue
         candidate=None
@@ -156,6 +159,11 @@ def parse(game,entry,html,observed_at):
                    [i for i,x in enumerate(section) if i>begin and _norm(x)=="defense"]+
                    [len(section)])
         candidates[side]=_qbs(section,begin,finish)
+    for side,qbs in candidates.items():
+        reviewed=entry.get(side+"_starting_qb_name")
+        if (not isinstance(reviewed,str) or len(player_key(reviewed))<2 or
+            len(qbs)!=1 or player_key(qbs[0])!=player_key(reviewed)):
+            raise ValueError("Official QB player name differs from reviewed gamebook STARTERS roster")
     payload_sha=hashlib.sha256(html.encode("utf-8")).hexdigest()
     rows=[]
     for side in ("away","home"):
