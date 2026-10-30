@@ -45,6 +45,12 @@ jobs:
         run: |
           python -m scripts.player_prop_prior_seasons \
             --output data/player_props/2024_2025_player_game_history.json
+      - name: Test transfer-aware prior season player form against 2026 early games
+        run: |
+          python -m scripts.player_prop_transfer_prior_eval \
+            --prior data/player_props/2024_2025_player_game_history.json \
+            --current data/player_props/espn_player_game_history.json \
+            --output data/player_props/transfer_prior_paired_ablation.json
       - name: Audit historical bookmaker prop coverage without any API calls
         run: |
           python -m scripts.player_prop_historical_market \
