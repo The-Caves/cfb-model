@@ -139,7 +139,7 @@ def download_rows():
     import hashlib
     parquet=pq.ParquetFile(io.BytesIO(blob))
     missing=NEEDED-set(parquet.schema_arrow.names)
-    if missing:raise ValueError("Missing player box source schema: "+str(sorted(missing)))
+    if missing:raise ValueError("Missing player box source schema: "+str(sorted(missing))+"; ACTUAL_COLUMNS="+str(sorted(parquet.schema_arrow.names)))
     # Limit loaded columns and allow sparse, nullable categories.
     table=parquet.read(columns=sorted(NEEDED))
     return table.to_pylist(),hashlib.sha256(blob).hexdigest()
