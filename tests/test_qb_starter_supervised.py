@@ -70,9 +70,10 @@ class SupervisedQBTests(unittest.TestCase):
         self.assertEqual(x["examples"][0]["pregame_run_id"],"991")
         self.assertEqual(x["examples"][0]["pregame_observed_utc"],later["observed_at_utc"])
     def test_stale_or_postkickoff_forecasts_cannot_be_labeled(self):
-        for t in ("2026-10-27T12:00:00Z","2026-10-31T20:01:00Z"):
-            out=build([snapshot(t)],ledger(),registry(),NOW)
-            self.assertEqual(out["summary"]["labeled_trainable_slots"],0)
+        out=build([snapshot("2026-10-27T12:00:00Z")],ledger(),registry(),NOW)
+        self.assertEqual(out["summary"]["labeled_trainable_slots"],0)
+        with self.assertRaisesRegex(ValueError,"Postkickoff"):
+            build([snapshot("2026-10-31T20:01:00Z")],ledger(),registry(),NOW)
     def test_late_observed_actual_label_cannot_enter_early_training(self):
         out=build([snapshot()],ledger(),registry(),"2026-10-31T22:00:00Z")
         self.assertEqual(out["summary"]["labeled_trainable_slots"],0)
