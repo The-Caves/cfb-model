@@ -217,9 +217,18 @@ def build(shadows,ledger,reviewed_registry,asof_utc,verify_sources=False):
         "model_promoted":False,"safe_for_betting":False,
         "betting_status":"PASS_UNVALIDATED"}
 
-def read_archives():
+def read_archives(archive_root=None):
+    # The settlement job checks out context-state AFTER archival writes.
+    # Prefer that immutable local Git tree over dozens of rate-limited REST
+    # lookups. It is still SHA-checked against every archived index entry.
+    root=Path(archive_root) if archive_root is not None else None
+    def blob(path):
+        if root is None:return store.get_blob_file(path)
+        target=root/path
+        if not target.is_file():raise ValueError("Missing local archived evidence: "+path)
+        return target.read_bytes()
     def read_json(path):
-        b=store.get_blob_file(path)
+        b=blob(path)
         if b is None:raise ValueError("Missing QB training source "+path)
         return json.loads(b)
     ci=read_json(SHADOW_INDEX);li=read_json(LABEL_INDEX)
@@ -234,9 +243,9 @@ def read_archives():
         if (not re.fullmatch(r"research_2026/candidate_shadow_qb/2026/\d{2}/\d{2}/run-\d+\.json\.gz",p)
             or not p.endswith("/run-"+str(entry["run_id"])+".json.gz")):
             raise ValueError("Unsafe candidate archive path")
-        blob=store.get_blob_file(p)
-        if blob is None:raise ValueError("Missing candidate QB archive")
-        data=store.unpack(blob)
+        source_blob=blob(p)
+        if source_blob is None:raise ValueError("Missing candidate QB archive")
+        data=store.unpack(source_blob)
         if checksum(data)!=entry["sha256"]:
             raise ValueError("Altered immutable QB forecast SHA")
         shadows.append(data)
@@ -244,9 +253,9 @@ def read_archives():
     # and archive path rather than trusting an edited index name.
     saved={}
     for e in li["runs"]:
-        blob=store.get_blob_file(e["path"])
-        if blob is None:raise ValueError("Missing original QB starter label archive")
-        data=store.unpack(blob)
+        source_blob=blob(e["path"])
+        if source_blob is None:raise ValueError("Missing original QB starter label archive")
+        data=store.unpack(source_blob)
         if hashlib.sha256(store.encode(data)).hexdigest()!=e["sha256"]:
             raise ValueError("Tampered postgame QB starter archive")
         key=str(e["run_id"])
@@ -263,9 +272,9 @@ def read_archives():
                 raise ValueError("Label index mutated independently of immutable source")
     return shadows,li
 
-def run(output,registry_path):
+def run(output,registry_path,archive_root=None):
     registry=json.loads(Path(registry_path).read_text(encoding="utf-8"))
-    shadows,ledger=read_archives()
+    shadows,ledger=read_archives(archive_root)
     report=build(shadows,ledger,registry,dt.datetime.now(dt.timezone.utc).isoformat())
     p=Path(output);p.parent.mkdir(parents=True,exist_ok=True)
     with p.open("x",encoding="utf-8") as f:
@@ -279,5 +288,6 @@ if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--registry",required=True)
     p.add_argument("--output",required=True)
+    p.add_argument("--archive-root",default=None)
     args=p.parse_args()
-    run(args.output,args.registry)
+    run(args.output,args.registry,args.archive_root)
