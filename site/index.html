@@ -84,6 +84,25 @@ nav[role=tablist]{display:flex;gap:7px;margin:18px 0 20px;border-bottom:1px soli
 .marketTile .researchSide.unavailable{color:#809db2;font-weight:500}
 .marketTile .small{font-size:10px;margin-top:4px}
 .marketMeta{color:#8198ae;font-size:10px;line-height:1.5;margin-top:8px}
+.playerFocus{margin-top:10px;border:1px solid #335065;border-radius:10px;background:#102235;padding:10px 11px}
+.playerHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.playerTitle{color:#e4eff8;font-weight:800;font-size:12px}
+.playerStatus{font-size:9px;color:#a6d2c6;font-weight:700;text-align:right}
+.playerPicks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.playerPick{min-width:0;background:#162c41;border:1px solid #2c4a61;border-radius:8px;padding:8px 9px}
+.playerName{font-size:10px;font-weight:750;color:#f0f6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.playerStat{font-size:11px;line-height:1.45;color:#a8c8db;margin-top:3px}
+.playerStat b{font-size:17px;letter-spacing:-.025em;color:#a2e7cc;font-variant-numeric:tabular-nums}
+.playerFoot{font-size:9px;color:#95b1c7;line-height:1.5;margin:7px 0 0}
+.playerFold{margin-top:8px;border-top:1px solid #2c455b}
+.playerFold summary{cursor:pointer;color:#acd4e9;font-size:10px;font-weight:750;padding:9px 0 0}
+.playerTable{width:100%;border-collapse:collapse;margin-top:7px;font-size:10px;color:#b7cbdb}
+.playerTable th{text-align:left;color:#97b4c9;font-weight:700}
+.playerTable td,.playerTable th{padding:7px 3px;border-bottom:1px solid #243d54}
+.playerTable td:last-child{text-align:right;font-variant-numeric:tabular-nums;color:#a0e4cd;font-weight:750}
+.playerFoldNote{color:#8eabbf;font-size:10px;line-height:1.55;margin:8px 0 0}
+.playerMissing{font-size:10px;color:#9cb3c6;background:#112032;border-radius:8px;padding:8px 10px}
+
 .scouting{margin:11px 0 0;border:1px solid #2d4558;border-radius:9px;background:#152639;overflow:hidden}
 .scouting summary{list-style:none;cursor:pointer;color:#a5d5e5;font-weight:750;font-size:11px;display:flex;align-items:center;justify-content:space-between;padding:11px 12px}
 .scouting summary::-webkit-details-marker{display:none}
@@ -146,6 +165,9 @@ footer{border-top:1px solid var(--line);color:#879fb5;font-size:11px;margin-top:
  .teamSub{font-size:9px}
  .scoreBox .score{font-size:24px}
  .scoutGrid{grid-template-columns:1fr}
+ .playerPicks{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .playerPick:nth-child(n+3){display:none}
+ .playerFocus{padding:9px 10px}
  .results{grid-template-columns:1fr}
  .tool{gap:7px}
  .tool .search{flex-basis:100%}
@@ -192,14 +214,14 @@ footer{border-top:1px solid var(--line);color:#879fb5;font-size:11px;margin-top:
   </div>
 </div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
 <main class="wrap">
-<div class="warning"><b>Research only · unvalidated.</b> Scores are frozen model estimates; market lines and QB updates may be newer and do not recalculate picks.</div>
-<div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span></div>
+<div class="warning"><b>Research only · unvalidated.</b> Frozen score estimates remain unchanged. Player projections are conditional stat outlooks, not real sportsbook lines or validated betting edges.</div>
+<div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span><span id="player-model-id">Player outlook pending</span></div>
 <nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Matchups</button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Performance</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Data &amp; sources</button></nav>
 <section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern. Scores are model estimates, not live results.</p>
 <div class="tool">
 <input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
 <select id="sort" aria-label="Sort games"><option value="time">Kickoff · earliest first</option><option value="late">Kickoff · latest first</option><option value="ats">Biggest model ATS difference</option><option value="total">Biggest model total difference</option><option value="alpha">School · A to Z</option></select>
-<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="depth">With QB depth-chart ranks</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option></select>
+<select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="depth">With QB depth-chart ranks</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option><option value="player">With player projections</option><option value="player-qb">With QB passing projection</option><option value="player-rush">With rushing projection</option><option value="player-rec">With receiving projection</option></select>
 </div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden">
@@ -221,8 +243,12 @@ footer{border-top:1px solid var(--line);color:#879fb5;font-size:11px;margin-top:
  <div id="performance-games" class="state">Loading individual game results…</div>
  <p class="performanceLegend">W = correct research selection; L = incorrect; P = push. A dash means the game has no eligible grade for that category. SU uses an archived 24–72h forecast; ATS and totals use the earliest observed pre-kickoff website selection with a real quoted market. These are separate cohorts and are not evidence of profitable betting. Source odds publication times are not independently verified.</p>
 </div>
+<div class="panel" style="margin-top:14px">
+ <h3>Player-prop model progress</h3>
+ <div class="state" id="player-performance">Player-stat research is separate from the verified SU/ATS/totals grade. No validated player-prop performance is published.</div>
+</div>
 </section>
-<section id="sources" role="tabpanel" class="hidden"><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Model ID</span><span id="modelid">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
+<section id="sources" role="tabpanel" class="hidden"><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Score model (frozen)</span><span id="modelid">—</span></div><div class="sourceRow"><span>Player stat research model</span><span id="propmodelid">—</span></div><div class="sourceRow"><span>Player projection coverage</span><span id="propcoverage">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
 <footer>2026 CFB Lab · Research only · No wagers placed. <a href="https://github.com/The-Caves/cfb-model">Open GitHub project</a></footer>
 </main>
 <script id="dashboard-data" type="application/json"></script>
@@ -379,10 +405,59 @@ function scoutingPanel(g){
  details.append(node("div","scoutFoot","Source: 2026 PBP + audited ESPN team turnovers. Historical publication times unverified. This scouting view does not change frozen model picks."));
  return details;
 }
+function playerOutlook(g){
+ const section=node("section","playerFocus");
+ const line=node("div","playerHead");
+ line.append(node("span","playerTitle","Player props · stat outlook"));
+ const obj=g.player_props||{},entries=Array.isArray(obj.entries)?obj.entries.filter(p=>p&&Number.isFinite(p.projection)&&typeof p.player==="string"):[];
+ line.append(node("span","playerStatus",entries.length?"PlayerForm R1 · research":"Awaiting verified form"));
+ section.append(line);
+ if(!entries.length){
+  section.append(node("div","playerMissing","No source-matched player projection yet. No prop line or market edge inferred."));
+  return section;
+ }
+ const teaser=node("div","playerPicks");
+ const rank=entries.slice().sort((a,b)=>{
+  const v={passing_yards:0,receiving_yards:1,rushing_yards:2};
+  return (v[a.metric]??3)-(v[b.metric]??3)||b.projection-a.projection;
+ });
+ // Give the one-look panel different stat types first; all players are in the fold.
+ const first=[];const used=new Set();
+ for(const e of rank){
+  if(used.has(e.metric))continue;
+  first.push(e);used.add(e.metric);
+  if(first.length===3)break;
+ }
+ for(const p of first){
+  const chip=node("div","playerPick");
+  chip.title=p.team+" · "+p.player+" · "+p.label+"; participation unconfirmed";
+  chip.append(node("div","playerName",p.player));
+  const stat=node("div","playerStat");
+  stat.append(node("b","",num(p.projection,1)),node("span",""," yds · "+p.label.replace(" yards","")));
+  chip.append(stat);teaser.append(chip);
+ }
+ section.append(teaser);
+ section.append(node("div","playerFoot","Projected stat if involved · playing status not confirmed · sportsbook line unavailable"));
+ const details=node("details","playerFold");
+ details.append(node("summary","","All "+entries.length+" player outlooks · method & source"));
+ const table=node("table","playerTable"),thead=node("thead"),hdr=node("tr");
+ for(const label of ["Player / school","Statistic","Projection"])hdr.append(node("th","",label));
+ thead.append(hdr);table.append(thead);const body=node("tbody");
+ for(const p of rank){
+  const row=node("tr");
+  row.append(node("td","",p.player+" · "+(p.team_side==="home"?"Home":"Away")));
+  row.append(node("td","",p.label||p.metric));
+  row.append(node("td","",num(p.projection,1)+" yd"));
+  body.append(row);
+ }table.append(body);details.append(table);
+ details.append(node("p","playerFoldNote","PlayerForm R1: "+(entries[0]?.recent_method||"recent games")+" with limited 2025 priors and past-opponent context. Different component tests have not validated this combination. No sportsbook lines, over/under odds, injury clearance, or validated player picks."));
+ section.append(details);
+ return section;
+}
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
-            node("span","modelTag","Model · research"));
+            node("span","modelTag","Score · "+String(data?.model||"V03")+" · research"));
  el.append(top);
  const teams=node("div","teamStack");
  teams.append(teamDisplayRow(g,"away"),teamDisplayRow(g,"home"));
@@ -409,6 +484,7 @@ function gameCard(g){
  tiles.append(marketTile("Observed spread",spreadLine,atsPick,g.ats_edge_points),
               marketTile("Observed O/U",totalLine,ouPick,g.ou_edge_points));
  el.append(tiles);
+ el.append(playerOutlook(g));
  if(hasQBRisk(g))el.append(node("div","warningMini","QB availability alert · check the source details"));
  if(Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
   el.append(node("div","marginAlert","Large model / spread difference ("+num(g.ats_edge_points)+" pts). Research only; not a validated edge."));
@@ -448,6 +524,10 @@ function resultTable(headers,items,columns){
 }
 function resultSymbol(s){return s==="WIN"?"W":s==="LOSS"?"L":s==="PUSH"?"P":"—";}
 function renderPerformance(){
+ const props=data?.player_prop_display||{};
+ byId("player-performance").textContent=props.covered_games>0?
+  "PlayerForm R1 experimental stat outlooks available for "+props.covered_games+" of "+props.total_games+" upcoming games. No verified pregame sportsbook player-prop lines or settled prop outcomes. Historical player-stat MAE is not betting-prop accuracy.":
+  "No validated pregame player prop forecasts yet. Historical player-stat models and player research are not a verified betting-prop grade.";
  const p=data?.prospective_records;
  if(!p||p.status!=="ARCHIVED_PROSPECTIVE_MODEL_PERFORMANCE_RESEARCH_ONLY"){
   byId("performance-scoring").textContent="Archived grades unavailable; no outcomes inferred.";
@@ -474,7 +554,7 @@ function render(){
  const needle=byId("query").value.trim().toLowerCase(),filter=byId("market-filter").value,order=byId("sort").value;
  const shown=future.filter(g=>{
   if(selectedDay!=="all"&&dateKey(dateOf(g.kickoff_utc))!==selectedDay)return false;
-  if(needle&&!(g.away_team+" "+g.home_team+" "+g.game_id+" "+(g.qb_home?.player||"")+" "+(g.qb_away?.player||"")).toLowerCase().includes(needle))return false;
+  if(needle&&!(g.away_team+" "+g.home_team+" "+g.game_id+" "+(g.qb_home?.player||"")+" "+(g.qb_away?.player||"")+" "+(g.player_props?.entries||[]).map(p=>p.player).join(" ")).toLowerCase().includes(needle))return false;
   if(filter==="lines"&&!Number.isFinite(g.market_home_spread)&&!Number.isFinite(g.market_total))return false;
   if(filter==="ats"&&!g.model_ats_side)return false;
   if(filter==="ou"&&!g.model_ou_side)return false;
@@ -486,6 +566,10 @@ function render(){
   if(filter==="qb-unknown"&&g.qb_home?.status!=="UNKNOWN"&&g.qb_away?.status!=="UNKNOWN")return false;
   if(filter==="qb-status"&&!(g.qb_availability_home?.length||g.qb_availability_away?.length))return false;
   if(filter==="qb-risk"&&!hasQBRisk(g))return false;
+  if(filter==="player"&&!(g.player_props?.entries?.length))return false;
+  if(filter==="player-qb"&&!(g.player_props?.entries||[]).some(p=>p.metric==="passing_yards"))return false;
+  if(filter==="player-rush"&&!(g.player_props?.entries||[]).some(p=>p.metric==="rushing_yards"))return false;
+  if(filter==="player-rec"&&!(g.player_props?.entries||[]).some(p=>p.metric==="receiving_yards"))return false;
   return true;
  });
  const when=g=>dateOf(g.kickoff_utc).getTime();
@@ -528,6 +612,10 @@ for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id===
  byId("captured").textContent="Forecast: "+fmtDate.format(dateOf(d.forecast_observed_utc));
  byId("refreshed").textContent="Board refreshed: "+fmtDate.format(dateOf(d.generated_at_utc));
  byId("runid").textContent=d.forecast_run_id;byId("modelid").textContent=d.model;
+ const prop=d.player_prop_display||{};
+ byId("player-model-id").textContent="Player stats: "+(prop.model||"not available")+" · conditional";
+ byId("propmodelid").textContent=prop.model||"Not available";
+ byId("propcoverage").textContent=(prop.covered_games??0)+" / "+(prop.total_games??d.games.length)+" games · no sportsbook player-prop history";
  byId("observation").textContent=fmtDate.format(dateOf(d.forecast_observed_utc));byId("hash").textContent=d.forecast_sha256;
  const market=d.market_display||{};
  const extra=" Market source: "+(market.source||"unavailable")+". Observed spread: "+(market.usable_spreads||0)+" games; totals: "+(market.usable_totals||0)+" games. No historical publication-time authentication.";
