@@ -38,6 +38,16 @@ class DriveSimTests(unittest.TestCase):
         self.assertEqual(x["explosive_drives_mean"],10)
         self.assertEqual(x["home_win_regulation_probability"],1)
 
+    def test_team_specific_empirical_field_position_coverage_required(self):
+        obj=fit()
+        obj["distributions"]["field_position_by_side"]={
+            "home":[{"zone":"zone","weight":1}],
+            "away":[{"zone":"zone","weight":1}]}
+        self.assertEqual(simulate(obj,DECISION,trials=100)["total_mean"],0)
+        obj["distributions"]["field_position_by_side"]["away"]=[]
+        with self.assertRaises(ValueError):
+            simulate(obj,DECISION,trials=100)
+
     def test_real_observed_market_only(self):
         market={"status":"OBSERVED_PREDECISION_MARKET","source_url":"https://example.edu/lines",
                 "observed_at_utc":DECISION,"home_spread":-2.5,"total":3.5}
