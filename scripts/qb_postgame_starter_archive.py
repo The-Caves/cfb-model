@@ -10,6 +10,7 @@ from scripts import context_archive as store
 from scripts.game_context import parse_time
 from scripts.qb_passer_history import player_key
 from scripts.qb_postgame_starter_labels import STATUS as OBSERVED,LABEL,UNKNOWN,URL
+OFFICIAL_SOURCE="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML"
 from scripts.personnel_results_archive import ROOT,_commit_material
 
 STATUS="QB_POSTGAME_STARTER_OBSERVATION_LEDGER_RESEARCH_ONLY"
@@ -58,7 +59,7 @@ def verify_index(index):
 
 def validate(snapshot):
     if (snapshot.get("status")!=OBSERVED or snapshot.get("season")!=2026
-        or snapshot.get("source")!="ESPN_SITE_GAME_SUMMARY"
+        or snapshot.get("source") not in ("ESPN_SITE_GAME_SUMMARY",OFFICIAL_SOURCE)
         or snapshot.get("postgame_labels_never_pregame_features") is not True
         or snapshot.get("historical_publication_times_verified") is not False
         or snapshot.get("model_promoted") is not False
@@ -74,7 +75,10 @@ def validate(snapshot):
         if (not re.fullmatch(r"\d{6,12}",gid) or "|" in team or
             key in keys or r["label_status"] not in VALID or
             r["betting_status"]!="PASS_UNVALIDATED" or
-            r.get("source_url")!=URL+gid or
+            (r.get("source_url")!=URL+gid if snapshot["source"]=="ESPN_SITE_GAME_SUMMARY"
+             else (r.get("source_class")!=OFFICIAL_SOURCE or not isinstance(r.get("source_url"),str)
+                   or not r["source_url"].startswith("https://")
+                   or "/sports/football/stats/2026/" not in r["source_url"])) or
             r.get("not_from_passing_leader") is not True or
             r.get("historical_publication_time_verified") is not False or
             not re.fullmatch("[0-9a-f]{64}",r.get("source_payload_sha256","")) or
@@ -104,12 +108,20 @@ def plan(old,snapshot,run_id):
         # Avoid appending the same positive/negative interpretation on each
         # scheduled fetch, but preserve changes and source origin.
         sign=(row["label_status"],player_key(row["starter_player"] or ""))
-        last=(prior["observations"][-1]["label_status"],
-              player_key(prior["observations"][-1]["starter_player"] or "")) if prior else None
+        last_obs=prior["observations"][-1] if prior else None
+        last=(last_obs["label_status"],
+              player_key(last_obs["starter_player"] or "")) if last_obs else None
         if sign==last:continue
+        if (prior and prior["effective_status"]==LABEL and
+            row["label_status"]==UNKNOWN and
+            # ESPN's missing starter flag must never retract an accepted
+            # independent official university offensive starter lineup.
+            row["source_url"]!=last_obs["source_url"]):
+            continue
         entry={"path":path,"captured_at_utc":row["captured_at_utc"],
                "label_status":row["label_status"],"starter_player":row["starter_player"],
                "source_url":row["source_url"],
+               "source_class":snapshot["source"],
                "source_payload_sha256":row["source_payload_sha256"]}
         if prior is None:
             next_index["slots"][key]={"game_id":str(row["game_id"]),"team":row["team"],

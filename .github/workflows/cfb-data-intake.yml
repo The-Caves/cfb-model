@@ -99,6 +99,18 @@ jobs:
             --input "data/pregame_evidence/qb-postgame-evidence-${{ github.run_id }}.json" \
             --output "data/pregame_evidence/qb-postgame-label-ledger-${{ github.run_id }}.json" | tee /tmp/qb-postgame-ledger.txt
           cat /tmp/qb-postgame-ledger.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Collect reviewed official football boxscore starting QB lineups
+        run: |
+          python -m scripts.qb_official_school_boxscores \
+            --games data/games_2026.csv \
+            --registry config/official_school_qb_boxscores_2026.json \
+            --output "data/pregame_evidence/qb-official-gamebook-${{ github.run_id }}.json"
+      - name: Archive official gamebook starter labels without changing frozen picks
+        run: |
+          python -m scripts.qb_postgame_starter_archive \
+            --input "data/pregame_evidence/qb-official-gamebook-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/qb-official-gamebook-ledger-${{ github.run_id }}.json" | tee /tmp/qb-official-actual-starter.txt
+          cat /tmp/qb-official-actual-starter.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Build checksummed retrospective weekly profiles (v0.4 step 1)
         run: |
           python -m scripts.weekly_profiles \
