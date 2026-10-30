@@ -93,6 +93,9 @@ nav[role=tablist]{display:flex;gap:7px;margin:18px 0 20px;border-bottom:1px soli
 .playerName{font-size:10px;font-weight:750;color:#f0f6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .playerStat{font-size:11px;line-height:1.45;color:#a8c8db;margin-top:3px}
 .playerStat b{font-size:17px;letter-spacing:-.025em;color:#a2e7cc;font-variant-numeric:tabular-nums}
+.playerRole{font-size:9px;line-height:1.4;color:#9db9c9;margin-top:3px}
+.playerRisk{font-size:9px;font-weight:750;color:#f2c389;margin-top:3px}
+.playerInlineStatus{font-size:9px;color:#eac48d;margin-top:2px}
 .playerFoot{font-size:9px;color:#95b1c7;line-height:1.5;margin:7px 0 0}
 .playerFold{margin-top:8px;border-top:1px solid #2c455b}
 .playerFold summary{cursor:pointer;color:#acd4e9;font-size:10px;font-weight:750;padding:9px 0 0}
@@ -410,7 +413,7 @@ function playerOutlook(g){
  const line=node("div","playerHead");
  line.append(node("span","playerTitle","Player props · stat outlook"));
  const obj=g.player_props||{},entries=Array.isArray(obj.entries)?obj.entries.filter(p=>p&&Number.isFinite(p.projection)&&typeof p.player==="string"):[];
- line.append(node("span","playerStatus",entries.length?"PlayerForm R1 · research":"Awaiting verified form"));
+ line.append(node("span","playerStatus",entries.length?"PlayerForm R1 · role research":"Awaiting verified form"));
  section.append(line);
  if(!entries.length){
   section.append(node("div","playerMissing","No source-matched player projection yet. No prop line or market edge inferred."));
@@ -434,10 +437,21 @@ function playerOutlook(g){
   chip.append(node("div","playerName",p.player));
   const stat=node("div","playerStat");
   stat.append(node("b","",num(p.projection,1)),node("span",""," yds · "+p.label.replace(" yards","")));
-  chip.append(stat);teaser.append(chip);
+  chip.append(stat);
+  chip.append(stat);
+  const role=p.workload_role_evidence;
+  if(role&&Number.isFinite(role.recorded_opportunity_share)){
+   const kind=p.metric==="passing_yards"?"recorded passes":p.metric==="rushing_yards"?"recorded carries":"recorded catches";
+   chip.append(node("div","playerRole",num(100*role.recorded_opportunity_share,0)+"% "+kind+" share"));
+  }
+  const status=p.official_reported_status;
+  if(status&&status!=="UNKNOWN_NOT_REPORTED")
+   chip.append(node("div","playerRisk","Official: "+status.replaceAll("_"," ")));
+  teaser.append(chip);
  }
  section.append(teaser);
- section.append(node("div","playerFoot","Projected stat if involved · playing status not confirmed · sportsbook line unavailable"));
+ const alertCount=(g.player_availability_home||[]).length+(g.player_availability_away||[]).length;
+ section.append(node("div","playerFoot","Conditional stat estimate · unconfirmed participation · no sportsbook line"+(alertCount?" · "+alertCount+" reported non-QB availability flags":"")));
  const details=node("details","playerFold");
  details.append(node("summary","","All "+entries.length+" player outlooks · method & source"));
  const table=node("table","playerTable"),thead=node("thead"),hdr=node("tr");
@@ -445,12 +459,18 @@ function playerOutlook(g){
  thead.append(hdr);table.append(thead);const body=node("tbody");
  for(const p of rank){
   const row=node("tr");
-  row.append(node("td","",p.player+" · "+(p.team_side==="home"?"Home":"Away")));
+  const playerCell=node("td","",p.player+" · "+(p.team_side==="home"?"Home":"Away"));
+  const role=p.workload_role_evidence;
+  if(role&&Number.isFinite(role.recorded_opportunity_share))
+   playerCell.append(node("div","playerRole",num(role.recorded_opportunity_share*100,0)+"% recorded team opportunity share"));
+  if(p.official_reported_status&&p.official_reported_status!=="UNKNOWN_NOT_REPORTED")
+   playerCell.append(node("div","playerInlineStatus","Official: "+p.official_reported_status.replaceAll("_"," ")));
+  row.append(playerCell);
   row.append(node("td","",p.label||p.metric));
   row.append(node("td","",num(p.projection,1)+" yd"));
   body.append(row);
  }table.append(body);details.append(table);
- details.append(node("p","playerFoldNote","PlayerForm R1: "+(entries[0]?.recent_method||"recent games")+" with limited 2025 priors and past-opponent context. Different component tests have not validated this combination. No sportsbook prop lines, over/under odds, injury clearance, or validated player picks."));
+ details.append(node("p","playerFoldNote","PlayerForm R1 uses recent recorded player games, limited 2025 priors and opponent history. Role shares reflect recorded team attempts, carries or receptions (not targets/snaps). Official reports are game-specific, but unlisted players remain UNKNOWN. Player participation is not confirmed; prior and matchup components are not jointly calibrated. No sportsbook prop lines or validated betting picks."));
  section.append(details);
  return section;
 }

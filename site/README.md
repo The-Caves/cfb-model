@@ -101,3 +101,30 @@ the rest remain one tap away.
 The score-model promotion gate remains independent: challenger evidence
 has not justified replacing V03, despite development of a separate
 PlayerForm R1 experiment.
+
+## 2026-10-30: All-position official availability and recorded workload
+
+The structured conference availability source was always broader than QB,
+but the site previously surfaced only QBs. The current pregame overlay now
+preserves all published positions (RB, WR, TE, OL, DL, EDGE, LB, DB, etc.)
+in each game's `player_availability_home/away` fields; the QB-specific
+display remains unchanged. A player without a report is **UNKNOWN**, never
+declared healthy or starting.
+
+An official OUT, OUT_FIRST_HALF, DOUBTFUL, SUSPENDED or contradictory
+availability status prevents a full-game yardage preview for the matched
+player. QUESTIONABLE/GAME_TIME_DECISION/LIMITED remain conditional forecasts
+with a clear official status label, never converted to an unsupported
+playing probability. These are published designations, not diagnosis.
+
+`player_prop_workload.py` computes player shares of *recorded team*
+passing attempts, rushing attempts, and catches, only from prior observed
+box games. Recorded catches are NOT targets, and none of these are snap
+shares. Receiving shares require reconciled QB completions versus total
+player receptions; missing categories and unlisted players are not zeros.
+The public game card shows a compact role-share label when available.
+These workload indicators do **not yet** alter yardage forecasts. A
+retrospective same-player recorded-game competition tests their statistical
+usefulness against the previous-four player workload baseline, with
+same-football-date withholding and explicit source-timing caveats.
+Live V03 scores and PlayerForm yard projections remain unpromoted.
