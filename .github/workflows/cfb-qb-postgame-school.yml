@@ -67,7 +67,9 @@ jobs:
                  "Explicit QB starter labels: "+str(j["explicit_starter_labels"]),
                  "Review/unknown slots: "+str(j["unknown_or_conflict_starter_labels"]),
                  "Fetch/parse failures: "+str(j["missing_or_rejected_games"])]
-          lines.extend("Source error: "+str(e["game_id"])+" "+e["reason"]+" "+e.get("detail","") for e in j["errors"])
+          lines.extend("Source error: "+str(e["game_id"])+" "+e["reason"]+" "+e.get("detail","")+
+                       " | format="+json.dumps(e.get("source_format_diagnostic",{}),ensure_ascii=True)[:900]
+                       for e in j["errors"])
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:f.write("\n\n".join(lines)+"\n")
           print("\n".join(lines))
           PY
