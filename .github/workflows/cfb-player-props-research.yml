@@ -46,6 +46,11 @@ jobs:
           python -m scripts.player_prop_walkforward \
             --input data/player_props/espn_player_game_history.json \
             --output data/player_props/retrospective_matchup_prop_baselines.json
+      - name: Evaluate opponent-specific passing and rushing defense adjustments
+        run: |
+          python -m scripts.player_prop_matchup_walkforward \
+            --input data/player_props/espn_player_game_history.json \
+            --output data/player_props/opponent_matchup_walkforward.json
       - name: Verify honest incomplete-market status and report grade coverage
         run: |
           python - <<'PY'
