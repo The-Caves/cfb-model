@@ -15,6 +15,7 @@ def config():
        "home":GAME["home"],"away":GAME["away"],
        "home_score":34,"away_score":27,"kickoff_utc":GAME["kickoff_utc"],
        "home_source_label":"Texas","away_source_label":"Ole Miss",
+       "home_starting_qb_name":"Arch Manning","away_starting_qb_name":"Trinidad Chambliss",
        "source_url":"https://texaslonghorns.com/sports/football/stats/2026/ole-miss/boxscore/22500",
        "publisher_hostname":"texaslonghorns.com","reviewed_official_publisher":True}
 def html():
@@ -56,6 +57,16 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
         r=parse(GAME,config(),unmatched,AT)
         self.assertEqual(r[1]["starter_player"],"Arch Manning")
 
+    def test_team_image_alt_between_qb_name_tokens_is_ignored(self):
+        page=html().replace("<a>Manning, Arch</a>","<a>Manning,<img alt='Ole Miss'> Arch</a>")
+        result=parse(GAME,config(),page,AT)
+        self.assertEqual(result[1]["starter_player"],"Arch Manning")
+        self.assertNotIn("Ole Miss",result[1]["starter_player"])
+    def test_wrong_extracted_name_is_rejected_before_becoming_a_label(self):
+        cfg=config();cfg["home_starting_qb_name"]="Arch Ole Miss Manning"
+        with self.assertRaisesRegex(ValueError,"differs from reviewed"):
+            parse(GAME,cfg,html(),AT)
+
     def test_wrong_score_fails_even_if_qb_table_is_correct(self):
         bad=html().replace("<div>27</div><div>Final</div><div>34</div>",
                            "<div>21</div><div>Final</div><div>34</div>")
@@ -76,6 +87,7 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
              "home_score":37,"away_score":24,"game_id":game["game_id"],
              "kickoff_utc":game["kickoff_utc"],
              "home_source_label":"Cincinnati","away_source_label":"Texas Tech",
+             "home_starting_qb_name":"JC French IV","away_starting_qb_name":"Will Hammond",
              "scoreboard_first_side":"home"}
         text=html().replace('Ole Miss vs Texas','Cincinnati vs Texas Tech')
         text=text.replace('<div>Ole Miss</div>','<div>Cincinnati</div>')
@@ -83,6 +95,8 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
                           '<div>37</div><div>Final</div><div>24</div>')
         text=text.replace('alt="Ole Miss"','alt="Cincinnati"')
         text=text.replace('alt="Texas"','alt="Texas Tech"')
+        text=text.replace("Chambliss,Trinidad","French IV,JC")
+        text=text.replace("Manning, Arch","Hammond, Will")
         rows=parse(game,cfg,text,AT)
         self.assertEqual(rows[0]["team"],"Texas Tech Red Raiders")
         self.assertEqual(rows[1]["team"],"Cincinnati Bearcats")

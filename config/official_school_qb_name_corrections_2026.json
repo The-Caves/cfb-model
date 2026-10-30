@@ -1,0 +1,31 @@
+{
+  "status": "AUDITED_SCHOOL_GAMEBOOK_PARSER_ALT_TEXT_CORRECTIONS",
+  "season": 2026,
+  "reason": "Parser inadvertently inserted a team-logo <img alt> label within the starting QB player name. Retain the original archived observation and append a source-verified reviewed correction.",
+  "entries": [
+    {
+      "game_id": "401856727",
+      "team": "Alabama Crimson Tide",
+      "old_player": "Keelon Texas A&M Russell",
+      "new_player": "Keelon Russell",
+      "source_url": "https://rolltide.com/sports/football/stats/2026/texas-am/boxscore/21645",
+      "old_source_payload_sha256": "57e08bea82a70957724ba749c16bbfeec2e03fd10a845cfe406d4017d1fb28b2"
+    },
+    {
+      "game_id": "401856732",
+      "team": "Texas Longhorns",
+      "old_player": "Arch Ole Miss Manning",
+      "new_player": "Arch Manning",
+      "source_url": "https://texaslonghorns.com/sports/football/stats/2026/ole-miss/boxscore/22500",
+      "old_source_payload_sha256": "2e3d6184227e4298d5da146916d60351d2b07519f5559940496a172e5de3da60"
+    },
+    {
+      "game_id": "401856840",
+      "team": "Texas Tech Red Raiders",
+      "old_player": "Will Cincinnati Hammond",
+      "new_player": "Will Hammond",
+      "source_url": "https://texastech.com/sports/football/stats/2026/cincinnati/boxscore/21731",
+      "old_source_payload_sha256": "f4839c713caa289c901328ca5211ae2a4606d9a40304636dcc817e2ab44f25e1"
+    }
+  ]
+}

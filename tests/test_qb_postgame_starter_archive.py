@@ -1,6 +1,6 @@
 import copy
 import unittest
-from scripts.qb_postgame_starter_archive import empty,plan,validate,verify_index,DANGER,STATUS,source_archive_run_id
+from scripts.qb_postgame_starter_archive import empty,plan,validate,verify_index,DANGER,STATUS,source_archive_run_id,reviewed_corrections
 from scripts.qb_postgame_starter_labels import parse,collect,LABEL,UNKNOWN
 from test_qb_postgame_starter_labels import GAME,payload,AT
 
@@ -29,6 +29,47 @@ class PostgameQBArchiveTests(unittest.TestCase):
         self.assertIsNotNone(record)
         self.assertEqual(len(updated["runs"]),2)
         self.assertEqual(counts["eligible_provider_flag_starter_labels"],2)
+
+    def test_audited_same_source_name_repair_appends_and_retains_prior(self):
+        old,_,_=plan(empty(),snapshot(),"99")
+        # First captured positive label was contaminated by team-logo alt text.
+        old["slots"][GAME["game_id"]+"|"+GAME["home"]]["starter_player"]="A School B Starter"
+        last=old["slots"][GAME["game_id"]+"|"+GAME["home"]]["observations"][-1]
+        last["starter_player"]="A School B Starter"
+        school_url="https://rolltide.com/sports/football/stats/2026/example/boxscore/100"
+        last["source_url"]=school_url
+        last["source_class"]="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML"
+        # Mimic a second official university gamebook capture, independent of ESPN.
+        actual=snapshot()
+        new_player=next(x for x in actual["rows"] if x["team"]==GAME["home"])
+        actual["source"]="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML"
+        actual["rows"]=[new_player]
+        actual["team_slots"]=1
+        new_player["source_class"]=actual["source"]
+        new_player["source_url"]=school_url
+        reviewed={GAME["game_id"]+"|"+GAME["home"]:{
+            "old_player":"A School B Starter",
+            "new_player":"A Starter",
+            "source_url":last["source_url"],
+            "old_source_payload_sha256":last["source_payload_sha256"]}}
+        revised,record,summary=plan(old,actual,"100",reviewed)
+        corrected=revised["slots"][GAME["game_id"]+"|"+GAME["home"]]
+        self.assertEqual(corrected["starter_player"],"A Starter")
+        self.assertEqual(corrected["effective_status"],LABEL)
+        self.assertEqual(len(corrected["observations"]),2)
+        self.assertEqual(corrected["observations"][-1]["reviewed_adjudication"]["old_player"],"A School B Starter")
+        self.assertEqual(summary["quarantined_conflicts"],0)
+        wrong=copy.deepcopy(reviewed)
+        wrong[GAME["game_id"]+"|"+GAME["home"]]["old_source_payload_sha256"]="0"*64
+        with self.assertRaisesRegex(ValueError,"provenance"):
+            plan(old,actual,"100",wrong)
+        with self.assertRaisesRegex(ValueError,"provenance"):
+            plan(old,actual,"100",{GAME["game_id"]+"|"+GAME["home"]:{
+                **reviewed[GAME["game_id"]+"|"+GAME["home"]],"new_player":"Someone Else"}})
+    def test_registered_corrections_are_source_bound_and_complete(self):
+        registered=reviewed_corrections("config/official_school_qb_name_corrections_2026.json")
+        self.assertEqual(len(registered),3)
+        self.assertEqual(registered["401856732|Texas Longhorns"]["new_player"],"Arch Manning")
 
     def test_unknown_retained_and_one_accepted_starter(self):
         first,record,summary=plan(empty(),snapshot(),"99")

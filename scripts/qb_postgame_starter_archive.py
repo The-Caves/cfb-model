@@ -93,8 +93,10 @@ def validate(snapshot):
         keys.add(key)
     return observed
 
-def plan(old,snapshot,run_id):
+def plan(old,snapshot,run_id,corrections=None):
     verify_index(old);observed=validate(snapshot)
+    corrections=corrections or {}
+    if not isinstance(corrections,dict):raise ValueError("Untrusted QB correction registry")
     if not str(run_id).isdigit():raise ValueError("Missing numeric GitHub run")
     day=observed.strftime("%Y/%m/%d")
     path=PATH_PREFIX+day+"/run-"+str(run_id)+".json.gz"
@@ -118,11 +120,32 @@ def plan(old,snapshot,run_id):
             # independent official university offensive starter lineup.
             row["source_url"]!=last_obs["source_url"]):
             continue
+        proposed=corrections.get(key)
+        permitted_correction=False
+        if proposed is not None:
+            if (not prior or prior["effective_status"]!=LABEL or
+                row["label_status"]!=LABEL or
+                snapshot["source"]!="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML" or
+                proposed.get("source_url")!=row["source_url"] or
+                proposed.get("source_url")!=last_obs["source_url"] or
+                proposed.get("old_source_payload_sha256")!=last_obs["source_payload_sha256"] or
+                proposed.get("old_player")!=prior["starter_player"] or
+                proposed.get("new_player")!=row["starter_player"]):
+                raise ValueError("Reviewed QB name correction provenance mismatch")
+            permitted_correction=True
         entry={"path":path,"captured_at_utc":row["captured_at_utc"],
                "label_status":row["label_status"],"starter_player":row["starter_player"],
                "source_url":row["source_url"],
                "source_class":snapshot["source"],
                "source_payload_sha256":row["source_payload_sha256"]}
+        if permitted_correction:
+            entry["reviewed_adjudication"]={
+                "kind":"SCHOOL_BOXSCORE_TEAM_LOGO_ALT_PARSER_REPAIR",
+                "old_player":proposed["old_player"],
+                "new_player":proposed["new_player"],
+                "prior_source_payload_sha256":proposed["old_source_payload_sha256"],
+                "provenance":"EXACT_REVIEWED_SOURCE_NAME_AND_ORIGINAL_CAPTURE_SHA",
+                "source_url":proposed["source_url"]}
         if prior is None:
             next_index["slots"][key]={"game_id":str(row["game_id"]),"team":row["team"],
                 "observations":[entry],"effective_status":row["label_status"],
@@ -132,7 +155,10 @@ def plan(old,snapshot,run_id):
             # UNKNOWN -> first genuine explicit label is useful new evidence,
             # not a contradiction. Any later removal/change of an accepted
             # explicit label or an existing conflict is quarantined.
-            if prior["effective_status"]==UNKNOWN and row["label_status"]==LABEL:
+            if permitted_correction:
+                prior["effective_status"]=LABEL
+                prior["starter_player"]=row["starter_player"]
+            elif prior["effective_status"]==UNKNOWN and row["label_status"]==LABEL:
                 prior["effective_status"]=LABEL
                 prior["starter_player"]=row["starter_player"]
             elif prior["effective_status"]==DANGER:
@@ -159,6 +185,24 @@ def plan(old,snapshot,run_id):
        "quarantined_conflicts":conflicts,
        "other_slots_unresolved":len(next_index["slots"])-n-conflicts,
        "model_promoted":False,"betting_status":"PASS_UNVALIDATED"}
+
+def reviewed_corrections(path):
+    if not Path(path).is_file():return {}
+    data=json.loads(Path(path).read_text())
+    if (data.get("status")!="AUDITED_SCHOOL_GAMEBOOK_PARSER_ALT_TEXT_CORRECTIONS"
+        or data.get("season")!=2026 or not isinstance(data.get("entries"),list)):
+        raise ValueError("Untrusted reviewed starter name correction manifest")
+    rows={}
+    for item in data["entries"]:
+        key=str(item.get("game_id"))+"|"+str(item.get("team"))
+        if (key in rows or not str(item.get("game_id","")).isdigit()
+            or not item.get("old_player") or not item.get("new_player")
+            or not isinstance(item.get("source_url"),str)
+            or not item["source_url"].startswith("https://")
+            or not re.fullmatch("[0-9a-f]{64}",item.get("old_source_payload_sha256",""))):
+            raise ValueError("Invalid QB starter name correction record")
+        rows[key]=item
+    return rows
 
 def source_archive_run_id(actions_run_id,source):
     """One unique index key per source within a single serial workflow."""
@@ -189,7 +233,16 @@ def run(input_file,output):
         blob=store.get_blob_file(entry["path"])
         if blob is None or _sha(store.unpack(blob))!=entry["sha256"]:
             raise ValueError("Immutable prior QB label evidence missing or changed")
-    updated,extra,counts=plan(old,snapshot,run_id)
+    corrections=(reviewed_corrections("config/official_school_qb_name_corrections_2026.json")
+                 if snapshot["source"]=="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML" else {})
+    # The correction manifest is restricted to historical parser errors. When
+    # the corrected source is not in this particular batch, leave it untouched.
+    applicable={str(r["game_id"])+"|"+r["team"]:corrections[str(r["game_id"])+"|"+r["team"]]
+                for r in snapshot["rows"]
+                if str(r["game_id"])+"|"+r["team"] in corrections
+                and old["slots"].get(str(r["game_id"])+"|"+r["team"],{}).get("starter_player")==
+                   corrections[str(r["game_id"])+"|"+r["team"]]["old_player"]}
+    updated,extra,counts=plan(old,snapshot,run_id,applicable)
     if extra is not None:
         entry=updated["runs"][-1]
         commit=_commit_material({INDEX:store.encode(updated),

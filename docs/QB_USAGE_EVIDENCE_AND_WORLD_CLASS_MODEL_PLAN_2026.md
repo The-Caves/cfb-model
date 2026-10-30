@@ -53,6 +53,12 @@ A separate game-specific fallback now parses **official university 2026 football
 
 This is a **seed and verifiable source pathway**, not nationwide starter coverage. Do not train a starter probability classifier on a handful of manually reviewed university source pages. Expand official gamebook coverage to 138 FBS schools, build immutable forecast-time feature/actual-starter joins, audit selection bias from schools with accessible gamebooks, and then use genuinely held-out chronological games to calibrate probabilities.
 
+## Official school starter parser integrity finding (October 30 capture)
+
+The first live source check accepted **six positive QB roster rows across three official games**. An independent archive audit caught **three contaminated player strings** caused by embedded team-logo image `alt` text leaking into the university roster's name field. Examples were `Arch Ole Miss Manning` and `Keelon Texas A&M Russell`, neither of which is a real player name. The original archived bytes are preserved and *must not be treated as clean training labels*.
+
+The parser now tags image `alt` tokens separately from literal player-name cells and refuses to promote any unique QB starter unless it matches the exact manually reviewed QB name in the source registry. A narrowly scoped audited correction manifest `config/official_school_qb_name_corrections_2026.json` lists **only the three captured defects**, original provider payload SHA-256, published official school URL, old contaminated name, and reviewed corrected name. The archive writer may append a reviewed correction only when all those fields match the previously stored source and the newly fetched corrected official row; it keeps the previous observation and adds an explicit `reviewed_adjudication` trail. Every other unexpected starter-name change still quarantines the slot. Independent prospective model training must use only the currently effective, non-quarantined verified labels and exclude older contaminated observations as ground truth.
+
 ## Next development milestones, in testable order
 
 1. **National QB source coverage:** expand verified official football preview/article and direct game-note PDF sources beyond the few currently readable feeds. Capture dated full text and exact fixture, not just an RSS homepage or metadata. Add a separate official availability update pipeline with conflict/review signals. Measure confirmation coverage by game week and report source failures.
