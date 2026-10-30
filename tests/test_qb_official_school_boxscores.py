@@ -44,8 +44,8 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
         self.assertTrue(rows[0]["not_from_passing_leader"])
         self.assertEqual(len(rows[0]["source_payload_sha256"]),64)
     def test_sidearm_inline_svg_and_script_markup_do_not_hide_official_starters(self):
-        extra='<script type="application/json">{"text":"Starters QB"}</script>'+
-              '<svg><title>Starters</title><path d="M0 0"/></svg>'
+        extra=('<script type="application/json">{"text":"Starters QB"}</script>'
+               '<svg><title>Starters</title><path d="M0 0"/></svg>')
         page=html().replace("<h2>Starters</h2>",extra+"<h2>Starters</h2>")
         r=parse(GAME,config(),page,AT)
         self.assertEqual([x["starter_player"] for x in r],["Trinidad Chambliss","Arch Manning"])
