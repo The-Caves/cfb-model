@@ -108,3 +108,21 @@ currently supplies validated per-drive scoring; this module must not be passed
 invented events, points inferred from final scores, or an unaudited drive ID map.
 The source adapter, calibrated score distribution, end-game/OT state and field-
 position transitions are still separate milestones.
+
+## Official 2026 roster report precision update
+
+The existing structured publisher ingestion already covers SEC, Big Ten, ACC and
+Big 12 when their game-specific reports are available. The separate change watcher
+now monitors **all four** rather than only SEC/Big Ten. Its HTML-change notices
+remain source-review signals, never player status claims. Non-conference games
+and schools lacking official reports remain UNKNOWN.
+
+The Big Ten's 2026 `Out (1st Half)` designation must **not** become `LIMITED`
+or a whole-game `OUT` label. The source pathway now preserves
+`OUT_FIRST_HALF`, passes it through timestamped history, and exposes separate
+position-count and matchup-coverage outputs. A first-half-out QB cannot be
+the confirmed opening starter. No total-game replacement penalty is assigned.
+This is reported *availability*, not a diagnosis, medical record or empirical
+probability of participation.
+
+Source rule: https://bigten.org/news/2026/8/28/big-ten-announces-changes-to-football-availability-reporting-process.aspx

@@ -28,6 +28,18 @@ class ReplacementTests(unittest.TestCase):
         self.assertIsNone(build_game(good, missing)["absence_differentials"])
         self.assertEqual(build_game(good, good)["absence_differentials"]["QB"], 0)
 
+    def test_first_half_unavailable_not_full_game_out(self):
+        sample=snap()
+        sample["reported_players"].append({"player":"Example Guard","position":"OL",
+                                          "reported_status":"OUT_FIRST_HALF"})
+        result=observed_absences(sample,ASOF)
+        self.assertEqual(result["partial_absences"]["OL"],1)
+        self.assertEqual(result["absences"]["OL"],0)
+        self.assertEqual(result["uncertain"]["OL"],0)
+        combined=build_game(result,result)
+        self.assertEqual(combined["partial_game_differentials"]["OL"],0)
+        self.assertIsNone(combined["replacement_points"])
+
     def test_no_arbitrary_replacement_penalty(self):
         self.assertEqual(train_coefficients([], DECISION)["status"], "INSUFFICIENT_TRAINING")
         good = observed_absences(snap(), ASOF)

@@ -44,6 +44,13 @@ class InjuryHistoryTests(unittest.TestCase):
         self.assertEqual(lookup([snap], "101", HOME, NOW, "Unlisted Player")["status"], "UNKNOWN")
         self.assertFalse(snap["safe_for_betting"])
 
+    def test_first_half_out_remains_distinct_reported_status(self):
+        snap=observe(context([signal(status="OUT_FIRST_HALF")]),NOW)
+        self.assertTrue(verify_observation(snap))
+        result=lookup([snap],"101",HOME,NOW,"Player One")
+        self.assertEqual(result["status"],"OUT_FIRST_HALF")
+        self.assertFalse(result["diagnosis_verified"])
+
     def test_reported_out_is_not_diagnosis_or_participation(self):
         snap = observe(context([signal()]), NOW)
         result = lookup([snap], "101", HOME, NOW, "Player One")

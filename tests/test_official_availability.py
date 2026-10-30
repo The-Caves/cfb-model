@@ -20,6 +20,16 @@ class PublishedOfficialTests(unittest.TestCase):
     def test_major_conference_official_sources_registered(self):
         self.assertEqual(set(CONFERENCES),{"SEC","B10","ACC","B12"})
         self.assertEqual(set(SOURCE_PAGE),set(CONFERENCES))
+    def test_out_first_half_is_not_limited_or_full_game_out(self):
+        for publisher in ("Out (1st Half)", "Out - (1st Half)"):
+            p=parse_player({"name":"OL #77 Example Lineman","status":publisher})
+            self.assertEqual(p["status"],"OUT_FIRST_HALF")
+            rows,qa=extract("B10",{"a":card(rows=[{"name":"OL #77 Example Lineman",
+                       "status":publisher}])},[G],ALIASES,"2026-10-24T17:00:00Z")
+            self.assertEqual(qa["official_reports_accepted"],1)
+            self.assertEqual(next(r["status"] for r in rows if r["kind"]=="AVAILABILITY"),
+                             "OUT_FIRST_HALF")
+
     def test_name_without_known_position_is_not_truncated(self):
         p=parse_player({"name":"AK Dear","status":"Questionable"})
         self.assertEqual(p["player"],"AK Dear")

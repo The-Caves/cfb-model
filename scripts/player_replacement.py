@@ -12,6 +12,7 @@ from scripts.game_context import parse_time
 STATUS = "PLAYER_REPLACEMENT_RESEARCH_ONLY"
 ABSENT = {"OUT", "SUSPENDED"}
 UNCERTAIN = {"DOUBTFUL", "QUESTIONABLE", "GAME_TIME_DECISION", "LIMITED"}
+PARTIAL_GAME = {"OUT_FIRST_HALF"}  # Confirmed first-half unavailability, NOT full-game absence.
 POSITIONS = ("QB", "RB", "WR", "TE", "OL", "DL", "EDGE", "LB", "CB", "DB", "S", "K", "P", "OTHER")
 
 def observed_absences(injury_snapshot, decision_utc):
@@ -20,13 +21,14 @@ def observed_absences(injury_snapshot, decision_utc):
     if parse_time(injury_snapshot["asof_utc"]) > decision:
         raise ValueError("Future injury snapshot")
     if injury_snapshot.get("coverage_status") != "VERIFIED_REPORT_REVIEWED":
-        return {"coverage": "UNKNOWN", "absences": None, "uncertain": None}
+        return {"coverage": "UNKNOWN", "absences": None, "uncertain": None, "partial_absences": None}
     rows = injury_snapshot.get("reported_players")
     if not isinstance(rows, list):
         raise ValueError("Verified report lacks player records")
     seen = set()
     absent = {p: 0 for p in POSITIONS}
     uncertain = {p: 0 for p in POSITIONS}
+    partial = {p: 0 for p in POSITIONS}
     for row in rows:
         player = row.get("player")
         pos = row.get("position")
@@ -41,18 +43,24 @@ def observed_absences(injury_snapshot, decision_utc):
             absent[pos] += 1
         elif state in UNCERTAIN:
             uncertain[pos] += 1
+        elif state in PARTIAL_GAME:
+            partial[pos] += 1
         elif state not in ("AVAILABLE", "PROBABLE", "UNKNOWN"):
             raise ValueError("Unrecognized availability designation")
     return {"coverage": "VERIFIED_REPORT_REVIEWED", "absences": absent,
-            "uncertain": uncertain, "player_identity_globally_verified": False}
+            "uncertain": uncertain, "partial_absences": partial,
+            "player_identity_globally_verified": False}
 
 def build_game(home, away):
     if home["coverage"] != "VERIFIED_REPORT_REVIEWED" or away["coverage"] != "VERIFIED_REPORT_REVIEWED":
         return {"coverage": "INCOMPLETE", "absence_differentials": None,
-                "uncertain_differentials": None, "replacement_points": None}
+                "uncertain_differentials": None, "partial_game_differentials": None,
+                "replacement_points": None}
     return {"coverage": "BOTH_REPORTS",
             "absence_differentials": {p: home["absences"][p]-away["absences"][p] for p in POSITIONS},
             "uncertain_differentials": {p: home["uncertain"][p]-away["uncertain"][p] for p in POSITIONS},
+            "partial_game_differentials": {p: home["partial_absences"][p]-away["partial_absences"][p]
+                                           for p in POSITIONS},
             "replacement_points": None}
 
 def train_coefficients(train, test_decision_utc, minimum=30, ridge=25.0):

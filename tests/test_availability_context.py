@@ -30,6 +30,13 @@ class PersonnelTests(unittest.TestCase):
         self.assertEqual(p["coverage_status"],"BOTH_TEAMS_VERIFIED")
         self.assertEqual(p["confirmed_qb_starters"],{})
         self.assertEqual(p["betting_status"],"PASS_UNVALIDATED")
+    def test_first_half_out_cannot_be_confirmed_opening_qb(self):
+        rows=[report("Home","QB_STARTER","Quarterback Alpha","QB","CONFIRMED"),
+              report("Home","AVAILABILITY","Quarterback Alpha","QB","OUT_FIRST_HALF")]
+        p=evaluate(GAME,ISSUE,rows)
+        self.assertEqual(p["confirmed_qb_starters"],{})
+        self.assertEqual(p["injuries"][0]["status"],"OUT_FIRST_HALF")
+
     def test_official_availability_is_not_a_confirmed_starter(self):
         rows=[report("Home",kind="AVAILABILITY",player="Quarterback Alpha",
                      position="QB",status="OUT")]
