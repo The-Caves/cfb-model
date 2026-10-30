@@ -36,7 +36,7 @@ def evaluate(source,start="2026-09-26"):
     # All game/athlete stat identity evidence comes from the retrospectively
     # observed provider fixture. Needed later: independent pregame team IDs.
     players=defaultdict(list)
-    defense=defaultdict(lambda:defaultdict(list))
+    defense=defaultdict(list)
     league=defaultdict(list)
     grade=defaultdict(list)
     skipped=defaultdict(lambda:defaultdict(int))
