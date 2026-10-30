@@ -54,6 +54,20 @@ jobs:
             --input "data/settlement_scores/qb-postgame-evidence-${{ github.run_id }}.json" \
             --output "data/settlement_scores/qb-postgame-ledger-${{ github.run_id }}.json" | tee /tmp/qb-starter-ledger.txt
           cat /tmp/qb-starter-ledger.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Observe manually reviewed official university QB starting lineups
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.qb_official_school_boxscores \
+            --games data/settlement_scores/games_2026.csv \
+            --registry config/official_school_qb_boxscores_2026.json \
+            --output "data/settlement_scores/qb-official-gamebook-${{ github.run_id }}.json"
+      - name: Persist gamebook actual starters separately from QB passing leaders
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.qb_postgame_starter_archive \
+            --input "data/settlement_scores/qb-official-gamebook-${{ github.run_id }}.json" \
+            --output "data/settlement_scores/qb-official-gamebook-ledger-${{ github.run_id }}.json" | tee /tmp/qb-official-gamebook-ledger.txt
+          cat /tmp/qb-official-gamebook-ledger.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Link only existing pregame captures to observed finals (no new pregame input)
         if: steps.gate.outputs.run == 'true'
         run: |
@@ -95,6 +109,8 @@ jobs:
             data/settlement_scores/settlement-*.json
             data/settlement_scores/qb-postgame-evidence-*.json
             data/settlement_scores/qb-postgame-ledger-*.json
+            data/settlement_scores/qb-official-gamebook-*.json
+            data/settlement_scores/qb-official-gamebook-ledger-*.json
             data/settlement_scores/step3g-grading-*.json
             data/settlement_scores/model-finishline-*.json
             data/settlement_scores/step3e-*/
