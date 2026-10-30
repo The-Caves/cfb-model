@@ -66,3 +66,38 @@ A supplementary, read-only official conference availability overlay runs in `scr
 QB1–QB3 chart ranks for each matchup are available inside a collapsed source panel based on a dated 2026 Ourlads college-football depth chart, with an outbound source link and its update date. `QB1` means **first on the third-party depth chart**, not guaranteed to start today. Real, date-matched *official* availability is overlaid beside the named player (for example, Taylor `QUESTIONABLE` at Mississippi State) and confirmed game-specific starter evidence is a separate stronger source class. A player whose only evidence is last week's box score remains labeled as last week's passer, not a QB1.
 
 Verified [successful final site build 40108010413](https://github.com/The-Caves/cfb-model/actions/runs/40108010413): all 102 upcoming matchups have both teams' chart-rank slots, covering 135 distinct teams and 570 listed quarterback entries. This does **not** mean 102 verified starting-QB matchups, and the model is **not** injury/replacement adjusted simply because names/ranks are displayed. `scripts/site_depthchart.py` and `tests/test_site_depthchart.py` implement source validation and daily caching.
+
+## 2026-10-30: PlayerForm R1 compact player-stat outlook in each game widget
+
+The **score model remains the original frozen V03 archive**. Before the site
+publishes, `scripts/site_player_props.py` now source-matches actual ESPN
+athlete game boxes, prior-season recorded athlete IDs and real ESPN
+game/team/kickoff identities, then attaches a separate **PlayerForm R1**
+experimental player-stat estimate. The one-look widget shows up to three
+conditional player-stat cards: passing, receiving and rushing yards. A
+collapsed details view lists up to six candidate rows across both teams.
+
+Components: last-four 2026 observed player games; 2025 shrinkage after
+only one or two 2026 appearances; conservative .25 capped prior-opponent
+allowance modifier, when a past-only source qualifies. The previous-season
+and defensive interactions were individually screened, NOT jointly
+calibrated prospectively. Their combination is strictly **research-only**.
+
+Player presence in past recorded games is **NOT confirmed participation** for
+the upcoming matchup. An OUT/OUT_FIRST_HALF/SUSPENDED/DOUBTFUL QB from the
+official overlay is suppressed from opening-game QB projection. A named
+candidate player still is not a guaranteed current starter or healthy.
+No actual player-prop sportsbook line is attached, and any Over/Under
+probability remains null. If ESPN data is missing, the card shows a small
+unavailable state and does not create fake odds, scores or players.
+
+The game scoreboard, V03 archived projection sha, ATS selection, totals,
+performance grades and current market remain unchanged by the player module.
+Source failures are explicit and the data may be newer than the underlying
+V03 freeze. Player names can be searched, and there are separate filters for
+available player stat projections. Mobile teasers show two compact chips and
+the rest remain one tap away.
+
+The score-model promotion gate remains independent: challenger evidence
+has not justified replacing V03, despite development of a separate
+PlayerForm R1 experiment.
