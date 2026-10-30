@@ -1,6 +1,12 @@
 name: CFB Official School QB Starter Source Check
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'config/official_school_qb_boxscores_2026.json'
+      - 'scripts/qb_official_school_boxscores.py'
+      - 'tests/test_qb_official_school_boxscores.py'
+      - '.github/workflows/cfb-qb-postgame-school.yml'
   push:
     branches: [main]
     paths:
