@@ -77,12 +77,14 @@ def mixture(rows,team,slot,game_date,observed_at):
         game=grouped[(day,gid)]
         totals={_number(r.get("team_pass_tagged_plays")) for r in game
                 if r.get("team_pass_tagged_plays") not in (None,"")}
-        if len(totals)!=1:
+        if len(totals)>1:raise ValueError("Inconsistent historical team pass totals")
+        if not totals:
             quality_ignored+=1;continue
         total=next(iter(totals))
         counts={player_key(r["player"]):_number(r["pass_tagged_plays"]) for r in game}
-        if (total==0 or sum(counts.values())>total or
-            sum(counts.values())/total<MIN_NAMED_COVERAGE):
+        if sum(counts.values())>total:
+            raise ValueError("Invalid historical named passes exceed team total")
+        if (total==0 or sum(counts.values())/total<MIN_NAMED_COVERAGE):
             quality_ignored+=1;continue
         # Availability is applied to expected *future* participation, not to
         # observed past counts: the OUT player contributes UNKNOWN mass.
