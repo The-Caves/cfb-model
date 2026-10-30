@@ -105,7 +105,7 @@ class DefenseAdjustedQBTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"coefficient"):
             peer_effect(ctx,"A","QB One",float("nan"))
         with self.assertRaisesRegex(ValueError,"after game day"):
-            build_context(history(),TARGET,"2026-11-01T03:00:00Z")
+            build_context(history(),TARGET,"2026-11-01T13:00:00Z")
 
     def test_no_other_qb_requires_zero_effect_even_if_star_is_amazing(self):
         rows=history()[:-1]
