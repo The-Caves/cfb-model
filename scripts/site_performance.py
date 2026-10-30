@@ -22,6 +22,7 @@ from scripts.game_context import parse_time
 from scripts.market_finals_archive import verify as verify_final_index
 from scripts.personnel_forecast_grade import verify_prior_grade
 from scripts.site_decision_archive import STATUS as BOARD_STATUS
+from scripts.weekly_profiles import canonical
 
 GRADE_INDEX="research_2026/forecast_grades_index.json"
 BOARD_INDEX="research_2026/site_board_snapshots/index.json"
@@ -41,11 +42,11 @@ def _file(root,path,pattern=None):
 def _json(root,path):
     return json.loads(_file(root,path).decode("utf-8"))
 
-def _packed(root,path,pattern,sha):
+def _packed(root,path,pattern,sha,canonical_digest=False):
     blob=_file(root,path,pattern)
     if len(blob)>8_000_000:raise ValueError("Unbounded compressed evidence")
     data=json.loads(gzip.decompress(blob))
-    if hashlib.sha256(store.encode(data)).hexdigest()!=sha:
+    if hashlib.sha256(canonical(data) if canonical_digest else store.encode(data)).hexdigest()!=sha:
         raise ValueError("Archived performance checksum mismatch: "+path)
     return data
 
@@ -74,7 +75,7 @@ def compute(root,now=None):
     grades={}
     for gid,entry in grade_index["games"].items():
         if not gid.isdigit():raise ValueError("Invalid grade game ID")
-        grades[entry["path"]]=_packed(root,entry["path"],GRADE_PATTERN,entry["grade_sha256"])
+        grades[entry["path"]]=_packed(root,entry["path"],GRADE_PATTERN,entry["grade_sha256"],True)
     verify_prior_grade(grade_index,grades)
 
     su=[];su_by_week=defaultdict(list);margin_errors=[];total_errors=[]
