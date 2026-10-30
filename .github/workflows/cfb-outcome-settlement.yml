@@ -68,6 +68,14 @@ jobs:
             --input "data/settlement_scores/qb-official-gamebook-${{ github.run_id }}.json" \
             --output "data/settlement_scores/qb-official-gamebook-ledger-${{ github.run_id }}.json" | tee /tmp/qb-official-gamebook-ledger.txt
           cat /tmp/qb-official-gamebook-ledger.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Pair frozen pregame QB scenarios with independently accepted postgame starter labels
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.qb_starter_supervised \
+            --registry config/official_school_qb_boxscores_2026.json \
+            --output "data/settlement_scores/qb-starter-trainability-${{ github.run_id }}.json" | tee /tmp/qb-supervised.txt
+          cat /tmp/qb-supervised.txt >> "$GITHUB_STEP_SUMMARY"
+          echo "QB starter model is NOT trained unless enough audited prospective labels exist." >> "$GITHUB_STEP_SUMMARY"
       - name: Link only existing pregame captures to observed finals (no new pregame input)
         if: steps.gate.outputs.run == 'true'
         run: |
@@ -111,6 +119,7 @@ jobs:
             data/settlement_scores/qb-postgame-ledger-*.json
             data/settlement_scores/qb-official-gamebook-*.json
             data/settlement_scores/qb-official-gamebook-ledger-*.json
+            data/settlement_scores/qb-starter-trainability-*.json
             data/settlement_scores/step3g-grading-*.json
             data/settlement_scores/model-finishline-*.json
             data/settlement_scores/step3e-*/
