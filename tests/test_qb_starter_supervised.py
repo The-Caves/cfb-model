@@ -1,6 +1,9 @@
 """Exact as-of starter-label joins must not train on future or guessed QBs."""
-import copy,unittest
-from scripts.qb_starter_supervised import build,STATUS
+import copy,unittest,hashlib,json,tempfile
+from pathlib import Path
+from scripts import context_archive as store
+from scripts.personnel_forecast import checksum
+from scripts.qb_starter_supervised import build,read_archives,STATUS
 from scripts.qb_postgame_starter_archive import empty,LABEL,UNKNOWN,DANGER
 
 KICK="2026-10-31T20:00:00Z"
@@ -114,5 +117,35 @@ class SupervisedQBTests(unittest.TestCase):
             build([snapshot()],ledger(),{"status":"MISSING"},NOW)
         r=snapshot();r["betting_status"]="PROMOTED"
         with self.assertRaises(ValueError):build([r],ledger(),registry(),NOW)
+
+    def test_local_checkout_verifies_candidate_and_postgame_archive(self):
+        with tempfile.TemporaryDirectory() as root:
+            base=Path(root)
+            candidate=snapshot()
+            forecast_path="research_2026/candidate_shadow_qb/2026/10/29/run-991.json.gz"
+            ci={"season":2026,"status":candidate["status"],
+                "runs":[{"run_id":"991","path":forecast_path,
+                         "sha256":checksum(candidate)}]}
+            known=ledger()
+            source_path=known["runs"][0]["path"]
+            source={"run_id":"991","rows":[{
+                "game_id":"401856727","team":"A","starter_player":"A Two",
+                "label_status":LABEL,"source_url":URL,
+                "source_payload_sha256":"f"*64}]}
+            known["runs"][0]["sha256"]=hashlib.sha256(store.encode(source)).hexdigest()
+            fixtures={
+                "research_2026/candidate_shadow_qb/index.json":store.encode(ci),
+                forecast_path:store.pack(candidate),
+                "research_2026/qb_postgame_starters/index.json":store.encode(known),
+                source_path:store.pack(source)}
+            for name,data in fixtures.items():
+                file=base/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_bytes(data)
+            forecasts,labels=read_archives(base)
+            result=build(forecasts,labels,registry(),NOW)
+            self.assertEqual(result["summary"]["labeled_trainable_slots"],1)
+            tampered=dict(source,rows=[{**source["rows"][0],"starter_player":"A One"}])
+            (base/source_path).write_bytes(store.pack(tampered))
+            with self.assertRaisesRegex(ValueError,"Tampered postgame"):
+                read_archives(base)
 
 if __name__=="__main__":unittest.main()
