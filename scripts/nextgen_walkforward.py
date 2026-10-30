@@ -37,15 +37,35 @@ NONLINEAR=tuple("nonlinear_"+k for k in (
     "pressure_reliance_gap","run_matchup_gap"))
 TRAJECTORY=("home_pass_trajectory","away_pass_trajectory",
             "home_run_trajectory","away_run_trajectory")
+RAW_TRAJECTORY=("home_pass_raw_trajectory","away_pass_raw_trajectory",
+                "home_run_raw_trajectory","away_run_raw_trajectory")
 TURNOVERS=tuple(scouting.TURNOVER_FIELDS)
+PRESSURE=("home_pressure_exposure","away_pressure_exposure")
+REDZONE=("home_redzone_conversion","away_redzone_conversion")
+PASSING=("home_pass_adj_edge","away_pass_adj_edge")
+RUSHING=("home_run_adj_edge","away_run_adj_edge")
+EXPLOSIVES=("home_explosive_pass_edge","away_explosive_pass_edge")
 GROUPS={
     "opponent_adjusted":ADJUSTED,
     "style_pressure":STYLE,
     "nonlinear_matchup":STYLE+NONLINEAR,
     "trajectory":TRAJECTORY,
+    "raw_trajectory":RAW_TRAJECTORY,
     "verified_turnover_context":TURNOVERS,
+    "pressure_only":PRESSURE,
+    "redzone_only":REDZONE,
+    "rushing_only":RUSHING,
+    "passing_only":PASSING,
+    "explosives_only":EXPLOSIVES,
+    "nonlinear_pressure_only":("nonlinear_pressure_reliance_gap",),
+    "pressure_25pct_blend":PRESSURE,
+    "run_pass_25pct_blend":ADJUSTED,
+    "nonlinear_25pct_blend":STYLE+NONLINEAR,
     "combined":ADJUSTED+STYLE+NONLINEAR+TRAJECTORY+TURNOVERS,
 }
+# Fixed, conservative mixing coefficients; never tuned against a held-out fold.
+SHRINK_BLEND={"pressure_25pct_blend":.25,"run_pass_25pct_blend":.25,
+              "nonlinear_25pct_blend":.25}
 
 def _mean(x):
     return sum(x)/len(x) if x else None
@@ -72,6 +92,8 @@ def add_temporal_features(games,advanced,turnovers=None):
             for side,records in (("home",history[home]),("away",history[away])):
                 base[gid][side+"_pass_trajectory"]=_trajectory(records,"pass_off_adj")
                 base[gid][side+"_run_trajectory"]=_trajectory(records,"run_off_adj")
+                base[gid][side+"_pass_raw_trajectory"]=_trajectory(records,"pass_off")
+                base[gid][side+"_run_raw_trajectory"]=_trajectory(records,"run_off")
         for g in group:
             for team in (g["home"],g["away"]):
                 opponent=g["away"] if team==g["home"] else g["home"]
@@ -175,6 +197,10 @@ def evaluate(rows,start="2026-09-26",min_train=90,min_test=1,penalty=45.):
             control_preds,sigma0=v03.predict(matched_test,CORE,control)
             candidate_preds,sigma1=v03.predict(matched_test,CORE+extras,candidate)
             before=_grade(matched_test,control_preds,sigma0)
+            alpha=SHRINK_BLEND.get(name,1.)
+            if alpha!=1.:
+                candidate_preds=control_preds+(candidate_preds-control_preds)*alpha
+                sigma1=(1-alpha)*sigma0+alpha*sigma1
             after=_grade(matched_test,candidate_preds,sigma1)
             for b,a in zip(before,after):
                 if b["game_id"]!=a["game_id"]:raise ValueError("Paired predictions misaligned")
@@ -185,6 +211,7 @@ def evaluate(rows,start="2026-09-26",min_train=90,min_test=1,penalty=45.):
                 "matched_train_games":len(matched_train),
                 "matched_test_games":len(matched_test),
                 "missing_train":missing_train,"missing_test":missing_test,
+                "candidate_effect_blend":alpha,
                 "v03":_aggregate(before),"candidate":_aggregate(after)}
         folds.append(fold)
     aggregate={}
