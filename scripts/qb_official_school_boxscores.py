@@ -136,9 +136,15 @@ def parse(game,entry,html,observed_at):
         raise ValueError("School source does not show matching game date")
     # Exact final-score frame, not arbitrary game-wide numeric counts.
     head=" ".join(before)
-    score_pattern=(r"\b"+re.escape(str(game["away_score"]))+
+    # School-published boxscores may place the publishing university
+    # second even for an away fixture. The exact visible score order must
+    # be independently reviewed per official source, never inferred.
+    first=entry.get("scoreboard_first_side","away")
+    if first not in ("home","away"):raise ValueError("Unreviewed school scoreboard score order")
+    second="away" if first=="home" else "home"
+    score_pattern=(r"\b"+re.escape(str(game[first+"_score"]))+
                    r"\b.{0,160}\bFinal\b.{0,160}\b"+
-                   re.escape(str(game["home_score"]))+r"\b")
+                   re.escape(str(game[second+"_score"]))+r"\b")
     if re.search(score_pattern,head,re.I|re.S) is None:
         raise ValueError("School final score frame does not match independent ESPN final")
     offsets={k:_heading(section,alias) for k,alias in aliases.items()}
