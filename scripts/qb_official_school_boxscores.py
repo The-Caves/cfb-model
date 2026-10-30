@@ -120,7 +120,7 @@ def parse(game,entry,html,observed_at):
     parser=Visible();parser.feed(html)
     tokens=parser.parts
     st=[i for i,t in enumerate(tokens) if _norm(t)=="starters"]
-    if len(st)!=1:raise ValueError("No unambiguous official STARTERS section")
+    if len(st)!=1:raise ValueError("No unambiguous official STARTERS section; visible_count="+str(len(st)))
     start=st[0];end=next((i for i in range(start+1,len(tokens))
                         if _norm(tokens[i])=="player participation"),len(tokens))
     section=tokens[start+1:end]
@@ -192,10 +192,24 @@ def collect(games,registry,asof,reader=fetch):
         game=index.get(gid)
         if game is None:continue
         checked+=1
-        try:rows.extend(parse(game,entry,reader(entry),asof))
+        html=None
+        try:
+            html=reader(entry)
+            rows.extend(parse(game,entry,html,asof))
         except (OSError,ValueError,TypeError,KeyError,TimeoutError) as exc:
+            diagnostic={}
+            if isinstance(html,str):
+                scan=Visible();scan.feed(html)
+                low=html.casefold();loc=low.find("starters")
+                diagnostic={"html_characters":len(html),
+                    "visible_tokens":len(scan.parts),
+                    "visible_starters":sum(_norm(x)=="starters" for x in scan.parts),
+                    "raw_starters_count":low.count("starters"),
+                    "first_tokens":[x[:90] for x in scan.parts[:16]],
+                    "raw_starters_context":html[max(0,loc-100):loc+150] if loc>=0 else None}
             errors.append({"game_id":gid,"source_url":entry["source_url"],
-                           "reason":type(exc).__name__,"detail":str(exc)[:170]})
+                           "reason":type(exc).__name__,"detail":str(exc)[:170],
+                           "source_format_diagnostic":diagnostic})
     return {"status":LABEL_STATUS,"season":2026,"captured_at_utc":at.isoformat(),
         "source":SOURCE,"completed_games_checked":checked,
         "verified_game_identities":len(rows)//2,
