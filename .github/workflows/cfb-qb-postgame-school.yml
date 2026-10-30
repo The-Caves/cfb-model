@@ -1,4 +1,4 @@
-name: CFB Official School Postgame QB Starter Evidence
+name: CFB Official School QB Starter Source Check
 on:
   workflow_dispatch:
   push:
@@ -10,16 +10,14 @@ on:
       - 'tests/test_qb_official_school_boxscores.py'
       - '.github/workflows/cfb-qb-postgame-school.yml'
 permissions:
-  contents: write
+  contents: read
 concurrency:
-  group: cfb-context-state
-  cancel-in-progress: false
+  group: cfb-official-school-readonly
+  cancel-in-progress: true
 jobs:
   school-qb:
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -73,12 +71,7 @@ jobs:
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:f.write("\n\n".join(lines)+"\n")
           print("\n".join(lines))
           PY
-      - name: Preserve newly observed official QB ground truth in append-only ledger
-        run: |
-          python -m scripts.qb_postgame_starter_archive \
-            --input data/school_qb/official-starter-evidence.json \
-            --output data/school_qb/official-starter-ledger.json
-      - name: Preserve raw evidence status and archive report
+      - name: Save read-only official source audit for subsequent serialized ingestion
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -86,6 +79,5 @@ jobs:
           path: |
             data/school_qb/games_2026.csv
             data/school_qb/official-starter-evidence.json
-            data/school_qb/official-starter-ledger.json
           retention-days: 30
           if-no-files-found: warn
