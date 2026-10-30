@@ -54,7 +54,7 @@ class SitePerformanceTests(unittest.TestCase):
             "games":{"100":{"path":self.fpath,"sha256":sha(self.final),
                  **{k:self.final[k] for k in ("home","away","kickoff_utc","home_score","away_score")}}}}
         self.row={"game_id":"100","home":"A","away":"B","kickoff_utc":KICK,
-            "forecast_model_version":"V03","frozen_forecast_sha256":"e"*64,
+            "forecast_model_version":"V03","frozen_forecast_run_id":"1","frozen_forecast_sha256":"e"*64,
             "frozen_forecast_observed_utc":FORECAST,
             "frozen_forecast_home_margin":14.,"frozen_forecast_total":48.,
             "market_home_spread":-6.5,"market_total":45.5,
@@ -105,6 +105,29 @@ class SitePerformanceTests(unittest.TestCase):
         self.assertEqual(d["ats"]["wins"],1)
         self.assertEqual(d["ats"]["decisions"],1)
         self.assertEqual(d["scoring"]["duplicate_ats_snapshots_excluded"],1)
+
+    def test_original_oct_24_site_archive_without_model_version_remains_gradeable(self):
+        self.row.pop("forecast_model_version")
+        self.bundle.pop("model_version")
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        d=compute(self.root,NOW)
+        self.assertEqual(d["ats"]["wins"],1)
+        self.assertEqual(d["ou"]["losses"],1)
+        self.assertEqual(d["recent"][0]["forecast_model"],"V03")
+        # The independently selected SU forecast has its real version.
+        self.grade_index["games"]={}
+        self.write(GRADE_INDEX,self.grade_index)
+        d=compute(self.root,NOW)
+        self.assertEqual(d["recent"][0]["forecast_model"],"LEGACY_MODEL_VERSION_NOT_CAPTURED")
+
+    def test_partial_model_version_provenance_rejected(self):
+        self.row.pop("forecast_model_version")
+        self.bundle=self.make_bundle([self.row],CAPTURE,"12")
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        with self.assertRaisesRegex(ValueError,"chronology"):
+            compute(self.root,NOW)
 
     def test_tampered_archived_record_fails(self):
         self.grade["su_correct"]=0
