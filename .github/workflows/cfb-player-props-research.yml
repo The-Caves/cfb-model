@@ -1,0 +1,76 @@
+name: CFB 2026 Player-Stat and Prop Model Research
+on:
+  pull_request:
+    paths:
+      - 'scripts/player_prop_*.py'
+      - 'tests/test_player_prop_*.py'
+      - '.github/workflows/cfb-player-props-research.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/player_prop_*.py'
+      - '.github/workflows/cfb-player-props-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  player-props-experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Validate historical player-stat research schema and no-lookahead
+        run: |
+          python -m unittest discover -s tests -p 'test_player_prop_*.py' -v
+      - name: Get frozen verified ESPN game/score list for matching IDs
+        uses: actions/download-artifact@v4
+        with:
+          repository: The-Caves/cfb-model
+          run-id: 40966132935
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: cfb-2026-data-40966132935
+          path: .source
+      - name: Capture actual 2026 per-game ESPN player-box observations
+        run: |
+          python -m scripts.player_prop_history \
+            --games .source/games_2026.csv \
+            --output data/player_props/espn_player_game_history.json
+      - name: Compare rolling and recency player-stat forecasts on same observed games
+        run: |
+          python -m scripts.player_prop_walkforward \
+            --input data/player_props/espn_player_game_history.json \
+            --output data/player_props/retrospective_matchup_prop_baselines.json
+      - name: Evaluate opponent-specific passing and rushing defense adjustments
+        run: |
+          python -m scripts.player_prop_matchup_walkforward \
+            --input data/player_props/espn_player_game_history.json \
+            --output data/player_props/opponent_matchup_walkforward.json
+      - name: Verify honest incomplete-market status and report grade coverage
+        run: |
+          python - <<'PY'
+          import json,os
+          r=json.load(open("data/player_props/retrospective_matchup_prop_baselines.json"))
+          assert r["status"]=="CFB_PROP_CHRONOLOGICAL_MATCHED_RESEARCH_ONLY"
+          assert r["model_promoted"] is False and r["betting_status"]=="PASS_UNVALIDATED"
+          assert r["player_participation_selection_bias_present"] is True
+          assert r["true_prop_market_coverage"]==0
+          report={k:{key:v.get(key) for key in ("paired_recorded_player_games","baseline_mae","recency_mae","recency_delta_mae")}
+                   for k,v in r["summary"].items()}
+          print(json.dumps(report,indent=2))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("## 2026 player-stat retrospective paired test\n\n")
+              f.write("**Not real bookmaker prop picks.** Revised source and conditional recorded-category cohort.\n\n")
+              f.write("```json\n"+json.dumps(report,indent=2)+"\n```\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cfb-player-props-research-${{ github.run_id }}
+          path: data/player_props/*.json
+          retention-days: 30
+          if-no-files-found: error
