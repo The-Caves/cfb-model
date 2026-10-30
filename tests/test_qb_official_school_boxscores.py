@@ -55,6 +55,28 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
         with self.assertRaises(ValueError):parse(GAME,cfg,html(),AT)
         cfg=config();cfg["reviewed_official_publisher"]=False
         with self.assertRaises(ValueError):valid_source(cfg)
+    def test_school_publishing_away_team_may_show_home_score_first(self):
+        game={**GAME,"home":"Cincinnati Bearcats","away":"Texas Tech Red Raiders",
+              "home_score":"37","away_score":"24","game_id":"401856840",
+              "kickoff_utc":"2026-10-24T16:00:00Z"}
+        cfg={**config(),"home":game["home"],"away":game["away"],
+             "home_score":37,"away_score":24,"game_id":game["game_id"],
+             "kickoff_utc":game["kickoff_utc"],
+             "home_source_label":"Cincinnati","away_source_label":"Texas Tech",
+             "scoreboard_first_side":"home"}
+        text=html().replace('Ole Miss vs Texas','Cincinnati vs Texas Tech')
+        text=text.replace('<div>Ole Miss</div>','<div>Cincinnati</div>')
+        text=text.replace('<div>27</div><div>Final</div><div>34</div>',
+                          '<div>37</div><div>Final</div><div>24</div>')
+        text=text.replace('alt="Ole Miss"','alt="Cincinnati"')
+        text=text.replace('alt="Texas"','alt="Texas Tech"')
+        rows=parse(game,cfg,text,AT)
+        self.assertEqual(rows[0]["team"],"Texas Tech Red Raiders")
+        self.assertEqual(rows[1]["team"],"Cincinnati Bearcats")
+        cfg.pop("scoreboard_first_side")
+        with self.assertRaisesRegex(ValueError,"score"):
+            parse(game,cfg,text,AT)
+
     def test_no_offense_team_label_or_ambiguous_qb_not_promoted(self):
         bad=html().replace('alt="Texas"','alt="Somewhere"',1)
         with self.assertRaisesRegex(ValueError,"heading"):

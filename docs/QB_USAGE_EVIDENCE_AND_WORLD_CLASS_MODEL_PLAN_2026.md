@@ -43,6 +43,16 @@ The `qb_postgame_starter_archive.py` captures dated postgame observations in `co
 
 **Training is not unblocked by code alone.** We need to measure the live ESPN field coverage; if the source lacks explicit lineup flags, the honest count is zero. Postgame school gamebooks or officially published lineups can be evaluated next for explicit QB starts under independently reviewed source rules. Before training starter probabilities, create an audited feature-to-label table where every feature was archived before kickoff and each selected label is independently established after completion. Neither historical passer EPA nor a depth-chart ranking is itself the true starter label.
 
+## Explicit official university boxscore starter-label recovery
+
+Live ESPN postgame QB evidence backfill across **570 actual completed games (1,140 game-team slots)** found **zero provider-stated starting quarterbacks**. This was correctly flagged UNKNOWN, not mislabeled from the player with the most passing snaps.
+
+A separate game-specific fallback now parses **official university 2026 football boxscore STARTERS tables** (the offensive roster's row with position `QB`). The game identity, independent final-score pair, game date and exact publisher hostname are reviewed in `config/official_school_qb_boxscores_2026.json`. The first reviewed historical sources are the University of Texas's Oct 24 Ole Miss boxscore, Alabama's Oct 24 Texas A&M boxscore, and Texas Tech's Oct 24 Cincinnati boxscore. Texas Tech was the away team, and its published scoreboard lists home/away results in the opposite order; that difference is explicitly documented per URL, never assumed by the parser.
+
+`scripts/qb_official_school_boxscores.py` is separate from the ESPN JSON provider. Accepted results enter the same append-only `qb_postgame_starters` ledger, where official positive labels are **not invalidated by a subsequent ESPN record that lacks a starter field**. Conflicting positive names or rescinded claims from an identical official source remain quarantined. A new inexpensive, on-registry-change GitHub Action rechecks only reviewed fixture dates, without rerunning the entire prediction model. Live university source readability and audited capture counts must be checked from workflow output before claiming broader coverage.
+
+This is a **seed and verifiable source pathway**, not nationwide starter coverage. Do not train a starter probability classifier on a handful of manually reviewed university source pages. Expand official gamebook coverage to 138 FBS schools, build immutable forecast-time feature/actual-starter joins, audit selection bias from schools with accessible gamebooks, and then use genuinely held-out chronological games to calibrate probabilities.
+
 ## Next development milestones, in testable order
 
 1. **National QB source coverage:** expand verified official football preview/article and direct game-note PDF sources beyond the few currently readable feeds. Capture dated full text and exact fixture, not just an RSS homepage or metadata. Add a separate official availability update pipeline with conflict/review signals. Measure confirmation coverage by game week and report source failures.
