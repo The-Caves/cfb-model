@@ -72,6 +72,11 @@ jobs:
                        for e in j["errors"])
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:f.write("\n\n".join(lines)+"\n")
           print("\n".join(lines))
+          if (j["verified_game_identities"] != len(json.load(open("config/official_school_qb_boxscores_2026.json"))["entries"])
+              or j["missing_or_rejected_games"] != 0
+              or j["explicit_starter_labels"] != 2*j["verified_game_identities"]
+              or j["unknown_or_conflict_starter_labels"] != 0):
+              raise SystemExit("Reviewed school QB starters did not pass all-source acceptance")
           PY
       - name: Save read-only official source audit for subsequent serialized ingestion
         if: always()
