@@ -194,6 +194,11 @@ jobs:
             --context data/context/upcoming_game_context_2026.json \
             --turnovers data/model_v03/espn-verified-turnovers.json \
             --output data/model_v03/team_matchup_intelligence
+      - name: Export exploratory opponent-specific nonlinear interactions (no fitted point effect)
+        run: |
+          python -m scripts.advanced_matchup_interactions \
+            --input data/model_v03/team_matchup_intelligence/team_profiles_and_matchups.json \
+            --output data/model_v03/team_matchup_intelligence/advanced-matchup-interactions.json
       - name: Preserve source-audited team scouting board for website inspection
         run: |
           python -m scripts.matchup_profile_archive \

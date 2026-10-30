@@ -91,3 +91,8 @@ minimum prospective sample size, and human-reviewed promotion policy.
 generic grader are testable research libraries, **not** live deployed
 predictors. None of these changes claims completed player-effect fitting,
 accurate nationwide injury status, simulator calibration or a better model.
+
+## Next implementation batch: observed trajectories and advanced matchup board
+
+- `evolving_team_intelligence` accepts independently observed, two-sided game metrics and builds strictly prior-date adjusted team histories; each games' historical opponent baseline must exist. A >=6-game signal is not proof of a structural change and large turnovers are surfaced as a confounder. CLI is available for an independently captured game-history feed; source adapter / first-publication audit is still needed.
+- `advanced_matchup_interactions` computes QB-less pressure/pass reliance, offense-versus-defensive run style and explosive passing interactions on the existing time-aware scouting board. Missing inputs remain null; there are no learned weights or active score changes. Data Intake exports this candidate board for independent research and future ablations.
