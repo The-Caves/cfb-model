@@ -163,6 +163,13 @@ def plan(old,snapshot,run_id):
 def run(input_file,output):
     snapshot=json.loads(Path(input_file).read_text(encoding="utf-8"))
     run_id=os.environ.get("GITHUB_RUN_ID","")
+    # A single workflow may archive ESPN UNKNOWN observations and independently
+    # sourced official gamebook positive labels in the SAME GitHub Actions run.
+    # Keep two append-only source records under distinct numeric archive keys.
+    # Preserve the original unsuffixed ESPN run IDs for existing ledgers.
+    source=snapshot.get("source")
+    if source=="REVIEWED_OFFICIAL_SCHOOL_BOXSCORE_HTML":
+        run_id=run_id+"2"
     now=dt.datetime.now(dt.timezone.utc)
     observed=validate(snapshot)
     if (not run_id.isdigit() or store.branch_head() is None
