@@ -85,6 +85,16 @@ jobs:
             --output "data/settlement_scores/qb-starter-trainability-${{ github.run_id }}.json" | tee /tmp/qb-supervised.txt
           cat /tmp/qb-supervised.txt >> "$GITHUB_STEP_SUMMARY"
           echo "QB starter model is NOT trained unless enough audited prospective labels exist." >> "$GITHUB_STEP_SUMMARY"
+      - name: Find official gamebook link candidates for completed games with frozen QB decisions
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m scripts.qb_gamebook_link_discovery \
+            --review-csv "data/settlement_scores/qb-starter-source-review-${{ github.run_id }}.csv" \
+            --sites config/official_athletics_sites_2026.json \
+            --max-schools 8 \
+            --output "data/settlement_scores/qb-gamebook-discovery-${{ github.run_id }}.json" | tee /tmp/qb-gamebook-discovery.txt
+          cat /tmp/qb-gamebook-discovery.txt >> "$GITHUB_STEP_SUMMARY"
+          echo "Discovery is NOT official QB confirmation. Every URL needs a reviewed gamebook and starter/score verification." >> "$GITHUB_STEP_SUMMARY"
       - name: Link only existing pregame captures to observed finals (no new pregame input)
         if: steps.gate.outputs.run == 'true'
         run: |
@@ -130,6 +140,7 @@ jobs:
             data/settlement_scores/qb-official-gamebook-ledger-*.json
             data/settlement_scores/qb-starter-trainability-*.json
             data/settlement_scores/qb-starter-source-review-*.csv
+            data/settlement_scores/qb-gamebook-discovery-*.json
             data/settlement_scores/step3g-grading-*.json
             data/settlement_scores/model-finishline-*.json
             data/settlement_scores/step3e-*/
