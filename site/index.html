@@ -107,6 +107,14 @@ nav[role=tablist]{display:flex;gap:7px;margin:18px 0 20px;border-bottom:1px soli
 .row{margin:0 0 5px}
 .results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .metric{font-size:28px;font-weight:800;margin:7px 0}
+.performanceMeta{font-size:11px;line-height:1.6;color:var(--subtle);margin-top:6px}
+.performanceTableShell{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:10px;margin-top:10px}
+.performanceTable{width:100%;border-collapse:collapse;font-size:11px}
+.performanceTable th,.performanceTable td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.performanceTable th{color:var(--subtle);background:#14263a;font-weight:750}
+.performanceTable tr:last-child td{border-bottom:none}
+.performanceTable td:nth-child(n+2){font-variant-numeric:tabular-nums}
+.performanceLegend{font-size:11px;line-height:1.65;color:var(--subtle);margin-top:12px}
 .state{color:#a8bfd3;font-size:13px;line-height:1.7}
 .sourceRow{display:flex;gap:14px;justify-content:space-between;border-bottom:1px solid var(--line);padding:12px 0;font-size:12px}
 .sourceRow span:first-child{color:var(--subtle)}
@@ -194,7 +202,26 @@ footer{border-top:1px solid var(--line);color:#879fb5;font-size:11px;margin-top:
 <select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="depth">With QB depth-chart ranks</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option></select>
 </div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
-<section id="performance" role="tabpanel" class="hidden"><div class="results"><div class="panel"><div class="small">Prospective SU</div><div class="metric" id="su">—</div></div><div class="panel"><div class="small">Prospective ATS</div><div class="metric" id="ats">—</div></div><div class="panel"><div class="small">Prospective totals</div><div class="metric" id="ou">—</div></div></div><div class="panel" style="margin-top:14px"><h3>Performance will not be fabricated</h3><p class="state">Verified forward-looking prediction grading is separate from retrospective research. Unobserved sportsbook lines cannot generate ATS or totals records. Until audited grading is published, those results remain unavailable.</p></div></section>
+<section id="performance" role="tabpanel" class="hidden">
+<div class="results">
+ <div class="panel"><div class="small">Frozen model · SU</div><div class="metric" id="su">—</div><div class="performanceMeta" id="su-meta">Awaiting verified final-score grades</div></div>
+ <div class="panel"><div class="small">As-displayed · ATS</div><div class="metric" id="ats">—</div><div class="performanceMeta" id="ats-meta">Awaiting pregame market and final</div></div>
+ <div class="panel"><div class="small">As-displayed · totals</div><div class="metric" id="ou">—</div><div class="performanceMeta" id="ou-meta">Awaiting pregame market and final</div></div>
+</div>
+<div class="panel" style="margin-top:14px">
+ <h3>Scoring accuracy and audit coverage</h3>
+ <div id="performance-scoring" class="state">Loading archived performance…</div>
+</div>
+<div class="panel" style="margin-top:14px">
+ <h3>Results by week</h3>
+ <div id="performance-weekly" class="state">Loading weekly grades…</div>
+</div>
+<div class="panel" style="margin-top:14px">
+ <h3>Recent graded games</h3>
+ <div id="performance-games" class="state">Loading individual game results…</div>
+ <p class="performanceLegend">W = correct research selection; L = incorrect; P = push. A dash means the game has no eligible grade for that category. SU uses an archived 24–72h forecast; ATS and totals use the earliest observed pre-kickoff website selection with a real quoted market. These are separate cohorts and are not evidence of profitable betting. Source odds publication times are not independently verified.</p>
+</div>
+</section>
 <section id="sources" role="tabpanel" class="hidden"><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Model ID</span><span id="modelid">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
 <footer>2026 CFB Lab · Research only · No wagers placed. <a href="https://github.com/The-Caves/cfb-model">Open GitHub project</a></footer>
 </main>
