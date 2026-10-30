@@ -8,6 +8,8 @@ on:
       - 'scripts/player_prop_workload.py'
       - 'tests/test_player_prop_workload.py'
       - 'tests/test_site_player_props.py'
+      - 'scripts/site_player_projection_archive.py'
+      - 'tests/test_site_player_projection_archive.py'
       - 'tests/test_site_ui_compact.py'
       - '.github/workflows/cfb-site-playerform-pr-check.yml'
   workflow_dispatch:
@@ -35,6 +37,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_site_player_props.py' -v
           python -m unittest discover -s tests -p 'test_site_availability.py' -v
           python -m unittest discover -s tests -p 'test_player_prop_workload.py' -v
+          python -m unittest discover -s tests -p 'test_site_player_projection_archive.py' -v
           python - <<'PY'
           import re
           from pathlib import Path
@@ -61,6 +64,19 @@ jobs:
           assert all(g["player_props"]["real_bookmaker_prop_lines"]==0 for g in d["games"])
           assert all(q["real_bookmaker_line"] is None and q["over_probability"] is None
               for g in d["games"] for q in g["player_props"]["entries"])
+          PY
+      - name: Dry-run freeze of actually observed upcoming player forecasts (no Git writes)
+        run: |
+          python - <<'PY'
+          import datetime as dt,json
+          from scripts.site_player_projection_archive import freeze
+          board=json.load(open("/tmp/cfb-playerform-board.json"))
+          result=freeze(board,dt.datetime.now(dt.timezone.utc),"987654321")
+          assert result["status"]=="ARCHIVED_PREKICKOFF_CONDITIONAL_PLAYER_STAT_DISPLAY_RESEARCH_ONLY"
+          assert result["summary"]["player_stat_projections"]>0
+          assert all(x["real_bookmaker_line"] is None and
+                     x["not_a_betting_prop_or_validated_edge"] for x in result["rows"])
+          print(json.dumps(result["summary"],sort_keys=True))
           PY
       - name: Store research-only source-smoke output
         uses: actions/upload-artifact@v4
