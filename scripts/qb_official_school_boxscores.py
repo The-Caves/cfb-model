@@ -20,23 +20,25 @@ MAX_HTML_BYTES=2_500_000
 class Visible(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
-        self.excluded=0
-        self.stack=[]
         self.parts=[]
     def handle_starttag(self,tag,attrs):
-        self.stack.append(tag)
-        if tag in ("script","style","noscript","svg"):self.excluded+=1
-        if tag=="img" and not self.excluded:
+        if tag=="img":
             alt=dict(attrs).get("alt")
             if alt and 2<=len(alt)<120:
                 self.parts.append(" ".join(alt.split()))
-    def handle_endtag(self,tag):
-        if tag in ("script","style","noscript","svg") and self.excluded:self.excluded-=1
-        if tag in self.stack:self.stack=self.stack[:len(self.stack)-1-self.stack[::-1].index(tag)]
     def handle_data(self,value):
-        if self.excluded:return
         part=" ".join(value.split())
         if part:self.parts.append(part)
+
+# Sidearm renders large Vue SSR markup containing inline SVG. An SVG open
+# tag can be malformed or nested in provider HTML; a stateful skip counter
+# inadvertently masked the entire starters section in live October pages.
+# Remove COMPLETE non-content blocks first, then tokenize remaining HTML.
+NOISE=re.compile(r"<(script|style|noscript|svg)\\b[^>]*>.*?</\\1\\s*>",re.I|re.S)
+def visible_tokens(html):
+    stripped=NOISE.sub(" ",html)
+    parser=Visible();parser.feed(stripped)
+    return parser.parts
 
 def _norm(s):
     return re.sub(r"\s+"," ",str(s).strip()).casefold()
@@ -117,8 +119,7 @@ def parse(game,entry,html,observed_at):
         entry.get("game_date_et")!=game["date"]):
         raise ValueError("Official school source does not match independently captured game")
     if not isinstance(html,str) or len(html)<100:raise ValueError("Empty official school boxscore")
-    parser=Visible();parser.feed(html)
-    tokens=parser.parts
+    tokens=visible_tokens(html)
     st=[i for i,t in enumerate(tokens) if _norm(t)=="starters"]
     if len(st)!=1:raise ValueError("No unambiguous official STARTERS section; visible_count="+str(len(st)))
     start=st[0];end=next((i for i in range(start+1,len(tokens))
@@ -199,13 +200,13 @@ def collect(games,registry,asof,reader=fetch):
         except (OSError,ValueError,TypeError,KeyError,TimeoutError) as exc:
             diagnostic={}
             if isinstance(html,str):
-                scan=Visible();scan.feed(html)
+                parts=visible_tokens(html)
                 low=html.casefold();loc=low.find("starters")
                 diagnostic={"html_characters":len(html),
-                    "visible_tokens":len(scan.parts),
-                    "visible_starters":sum(_norm(x)=="starters" for x in scan.parts),
+                    "visible_tokens":len(parts),
+                    "visible_starters":sum(_norm(x)=="starters" for x in parts),
                     "raw_starters_count":low.count("starters"),
-                    "first_tokens":[x[:90] for x in scan.parts[:16]],
+                    "first_tokens":[x[:90] for x in parts[:16]],
                     "raw_starters_context":html[max(0,loc-100):loc+150] if loc>=0 else None}
             errors.append({"game_id":gid,"source_url":entry["source_url"],
                            "reason":type(exc).__name__,"detail":str(exc)[:170],
