@@ -40,6 +40,15 @@ The color palette is a restrained navy/slate/teal design with a responsive mobil
 
 The original archived forecast model and market source safeguards are unchanged by this redesign. New tests in `tests/test_site_ui_compact.py` and `tests/test_site_team_branding.py`, plus a JavaScript syntax check, protect the mobile layout's data contract and fallback behavior.
 
+
+## Cumulative prospectively archived performance (October 29)
+
+The Performance tab is populated by `scripts/site_performance.py` during every successful dashboard build. It reads archived, independently observed **final outcomes** and append-only pregame records from the `context-state` branch, verifies source checksums and refuses changed fixture identities. This corrects the original site placeholder `prospective_records: {su: null, ats: null, ou: null}` and provides cumulative win/loss/push records, actual scored-game count, home-margin and total MAE, weekly summaries and recent finished game-by-game grading.
+
+**Separate decision populations:** SU is based only on uniquely selected, frozen 24-to-72-hour preregistered `Step3G` forecast grades (`forecast_grades_index.json`). ATS and totals are graded from the **earliest captured pre-kickoff website selection per exact game/market** (`site_board_snapshots/index.json`), matched to independently archived ESPN final scores (`market_finals/index.json`). Since the website sometimes displays a later-observed market quote than the original model forecast, these are **as-displayed comparisons** and *not* claims of synchronized preforecast sportsbook prices. More than one website build, refresh, line or provider must never multiply a game outcome. Unmatched finals remain ungraded; a missing market is not interpreted as a loss, win or push.
+
+All values remain `PASS_UNVALIDATED`, no net profits or real wagers are inferred, no grade changes the original model coefficients, and historic bookmaker publication clocks remain unauthenticated. Real future results can enter subsequent builds after independent outcome settlement; do not change a published grade retroactively. CI covers deduplication, source hashes, missing finals, late quotes and preservation of the original future predictions.
+
 ## Remaining model limitations
 
 Projections are **research outputs**, not calibrated bets. National game-specific QB1 evidence and availability are incomplete. The 2026 historical play-by-play availability times are not independently attested. Authenticated historical FanDuel lines are unavailable. Live public ESPN pregame sportsbook observations can now support clearly labeled **conditional research comparisons** where matched, but not authenticated historical ATS/O-U validation; trustworthy performance claims require genuine predecision markets and paired verified outcomes. Keep these limitations visible in the public site.

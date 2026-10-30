@@ -1,0 +1,142 @@
+"""Regression tests: real archived evidence, not placeholders or picked hindsight."""
+import datetime as dt
+import hashlib
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from scripts import context_archive as store
+from scripts.site_performance import compute,run,BOARD_INDEX,FINAL_INDEX,GRADE_INDEX
+from scripts.site_decision_archive import STATUS as BOARD_STATUS
+from scripts.weekly_profiles import canonical
+
+NOW="2026-10-29T20:00:00Z"
+KICK="2026-10-24T19:00:00Z"
+FORECAST="2026-10-23T18:00:00Z"
+CAPTURE="2026-10-24T17:00:00Z"
+MARKET="2026-10-24T16:55:00Z"
+SCORE_OBS="2026-10-24T20:20:00Z"
+
+def sha(obj):return hashlib.sha256(store.encode(obj)).hexdigest()
+
+class SitePerformanceTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root=Path(self.tmp.name)
+        self.grade={"status":"OBSERVED_FORECAST_GRADED_RESEARCH_ONLY","season":2026,
+            "game_id":"100","home":"A","away":"B","kickoff_utc":KICK,
+            "forecast_run_id":"1","forecast_observed_utc":FORECAST,
+            "frozen_forecast_row_sha256":"a"*64,"final_source_record_sha256":"b"*64,
+            "final_outcome_known_at_utc":"2026-10-24T20:00:00Z",
+            "final_observed_at_utc":SCORE_OBS,"forecast_model":"V03",
+            "actual_home_score":28,"actual_away_score":17,
+            "margin_abs_error":3.,"total_abs_error":3.,"su_correct":1,
+            "ats_grade":None,"over_under_grade":None,
+            "safe_for_betting":False,"model_validated":False,
+            "betting_status":"PASS_UNVALIDATED"}
+        self.gpath="research_2026/forecast_grades/2026/10/24/100.json.gz"
+        self.grade_index={"status":"STEP3G_OBSERVED_PROSPECTIVE_GRADING_RESEARCH_ONLY",
+            "season":2026,"safe_for_betting":False,"betting_status":"PASS_UNVALIDATED",
+            "games":{"100":{"path":self.gpath,"grade_sha256":hashlib.sha256(canonical(self.grade)).hexdigest(),
+                "forecast_row_sha256":"a"*64,"final_record_sha256":"b"*64,
+                "forecast_run_id":"1"}}}
+        self.final={"status":"OBSERVED_INDEPENDENT_MARKET_FINAL",
+            "season":2026,"game_id":"100","home":"A","away":"B",
+            "home_score":28,"away_score":17,"kickoff_utc":KICK,
+            "outcome_known_at_utc":"2026-10-24T20:00:00Z",
+            "observed_at_utc":SCORE_OBS,"scoreboard_sha256":"c"*64,
+            "safe_for_betting":False,"betting_status":"PASS_UNVALIDATED"}
+        self.fpath="research_2026/market_finals/100.json.gz"
+        self.final_index={"status":"OBSERVED_MARKET_FINAL_INDEX_RESEARCH_ONLY",
+            "season":2026,"safe_for_betting":False,"betting_status":"PASS_UNVALIDATED",
+            "games":{"100":{"path":self.fpath,"sha256":sha(self.final),
+                 **{k:self.final[k] for k in ("home","away","kickoff_utc","home_score","away_score")}}}}
+        self.row={"game_id":"100","home":"A","away":"B","kickoff_utc":KICK,
+            "forecast_model_version":"V03","frozen_forecast_sha256":"e"*64,
+            "frozen_forecast_observed_utc":FORECAST,
+            "frozen_forecast_home_margin":14.,"frozen_forecast_total":48.,
+            "market_home_spread":-6.5,"market_total":45.5,
+            "market_provider":"TestSource","market_observed_utc":MARKET,
+            "displayed_ats_side":"HOME","displayed_ou_side":"OVER"}
+        self.bpath="research_2026/site_board_snapshots/2026/10/24/run-12.json.gz"
+        self.bundle=self.make_bundle([self.row],CAPTURE,"12")
+        self.board_index={"status":BOARD_STATUS,"schema_version":1,
+            "runs":[self.entry(self.bundle,self.bpath)]}
+        self.flush()
+
+    def make_bundle(self,rows,capture,run_id):
+        return {"status":BOARD_STATUS,"schema_version":1,
+            "capture_utc":capture,"dashboard_run_id":run_id,
+            "model_version":"V03","model_forecast_sha256":"e"*64,
+            "betting_status":"PASS_UNVALIDATED","not_an_executed_bet":True,
+            "summary":{"future_games":len(rows)},"rows":rows}
+    def entry(self,bundle,path):
+        return {"run_id":bundle["dashboard_run_id"],"path":path,
+            "sha256":sha(bundle),"capture_utc":bundle["capture_utc"]}
+    def write(self,path,value,packed=False):
+        f=self.root/path;f.parent.mkdir(parents=True,exist_ok=True)
+        f.write_bytes(store.pack(value) if packed else store.encode(value))
+    def flush(self):
+        self.write(GRADE_INDEX,self.grade_index);self.write(self.gpath,self.grade,True)
+        self.write(FINAL_INDEX,self.final_index);self.write(self.fpath,self.final,True)
+        self.write(BOARD_INDEX,self.board_index);self.write(self.bpath,self.bundle,True)
+
+    def test_full_source_verified_su_and_original_website_choices(self):
+        d=compute(self.root,NOW)
+        self.assertEqual(d["su"]["wins"],1)
+        self.assertEqual(d["ats"]["wins"],1)
+        self.assertEqual(d["ou"]["losses"],1)
+        self.assertEqual(d["scoring"]["margin_mae"],3.)
+        self.assertEqual(d["scoring"]["total_mae"],3.)
+        self.assertEqual(len(d["recent"]),1)
+        self.assertEqual(d["recent"][0]["score"],"17–28")
+        self.assertEqual(len(d["weekly"]),1)
+        self.assertFalse(d["model_validated"])
+
+    def test_duplicate_site_refresh_cannot_count_twice_or_overwrite_earliest(self):
+        b=self.make_bundle([{**self.row,"market_home_spread":-16.5,
+            "displayed_ats_side":"AWAY"}],"2026-10-24T17:05:00Z","13")
+        path="research_2026/site_board_snapshots/2026/10/24/run-13.json.gz"
+        self.board_index["runs"].append(self.entry(b,path))
+        self.write(path,b,True);self.write(BOARD_INDEX,self.board_index)
+        d=compute(self.root,NOW)
+        self.assertEqual(d["ats"]["wins"],1)
+        self.assertEqual(d["ats"]["decisions"],1)
+        self.assertEqual(d["scoring"]["duplicate_ats_snapshots_excluded"],1)
+
+    def test_tampered_archived_record_fails(self):
+        self.grade["su_correct"]=0
+        self.write(self.gpath,self.grade,True)
+        with self.assertRaisesRegex(ValueError,"checksum"):
+            compute(self.root,NOW)
+
+    def test_late_market_quote_is_rejected(self):
+        self.row["market_observed_utc"]="2026-10-24T21:00:00Z"
+        self.bundle=self.make_bundle([self.row],CAPTURE,"12")
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        with self.assertRaisesRegex(ValueError,"provenance"):
+            compute(self.root,NOW)
+
+    def test_missing_finished_game_does_not_invent_grade(self):
+        self.final_index["games"]={}
+        self.write(FINAL_INDEX,self.final_index)
+        d=compute(self.root,NOW)
+        self.assertEqual(d["ats"]["decisions"],0)
+        self.assertEqual(d["ou"]["decisions"],0)
+        self.assertEqual(d["scoring"]["unsettled_site_market_games"],1)
+        self.assertEqual(d["su"]["decisions"],1)
+
+    def test_publish_to_site_dashboard_without_touching_upcoming_picks(self):
+        board=self.root/"dashboard.json"
+        source={"schema_version":2,"betting_status":"PASS_UNVALIDATED",
+                "games":[{"game_id":"800","model_home_margin":17}]}
+        board.write_text(json.dumps(source))
+        d=run(self.root,board,NOW)
+        self.assertEqual(d["games"],source["games"])
+        self.assertEqual(d["prospective_records"]["ats"]["wins"],1)
+        self.assertEqual(json.loads(board.read_text())["prospective_records"]["su"]["wins"],1)
+
+if __name__=="__main__":unittest.main()
