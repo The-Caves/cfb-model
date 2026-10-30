@@ -43,6 +43,19 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
         self.assertEqual(rows[0]["team"],GAME["away"])
         self.assertTrue(rows[0]["not_from_passing_leader"])
         self.assertEqual(len(rows[0]["source_payload_sha256"]),64)
+    def test_sidearm_inline_svg_and_script_markup_do_not_hide_official_starters(self):
+        extra=('<script type="application/json">{"text":"Starters QB"}</script>'
+               '<svg><title>Starters</title><path d="M0 0"/></svg>')
+        page=html().replace("<h2>Starters</h2>",extra+"<h2>Starters</h2>")
+        r=parse(GAME,config(),page,AT)
+        self.assertEqual([x["starter_player"] for x in r],["Trinidad Chambliss","Arch Manning"])
+        # A provider page may also contain an unmatched inline SVG tag.
+        # Never let its state suppress the subsequent gamebook's actual text.
+        unmatched=html().replace("<h2>Starters</h2>",
+                               '<svg class="icon"><path d="M1 1"/><h2>Starters</h2>')
+        r=parse(GAME,config(),unmatched,AT)
+        self.assertEqual(r[1]["starter_player"],"Arch Manning")
+
     def test_wrong_score_fails_even_if_qb_table_is_correct(self):
         bad=html().replace("<div>27</div><div>Final</div><div>34</div>",
                            "<div>21</div><div>Final</div><div>34</div>")
