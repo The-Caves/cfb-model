@@ -86,6 +86,7 @@ def parse(game,summary,observed_at):
             "starter_player":None,"label_status":UNKNOWN,
             "evidence_class":"NONE",
             "source_url":URL+gid,
+            "source_payload_sha256":hashlib.sha256(json.dumps(summary,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()).hexdigest(),
             "captured_at_utc":now.isoformat(),
             "candidate_qb_passers":[],
             "explicit_qb_starter_flags":0,
@@ -114,12 +115,11 @@ def parse(game,summary,observed_at):
                 if not player or _position(athlete)!="QB":
                     continue
                 key=player_key(player)
-                if key in seen and _flag(raw):
-                    raise ValueError("Duplicate explicit QB starting player annotation")
-                if _flag(raw):
+                if _flag(raw) or _flag(athlete):
                     # raw is the individual stat-athlete result; no coercion
                     # from missing, 1, string, position group or summary leader.
-                    positive.append(player);seen.add(key)
+                    if key not in seen:
+                        positive.append(player);seen.add(key)
         teams[name]["candidate_qb_passers"]=passing[:MAX_PLAYERS]
         teams[name]["explicit_qb_starter_flags"]=len(positive)
         if len(positive)==1:
