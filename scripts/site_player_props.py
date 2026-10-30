@@ -24,6 +24,7 @@ from scripts.game_context import parse_time
 from scripts.nextgen_source_readiness import SOURCE, fetch_asset
 from scripts.player_prop_history import NEEDED,from_box_rows
 from scripts.player_prop_prior_seasons import SCHEDULE_COLS,make_schedule
+from scripts.player_prop_workload import player_role_index,role_summary
 
 STATUS="CFB_SITE_PLAYERFORM_R1_STAT_RESEARCH_ONLY"
 MODEL="PlayerForm R1"
@@ -101,6 +102,7 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
     past25,_=make_schedule(schedule2025,2025,observed_at_utc)
     rows26=from_box_rows(box2026,past26,observed_at_utc,season=2026)["rows"]
     rows25=from_box_rows(box2025,past25,observed_at_utc,season=2025)["rows"]
+    role_history,role_teams,role_rejects=player_role_index(rows26,observed_at_utc)
     curr=defaultdict(list);prev=defaultdict(list);prevteam=defaultdict(set)
     # These completed-game rows are only known from the source as observed NOW.
     # Do not pretend this is a historical pregame capture of each 2026 game.
@@ -141,7 +143,7 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
             league[stat].append((kick,total))
     for group in (allowed,league):
         for vals in group.values():vals.sort()
-    count=0;rows_count=0;blocked=defaultdict(int)
+    count=0;rows_count=0;roles_count=0;flagged_count=0;blocked=defaultdict(int)
     for g in board["games"]:
         gid=str(g["game_id"]);s=sched26.get(gid)
         g["player_props"]=_blank("No verified ESPN schedule-to-team ID match")
@@ -168,11 +170,21 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                 if not observed:continue
                 last=items[-1]
                 name=last[2]
-                if (stat=="passing_yards" and
-                    any(_name(a.get("player"))==_name(name) and
-                        a.get("status") in NO_OPENING_START
-                        for a in g.get("qb_availability_"+side,[]))):
-                    blocked["QB_REPORTED_UNAVAILABLE"]+=1;continue
+                # Game-specific official reports apply to EVERY player
+                # category. An unlisted player is NOT necessarily available.
+                matching=[a for a in (g.get("qb_availability_"+side,[])+
+                                      g.get("player_availability_"+side,[]))
+                          if _name(a.get("player"))==_name(name)]
+                reported_statuses={a.get("status") for a in matching}
+                if reported_statuses & (NO_OPENING_START|{"CONFLICT_REVIEW"}):
+                    blocked["OFFICIAL_PLAYER_REPORTED_UNAVAILABLE_OR_CONFLICT"]+=1
+                    continue
+                official_status=(next(iter(reported_statuses)) if len(reported_statuses)==1
+                                 else "CONFLICT_REVIEW" if len(reported_statuses)>1
+                                 else "UNKNOWN_NOT_REPORTED")
+                if official_status=="CONFLICT_REVIEW":
+                    blocked["OFFICIAL_PLAYER_REPORTED_CONFLICT"]+=1
+                    continue
                 old=[(kick,val) for kick,val in by_id_prior.get((pid,stat),[]) if kick<now]
                 f=_playerform(observed,old,stat,prevteam[pid],teamid)
                 if f is None:continue
@@ -187,6 +199,7 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                     matchup=round(raw,6)
                 factor=1+.25*matchup if matchup is not None else 1.
                 projected=round(max(0.,f["base"]*factor),1)
+                role=role_summary(role_history,teamid,pid,stat)
                 picks.append({
                     "player_id":pid,"player":name,"team_side":side,
                     "team":g[side+"_team"],"metric":stat,"label":GROUP[stat],
@@ -199,6 +212,9 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                     "recent_method":f["base_method"],
                     "opponent_matchup_factor":factor if matchup is not None else None,
                     "player_participation_status":"RECENT_GAME_PARTICIPANT_NOT_CONFIRMED",
+                    "official_reported_status":official_status,
+                    "workload_role_evidence":role,
+                    "workload_share_used_to_change_yard_projection":False,
                     "real_bookmaker_line":None,
                     "over_probability":None,
                     "source_observed_at_utc":now.isoformat(),
@@ -221,6 +237,10 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                 "player_participation_confirmed":False,
                 "historical_publication_time_authenticated":False}
             count+=1;rows_count+=len(entries)
+            roles_count+=sum(p["workload_role_evidence"] is not None for p in entries)
+            flagged_count+=sum(p["official_reported_status"] not in
+                              ("UNKNOWN_NOT_REPORTED","AVAILABLE","PROBABLE")
+                              for p in entries)
         else:
             g["player_props"]=_blank("Insufficient player-game observations")
             blocked["INSUFFICIENT_PLAYER_HISTORY"]+=1
@@ -229,12 +249,17 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
     board["player_prop_display"]={
         "status":STATUS,"model":MODEL,"covered_games":count,
         "player_stat_projections":rows_count,"total_games":len(board["games"]),
+        "entries_with_observed_role_shares":roles_count,
+        "official_status_flagged_entries":flagged_count,
+        "rejected_role_source_records":role_rejects,
+        "role_shares_changed_yard_projections":False,
+        "all_reported_player_positions_considered":True,
         "unavailable_by_reason":dict(blocked),
         "model_scores_updated":False,"real_bookmaker_quotes_present":False,
         "valid_over_under_model_edges":False,
         "research_prior_and_matchup_components_jointly_validated":False,
         "all_player_participation_verified":False,
-        "description":"Conditional player-stat research projections; not sportsbook props or live player confirmation."}
+        "description":"Conditional player-stat research projections, observed recorded-opportunity shares and game-specific reports for all positions; not snaps, sportsbook props or confirmed participation."}
     return board
 
 def run(path,now=None,fetcher=fetch_asset):
