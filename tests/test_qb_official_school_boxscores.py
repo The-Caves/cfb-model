@@ -95,6 +95,8 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
                           '<div>37</div><div>Final</div><div>24</div>')
         text=text.replace('alt="Ole Miss"','alt="Cincinnati"')
         text=text.replace('alt="Texas"','alt="Texas Tech"')
+        text=text.replace("Chambliss,Trinidad","French IV,JC")
+        text=text.replace("Manning, Arch","Hammond, Will")
         rows=parse(game,cfg,text,AT)
         self.assertEqual(rows[0]["team"],"Texas Tech Red Raiders")
         self.assertEqual(rows[1]["team"],"Cincinnati Bearcats")
