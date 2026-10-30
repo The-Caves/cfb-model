@@ -64,6 +64,19 @@ class Tests(unittest.TestCase):
         snap=observe(ctx(g),queue("VERIFIED_SOURCE","Quarterback A"),NOW)
         self.assertEqual(snap["summary"]["confirmed_reviewed"],0)
         self.assertIn("CONFIRMED_STARTER_AVAILABILITY_CONFLICT",next(r for r in snap["rows"] if r["team"]=="Texas Longhorns")["evidence_conflicts"])
+    def test_first_half_out_conflicts_with_confirmed_starting_qb(self):
+        g=copy.deepcopy(GAME)
+        g["verified_qb_starters"]={"Texas Longhorns":claim()}
+        g["qb_availability_reports"]=[{"team":"Texas Longhorns","position":"QB",
+            "player":"Quarterback A","status":"OUT_FIRST_HALF",
+            "published_at_utc":"2026-10-22T09:00:00Z",
+            "captured_at_utc":"2026-10-22T09:10:00Z",
+            "source_url":"https://school.edu/first-half-out"}]
+        snap=observe(ctx(g),queue("VERIFIED_SOURCE","Quarterback A"),NOW)
+        self.assertEqual(snap["summary"]["confirmed_reviewed"],0)
+        self.assertIn("CONFIRMED_STARTER_AVAILABILITY_CONFLICT",
+            next(r for r in snap["rows"] if r["team"]=="Texas Longhorns")["evidence_conflicts"])
+
     def test_after_kickoff_slot_not_backfilled(self):
         g=copy.deepcopy(GAME)
         g["kickoff_utc"]="2026-10-22T09:00:00Z"

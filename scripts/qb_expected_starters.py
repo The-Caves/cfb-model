@@ -15,6 +15,7 @@ from scripts.qb_role_features import STATUS as ROLE_STATUS
 
 STATUS="QB_EXPECTED_STARTER_SOURCE_RANKED_RESEARCH_ONLY"
 INACTIVE={"OUT","SUSPENDED"}
+START_UNAVAILABLE=INACTIVE|{"OUT_FIRST_HALF"}  # Cannot start; may return after halftime.
 WARN={"QUESTIONABLE","DOUBTFUL","GAME_TIME_DECISION","LIMITED"}
 MAX_CHART_AGE_DAYS=21
 
@@ -96,8 +97,8 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                 latest=historical.get("last_game_leading_passer_proxy")
                 latest_rank=next((r["rank"] for r in ranked
                                   if _name(r["player"])==_name(latest)),None)
-                if qb1 and qb1_status in INACTIVE:
-                    alternatives=[r for r in ranked[1:] if availability.get(_name(r["player"]),{}).get("status") not in INACTIVE|{"CONFLICT"}]
+                if qb1 and qb1_status in START_UNAVAILABLE:
+                    alternatives=[r for r in ranked[1:] if availability.get(_name(r["player"]),{}).get("status") not in START_UNAVAILABLE|{"CONFLICT"}]
                     if latest_rank and latest_rank>1 and any(_name(r["player"])==_name(latest) for r in alternatives):
                         # Recently active QB2/3 becomes an expected, NOT confirmed starter.
                         current={"player":latest,"source_class":"PROJECTED_FROM_QB1_OUT_AND_LAST_GAME_PASSER",
@@ -130,12 +131,12 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                     same_two=(historical.get("recent_two_game_leading_passer_proxy")
                               and _name(historical["recent_two_game_leading_passer_proxy"])==_name(latest))
                     latest_status=availability.get(_name(latest),{}).get("status")
-                    if chart_stale and latest_status not in INACTIVE|{"CONFLICT"}:
+                    if chart_stale and latest_status not in START_UNAVAILABLE|{"CONFLICT"}:
                         current={"player":latest,
                                  "source_class":"PROJECTED_RECENT_PASSER_AFTER_STALE_CHART",
                                  "confidence":"MEDIUM_UNCONFIRMED",
                                  "reason":"LAST_GAME_PASSER_NEWER_THAN_DEPTH_CHART_UPDATE"}
-                    elif not updated and same_two and latest_status not in INACTIVE|{"CONFLICT"}:
+                    elif not updated and same_two and latest_status not in START_UNAVAILABLE|{"CONFLICT"}:
                         # The provider chart was fetched recently, but without
                         # a dated chart update that is NOT evidence it superseded
                         # two consecutive actual games of passing usage.
@@ -151,7 +152,7 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                 elif qb1:
                     current={"player":qb1,"source_class":"PROJECTED_DEPTH_CHART_ONLY",
                              "confidence":"LOW_UNCONFIRMED","reason":"CHART_QB1_NO_RECENT_USAGE_CONFIRMATION"}
-                elif latest and availability.get(_name(latest),{}).get("status") not in INACTIVE|{"CONFLICT"}:
+                elif latest and availability.get(_name(latest),{}).get("status") not in START_UNAVAILABLE|{"CONFLICT"}:
                     current={"player":latest,"source_class":"PROJECTED_LAST_GAME_PASSER_ONLY",
                              "confidence":"LOW_UNCONFIRMED","reason":"LAST_GAME_PASSER_NOT_GAME_WEEK_STARTER"}
                 else:
@@ -166,7 +167,11 @@ def build(context,role,charts,observed_at_utc,chart_health=None):
                 if availability.get(_name(r["player"]),{}).get("status") in INACTIVE:
                     continue
                 options.append({"player":r["player"],"depth_rank":r["rank"],
-                                "role":r["label"],"source":"THIRD_PARTY_CHART_SCENARIO"})
+                                "role":r["label"],"source":"THIRD_PARTY_CHART_SCENARIO",
+                                "opening_start_eligible":
+                                    availability.get(_name(r["player"]),{}).get("status") not in START_UNAVAILABLE,
+                                "out_first_half":
+                                    availability.get(_name(r["player"]),{}).get("status")=="OUT_FIRST_HALF"})
             if current["player"] and _name(current["player"]) not in {_name(r["player"]) for r in options}:
                 options.append({"player":current["player"],"depth_rank":depth_rank,
                                 "role":f"QB{depth_rank}" if depth_rank else "QB_RANK_UNKNOWN",

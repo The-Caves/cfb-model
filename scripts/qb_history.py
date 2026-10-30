@@ -60,7 +60,7 @@ def _slot(game,team,opponent,obs,queue_row):
         if not source_valid:
             record["evidence_conflicts"].append("UNSUPPORTED_OR_LATE_STARTER_CLAIM")
         elif any(s["player"]==player and s["status"] in
-                 ("OUT","SUSPENDED","DOUBTFUL","LIMITED")
+                 ("OUT","OUT_FIRST_HALF","SUSPENDED","DOUBTFUL","LIMITED")
                  for s in record["qb_availability_signals"]):
             record["evidence_conflicts"].append("CONFIRMED_STARTER_AVAILABILITY_CONFLICT")
         else:
