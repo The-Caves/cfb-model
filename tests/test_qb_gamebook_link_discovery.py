@@ -64,7 +64,7 @@ class SchoolGamebookLinkTests(unittest.TestCase):
 
     def test_partially_matching_slug_is_still_review_only(self):
         def page(url,host):
-            return '<a href="/sports/football/stats/2026/ole-miss-rebels/boxscore/234">Score</a>'
+            return '<a href="/sports/football/stats/2026/ole-miss-rebels-game/boxscore/234">Score</a>'
         result=discover([target()],sites(),AT,fetch=page)
         self.assertEqual(result["candidates"][0]["match_rule"],
                          "PARTIAL_OPPONENT_SLUG_NEEDS_REVIEW")
