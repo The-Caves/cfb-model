@@ -68,11 +68,19 @@ jobs:
             --input "data/settlement_scores/qb-official-gamebook-${{ github.run_id }}.json" \
             --output "data/settlement_scores/qb-official-gamebook-ledger-${{ github.run_id }}.json" | tee /tmp/qb-official-gamebook-ledger.txt
           cat /tmp/qb-official-gamebook-ledger.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Read immutable context-state as local Git tree for QB source/forecast audit
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: context-state
+          path: .context-state
+          persist-credentials: false
       - name: Pair frozen pregame QB scenarios with independently accepted postgame starter labels
         if: steps.gate.outputs.run == 'true'
         run: |
           python -m scripts.qb_starter_supervised \
             --registry config/official_school_qb_boxscores_2026.json \
+            --archive-root .context-state \
             --output "data/settlement_scores/qb-starter-trainability-${{ github.run_id }}.json" | tee /tmp/qb-supervised.txt
           cat /tmp/qb-supervised.txt >> "$GITHUB_STEP_SUMMARY"
           echo "QB starter model is NOT trained unless enough audited prospective labels exist." >> "$GITHUB_STEP_SUMMARY"
