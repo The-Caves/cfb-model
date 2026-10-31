@@ -119,7 +119,13 @@ def apply(board,source_rows=None,manifest=None,context=None):
         if str(g["game_id"]) in seen:raise ValueError("Duplicate website matchup")
         seen.add(str(g["game_id"]))
     fail,audit=_bias(board)
-    quality="V03_HOME_BIAS_QUARANTINED" if fail else "V03_HOME_BIAS_NOT_FLAGGED"
+    # No authenticated same-run evidence means the already-discredited
+    # V03 must remain quarantined, regardless of today's shrinking count.
+    if source_rows is None:
+        fail=True
+    quality=("V03_HOME_BIAS_SOURCE_MISSING_FAIL_CLOSED"
+             if source_rows is None else
+             "V03_HOME_BIAS_QUARANTINED" if fail else "V03_HOME_BIAS_NOT_FLAGGED")
     scores={}
     training_home_margin=None
     training_games=0
