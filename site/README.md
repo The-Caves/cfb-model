@@ -196,3 +196,38 @@ the margin and total cannot form a nonnegative score, the score remains
 unavailable rather than inventing points. Frozen V03 original scores,
 ATS selection quarantine, research opponent-rating margin, prospective
 archive receipts, and player stat projections remain unchanged.
+
+## October 31: Correct underlying opponent-adjusted scoring (V04, research)
+
+The original V03 score model learned a very large false home advantage
+from an unbalanced 2026 nonconference schedule. V04 replaces that scoring
+architecture with two separate, directly source-trained components:
+(1) opponent-adjusted home/away team strength difference and a
+conservatively regularized 2.5-point venue prior;
+(2) team offense-versus-defense expected scoring, with explicit 2026
+past-only 28-day recency decay, limited 70-point single-team targets,
+regularization, and no bookmaker fit. Two directly estimated quantities
+form coherent projected points for both teams, margin and total.
+Unlike the earlier R1/V03 display workaround, the V04 predicted **total
+is fitted directly from historical team scores, not recycled V03**.
+
+The reproducible original October 31 2026 research source achieved
+**301 matched games across 5 weekly past-only folds**: V03 margin
+MAE 15.890, totals MAE 13.700 and home pick frequency 97.7%;
+V04 margin MAE **13.205**, totals MAE **13.480**, home
+selection 68.1%. V04's mean signed home margin error was +0.23
+points versus +10.41 for V03. This is a chronological retrospective
+ablation rather than authenticated earlier-publication history and
+does not establish betting success.
+
+The public site's verified-source overlay now includes V04 directly
+trained final scores on game cards where the exact-run original
+training inputs pass checksum, team, venue and kickoff checks. V03
+remains quarantined and its original immutably archived picks are
+unmodified. V04 is labeled experimental, not prospectively promoted,
+and no V04 ATS picks/edge/profit claims are generated. Where there is
+no V04 source-matched prediction, fall back to the clearly labeled
+R1/V03 illustration or show unavailable. Each source-matched
+V04 pregame score is saved as its own separate research field in
+the game's site decision receipt for future genuine prospective
+competition against V03.

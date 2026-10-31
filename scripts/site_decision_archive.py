@@ -84,6 +84,29 @@ def freeze(board,now,run_id):
             if over!="PASS":ou+=1
         elif tt:
             raise ValueError("Observed total without computed side")
+        # Freeze the ACTUALLY DISPLAYED independent V04 research score
+        # alongside (never replacing) the original V03 forecast receipts.
+        candidate=g.get("v04_direct_scores")
+        if candidate is not None:
+            if (not isinstance(candidate,dict) or
+                candidate.get("status")!="SOURCE_OBSERVED_DIRECT_TEAM_SCORE_MODEL_RESEARCH_ONLY"
+                or candidate.get("model")!="V04_INDEPENDENT_OPPONENT_ADJUSTED_SCORES_RESEARCH_ONLY"
+                or candidate.get("direct_scoring_fit_uses_v03_total") is not False
+                or candidate.get("no_market_lines_in_training") is not True
+                or candidate.get("model_promoted") is not False or
+                g.get("home_bias_quarantined") is not True):
+                raise ValueError("V04 research source/status mismatch")
+            home_pts=candidate.get("home_points")
+            away_pts=candidate.get("away_points")
+            pred_margin=candidate.get("home_margin")
+            pred_total=candidate.get("total_points")
+            if (not all(finite(v) for v in (home_pts,away_pts,pred_margin,pred_total))
+                or min(home_pts,away_pts,pred_total)<0 or
+                abs(home_pts+away_pts-pred_total)>.03 or
+                abs(home_pts-away_pts-pred_margin)>.03):
+                raise ValueError("V04 model score incoherent or unsupported")
+        else:
+            home_pts=away_pts=pred_margin=pred_total=None
         discrepancy=round(abs(margin+spread),4) if sp else None
         risk="HIGH_MODEL_MARKET_DISAGREEMENT" if discrepancy is not None and discrepancy>=10 else "NONE"
         high_disagreement+=int(risk!="NONE")
@@ -106,6 +129,16 @@ def freeze(board,now,run_id):
             "opponent_rating_shadow_margin":(
                 g["opponent_rating"]["predicted_home_margin"]
                 if isinstance(g.get("opponent_rating"),dict) else None),
+            "v04_direct_score_model":candidate.get("model") if candidate else None,
+            "v04_direct_home_points":home_pts,
+            "v04_direct_away_points":away_pts,
+            "v04_direct_home_margin":pred_margin,
+            "v04_direct_total_points":pred_total,
+            "v04_direct_source_no_v03_total_reuse":(
+                candidate["direct_scoring_fit_uses_v03_total"] is False
+                if candidate else None),
+            "v04_research_not_promoted":candidate.get("model_promoted") is False
+                if candidate else None,
             "qb_verified_at_forecast":g.get("qb_starters_verified",0),
         })
     if not rows:raise ValueError("No unstarted games to archive")

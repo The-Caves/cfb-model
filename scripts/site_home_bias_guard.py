@@ -28,6 +28,7 @@ import numpy as np
 from scripts.game_context import parse_time
 from scripts.personnel_forecast import checksum
 
+
 ET=ZoneInfo("America/New_York")
 STATUS="V03_HOME_BIAS_CIRCUIT_BREAKER_AND_OPPONENT_RATING_SHADOW"
 MODEL="OPPONENT_ADJUSTED_SCORE_MARGIN_R1_RESEARCH_ONLY"
@@ -105,6 +106,11 @@ def _bias(board):
            "home_selection_fraction":FLAG_FRACTION,"mean_margin_points":FLAG_MARGIN}}
 
 def apply(board,source_rows=None,manifest=None,context=None):
+    # Late import breaks dependency cycle: V04 reuses the independently
+    # audited R1 source gate; the guard only imports V04 when invoked.
+    from scripts.v04_direct_scores import (
+        fit as fit_v04_scores, predict as predict_v04_scores,
+        MODEL as V04_MODEL, STATUS as V04_STATUS)
     if (board.get("schema_version")!=2 or
         board.get("betting_status")!="PASS_UNVALIDATED" or
         not isinstance(board.get("games"),list) or
@@ -127,6 +133,7 @@ def apply(board,source_rows=None,manifest=None,context=None):
              if source_rows is None else
              "V03_HOME_BIAS_QUARANTINED" if fail else "V03_HOME_BIAS_NOT_FLAGGED")
     scores={}
+    v04_scores={}
     training_home_margin=None
     training_games=0
     if source_rows is not None or manifest is not None or context is not None:
@@ -153,6 +160,10 @@ def apply(board,source_rows=None,manifest=None,context=None):
         fail=fail or (len(train)>=90 and training_home_margin>=8.)
         quality="V03_HOME_BIAS_QUARANTINED" if fail else "V03_HOME_BIAS_NOT_FLAGGED"
         strength=ratings(train)
+        # V04 is a source-trained team-score research model, NOT the
+        # V03-total/R1-margin illustrative hybrid. Fit only to this
+        # exact, checksum-matched, pre-forecast completed-score snapshot.
+        v04_model=fit_v04_scores(source_rows,forecast.isoformat())
         for g in board["games"]:
             ctx=candidates.get(str(g["game_id"]))
             if ctx is None:continue
@@ -174,6 +185,14 @@ def apply(board,source_rows=None,manifest=None,context=None):
                           math.isfinite(m) and abs(m)<=original_total)
             scenario_home=round((original_total+m)/2,2) if illustrative else None
             scenario_away=round((original_total-m)/2,2) if illustrative else None
+            v04=predict_v04_scores(v04_model,home,away,ctx["neutral"])
+            if v04 is not None:
+                if (v04["model"]!=V04_MODEL or v04["status"]!=V04_STATUS or
+                    v04["direct_scoring_fit_uses_v03_total"] is not False or
+                    v04["no_market_lines_in_training"] is not True or
+                    v04["model_promoted"] is not False):
+                    raise ValueError("V04 score source or experimental status invalid")
+                v04_scores[str(g["game_id"])]=v04
             scores[str(g["game_id"])]={
                 "status":"SOURCE_MATCHED_OPPONENT_RATING_R1_RESEARCH_ONLY",
                 "score_scenario_status":("HYBRID_R1_MARGIN_WITH_FROZEN_V03_TOTAL_UNVALIDATED"
@@ -196,6 +215,7 @@ def apply(board,source_rows=None,manifest=None,context=None):
     suppressed=0
     for g in board["games"]:
         g["opponent_rating"]=scores.get(str(g["game_id"]))
+        g["v04_direct_scores"]=v04_scores.get(str(g["game_id"]))
         g["home_bias_quarantined"]=bool(fail)
         if fail and g.get("market_home_spread") is not None:
             # These are withheld from the website decision ledger as well.
@@ -218,6 +238,12 @@ def apply(board,source_rows=None,manifest=None,context=None):
         "source_same_forecast_training_run_verified":len(scores)>0,
         "source_training_games":max((p["source_training_games"] for p in scores.values()),default=0),
         "opponent_rating_games":len(scores),
+        "v04_direct_score_games":len(v04_scores),
+        "v04_model":V04_MODEL,
+        "v04_status":"RESEARCH_PRELIMINARY_NOT_PROSPECTIVELY_PROMOTED",
+        "v04_scores_independently_trained":True,
+        "v04_score_uses_v03_total":False,
+        "v04_model_market_odds_used_to_fit":False,
         "training_raw_mean_home_margin":training_home_margin,
         "training_game_count":training_games,
         "today_opponent_rating_games":len(selected),

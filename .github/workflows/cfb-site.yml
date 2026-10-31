@@ -13,6 +13,9 @@ on:
       - 'tests/test_site_decision_archive.py'
       - 'scripts/site_market.py'
       - 'scripts/site_home_bias_guard.py'
+      - 'scripts/v04_direct_scores.py'
+      - 'tests/test_v04_direct_scores.py'
+      - 'scripts/v04_score_benchmark.py'
       - 'tests/test_site_home_bias_guard.py'
       - 'scripts/site_qb.py'
       - 'scripts/site_depthchart.py'
@@ -99,7 +102,9 @@ jobs:
       - name: Test independently archived pre-kickoff conditional player research predictions
         run: python -m unittest discover -s tests -p 'test_site_player_projection_archive.py' -v
       - name: Test V03 severe home-bias quarantine and independent rating
-        run: python -m unittest discover -s tests -p 'test_site_home_bias_guard.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_site_home_bias_guard.py' -v
+          python -m unittest discover -s tests -p 'test_v04_direct_scores.py' -v
       - name: Test source-matched market comparisons
         run: python -m unittest discover -s tests -p 'test_site_market.py' -v
       - name: Test game-specific QB status and season-passer fallback
@@ -154,6 +159,11 @@ jobs:
           assert report["status"]=="V03_HOME_BIAS_QUARANTINED"
           assert report["source_same_forecast_training_run_verified"] is True
           assert report["opponent_rating_games"]>0
+          assert report["v04_direct_score_games"]==report["opponent_rating_games"]
+          assert report["v04_score_uses_v03_total"] is False
+          assert all((g["v04_direct_scores"] is None or
+                      g["v04_direct_scores"]["direct_scoring_fit_uses_v03_total"] is False)
+                     for g in b["games"])
           assert all(g["model_ats_side"]=="PASS" for g in b["games"]
                      if g.get("market_home_spread") is not None)
           assert not report["score_archive_rewritten"]
