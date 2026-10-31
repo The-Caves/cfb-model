@@ -177,3 +177,22 @@ record, then asserts the displayed grade matches the source's observed
 timestamp and sample count. Historical prediction snapshots remain
 separately checksum-verified and immutable. The read-only UI grade is
 not sportsbook prop performance.
+
+## October 31 score-card visibility correction
+
+The V03 home-bias quarantine briefly replaced the projected final score
+on each game card with a dash, reducing the usefulness of the dashboard.
+A follow-up now displays an **explicit hybrid illustrative final score**.
+The independent opponent R1 score-margin model is combined with the
+original separately frozen V03 **total only**:
+
+- illustrated home points = (V03 total + R1 home margin) / 2
+- illustrated away points = (V03 total - R1 home margin) / 2
+
+These are mathematical score illustrations, **not independently trained,
+jointly calibrated, or prospectively validated game-score forecasts**.
+The final-score hints and game header label them as hybrid research. If
+the margin and total cannot form a nonnegative score, the score remains
+unavailable rather than inventing points. Frozen V03 original scores,
+ATS selection quarantine, research opponent-rating margin, prospective
+archive receipts, and player stat projections remain unchanged.
