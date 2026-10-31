@@ -27,7 +27,7 @@ import numpy as np
 
 from scripts.game_context import parse_time
 from scripts.personnel_forecast import checksum
-from scripts.v04_direct_scores import fit as fit_v04_scores, predict as predict_v04_scores, MODEL as V04_MODEL, STATUS as V04_STATUS
+
 
 ET=ZoneInfo("America/New_York")
 STATUS="V03_HOME_BIAS_CIRCUIT_BREAKER_AND_OPPONENT_RATING_SHADOW"
@@ -106,6 +106,11 @@ def _bias(board):
            "home_selection_fraction":FLAG_FRACTION,"mean_margin_points":FLAG_MARGIN}}
 
 def apply(board,source_rows=None,manifest=None,context=None):
+    # Late import breaks dependency cycle: V04 reuses the independently
+    # audited R1 source gate; the guard only imports V04 when invoked.
+    from scripts.v04_direct_scores import (
+        fit as fit_v04_scores, predict as predict_v04_scores,
+        MODEL as V04_MODEL, STATUS as V04_STATUS)
     if (board.get("schema_version")!=2 or
         board.get("betting_status")!="PASS_UNVALIDATED" or
         not isinstance(board.get("games"),list) or
