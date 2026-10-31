@@ -54,6 +54,31 @@ class SiteHomeBiasTests(unittest.TestCase):
         self.assertEqual(g["opponent_rating"]["model"],MODEL)
         self.assertEqual(g["opponent_rating"]["home_field_allowance"],2.5)
         self.assertTrue(g["opponent_rating"]["not_prospectively_calibrated"])
+    def test_score_illustration_uses_independent_r1_margin_and_unchanged_v03_total(self):
+        d=apply(board(),completed(),manifest(),context())
+        g=d["games"][0]
+        out=g["opponent_rating"]
+        self.assertEqual(out["score_scenario_status"],
+            "HYBRID_R1_MARGIN_WITH_FROZEN_V03_TOTAL_UNVALIDATED")
+        self.assertAlmostEqual(out["scenario_home_points"]+out["scenario_away_points"],
+                               g["model_total"],delta=.02)
+        self.assertAlmostEqual(out["scenario_home_points"]-out["scenario_away_points"],
+                               out["predicted_home_margin"],delta=.02)
+        self.assertEqual(out["scenario_total_source"],"FROZEN_UNVALIDATED_V03_TOTAL")
+        self.assertFalse(out["score_scenario_is_jointly_trained_or_calibrated"])
+        self.assertTrue(out["original_v03_scores_and_margin_unchanged"])
+        self.assertEqual(g["model_home_points"],31.39755)
+        self.assertEqual(g["model_away_points"],28.22808)
+
+    def test_no_fake_score_when_r1_margin_would_make_negative_points(self):
+        b=board()
+        b["games"][0]["model_total"]=2.
+        d=apply(b,completed(),manifest(),context())
+        out=d["games"][0]["opponent_rating"]
+        self.assertEqual(out["score_scenario_status"],"NO_VALID_SCORE_SPLIT")
+        self.assertIsNone(out["scenario_home_points"])
+        self.assertIsNone(out["scenario_away_points"])
+
     def test_1_game_left_today_still_quarantines_from_training_evidence(self):
         d=apply(board(1),completed(),manifest(),context(1))
         self.assertEqual(d["home_bias_audit"]["status"],"V03_HOME_BIAS_QUARANTINED")

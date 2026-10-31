@@ -322,6 +322,18 @@ function logoBadge(team,brand){
  }
  return badge;
 }
+function opponentScoreScenario(game){
+ const x=game.opponent_rating;
+ if(game.home_bias_quarantined!==true||
+    x?.score_scenario_status!=="HYBRID_R1_MARGIN_WITH_FROZEN_V03_TOTAL_UNVALIDATED"||
+    !Number.isFinite(x.scenario_home_points)||!Number.isFinite(x.scenario_away_points)||
+    !Number.isFinite(x.scenario_total_points)||!Number.isFinite(x.predicted_home_margin)||
+    x.scenario_home_points<0||x.scenario_away_points<0||
+    Math.abs(x.scenario_home_points+x.scenario_away_points-x.scenario_total_points)>.03||
+    Math.abs(x.scenario_home_points-x.scenario_away_points-x.predicted_home_margin)>.03)
+   return null;
+ return x;
+}
 function teamDisplayRow(game,side){
  const team=game[side+"_team"],brand=game["team_brand_"+side],row=node("div","teamRow");
  if(/^#[0-9a-f]{6}$/i.test(brand?.color||""))row.style.setProperty("--school-color",brand.color);
@@ -329,9 +341,12 @@ function teamDisplayRow(game,side){
  name.append(node("div","teamName",team));
  name.append(shortQB(game["qb_"+side],game["qb_depth_"+side],game["qb_availability_"+side]));
  left.append(logoBadge(team,brand),name);
- const score=node("div","scoreBox"),n=game["model_"+side+"_points"];
- score.append(node("div","score",game.home_bias_quarantined?"—":num(n,0)),
-              node("div","scoreHint",game.home_bias_quarantined?"V03 withheld":"Projected"));
+ const score=node("div","scoreBox"),scenario=opponentScoreScenario(game);
+ const n=game.home_bias_quarantined?
+   (scenario?scenario["scenario_"+side+"_points"]:null):game["model_"+side+"_points"];
+ score.append(node("div","score",Number.isFinite(n)?num(n,0):"—"),
+              node("div","scoreHint",game.home_bias_quarantined?
+                (scenario?"Hybrid estimate*":"No valid split"):"Projected"));
  row.append(left,score);return row;
 }
 function qbDetails(game){
@@ -485,7 +500,8 @@ function opponentMargin(g){
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
-            node("span","modelTag","Score · "+String(data?.model||"V03")+" · research"));
+            node("span","modelTag",g.home_bias_quarantined?"Score scenario · R1 margin / V03 total":
+  "Score · "+String(data?.model||"V03")+" · research"));
  el.append(top);
  const teams=node("div","teamStack");
  teams.append(teamDisplayRow(g,"away"),teamDisplayRow(g,"home"));
@@ -498,7 +514,11 @@ function gameCard(g){
  if(quarantined){
   summary.append(node("div","modelTag","Opponent-strength R1 · experimental"));
   summary.append(node("div","favorite",lead));
-  summary.append(node("div","biasWarning","V03 home-bias alert · Original winner and ATS calls suppressed. Opponent-strength R1 is a research challenger, not a validated pick."));
+  const scoreScenario=opponentScoreScenario(g);
+  summary.append(node("div","biasNote",scoreScenario?
+   "* Illustrated final score uses R1 opponent-adjusted margin and the frozen V03 total ("+num(scoreScenario.scenario_total_points)+"). Not a jointly trained or validated score model.":
+   "R1 estimates a margin only; a valid final-score illustration is unavailable."));
+  summary.append(node("div","biasWarning","V03 home-bias alert · V03 withheld: original winner and ATS calls suppressed. Opponent-strength R1 is a research challenger, not a validated pick."));
   summary.append(node("div","biasNote","Archived V03 (unreliable): "+(Number.isFinite(g.model_home_margin)?
     (g.model_home_margin>0?g.home_team:g.away_team)+" by "+num(Math.abs(g.model_home_margin)):"unavailable")+
     " · V03 projected total: "+num(g.model_total)+" · No calibrated win probability"));
@@ -519,7 +539,8 @@ function gameCard(g){
  }
  if(Number.isFinite(g.market_total)){
   totalLine=num(g.market_total);
-  if(g.model_ou_side)ouPick=g.model_ou_side==="PASS"?"Model: PASS":"Model: "+g.model_ou_side;
+  if(g.model_ou_side)ouPick=quarantined?"V03 total (unvalidated): "+g.model_ou_side:
+    g.model_ou_side==="PASS"?"Model: PASS":"Model: "+g.model_ou_side;
  }
  tiles.append(marketTile("Observed spread",spreadLine,atsPick,g.ats_edge_points),
               marketTile("Observed O/U",totalLine,ouPick,g.ou_edge_points));

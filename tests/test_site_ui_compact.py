@@ -51,7 +51,12 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn("V03 home-bias alert",self.html)
         self.assertIn("V03 withheld",self.html)
         self.assertIn("Opponent-strength R1 · experimental",self.html)
-        self.assertIn('game.home_bias_quarantined?"—"',self.html)
+        self.assertIn("function opponentScoreScenario(game)",self.html)
+        self.assertIn("Hybrid estimate*",self.html)
+        self.assertIn("Score scenario · R1 margin / V03 total",self.html)
+        self.assertIn("Not a jointly trained or validated score model",self.html)
+        self.assertIn('scenario["scenario_"+side+"_points"]',self.html)
+        self.assertIn("No valid split",self.html)
 
     def test_mobile_and_logo_fallback(self):
         self.assertIn('@media(max-width:580px)',self.html)
