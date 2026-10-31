@@ -35,7 +35,7 @@ def evaluate(games,advanced,start="2026-09-26",days=7):
         final=[r for r in weekly if cutoff<=dt.date.fromisoformat(r["date"])<
                cutoff+dt.timedelta(days=days)]
         if len(prior)<90 or not final:continue
-        instant=dt.datetime.combine(cutoff,dt.time.min,tzinfo=dt.timezone.utc).isoformat()
+        instant=dt.datetime.combine(cutoff,dt.time(hour=12),tzinfo=dt.timezone.utc).isoformat()
         our_model=fit(prior,instant)
         r1_strength=ratings(_source_games(prior,dt.datetime.fromisoformat(instant)))
         v03=fit_ridge(prior_features,BASE_FIELDS)
