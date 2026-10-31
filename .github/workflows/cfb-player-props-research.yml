@@ -25,6 +25,8 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: python -m pip install -r requirements.txt
+      - name: Validate immutable prospective player-stat settlement on synthetic independent final
+        run: python -m unittest discover -s tests -p 'test_player_prop_prospective_stat_grade.py' -v
       - name: Validate historical player-stat research schema and no-lookahead
         run: |
           python -m unittest discover -s tests -p 'test_player_prop_*.py' -v

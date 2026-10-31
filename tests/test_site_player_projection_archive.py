@@ -35,6 +35,7 @@ class ProspectivePlayerArchiveTests(unittest.TestCase):
         self.assertEqual(x["summary"]["player_stat_projections"],1)
         r=x["rows"][0]
         self.assertEqual(r["projection_conditional_yards"],73.5)
+        self.assertIsNone(r["recent_four_baseline_yards"])
         self.assertEqual(r["official_reported_status"],"QUESTIONABLE")
         self.assertEqual(r["original_V03_sha256"],"a"*64)
         self.assertFalse(r["player_participation_verified"])
@@ -60,6 +61,14 @@ class ProspectivePlayerArchiveTests(unittest.TestCase):
             x["games"][0]["player_props"]["entries"][0][key]=value
             with self.assertRaises(ValueError):
                 freeze(x,NOW,"9988")
+
+    def test_same_instant_recent_four_control_gets_frozen_and_validated(self):
+        b=fixture()
+        b["games"][0]["player_props"]["entries"][0]["recent_four_baseline_yards"]=62.4
+        a=freeze(b,NOW,"9988")
+        self.assertEqual(a["rows"][0]["recent_four_baseline_yards"],62.4)
+        b["games"][0]["player_props"]["entries"][0]["recent_four_baseline_yards"]=float("nan")
+        with self.assertRaises(ValueError):freeze(b,NOW,"9988")
 
     def test_no_source_model_mutation_or_unsupported_role_share(self):
         x=fixture()

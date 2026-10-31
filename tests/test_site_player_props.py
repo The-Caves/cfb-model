@@ -58,6 +58,7 @@ class SitePlayerFormTests(unittest.TestCase):
         row=out["games"][0]
         self.assertEqual(len(row["player_props"]["entries"]),6)
         self.assertEqual(row["model_home_margin"],4.3)
+        self.assertIsInstance(row["player_props"]["entries"][0]["recent_four_baseline_yards"],float)
         self.assertEqual(row["model_total"],48.5)
         self.assertEqual(row["player_props"]["real_bookmaker_prop_lines"],0)
         self.assertFalse(out["player_prop_display"]["model_scores_updated"])

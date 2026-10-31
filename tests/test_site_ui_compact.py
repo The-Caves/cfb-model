@@ -41,6 +41,11 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn('With player projections',self.html)
         self.assertNotIn('model_home_margin =',self.html)
 
+    def test_prospective_player_model_performance_has_model_vs_baseline(self):
+        self.assertIn("function renderPlayerPerformance()",self.html)
+        self.assertIn("Earliest saved pre-kickoff PlayerForm estimate",self.html)
+        self.assertIn("player_stat_performance",self.html)
+
     def test_mobile_and_logo_fallback(self):
         self.assertIn('@media(max-width:580px)',self.html)
         self.assertIn('logoBadge(team,brand)',self.html)

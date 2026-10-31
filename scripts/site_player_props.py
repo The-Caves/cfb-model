@@ -204,6 +204,11 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                     "player_id":pid,"player":name,"team_side":side,
                     "team":g[side+"_team"],"metric":stat,"label":GROUP[stat],
                     "projection":projected,"unit":"yards",
+                    # Independent score-free control forecast captured at
+                    # the SAME pregame observation instant for fair future
+                    # paired testing; never regenerated from a later box.
+                    "recent_four_baseline_yards":round(_mean(
+                        [value for _,value in observed[-4:]]),4),
                     "recent_game_low":f["recent_min"],
                     "recent_game_high":f["recent_max"],
                     "recent_games":f["current_games"],

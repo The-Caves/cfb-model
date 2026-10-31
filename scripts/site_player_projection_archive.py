@@ -77,6 +77,9 @@ def freeze(board,now,run_id):
             issued=parse_time(row["source_observed_at_utc"])
             if issued>capture or issued>=kick or (capture-issued).total_seconds()>MAX_AGE_SECONDS:
                 raise ValueError("Player projection issued after kickoff or outside source-age policy")
+            recent=row.get("recent_four_baseline_yards")
+            if recent is not None and (not _finite(recent) or not -100<=recent<=1200):
+                raise ValueError("Invalid independent same-time recent-four baseline")
             role=row.get("workload_role_evidence")
             if role is not None:
                 share=role.get("recorded_opportunity_share")
@@ -91,6 +94,7 @@ def freeze(board,now,run_id):
                 "team_side":row["team_side"],"team":row["team"],
                 "metric":row["metric"],"model_version":model,
                 "projection_conditional_yards":row["projection"],
+                "recent_four_baseline_yards":recent,
                 "workload_role_evidence":role,
                 "official_reported_status":row.get("official_reported_status","UNKNOWN_NOT_REPORTED"),
                 "player_participation_verified":False,
