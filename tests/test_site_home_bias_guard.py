@@ -101,9 +101,38 @@ class SiteHomeBiasTests(unittest.TestCase):
         ctx=context();ctx["games"][0]["away"]="Another Team"
         with self.assertRaisesRegex(ValueError,"differs"):
             apply(board(),completed(),manifest(),ctx)
-    def test_same_day_game_scores_not_used(self):
-        rows=completed();rows[-1]["date"]="2026-10-31"
-        with self.assertRaisesRegex(ValueError,"strictly before"):
+    def test_same_day_final_is_embargoed_from_both_models(self):
+        rows=completed()
+        rows[-1]["date"]="2026-10-31"
+        rows[-1]["kickoff_utc"]="2026-10-31T12:00:00Z"
+        d=apply(board(),rows,manifest(),context())
+        self.assertEqual(d["home_bias_audit"]["same_day_final_scores_embargoed"],1)
+        self.assertEqual(d["home_bias_audit"]["training_game_count"],119)
+        self.assertEqual(d["games"][0]["opponent_rating"]["source_training_games"],119)
+        self.assertEqual(d["games"][0]["v04_direct_scores"]["source_training_games"],119)
+        self.assertEqual(d["games"][0]["model_home_margin"],3.16947)
+        self.assertEqual(d["games"][0]["model_ats_side"],"PASS")
+
+    def test_same_day_purported_future_final_fails_closed(self):
+        rows=completed()
+        rows[-1]["date"]="2026-10-31"
+        rows[-1]["kickoff_utc"]="2026-10-31T20:00:00Z"
+        with self.assertRaisesRegex(ValueError,"after forecast cutoff"):
+            apply(board(),rows,manifest(),context())
+
+    def test_future_day_source_score_fails_closed(self):
+        rows=completed()
+        rows[-1]["date"]="2026-11-01"
+        rows[-1]["kickoff_utc"]="2026-11-01T20:00:00Z"
+        with self.assertRaisesRegex(ValueError,"after forecast cutoff"):
+            apply(board(),rows,manifest(),context())
+
+    def test_duplicate_embargoed_source_game_fails_closed(self):
+        rows=completed()
+        rows[-1]["date"]="2026-10-31"
+        rows[-1]["kickoff_utc"]="2026-10-31T12:00:00Z"
+        rows.append(rows[-1].copy())
+        with self.assertRaisesRegex(ValueError,"Duplicated"):
             apply(board(),rows,manifest(),context())
     def test_duplicate_source_games_fail(self):
         rows=completed();rows.append(rows[0].copy())
