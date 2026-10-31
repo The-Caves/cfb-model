@@ -72,6 +72,8 @@ nav[role=tablist]{display:flex;gap:7px;margin:18px 0 20px;border-bottom:1px soli
 .qbWarn{color:#f1be77}
 .qbConf{color:#79d9b6}
 .qbSourceMini{color:#748fa7}
+.biasWarning{border:1px solid #d5a34c;border-radius:9px;background:#32291b;color:#f8d9a0;padding:9px 11px;font-size:11px;line-height:1.5;margin-top:9px}
+.biasNote{font-size:10px;color:#aabfd0;line-height:1.5;margin-top:5px}
 .modelSummary{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 8px}
 .favorite{font-size:12px;font-weight:750;color:#86dec2;margin:0}
 .underStats{font-size:11px;color:#9eb3c7}
@@ -328,7 +330,8 @@ function teamDisplayRow(game,side){
  name.append(shortQB(game["qb_"+side],game["qb_depth_"+side],game["qb_availability_"+side]));
  left.append(logoBadge(team,brand),name);
  const score=node("div","scoreBox"),n=game["model_"+side+"_points"];
- score.append(node("div","score",num(n,0)),node("div","scoreHint","Projected"));
+ score.append(node("div","score",game.home_bias_quarantined?"—":num(n,0)),
+              node("div","scoreHint",game.home_bias_quarantined?"V03 withheld":"Projected"));
  row.append(left,score);return row;
 }
 function qbDetails(game){
@@ -474,6 +477,11 @@ function playerOutlook(g){
  section.append(details);
  return section;
 }
+function opponentMargin(g){
+ const x=g.opponent_rating;
+ return x&&x.status==="SOURCE_MATCHED_OPPONENT_RATING_R1_RESEARCH_ONLY"&&Number.isFinite(x.predicted_home_margin)?
+   x.predicted_home_margin:null;
+}
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
@@ -483,18 +491,30 @@ function gameCard(g){
  teams.append(teamDisplayRow(g,"away"),teamDisplayRow(g,"home"));
  el.append(teams);
  const summary=node("div","modelSummary");
- const margin=g.model_home_margin;
- const lead=Number.isFinite(margin)?margin===0?"Model: even":(margin>0?g.home_team:g.away_team)+" by "+num(Math.abs(margin)):"No model margin available";
- summary.append(node("div","favorite",lead));
- const secondary=node("div","underStats");
- secondary.append(node("strong","","Total "+num(g.model_total)),node("span",""," · "+(Number.isFinite(g.research_home_win_probability)?
-   num(g.research_home_win_probability*100,0)+"% home win (uncal.)":"Win probability unavailable")));
- summary.append(secondary);el.append(summary);
+ const quarantined=g.home_bias_quarantined===true;
+ const alt=opponentMargin(g);
+ const margin=quarantined?alt:g.model_home_margin;
+ const lead=Number.isFinite(margin)?margin===0?"Even":(margin>0?g.home_team:g.away_team)+" by "+num(Math.abs(margin)):"No reliable directional projection";
+ if(quarantined){
+  summary.append(node("div","modelTag","Opponent-strength R1 · experimental"));
+  summary.append(node("div","favorite",lead));
+  summary.append(node("div","biasWarning","V03 home-bias alert · Original winner and ATS calls suppressed. Opponent-strength R1 is a research challenger, not a validated pick."));
+  summary.append(node("div","biasNote","Archived V03 (unreliable): "+(Number.isFinite(g.model_home_margin)?
+    (g.model_home_margin>0?g.home_team:g.away_team)+" by "+num(Math.abs(g.model_home_margin)):"unavailable")+
+    " · V03 projected total: "+num(g.model_total)+" · No calibrated win probability"));
+ }else{
+  summary.append(node("div","favorite",lead));
+  const secondary=node("div","underStats");
+  secondary.append(node("strong","","Total "+num(g.model_total)),node("span",""," · "+(Number.isFinite(g.research_home_win_probability)?
+    num(g.research_home_win_probability*100,0)+"% home win (uncal.)":"Win probability unavailable")));
+  summary.append(secondary);
+ }
+ el.append(summary);
  const tiles=node("div","marketTiles");
  let spreadLine="No line",atsPick=null,totalLine="No line",ouPick=null;
  if(Number.isFinite(g.market_home_spread)){
   spreadLine=g.home_team+" "+(g.market_home_spread>0?"+":"")+num(g.market_home_spread);
-  if(g.model_ats_side)atsPick=g.model_ats_side==="PASS"?"Model: PASS":
+  if(g.model_ats_side)atsPick=quarantined?"V03: withheld (bias)":g.model_ats_side==="PASS"?"Model: PASS":
    (g.model_ats_side==="HOME"?g.home_team:g.away_team)+" ATS";
  }
  if(Number.isFinite(g.market_total)){
@@ -506,7 +526,7 @@ function gameCard(g){
  el.append(tiles);
  el.append(playerOutlook(g));
  if(hasQBRisk(g))el.append(node("div","warningMini","QB availability alert · check the source details"));
- if(Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
+ if(!quarantined&&Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
   el.append(node("div","marginAlert","Large model / spread difference ("+num(g.ats_edge_points)+" pts). Research only; not a validated edge."));
  }
  const scouting=scoutingPanel(g);if(scouting)el.append(scouting);
