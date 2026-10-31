@@ -44,6 +44,8 @@ class SiteHomeBiasTests(unittest.TestCase):
         self.assertEqual(audit["training_raw_mean_home_margin"],13.)
         self.assertEqual(audit["quarantined_ats_lines"],20)
         self.assertEqual(audit["opponent_rating_games"],20)
+        self.assertEqual(audit["v04_direct_score_games"],20)
+        self.assertFalse(audit["v04_score_uses_v03_total"])
         self.assertFalse(audit["automatic_model_promotion"])
         g=d["games"][0]
         self.assertEqual(g["model_home_margin"],3.16947)
@@ -52,6 +54,12 @@ class SiteHomeBiasTests(unittest.TestCase):
         self.assertEqual(g["model_ats_side"],"PASS")
         self.assertIsNone(g["ats_edge_points"])
         self.assertEqual(g["opponent_rating"]["model"],MODEL)
+        v04=g["v04_direct_scores"]
+        self.assertEqual(v04["status"],"SOURCE_OBSERVED_DIRECT_TEAM_SCORE_MODEL_RESEARCH_ONLY")
+        self.assertAlmostEqual(v04["home_points"]+v04["away_points"],v04["total_points"],delta=.02)
+        self.assertAlmostEqual(v04["home_points"]-v04["away_points"],v04["home_margin"],delta=.02)
+        self.assertFalse(v04["direct_scoring_fit_uses_v03_total"])
+        self.assertEqual(g["model_total"],59.62563)
         self.assertEqual(g["opponent_rating"]["home_field_allowance"],2.5)
         self.assertTrue(g["opponent_rating"]["not_prospectively_calibrated"])
     def test_score_illustration_uses_independent_r1_margin_and_unchanged_v03_total(self):
@@ -87,6 +95,7 @@ class SiteHomeBiasTests(unittest.TestCase):
         d=apply(board())
         self.assertEqual(d["home_bias_audit"]["status"],"V03_HOME_BIAS_SOURCE_MISSING_FAIL_CLOSED")
         self.assertIsNone(d["games"][0]["opponent_rating"])
+        self.assertIsNone(d["games"][0]["v04_direct_scores"])
         self.assertFalse(d["home_bias_audit"]["source_same_forecast_training_run_verified"])
     def test_wrong_game_identity_fails_instead_of_guessing(self):
         ctx=context();ctx["games"][0]["away"]="Another Team"

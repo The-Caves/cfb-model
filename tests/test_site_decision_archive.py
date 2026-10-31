@@ -79,6 +79,28 @@ class ProspectiveDashboardArchiveTests(unittest.TestCase):
         b["games"][0]["model_ats_side"]="HOME"
         with self.assertRaises(ValueError):freeze(b,NOW,"888")
 
+    def test_v04_source_audited_score_model_is_immutable_research_shadow(self):
+        b=board();g=b["games"][0]
+        g["home_bias_quarantined"]=True
+        g["model_ats_side"]="PASS"
+        g["v04_direct_scores"]={
+            "status":"SOURCE_OBSERVED_DIRECT_TEAM_SCORE_MODEL_RESEARCH_ONLY",
+            "model":"V04_INDEPENDENT_OPPONENT_ADJUSTED_SCORES_RESEARCH_ONLY",
+            "home_points":17.4,"away_points":25.1,
+            "home_margin":-7.7,"total_points":42.5,
+            "direct_scoring_fit_uses_v03_total":False,
+            "no_market_lines_in_training":True,"model_promoted":False}
+        x=freeze(b,NOW,"888")
+        row=x["rows"][0]
+        self.assertEqual(row["v04_direct_home_margin"],-7.7)
+        self.assertEqual(row["v04_direct_total_points"],42.5)
+        self.assertEqual(row["frozen_forecast_home_margin"],10.)
+        self.assertTrue(row["v04_research_not_promoted"])
+        self.assertEqual(row["displayed_ats_side"],"PASS")
+        g["v04_direct_scores"]["home_points"]=5.
+        with self.assertRaisesRegex(ValueError,"incoherent"):
+            freeze(b,NOW,"888")
+
     def test_duplicate_ids_not_allowed(self):
         b=board();b["games"].append(copy.deepcopy(b["games"][0]))
         with self.assertRaises(ValueError):freeze(b,NOW,"888")
