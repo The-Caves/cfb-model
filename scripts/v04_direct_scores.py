@@ -140,7 +140,7 @@ def walkforward(rows,cutoffs):
         past=[r for r in rows if dt.date.fromisoformat(r["date"])<day]
         future=[r for r in rows if day<=dt.date.fromisoformat(r["date"])<day+dt.timedelta(days=7)]
         if len(past)<MIN_TRAINING_GAMES or not future:continue
-        at=dt.datetime.combine(day,dt.time.min,tzinfo=dt.timezone.utc)
+        at=dt.datetime.combine(day,dt.time(hour=12),tzinfo=dt.timezone.utc)
         model=fit(past,at.isoformat())
         detail=[]
         for g in future:
