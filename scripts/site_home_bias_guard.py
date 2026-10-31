@@ -74,6 +74,35 @@ def _source_games(rows,forecast):
         raise ValueError("Too few real completed games for rating model")
     return accepted
 
+def _previous_football_day_rows(rows,forecast):
+    """Embargo already-final same-day games without losing snapshot integrity.
+
+    The immutable intake artifact can legitimately contain early Saturday
+    finals when later Saturday games are forecast. Exclude those outcomes
+    from BOTH R1 and V04 fits; never include a same-day result merely
+    because its kickoff predates this snapshot. A purported completed
+    fixture still in the future is rejected as source-inconsistent.
+    """
+    local_day=forecast.astimezone(ET).date()
+    seen=set()
+    prior=[]
+    embargoed=0
+    for row in rows:
+        gid=str(row["game_id"])
+        if gid in seen:
+            raise ValueError("Duplicated source game identity")
+        seen.add(gid)
+        day=dt.date.fromisoformat(row["date"])
+        kickoff=parse_time(row["kickoff_utc"])
+        if day>local_day or kickoff>=forecast:
+            raise ValueError("Completed source game is after forecast cutoff")
+        if day==local_day:
+            embargoed+=1
+            continue
+        prior.append(row)
+    return prior,embargoed
+
+
 def ratings(completed):
     names=sorted({n for h,a,_,_ in completed for n in (h,a)})
     lookup={n:i for i,n in enumerate(names)}
@@ -136,6 +165,7 @@ def apply(board,source_rows=None,manifest=None,context=None):
     v04_scores={}
     training_home_margin=None
     training_games=0
+    embargoed_same_day=0
     if source_rows is not None or manifest is not None or context is not None:
         if not(isinstance(source_rows,list) and isinstance(manifest,dict)
                and isinstance(context,dict)):
@@ -151,7 +181,8 @@ def apply(board,source_rows=None,manifest=None,context=None):
             gid=str(r["game_id"])
             if gid in candidates:raise ValueError("Duplicate context game")
             candidates[gid]=r
-        train=_source_games(source_rows,forecast)
+        prior_rows,embargoed_same_day=_previous_football_day_rows(source_rows,forecast)
+        train=_source_games(prior_rows,forecast)
         training_home_margin=round(sum(r[2] for r in train)/len(train),5)
         training_games=len(train)
         # Whole-season 2026 schedule imbalance is independently diagnostic.
@@ -163,7 +194,7 @@ def apply(board,source_rows=None,manifest=None,context=None):
         # V04 is a source-trained team-score research model, NOT the
         # V03-total/R1-margin illustrative hybrid. Fit only to this
         # exact, checksum-matched, pre-forecast completed-score snapshot.
-        v04_model=fit_v04_scores(source_rows,forecast.isoformat())
+        v04_model=fit_v04_scores(prior_rows,forecast.isoformat())
         for g in board["games"]:
             ctx=candidates.get(str(g["game_id"]))
             if ctx is None:continue
@@ -246,6 +277,7 @@ def apply(board,source_rows=None,manifest=None,context=None):
         "v04_model_market_odds_used_to_fit":False,
         "training_raw_mean_home_margin":training_home_margin,
         "training_game_count":training_games,
+        "same_day_final_scores_embargoed":embargoed_same_day,
         "today_opponent_rating_games":len(selected),
         "today_opponent_home_picks":alternate_home,
         "today_opponent_home_pick_fraction":round(alternate_home/len(selected),5) if selected else None,
