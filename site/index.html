@@ -518,7 +518,7 @@ function gameCard(g){
   summary.append(node("div","biasNote",scoreScenario?
    "* Illustrated final score uses R1 opponent-adjusted margin and the frozen V03 total ("+num(scoreScenario.scenario_total_points)+"). Not a jointly trained or validated score model.":
    "R1 estimates a margin only; a valid final-score illustration is unavailable."));
-  summary.append(node("div","biasWarning","V03 home-bias alert · Original winner and ATS calls suppressed. Opponent-strength R1 is a research challenger, not a validated pick."));
+  summary.append(node("div","biasWarning","V03 home-bias alert · V03 withheld: original winner and ATS calls suppressed. Opponent-strength R1 is a research challenger, not a validated pick."));
   summary.append(node("div","biasNote","Archived V03 (unreliable): "+(Number.isFinite(g.model_home_margin)?
     (g.model_home_margin>0?g.home_team:g.away_team)+" by "+num(Math.abs(g.model_home_margin)):"unavailable")+
     " · V03 projected total: "+num(g.model_total)+" · No calibrated win probability"));
