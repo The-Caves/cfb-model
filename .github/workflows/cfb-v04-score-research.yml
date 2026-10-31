@@ -1,0 +1,70 @@
+name: CFB V04 Independent Opponent Score Model Tests
+on:
+  pull_request:
+    paths:
+      - 'scripts/v04_direct_scores.py'
+      - 'scripts/v04_score_benchmark.py'
+      - 'scripts/site_home_bias_guard.py'
+      - 'tests/test_v04_direct_scores.py'
+      - '.github/workflows/cfb-v04-score-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verified-v04-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Regression tests for direct team scores and no future labels
+        run: |
+          python -m unittest discover -s tests -p 'test_v04_direct_scores.py' -v
+          python -m unittest discover -s tests -p 'test_site_home_bias_guard.py' -v
+      - name: Retrieve exact pregame source artifact from original October 31 forecast
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-2026-data-41213872537
+          run-id: 41213872537
+          repository: ${{ github.repository }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .source-original
+      - name: Real 2026 weekly V03, R1, V04 matched-game contest
+        run: |
+          set -euo pipefail
+          test -s .source-original/games_2026.csv
+          test -s .source-original/advanced/team_game_advanced_2026.csv
+          test -s .source-original/advanced/advanced_manifest.json
+          python -m scripts.v04_score_benchmark \
+            --games .source-original/games_2026.csv \
+            --advanced .source-original/advanced/team_game_advanced_2026.csv \
+            --advanced-manifest .source-original/advanced/advanced_manifest.json \
+            --output /tmp/v04-score-benchmark.json | tee /tmp/v04-results.log
+          cat /tmp/v04-results.log >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/v04-score-benchmark.json'))
+          assert r["status"]=="V04_DIRECT_SCORE_PAIRED_WALKFORWARD_RESEARCH_ONLY"
+          assert r["matched_games"]>100
+          assert r["n_folds"]>=3
+          assert not r["model_promoted"]
+          assert r["historical_original_pbp_publication_authenticated"] is False
+          assert r["models"]["v04"]["home_win_selection_fraction"]<.85
+          assert all(p["cutoff"]==r["folds"][i]["first_test_day"]
+                     for i,f in enumerate(r["folds"])
+                     for p in r["predictions"]
+                     if p["game_id"] in f["game_ids"])
+          print("Verified no promotion, real matched control and no invented market history")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-v04-matched-walkforward-${{ github.run_id }}
+          path: /tmp/v04-score-benchmark.json
+          retention-days: 30
+          if-no-files-found: warn
