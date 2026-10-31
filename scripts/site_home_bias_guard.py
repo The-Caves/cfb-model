@@ -163,8 +163,27 @@ def apply(board,source_rows=None,manifest=None,context=None):
             home,away=g["home_team"],g["away_team"]
             if home not in strength or away not in strength:continue
             m=strength[home]-strength[away]+(0 if ctx["neutral"] else HOME_ALLOWANCE)
+            # The independent R1 candidate currently predicts a margin,
+            # not possession-level points or a total. For the one-glance
+            # site, derive an explicitly HYBRID score illustration using
+            # the separately archived, unvalidated V03 total. Never
+            # relabel the resulting points as trained R1 score outputs.
+            original_total=g.get("model_total")
+            illustrative=(original_total is not None and
+                          _is_number(original_total) and 0<=original_total<=160 and
+                          math.isfinite(m) and abs(m)<=original_total)
+            scenario_home=round((original_total+m)/2,2) if illustrative else None
+            scenario_away=round((original_total-m)/2,2) if illustrative else None
             scores[str(g["game_id"])]={
                 "status":"SOURCE_MATCHED_OPPONENT_RATING_R1_RESEARCH_ONLY",
+                "score_scenario_status":("HYBRID_R1_MARGIN_WITH_FROZEN_V03_TOTAL_UNVALIDATED"
+                    if illustrative else "NO_VALID_SCORE_SPLIT"),
+                "scenario_home_points":scenario_home,
+                "scenario_away_points":scenario_away,
+                "scenario_total_points":original_total if illustrative else None,
+                "scenario_total_source":"FROZEN_UNVALIDATED_V03_TOTAL" if illustrative else None,
+                "score_scenario_is_jointly_trained_or_calibrated":False,
+                "original_v03_scores_and_margin_unchanged":True,
                 "model":MODEL,"predicted_home_margin":round(m,5),
                 "home_team_rating":round(strength[home],5),
                 "away_team_rating":round(strength[away],5),
