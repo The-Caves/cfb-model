@@ -69,6 +69,43 @@ class QBPasserHistoryTests(unittest.TestCase):
             prior_qb_form(old,"Delaware","Nick Minicucci",
                           "2026-10-27","2026-10-26T23:00:00Z")
 
+    def test_friday_evening_et_but_saturday_utc_preserves_valid_pregame_qb_data(self):
+        # Fri Oct 30 at 10:29 PM ET is Sat Oct 31 at 02:29 UTC.
+        # This exact boundary caused the intake QB shadow to fail.
+        rows,_=collect({"game_id":"202","date":"2026-10-23"},
+                       "UCF Knights","Opponent",
+                       [play("Expected QB",.3)]*20,
+                       "2026-10-24T02:00:00Z")
+        stat=prior_qb_form(rows,"UCF Knights","Expected QB",
+                           "2026-10-30","2026-10-31T02:29:00Z")
+        self.assertEqual(stat["prior_player_games"],1)
+        self.assertEqual(stat["prior_player_pass_tagged_plays"],20)
+        self.assertEqual(stat["player_epa_per_pass_tagged_play"],.3)
+        self.assertFalse(stat["source_historical_publication_verified"])
+
+    def test_same_day_game_never_leaks_into_friday_evening_shadow(self):
+        old,_=collect({"game_id":"202","date":"2026-10-23"},
+                      "UCF Knights","Opponent",
+                      [play("Expected QB",.3)]*20,
+                      "2026-10-24T02:00:00Z")
+        # Postgame Friday record with publication on Saturday UTC must not
+        # become an eligible pre-Friday game, even if timestamp precedes
+        # our simulated late-night Friday UTC decision clock.
+        same=dict(old[0],game_id="203",date="2026-10-30",
+                  source_retrieved_at_utc="2026-10-31T01:00:00Z",
+                  pass_epa_sum=50.)
+        p=prior_qb_form(old+[same],"UCF Knights","Expected QB",
+                        "2026-10-30","2026-10-31T02:29:00Z")
+        self.assertEqual(p["prior_player_games"],1)
+        self.assertEqual(p["player_epa_per_pass_tagged_play"],.3)
+
+    def test_actual_next_eastern_date_still_rejected(self):
+        # On Saturday after midnight ET the same Friday pregame lookup
+        # must fail, regardless of the correct UTC source clock.
+        with self.assertRaisesRegex(ValueError,"later"):
+            prior_qb_form([],"UCF Knights","Expected QB",
+                          "2026-10-30","2026-10-31T04:30:00Z")
+
     def test_observation_must_not_postdate_target_day(self):
         with self.assertRaisesRegex(ValueError,"later"):
             prior_qb_form([],"Delaware","Nick Minicucci",
