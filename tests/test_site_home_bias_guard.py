@@ -60,7 +60,7 @@ class SiteHomeBiasTests(unittest.TestCase):
         self.assertEqual(d["games"][0]["model_ats_side"],"PASS")
     def test_missing_source_no_fake_challenger(self):
         d=apply(board())
-        self.assertEqual(d["home_bias_audit"]["status"],"V03_HOME_BIAS_QUARANTINED")
+        self.assertEqual(d["home_bias_audit"]["status"],"V03_HOME_BIAS_SOURCE_MISSING_FAIL_CLOSED")
         self.assertIsNone(d["games"][0]["opponent_rating"])
         self.assertFalse(d["home_bias_audit"]["source_same_forecast_training_run_verified"])
     def test_wrong_game_identity_fails_instead_of_guessing(self):
