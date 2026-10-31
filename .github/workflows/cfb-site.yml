@@ -161,6 +161,22 @@ jobs:
             --archive-root .context-state \
             --dashboard site/data/dashboard.json | tee /tmp/player-form-grades.txt
           cat /tmp/player-form-grades.txt >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source=Path(".context-state/state/player_stat_grade_latest.json")
+          board=json.load(open("site/data/dashboard.json"))
+          result=board["player_stat_performance"]
+          if source.is_file():
+              archived=json.load(source.open())
+              assert result["status"]=="SITE_VERIFIED_PROSPECTIVE_PLAYER_STAT_RESEARCH_PERFORMANCE"
+              assert result["graded_at_utc"]==archived["graded_at_utc"]
+              assert result["graded_recorded_player_stat_samples"]==archived["graded_recorded_player_stat_samples"]
+              print("Verified website uses latest source-observed player grade.")
+          else:
+              assert result["status"]=="NO_SETTLED_PLAYER_STAT_RESEARCH_GRADE_YET"
+              print("No archived player grade exists; no result imputed.")
+          PY
       - name: Report earliest today research matchups without betting claims
         run: |
           python - <<'PY'
