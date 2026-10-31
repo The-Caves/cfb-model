@@ -322,6 +322,19 @@ function logoBadge(team,brand){
  }
  return badge;
 }
+function v04ScoreScenario(game){
+ const m=game.v04_direct_scores;
+ if(game.home_bias_quarantined!==true||
+    m?.status!=="SOURCE_OBSERVED_DIRECT_TEAM_SCORE_MODEL_RESEARCH_ONLY"||
+    m?.model!=="V04_INDEPENDENT_OPPONENT_ADJUSTED_SCORES_RESEARCH_ONLY"||
+    m.direct_scoring_fit_uses_v03_total!==false||
+    m.no_market_lines_in_training!==true||m.model_promoted!==false||
+    ![m.home_points,m.away_points,m.home_margin,m.total_points].every(Number.isFinite)||
+    m.home_points<0||m.away_points<0||
+    Math.abs(m.home_points+m.away_points-m.total_points)>.03||
+    Math.abs(m.home_points-m.away_points-m.home_margin)>.03)return null;
+ return m;
+}
 function opponentScoreScenario(game){
  const x=game.opponent_rating;
  if(game.home_bias_quarantined!==true||
@@ -341,12 +354,14 @@ function teamDisplayRow(game,side){
  name.append(node("div","teamName",team));
  name.append(shortQB(game["qb_"+side],game["qb_depth_"+side],game["qb_availability_"+side]));
  left.append(logoBadge(team,brand),name);
- const score=node("div","scoreBox"),scenario=opponentScoreScenario(game);
+ const score=node("div","scoreBox"),v04=v04ScoreScenario(game),
+    scenario=v04?null:opponentScoreScenario(game);
  const n=game.home_bias_quarantined?
-   (scenario?scenario["scenario_"+side+"_points"]:null):game["model_"+side+"_points"];
+   (v04?v04[side+"_points"]:(scenario?scenario["scenario_"+side+"_points"]:null)):
+   game["model_"+side+"_points"];
  score.append(node("div","score",Number.isFinite(n)?num(n,0):"—"),
               node("div","scoreHint",game.home_bias_quarantined?
-                (scenario?"Hybrid estimate*":"No valid split"):"Projected"));
+                (v04?"V04 direct*":scenario?"Hybrid estimate*":"No valid split"):"Projected"));
  row.append(left,score);return row;
 }
 function qbDetails(game){
@@ -500,25 +515,29 @@ function opponentMargin(g){
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
-            node("span","modelTag",g.home_bias_quarantined?"Score scenario · R1 margin / V03 total":
-  "Score · "+String(data?.model||"V03")+" · research"));
+            node("span","modelTag",g.home_bias_quarantined?
+   (v04ScoreScenario(g)?"Scores · V04 directly trained · research":
+    "Score scenario · R1 margin / V03 total"):
+   "Score · "+String(data?.model||"V03")+" · research"));
  el.append(top);
  const teams=node("div","teamStack");
  teams.append(teamDisplayRow(g,"away"),teamDisplayRow(g,"home"));
  el.append(teams);
  const summary=node("div","modelSummary");
  const quarantined=g.home_bias_quarantined===true;
- const alt=opponentMargin(g);
+ const v04=v04ScoreScenario(g);
+ const alt=v04?v04.home_margin:opponentMargin(g);
  const margin=quarantined?alt:g.model_home_margin;
  const lead=Number.isFinite(margin)?margin===0?"Even":(margin>0?g.home_team:g.away_team)+" by "+num(Math.abs(margin)):"No reliable directional projection";
  if(quarantined){
-  summary.append(node("div","modelTag","Opponent-strength R1 · experimental"));
+  summary.append(node("div","modelTag",v04?"V04 opponent-adjusted scores · experimental":"Opponent-strength R1 · experimental"));
   summary.append(node("div","favorite",lead));
-  const scoreScenario=opponentScoreScenario(g);
-  summary.append(node("div","biasNote",scoreScenario?
-   "* Illustrated final score uses R1 opponent-adjusted margin and the frozen V03 total ("+num(scoreScenario.scenario_total_points)+"). Not a jointly trained or validated score model.":
+  const scoreScenario=v04?null:opponentScoreScenario(g);
+  summary.append(node("div","biasNote",v04?
+   "* V04 directly fits opponent-adjusted team scoring and a separate strength margin from recorded 2026 games. V04 total "+num(v04.total_points)+" · source observed before forecast. Historical results are retrospective; this version is not independently prospectively validated.":
+   scoreScenario?"* Illustrated final score uses R1 opponent-adjusted margin and the frozen V03 total ("+num(scoreScenario.scenario_total_points)+"). Not a jointly trained or validated score model.":
    "R1 estimates a margin only; a valid final-score illustration is unavailable."));
-  summary.append(node("div","biasWarning","V03 home-bias alert · V03 withheld: original winner and ATS calls suppressed. Opponent-strength R1 is a research challenger, not a validated pick."));
+  summary.append(node("div","biasWarning","V03 home-bias alert · V03 withheld: original winner and ATS calls suppressed. V04/R1 are research challengers, not validated betting picks."));
   summary.append(node("div","biasNote","Archived V03 (unreliable): "+(Number.isFinite(g.model_home_margin)?
     (g.model_home_margin>0?g.home_team:g.away_team)+" by "+num(Math.abs(g.model_home_margin)):"unavailable")+
     " · V03 projected total: "+num(g.model_total)+" · No calibrated win probability"));
@@ -539,7 +558,9 @@ function gameCard(g){
  }
  if(Number.isFinite(g.market_total)){
   totalLine=num(g.market_total);
-  if(g.model_ou_side)ouPick=quarantined?"V03 total (unvalidated): "+g.model_ou_side:
+  if(g.model_ou_side)ouPick=quarantined?(v04?
+    "V04 total "+num(v04.total_points)+" · research, no pick":
+    "V03 total (unvalidated): "+g.model_ou_side):
     g.model_ou_side==="PASS"?"Model: PASS":"Model: "+g.model_ou_side;
  }
  tiles.append(marketTile("Observed spread",spreadLine,atsPick,g.ats_edge_points),
