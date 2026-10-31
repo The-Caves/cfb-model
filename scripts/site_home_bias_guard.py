@@ -15,6 +15,7 @@ NOT independently prospectively validated and its output is not a bet.
 """
 import argparse
 import csv
+import hashlib
 import datetime as dt
 import json
 import math
@@ -25,6 +26,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 
 from scripts.game_context import parse_time
+from scripts.personnel_forecast import checksum
 
 ET=ZoneInfo("America/New_York")
 STATUS="V03_HOME_BIAS_CIRCUIT_BREAKER_AND_OPPONENT_RATING_SHADOW"
@@ -119,6 +121,8 @@ def apply(board,source_rows=None,manifest=None,context=None):
     fail,audit=_bias(board)
     quality="V03_HOME_BIAS_QUARANTINED" if fail else "V03_HOME_BIAS_NOT_FLAGGED"
     scores={}
+    training_home_margin=None
+    training_games=0
     if source_rows is not None or manifest is not None or context is not None:
         if not(isinstance(source_rows,list) and isinstance(manifest,dict)
                and isinstance(context,dict)):
@@ -135,6 +139,13 @@ def apply(board,source_rows=None,manifest=None,context=None):
             if gid in candidates:raise ValueError("Duplicate context game")
             candidates[gid]=r
         train=_source_games(source_rows,forecast)
+        training_home_margin=round(sum(r[2] for r in train)/len(train),5)
+        training_games=len(train)
+        # Whole-season 2026 schedule imbalance is independently diagnostic.
+        # Keep V03 in quarantine even after noon games kick off and the
+        # dashboard's remaining "today" sample becomes small.
+        fail=fail or (len(train)>=90 and training_home_margin>=8.)
+        quality="V03_HOME_BIAS_QUARANTINED" if fail else "V03_HOME_BIAS_NOT_FLAGGED"
         strength=ratings(train)
         for g in board["games"]:
             ctx=candidates.get(str(g["game_id"]))
@@ -182,6 +193,8 @@ def apply(board,source_rows=None,manifest=None,context=None):
         "source_same_forecast_training_run_verified":len(scores)>0,
         "source_training_games":max((p["source_training_games"] for p in scores.values()),default=0),
         "opponent_rating_games":len(scores),
+        "training_raw_mean_home_margin":training_home_margin,
+        "training_game_count":training_games,
         "today_opponent_rating_games":len(selected),
         "today_opponent_home_picks":alternate_home,
         "today_opponent_home_pick_fraction":round(alternate_home/len(selected),5) if selected else None,
@@ -203,15 +216,35 @@ def run(dashboard,score_dir):
     p=Path(dashboard);board=json.loads(p.read_text(encoding="utf-8"))
     root=Path(score_dir)
     needed=[root/"games_2026.csv",root/"manifest.json",
-            root/"context/upcoming_game_context_2026.json"]
+            root/"context/upcoming_game_context_2026.json",
+            root/"pregame_evidence"/("step3g-forecast-"+str(board["forecast_run_id"])+".json")]
     if all(x.is_file() for x in needed):
         with needed[0].open(newline="",encoding="utf-8") as f:
             rows=list(csv.DictReader(f))
         manifest=json.loads(needed[1].read_text(encoding="utf-8"))
         context=json.loads(needed[2].read_text(encoding="utf-8"))
+        saved=json.loads(needed[3].read_text(encoding="utf-8"))["record"]
+        hashes=saved["model_training"]["source_hashes"]
+        if (str(saved["run_id"])!=str(board["forecast_run_id"]) or
+            checksum(saved)!=board["forecast_sha256"] or
+            hashlib.sha256(needed[0].read_bytes()).hexdigest()!=hashes["completed_score_csv_sha256"] or
+            hashlib.sha256(needed[1].read_bytes()).hexdigest()!=hashes["scoreboard_manifest_sha256"] or
+            saved["forecast_observed_utc"]!=board["forecast_observed_utc"]):
+            raise ValueError("Game-day opponent rating source differs from immutable forecast source")
         result=apply(board,rows,manifest,context)
     elif not any(x.is_file() for x in needed):
         result=apply(board)
+        # A score-file download failure cannot silently reinstate
+        # V03 selections after the known severe model home-bias incident.
+        for game in result["games"]:
+            if game.get("market_home_spread") is not None:
+                game["model_ats_side"]="PASS"
+                game["ats_edge_points"]=None
+            game["home_bias_quarantined"]=True
+        result["home_bias_audit"].update({
+            "status":"V03_HOME_BIAS_SOURCE_MISSING_FAIL_CLOSED",
+            "warning":"No same-run completed-game score evidence. V03 directional and ATS research picks withheld; no opponent model inferred.",
+            "quarantined_ats_lines":sum(g.get("market_home_spread") is not None for g in result["games"])})
     else:
         raise ValueError("Partial model evidence is unsafe; no fallback to guessed teams")
     p.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n",encoding="utf-8")
