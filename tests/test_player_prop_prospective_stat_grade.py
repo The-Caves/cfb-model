@@ -82,7 +82,9 @@ class SettlementTests(unittest.TestCase):
             self.assertEqual(r["graded_recorded_player_stat_samples"],1)
             self.assertEqual(r["grade_records"][0]["forecast_run_id"],"400")
             self.assertEqual(r["grade_records"][0]["absolute_error"],40)
-            self.assertEqual(r["metrics"]["rushing_yards"]["paired_mae_improvement"],10)
+            # Actual 100, original PlayerForm 60 (40 error), recent-four 70
+            # (30 error): paired IMPROVEMENT is negative ten.
+            self.assertEqual(r["metrics"]["rushing_yards"]["paired_mae_improvement"],-10)
             self.assertFalse(r["model_promoted"])
 
     def test_unplayed_or_missing_player_cannot_be_zero_or_settled(self):
