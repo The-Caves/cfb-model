@@ -46,6 +46,13 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn("Earliest saved pre-kickoff PlayerForm estimate",self.html)
         self.assertIn("player_stat_performance",self.html)
 
+    def test_bias_alert_challenger_not_original_v03_winner(self):
+        self.assertIn("function opponentMargin(g)",self.html)
+        self.assertIn("V03 home-bias alert",self.html)
+        self.assertIn("V03 withheld",self.html)
+        self.assertIn("Opponent-strength R1 · experimental",self.html)
+        self.assertIn('game.home_bias_quarantined?"—"',self.html)
+
     def test_mobile_and_logo_fallback(self):
         self.assertIn('@media(max-width:580px)',self.html)
         self.assertIn('logoBadge(team,brand)',self.html)

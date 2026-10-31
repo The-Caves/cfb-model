@@ -63,6 +63,22 @@ class ProspectiveDashboardArchiveTests(unittest.TestCase):
         z=freeze(b,NOW,"888")
         self.assertEqual(z["rows"][0]["frozen_forecast_home_margin"],-4)
         self.assertEqual(z["rows"][0]["displayed_ats_side"],"AWAY")
+    def test_bias_quarantined_spread_is_pass_and_archived_for_audit(self):
+        b=board();g=b["games"][0]
+        g["home_bias_quarantined"]=True
+        g["model_ats_side"]="PASS"
+        g["opponent_rating"]={
+            "model":"OPPONENT_ADJUSTED_SCORE_MARGIN_R1_RESEARCH_ONLY",
+            "predicted_home_margin":-17.3}
+        x=freeze(b,NOW,"888")
+        self.assertEqual(x["summary"]["ats_decisions"],0)
+        self.assertEqual(x["rows"][0]["displayed_ats_side"],"PASS")
+        self.assertEqual(x["rows"][0]["frozen_forecast_home_margin"],10.)
+        self.assertEqual(x["rows"][0]["opponent_rating_shadow_margin"],-17.3)
+        self.assertTrue(x["rows"][0]["home_bias_quarantined"])
+        b["games"][0]["model_ats_side"]="HOME"
+        with self.assertRaises(ValueError):freeze(b,NOW,"888")
+
     def test_duplicate_ids_not_allowed(self):
         b=board();b["games"].append(copy.deepcopy(b["games"][0]))
         with self.assertRaises(ValueError):freeze(b,NOW,"888")
