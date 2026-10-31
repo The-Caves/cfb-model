@@ -247,7 +247,7 @@ footer{border-top:1px solid var(--line);color:#879fb5;font-size:11px;margin-top:
  <p class="performanceLegend">W = correct research selection; L = incorrect; P = push. A dash means the game has no eligible grade for that category. SU uses an archived 24–72h forecast; ATS and totals use the earliest observed pre-kickoff website selection with a real quoted market. These are separate cohorts and are not evidence of profitable betting. Source odds publication times are not independently verified.</p>
 </div>
 <div class="panel" style="margin-top:14px">
- <h3>Player-prop model progress</h3>
+ <h3>Player model · prospective stat accuracy</h3>
  <div class="state" id="player-performance">Player-stat research is separate from the verified SU/ATS/totals grade. No validated player-prop performance is published.</div>
 </div>
 </section>
@@ -543,11 +543,39 @@ function resultTable(headers,items,columns){
  const body=node("tbody");for(const x of items){const row=node("tr");for(const c of columns(x))row.append(node("td","",c==null?"—":String(c)));body.append(row);}table.append(body);wrap.append(table);return wrap;
 }
 function resultSymbol(s){return s==="WIN"?"W":s==="LOSS"?"L":s==="PUSH"?"P":"—";}
+function renderPlayerPerformance(){
+ const area=byId("player-performance"),grade=data?.player_stat_performance||{};
+ area.replaceChildren();
+ if(grade.status!=="SITE_VERIFIED_PROSPECTIVE_PLAYER_STAT_RESEARCH_PERFORMANCE"){
+  area.append(node("div","","PlayerForm R1 · prospective player-stat grading is awaiting completed games and source-recorded player box scores."));
+  area.append(node("div","performanceMeta","Frozen research yard projections already exist; missing player/category outcomes will remain ungraded. No verified bookmaker player-prop outcomes."));
+  return;
+ }
+ const n=grade.graded_recorded_player_stat_samples||0;
+ const total=grade.eligible_unique_pre_kickoff_player_forecasts||0;
+ area.append(node("div","","Frozen player yard projections: "+total+" unique · "+n+" source-recorded categories graded"));
+ if(n===0){
+  area.append(node("div","performanceMeta","No eligible completed player-stat results yet. No zeroes imputed for absent players or categories."));
+ }else{
+  const fmt=x=>Number.isFinite(x)?num(x,1):"—";
+  const dataRows=[
+    ["Passing yards",grade.metrics?.passing_yards],
+    ["Rushing yards",grade.metrics?.rushing_yards],
+    ["Receiving yards",grade.metrics?.receiving_yards]];
+  area.append(resultTable(["Player stat","Graded","MAE","Vs recent-four"],dataRows.map(([name,metric])=>({
+    name,count:metric?.graded_recorded_player_games??0,
+    mae:fmt(metric?.playerform_conditional_mae),
+    diff:metric?.paired_recency_control_samples>0?
+      (metric.paired_mae_improvement>0?"+":"")+fmt(metric?.paired_mae_improvement)+" yd ("+
+      metric.paired_recency_control_samples+")":"—"
+  })),x=>[x.name,x.count,x.mae+" yd",x.diff]));
+ }
+ area.append(node("div","performanceMeta","Earliest saved pre-kickoff PlayerForm estimate per athlete/game/stat · recorded-stat participants only · independent future results. Positive versus recent-four = smaller error. This is NOT betting-prop accuracy, hit rate or profit."));
+ if(grade.graded_at_utc)
+  area.append(node("div","performanceMeta","Source grade updated "+fmtDate.format(dateOf(grade.graded_at_utc))+" · ungraded predictions remain pending or unknown."));
+}
 function renderPerformance(){
- const props=data?.player_prop_display||{};
- byId("player-performance").textContent=props.covered_games>0?
-  "PlayerForm R1 experimental stat outlooks available for "+props.covered_games+" of "+props.total_games+" upcoming games. No verified pregame sportsbook player-prop lines or settled prop outcomes. Historical player-stat MAE is not betting-prop accuracy.":
-  "No validated pregame player prop forecasts yet. Historical player-stat models and player research are not a verified betting-prop grade.";
+ renderPlayerPerformance();
  const p=data?.prospective_records;
  if(!p||p.status!=="ARCHIVED_PROSPECTIVE_MODEL_PERFORMANCE_RESEARCH_ONLY"){
   byId("performance-scoring").textContent="Archived grades unavailable; no outcomes inferred.";
