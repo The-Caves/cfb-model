@@ -12,6 +12,8 @@ on:
       - 'scripts/personnel_results_archive.py'
       - 'tests/test_site_decision_archive.py'
       - 'scripts/site_market.py'
+      - 'scripts/site_home_bias_guard.py'
+      - 'tests/test_site_home_bias_guard.py'
       - 'scripts/site_qb.py'
       - 'scripts/site_depthchart.py'
       - 'scripts/site_team_branding.py'
@@ -49,6 +51,7 @@ on:
     branches: [main]
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: cfb-research-site
   cancel-in-progress: true
@@ -95,6 +98,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_site_player_props.py' -v
       - name: Test independently archived pre-kickoff conditional player research predictions
         run: python -m unittest discover -s tests -p 'test_site_player_projection_archive.py' -v
+      - name: Test V03 severe home-bias quarantine and independent rating
+        run: python -m unittest discover -s tests -p 'test_site_home_bias_guard.py' -v
       - name: Test source-matched market comparisons
         run: python -m unittest discover -s tests -p 'test_site_market.py' -v
       - name: Test game-specific QB status and season-passer fallback
@@ -113,10 +118,46 @@ jobs:
         run: |
           python -m scripts.site_export --archive-root .context-state --output site/data/dashboard.json | tee /tmp/site-export.txt
           cat /tmp/site-export.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Identify exact frozen forecast data source
+        id: original_forecast
+        run: |
+          python - <<'PY'
+          import json,os
+          d=json.load(open("site/data/dashboard.json"))
+          run=str(d["forecast_run_id"])
+          assert run.isdigit()
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              f.write("run_id="+run+"\n")
+          PY
+      - name: Load original same-run score data, model source and kickoff identities
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-2026-data-${{ steps.original_forecast.outputs.run_id }}
+          run-id: ${{ steps.original_forecast.outputs.run_id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .score-source
       - name: Read observed free ESPN market quotes and compare research lines
         run: |
           python -m scripts.site_market --dashboard site/data/dashboard.json | tee /tmp/site-market.txt
           cat /tmp/site-market.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Audit home-selection pathology and attach independently fitted opponent ratings
+        run: |
+          python -m scripts.site_home_bias_guard \
+            --dashboard site/data/dashboard.json \
+            --source-dir .score-source | tee /tmp/site-home-bias.txt
+          cat /tmp/site-home-bias.txt >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          b=json.load(open("site/data/dashboard.json"))
+          report=b["home_bias_audit"]
+          assert report["status"]=="V03_HOME_BIAS_QUARANTINED"
+          assert report["source_same_forecast_training_run_verified"] is True
+          assert report["opponent_rating_games"]>0
+          assert all(g["model_ats_side"]=="PASS" for g in b["games"]
+                     if g.get("market_home_spread") is not None)
+          assert not report["score_archive_rewritten"]
+          PY
       - name: Overlay source-labelled QB names (no starter inference)
         run: |
           python -m scripts.site_qb --dashboard site/data/dashboard.json --history .context-state/state/qb_history_latest.json | tee /tmp/site-qb.txt
