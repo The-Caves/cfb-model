@@ -28,6 +28,7 @@ from scripts.site_player_projection_archive import (
     INDEX,ROOT,STATUS as ARCHIVED, METRICS, MAX_AGE_SECONDS)
 
 STATUS="PROSPECTIVE_FROZEN_PLAYER_STAT_MAE_GRADE_RESEARCH_ONLY"
+LATEST="state/player_stat_grade_latest.json"
 INDEX_FILE=INDEX
 RUN_PATTERN=r"research_2026/player_projection_snapshots/(?:2026/(?:08|09|10|11|12)|2027/01)/\d{2}/run-\d+\.json\.gz"
 CATEGORIES={"passing_yards":"passing","rushing_yards":"rushing",
@@ -225,9 +226,35 @@ def grade(root,official_fixtures,player_ledger,evaluated_at_utc):
         "betting_status":"PASS_UNVALIDATED",
     }
 
-def run(archive_root,output):
+def publish_latest(result):
+    """Persist current as-observed grading, never modify frozen forecast rows."""
+    if (result.get("status")!=STATUS
+        or result.get("betting_status")!="PASS_UNVALIDATED"
+        or result.get("model_promoted") is not False
+        or result.get("safe_for_betting") is not False):
+        raise ValueError("Invalid live player-stat grade publication")
+    # A small latest summary is deliberately mutable. Predictions themselves
+    # remain immutable in their separate per-run SHA-bound archive.
+    public={k:v for k,v in result.items() if k not in
+            ("grade_records","excluded_completed_source_fixtures")}
+    public["grade_records_persisted_in_latest"]=False
+    prior=store.get_blob_file(LATEST)
+    if prior is not None:
+        old=json.loads(prior)
+        if (old.get("status")!=STATUS or
+            parse_time(old["graded_at_utc"])>parse_time(result["graded_at_utc"])):
+            raise ValueError("Refusing stale or unrecognized latest grade overwrite")
+    blob=store.encode(public)
+    if prior==blob:
+        return {"status":"GRADE_ALREADY_PUBLISHED","path":LATEST}
+    from scripts.personnel_results_archive import _commit_material
+    sha=_commit_material({LATEST:blob},"player-prop-grading")
+    return {"status":"PLAYER_STAT_GRADE_PUBLISHED","path":LATEST,
+            "commit_sha":sha,
+            "graded_recorded_player_stat_samples":result["graded_recorded_player_stat_samples"]}
+
+def run(archive_root,output,publish=False):
     import pyarrow.parquet as pq
-    t0=dt.datetime.now(dt.timezone.utc)
     schedule_uri=SOURCE+"/cfb_schedules/cfb_schedules_2026.parquet"
     box_uri=SOURCE+"/espn_cfb_player_box/player_box_2026.parquet"
     fixtures_blob=fetch_asset(schedule_uri,max_bytes=150_000_000)
@@ -248,6 +275,8 @@ def run(archive_root,output):
     result["schedule_source_sha256"]=hashlib.sha256(fixtures_blob).hexdigest()
     p=Path(output);p.parent.mkdir(parents=True,exist_ok=True)
     p.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n",encoding="utf-8")
+    if publish:
+        result["publication"]=publish_latest(result)
     print(json.dumps({"status":STATUS,"archive":result["archive_verification"],
        "prospectively_frozen_player_stats":result["eligible_unique_pre_kickoff_player_forecasts"],
        "graded_samples":result["graded_recorded_player_stat_samples"],
@@ -257,4 +286,5 @@ def run(archive_root,output):
 if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--archive-root",required=True);p.add_argument("--output",required=True)
-    a=p.parse_args();run(a.archive_root,a.output)
+    p.add_argument("--publish",action="store_true")
+    a=p.parse_args();run(a.archive_root,a.output,publish=a.publish)
