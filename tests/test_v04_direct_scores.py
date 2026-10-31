@@ -54,15 +54,16 @@ class V04Tests(unittest.TestCase):
             fit(a,OBS)
     def test_own_game_result_cannot_enter_train(self):
         a=observed()
-        c=walkforward(a,["2026-10-03"])
+        c=walkforward(a,["2026-10-24"])
         self.assertEqual(c["status"],"V04_CHRONOLOGICAL_RESEARCH_ONLY")
-        self.assertTrue(all(r["actual_margin"]==a[0]["home_score"]-a[0]["away_score"] for fold in c["folds"] for r in fold["predictions"] if r["game_id"]=="1") or True)
+        self.assertTrue(c["folds"])
+        self.assertGreater(c["folds"][0]["matched_games"],0)
         b=copy.deepcopy(a)
         for row in b:
-            if row["date"]>="2026-10-03":
+            if row["date"]>="2026-10-24":
                 row["home_score"]=200
                 row["away_score"]=0
-        d=walkforward(b,["2026-10-03"])
+        d=walkforward(b,["2026-10-24"])
         self.assertEqual(
             [(p["margin"],p["total"]) for f in c["folds"] for p in f["predictions"]],
             [(p["margin"],p["total"]) for f in d["folds"] for p in f["predictions"]])
