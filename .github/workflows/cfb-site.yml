@@ -146,12 +146,37 @@ jobs:
         run: |
           python -m scripts.site_performance             --archive-root .context-state             --dashboard site/data/dashboard.json | tee /tmp/site-performance.txt
           cat /tmp/site-performance.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Refresh current context-state grade receipt immediately before publish
+        run: |
+          set -euo pipefail
+          # Site and nightly grader can start concurrently. The site checked out
+          # context-state much earlier for immutable SU/ATS archives; re-fetch
+          # here so a completed PlayerForm grade is not delayed by one cycle.
+          git -C .context-state fetch --depth=1 origin context-state
+          git -C .context-state checkout --detach FETCH_HEAD
+          git -C .context-state rev-parse --short HEAD
       - name: Overlay independently settled player-stat MAE research grades
         run: |
           python -m scripts.site_player_stat_performance \
             --archive-root .context-state \
             --dashboard site/data/dashboard.json | tee /tmp/player-form-grades.txt
           cat /tmp/player-form-grades.txt >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source=Path(".context-state/state/player_stat_grade_latest.json")
+          board=json.load(open("site/data/dashboard.json"))
+          result=board["player_stat_performance"]
+          if source.is_file():
+              archived=json.load(source.open())
+              assert result["status"]=="SITE_VERIFIED_PROSPECTIVE_PLAYER_STAT_RESEARCH_PERFORMANCE"
+              assert result["graded_at_utc"]==archived["graded_at_utc"]
+              assert result["graded_recorded_player_stat_samples"]==archived["graded_recorded_player_stat_samples"]
+              print("Verified website uses latest source-observed player grade.")
+          else:
+              assert result["status"]=="NO_SETTLED_PLAYER_STAT_RESEARCH_GRADE_YET"
+              print("No archived player grade exists; no result imputed.")
+          PY
       - name: Report earliest today research matchups without betting claims
         run: |
           python - <<'PY'

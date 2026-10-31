@@ -160,3 +160,20 @@ and the site's Performance tab shows sample size, yardage MAE and paired
 baseline differences, with no sportsbook or ROI claims. The grade is
 conditional on a player having a recorded stat category; it does not
 measure correct injury, absence, starter or player-prop betting predictions.
+
+## October 31: first real prospective grading checkpoint
+
+The first successful PlayerForm settlement found **11 valid recorded
+stat-category outcomes** (3 passing, 4 rushing, 4 receiving) from
+**668 unique** originally frozen game/player/stat predictions. The
+conditional mean absolute errors were 82.0, 30.025 and 17.675 yards
+respectively. **These samples are too small to validate any model
+advantage**, and older forecasts have no paired frozen recent-four
+baseline; this is an audit checkpoint, not a win-rate claim.
+
+The grader and site build can run concurrently. The site now refreshes
+`context-state` immediately before reading the latest player-grade
+record, then asserts the displayed grade matches the source's observed
+timestamp and sample count. Historical prediction snapshots remain
+separately checksum-verified and immutable. The read-only UI grade is
+not sportsbook prop performance.
