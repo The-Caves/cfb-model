@@ -109,5 +109,5 @@ class QBPasserHistoryTests(unittest.TestCase):
     def test_observation_must_not_postdate_target_day(self):
         with self.assertRaisesRegex(ValueError,"later"):
             prior_qb_form([],"Delaware","Nick Minicucci",
-                          "2026-10-27","2026-10-28T00:00:00Z")
+                          "2026-10-27","2026-10-28T05:00:00Z")
 if __name__=="__main__":unittest.main()
