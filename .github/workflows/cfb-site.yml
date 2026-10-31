@@ -39,6 +39,14 @@ on:
   schedule:
     - cron: '33 11,14,17,20,23 * * *'
     - cron: '17,47 14-23 * * 6'
+  # A successful ingestion writes a NEW immutable source snapshot to
+  # context-state. Publish it immediately instead of waiting for a 30-min
+  # Saturday clock tick near kickoff. A failed intake must not publish
+  # research scores under a false fresh-data claim.
+  workflow_run:
+    workflows: ['CFB 2026 Data Intake']
+    types: [completed]
+    branches: [main]
 permissions:
   contents: read
 concurrency:
@@ -46,6 +54,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
