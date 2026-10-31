@@ -173,7 +173,16 @@ def compute(root,now=None):
                 if market=="ats":
                     if abs(line)>=80:raise ValueError("Invalid observed spread")
                     diff=margin+line
-                    expected="HOME" if diff>0 else "AWAY" if diff<0 else "PASS"
+                    # Since 2026-10-31 the live page can explicitly suppress
+                    # the unreliable V03 home-biased ATS research choice.
+                    # This is a legitimate immutable *as displayed* PASS,
+                    # not a retroactive rewrite of the original score.
+                    if ("home_bias_quarantined" in x and
+                        type(x["home_bias_quarantined"]) is not bool):
+                        raise ValueError("Invalid home-bias quarantine provenance")
+                    expected=("PASS" if x.get("home_bias_quarantined") is True
+                              else "HOME" if diff>0 else
+                              "AWAY" if diff<0 else "PASS")
                 else:
                     if not 0<line<150:raise ValueError("Invalid observed game total")
                     diff=pred_total-line
