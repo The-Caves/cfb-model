@@ -8,6 +8,9 @@ import datetime as dt
 import math
 import re
 from collections import Counter
+from zoneinfo import ZoneInfo
+
+ET=ZoneInfo("America/New_York")
 
 def player_key(value):
     raw=" ".join(value.split()).casefold()
@@ -101,7 +104,11 @@ def prior_qb_form(rows,team,player,game_date,asof_utc,minimum_pass_plays=15):
     """
     cutoff=dt.date.fromisoformat(game_date)
     observed=dt.datetime.fromisoformat(asof_utc.replace("Z","+00:00"))
-    if observed.tzinfo is None or observed.date()>cutoff:
+    # Football game dates use America/New_York. 02:29 UTC Saturday is
+    # still Friday evening ET: rejecting by UTC date wrongly aborts a
+    # legitimately pre-kickoff Friday QB shadow. Actual source timestamps
+    # remain full zoned instants and same-day game outcomes stay embargoed.
+    if observed.tzinfo is None or observed.astimezone(ET).date()>cutoff:
         raise ValueError("QB source observed later than the target football date")
     wanted=player_key(player) if isinstance(player,str) else ""
     if len(wanted)<2:raise ValueError("Expected QB name is required")
