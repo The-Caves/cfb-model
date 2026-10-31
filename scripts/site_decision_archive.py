@@ -69,7 +69,9 @@ def freeze(board,now,run_id):
         side=g.get("model_ats_side")
         over=g.get("model_ou_side")
         if side is not None:
-            expected="HOME" if margin+spread>0 else "AWAY" if margin+spread<0 else "PASS"
+            expected=("PASS" if g.get("home_bias_quarantined") is True else
+                      "HOME" if margin+spread>0 else
+                      "AWAY" if margin+spread<0 else "PASS")
             if not sp or side not in VALID_SIDES or side!=expected:
                 raise ValueError("Displayed ATS selection changed or no source")
             if side!="PASS":ats+=1
@@ -97,6 +99,13 @@ def freeze(board,now,run_id):
             "market_home_spread":spread,"market_total":market_total,
             "market_provider":provider,"market_observed_utc":market_observed,
             "displayed_ats_side":side,"displayed_ou_side":over,
+            "home_bias_quarantined":g.get("home_bias_quarantined") is True,
+            "opponent_rating_shadow_model":(
+                g["opponent_rating"]["model"] if isinstance(g.get("opponent_rating"),dict)
+                else None),
+            "opponent_rating_shadow_margin":(
+                g["opponent_rating"]["predicted_home_margin"]
+                if isinstance(g.get("opponent_rating"),dict) else None),
             "qb_verified_at_forecast":g.get("qb_starters_verified",0),
         })
     if not rows:raise ValueError("No unstarted games to archive")
