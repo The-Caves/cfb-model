@@ -19,6 +19,8 @@ on:
       - 'tests/test_site_ui_compact.py'
       - 'scripts/site_matchup.py'
       - 'scripts/site_player_props.py'
+      - 'scripts/site_player_stat_performance.py'
+      - 'tests/test_site_player_stat_performance.py'
       - 'scripts/site_player_projection_archive.py'
       - 'tests/test_site_player_projection_archive.py'
       - 'scripts/player_prop_workload.py'
@@ -72,6 +74,8 @@ jobs:
           node --check /tmp/cfb-ui-script.js
       - name: Test forecast export
         run: python -m unittest discover -s tests -p 'test_site_export.py' -v
+      - name: Test independent player-stat performance overlay
+        run: python -m unittest discover -s tests -p 'test_site_player_stat_performance.py' -v
       - name: Test deduplicated prospective performance audit
         run: python -m unittest discover -s tests -p 'test_site_performance.py' -v
       - name: Test ESPN-sourced team colors and logos do not change forecasts
@@ -142,6 +146,12 @@ jobs:
         run: |
           python -m scripts.site_performance             --archive-root .context-state             --dashboard site/data/dashboard.json | tee /tmp/site-performance.txt
           cat /tmp/site-performance.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Overlay independently settled player-stat MAE research grades
+        run: |
+          python -m scripts.site_player_stat_performance \
+            --archive-root .context-state \
+            --dashboard site/data/dashboard.json | tee /tmp/player-form-grades.txt
+          cat /tmp/player-form-grades.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Report earliest today research matchups without betting claims
         run: |
           python - <<'PY'
@@ -175,6 +185,7 @@ jobs:
           assert d["qb_depth_display"]["confirmed_starting_QB_from_chart"] is False
           assert d["qb_depth_display"]["changes_frozen_model_picks"] is False
           assert d["matchup_display"]["changes_frozen_model"] is False
+          assert d["player_stat_performance"]["player_stat_accuracy_not_market_betting_prop_accuracy"] is True
           props=d["player_prop_display"]
           assert props["model_scores_updated"] is False
           assert props["real_bookmaker_quotes_present"] is False

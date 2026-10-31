@@ -4,6 +4,8 @@ on:
     paths:
       - 'site/**'
       - 'scripts/site_player_props.py'
+      - 'scripts/site_player_stat_performance.py'
+      - 'tests/test_site_player_stat_performance.py'
       - 'scripts/site_availability.py'
       - 'scripts/player_prop_workload.py'
       - 'tests/test_player_prop_workload.py'
@@ -35,6 +37,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_site_ui_compact.py' -v
           python -m unittest discover -s tests -p 'test_site_player_props.py' -v
+          python -m unittest discover -s tests -p 'test_site_player_stat_performance.py' -v
           python -m unittest discover -s tests -p 'test_site_availability.py' -v
           python -m unittest discover -s tests -p 'test_player_prop_workload.py' -v
           python -m unittest discover -s tests -p 'test_site_player_projection_archive.py' -v

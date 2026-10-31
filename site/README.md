@@ -140,3 +140,23 @@ Prior snapshots are immutable and cannot be quietly replaced by postgame
 forecasts. This is essential groundwork for credible independent later
 per-player model performance grades. Nothing in this mechanism adds a real
 sportsbook prop line, a market over/under selection or an injury diagnosis.
+
+## Prospectively graded PlayerForm yard performance
+
+`scripts/player_prop_prospective_stat_grade.py` now joins immutable
+pre-kickoff player/game/metric snapshots with **freshly observed** completed
+2026 ESPN schedules and recorded athlete box categories. Select earliest
+eligible pregame model prediction for each player/game/stat, never a chosen
+later update. Missing players, missing stat categories, incomplete games,
+and unverified identity matches are **not recorded zeroes**. An explicit
+zero from a recorded stat category IS gradeable.
+
+Since October 31, each new displayed PlayerForm forecast also stores the
+same-source recent-four player yard baseline separately. Only frozen
+baseline values are paired on the same settled athlete-game cohort.
+Earlier snapshots without this baseline have no invented comparison.
+A source-verified latest grade summary is published on `context-state`,
+and the site's Performance tab shows sample size, yardage MAE and paired
+baseline differences, with no sportsbook or ROI claims. The grade is
+conditional on a player having a recorded stat category; it does not
+measure correct injury, absence, starter or player-prop betting predictions.
