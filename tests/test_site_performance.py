@@ -95,6 +95,32 @@ class SitePerformanceTests(unittest.TestCase):
         self.assertEqual(len(d["weekly"]),1)
         self.assertFalse(d["model_validated"])
 
+    def test_quarantined_v03_ats_pass_retains_historical_su_and_ou(self):
+        self.row["home_bias_quarantined"]=True
+        self.row["opponent_rating_shadow_margin"]=-17.5
+        self.row["displayed_ats_side"]="PASS"
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        report=compute(self.root,NOW)
+        self.assertEqual(report["su"]["wins"],1)
+        self.assertEqual(report["ats"]["decisions"],0)
+        self.assertEqual(report["ou"]["losses"],1)
+        self.assertEqual(report["scoring"]["duplicate_ats_snapshots_excluded"],0)
+        # An attacker cannot relabel an explicit bias-suppressed pick as
+        # the original computed HOME pick and collect an ATS win.
+        self.row["displayed_ats_side"]="HOME"
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        with self.assertRaisesRegex(ValueError,"Archived website pick changed"):
+            compute(self.root,NOW)
+
+    def test_nonboolean_quarantine_provenance_rejected(self):
+        self.row["home_bias_quarantined"]="false"
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        with self.assertRaisesRegex(ValueError,"quarantine provenance"):
+            compute(self.root,NOW)
+
     def test_duplicate_site_refresh_cannot_count_twice_or_overwrite_earliest(self):
         b=self.make_bundle([{**self.row,"market_home_spread":-16.5,
             "displayed_ats_side":"AWAY"}],"2026-10-24T17:05:00Z","13")
