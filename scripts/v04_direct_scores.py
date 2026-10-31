@@ -105,7 +105,10 @@ def predict(model,home,away,neutral):
     margin=max(-min(MAX_MARGIN,total),min(min(MAX_MARGIN,total),margin))
     points_home=(total+margin)/2
     points_away=(total-margin)/2
-    if any(not math.isfinite(x) or x<0 for x in (total,margin,points_home,points_away)):
+    # A negative margin means the away team is favored; this is valid
+    # and is precisely what the home-bias regression must permit.
+    if (not all(math.isfinite(x) for x in (total,margin,points_home,points_away))
+        or min(total,points_home,points_away)<0):
         raise ValueError("Invalid opponent-adjusted team score projection")
     return {
         "status":STATUS,"model":MODEL,
