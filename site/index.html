@@ -335,6 +335,18 @@ function v04ScoreScenario(game){
     Math.abs(m.home_points-m.away_points-m.home_margin)>.03)return null;
  return m;
 }
+function v04MarketResearch(game){
+ const r=game?.v04_market_research;
+ if(!v04ScoreScenario(game)||
+    r?.status!=="V04_MARKET_ANCHORED_RESEARCH_PASS_GATED"||
+    r?.policy!=="V04_FIXED_RESIDUAL_RULE_20261101_V1"||
+    !["HOME","AWAY","PASS"].includes(r.ats_side)||
+    !["OVER","UNDER","PASS"].includes(r.ou_side)||
+    r.research_policy_promoted!==false||
+    r.validated_betting_edge!==false||
+    r.market_lines_not_model_training_inputs!==true)return null;
+ return r;
+}
 function opponentScoreScenario(game){
  const x=game.opponent_rating;
  if(game.home_bias_quarantined!==true||
@@ -551,20 +563,33 @@ function gameCard(g){
  el.append(summary);
  const tiles=node("div","marketTiles");
  let spreadLine="No line",atsPick=null,totalLine="No line",ouPick=null;
+ const v04research=quarantined?v04MarketResearch(g):null;
  if(Number.isFinite(g.market_home_spread)){
   spreadLine=g.home_team+" "+(g.market_home_spread>0?"+":"")+num(g.market_home_spread);
-  if(g.model_ats_side)atsPick=quarantined?"V03: withheld (bias)":g.model_ats_side==="PASS"?"Model: PASS":
+  if(g.model_ats_side)atsPick=quarantined?
+   (v04research?(v04research.ats_side==="PASS"?"V04 research: PASS":
+     "V04 research: "+(v04research.ats_side==="HOME"?g.home_team:g.away_team)+" ATS"):"V03: withheld (bias)"):
+   g.model_ats_side==="PASS"?"Model: PASS":
    (g.model_ats_side==="HOME"?g.home_team:g.away_team)+" ATS";
  }
  if(Number.isFinite(g.market_total)){
   totalLine=num(g.market_total);
-  if(g.model_ou_side)ouPick=quarantined?(v04?
-    "V04 total "+num(v04.total_points)+" · research, no pick":
+  if(g.model_ou_side)ouPick=quarantined?
+    (v04research?"V04 research: "+v04research.ou_side+" · unvalidated":
+      v04?"V04 total "+num(v04.total_points)+" · research, no pick":
     "V03 total (unvalidated): "+g.model_ou_side):
     g.model_ou_side==="PASS"?"Model: PASS":"Model: "+g.model_ou_side;
  }
- tiles.append(marketTile("Observed spread",spreadLine,atsPick,g.ats_edge_points),
-              marketTile("Observed O/U",totalLine,ouPick,g.ou_edge_points));
+ tiles.append(marketTile("Observed spread",spreadLine,atsPick,
+               quarantined?(v04research?.ats_side==="PASS"?null:
+                  Math.abs(v04research?.raw_ats_model_market_gap)):g.ats_edge_points),
+              marketTile("Observed O/U",totalLine,ouPick,
+               quarantined?(v04research?.ou_side==="PASS"?null:
+                  Math.abs(v04research?.raw_ou_model_market_gap)):g.ou_edge_points));
+ if(v04research)el.append(node("div","biasNote",
+   "V04 is an unvalidated, market-anchored research policy. "+
+   "A PASS means uncertainty; these are not proven betting edges. "+
+   (v04research.missing_verified_qb_warning?"Unconfirmed QB(s): stronger research thresholds applied.":"")));
  el.append(tiles);
  el.append(playerOutlook(g));
  if(hasQBRisk(g))el.append(node("div","warningMini","QB availability alert · check the source details"));
@@ -649,6 +674,13 @@ function renderPerformance(){
  area.append(node("div","","Frozen graded games: "+(score.frozen_games??"—")+" · Margin MAE: "+num(score.margin_mae,2)+" pts · Total MAE: "+num(score.total_mae,2)+" pts"));
  area.append(node("div","performanceMeta","Independent final games: "+(score.verified_final_games??"—")+" · Page snapshots: "+(score.website_runs??"—")+" · Unsettled displayed games: "+(score.unsettled_site_market_games??"—")));
  area.append(node("div","performanceMeta","Repeated snapshots excluded · ATS "+(score.duplicate_ats_snapshots_excluded??"—")+" · Totals "+(score.duplicate_ou_snapshots_excluded??"—")+" · Updated "+fmtDate.format(dateOf(p.asof_utc))));
+ const v=p.v04_challenger;
+ if(v?.status==="ARCHIVED_PREKICKOFF_V04_MARKET_RESEARCH_GRADES"){
+  area.append(node("div","performanceMeta","V04 pregame research challenger (not promoted): ATS "+resultRecord(v.ats)+" · O/U "+resultRecord(v.ou)));
+  area.append(node("div","performanceMeta","First-quote eligible games: ATS "+v.eligible_with_quote.ats+" (PASS "+v.explicit_passes.ats+") · Totals "+v.eligible_with_quote.ou+" (PASS "+v.explicit_passes.ou+")"));
+  area.append(node("div","performanceMeta","Paired margin MAE: V04 "+num(v.v04_margin_mae,2)+" vs observed market "+num(v.market_margin_mae_paired,2)+" · Total MAE: V04 "+num(v.v04_total_mae,2)+" vs market "+num(v.market_total_mae_paired,2)));
+  area.append(node("div","performanceMeta","Research decisions use earliest archived pregame quotes, with abstentions preserved. Not a verified betting edge or ROI."));
+ }
  const weekly=byId("performance-weekly");weekly.replaceChildren();
  if(p.weekly?.length)weekly.append(resultTable(["Week","SU","ATS","Totals"],p.weekly,x=>[x.week,resultRecord(x.su),resultRecord(x.ats),resultRecord(x.ou)]));
  else weekly.append(node("div","performanceMeta","No archived weekly results."));

@@ -178,6 +178,58 @@ class SitePerformanceTests(unittest.TestCase):
         self.assertEqual(d["scoring"]["unsettled_site_market_games"],1)
         self.assertEqual(d["su"]["decisions"],1)
 
+    def test_new_v04_research_grades_are_separate_from_quarantined_v03(self):
+        from scripts.v04_market_challenger import decide
+        from scripts.v04_direct_scores import STATUS as V04_STATUS, MODEL as V04_MODEL
+        self.row["home_bias_quarantined"]=True
+        self.row["displayed_ats_side"]="PASS"
+        self.row["v04_direct_score_model"]=V04_MODEL
+        self.row["v04_direct_source_no_v03_total_reuse"]=True
+        self.row["v04_research_not_promoted"]=True
+        self.row["v04_direct_home_margin"]=14.
+        self.row["v04_direct_total_points"]=58.
+        self.row["v04_direct_home_points"]=36.
+        self.row["v04_direct_away_points"]=22.
+        self.row["qb_verified_at_forecast"]=2
+        score={"status":V04_STATUS,"model":V04_MODEL,
+               "home_margin":14.,"total_points":58.,
+               "home_points":36.,"away_points":22.,
+               "direct_scoring_fit_uses_v03_total":False,
+               "no_market_lines_in_training":True,"model_promoted":False}
+        receipt=decide(score,self.row["market_home_spread"],
+             self.row["market_total"],self.row["market_provider"],
+             self.row["market_observed_utc"],KICK,CAPTURE,2)
+        mapping={"status":"v04_research_status","policy":"v04_research_policy",
+             "ats_side":"v04_research_ats_side",
+             "ou_side":"v04_research_ou_side",
+             "ats_reason":"v04_research_ats_reason",
+             "ou_reason":"v04_research_ou_reason",
+             "raw_ats_model_market_gap":"v04_research_ats_gap",
+             "raw_ou_model_market_gap":"v04_research_ou_gap",
+             "market_anchored_home_margin":"v04_research_anchored_margin",
+             "market_anchored_total":"v04_research_anchored_total",
+             "missing_verified_qb_warning":"v04_research_qb_unknown"}
+        for key,col in mapping.items():
+            self.row[col]=receipt[key]
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        result=compute(self.root,NOW)
+        self.assertEqual(result["ats"]["decisions"],0)
+        v04=result["v04_challenger"]
+        self.assertEqual(v04["eligible_with_quote"],{"ats":1,"ou":1})
+        self.assertEqual(v04["ats"]["wins"],1)
+        self.assertEqual(v04["ou"]["losses"],1)
+        self.assertEqual(v04["explicit_passes"],{"ats":0,"ou":0})
+        self.assertEqual(v04["v04_su_correct"],1)
+        self.assertFalse(v04["model_promoted"])
+        self.row["v04_research_ats_side"]="AWAY"
+        # Recompute the wrapper digest to exercise the independent policy
+        # validation, rather than only the outer tamper-check failure.
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        with self.assertRaisesRegex(ValueError,"V04 selection changed"):
+            compute(self.root,NOW)
+
     def test_publish_to_site_dashboard_without_touching_upcoming_picks(self):
         board=self.root/"dashboard.json"
         source={"schema_version":2,"betting_status":"PASS_UNVALIDATED",
