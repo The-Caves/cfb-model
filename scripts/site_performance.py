@@ -23,6 +23,9 @@ from scripts.market_finals_archive import verify as verify_final_index
 from scripts.personnel_forecast_grade import verify_prior_grade
 from scripts.site_decision_archive import STATUS as BOARD_STATUS
 from scripts.weekly_profiles import canonical
+from scripts.v04_market_challenger import (
+    decide as v04_decide, POLICY as V04_POLICY, STATUS as V04_STATUS)
+from scripts.v04_direct_scores import MODEL as V04_SCORE_MODEL, STATUS as V04_SCORE_STATUS
 
 GRADE_INDEX="research_2026/forecast_grades_index.json"
 BOARD_INDEX="research_2026/site_board_snapshots/index.json"
@@ -115,7 +118,7 @@ def compute(root,now=None):
     if (board_index.get("status")!=BOARD_STATUS or board_index.get("schema_version")!=1
             or not isinstance(board_index.get("runs"),list)):
         raise ValueError("Invalid archived website snapshot index")
-    first={};seen_runs=set();raw=Counter();mismatches=0;observed_games=set()
+    first={};first_v04={};seen_runs=set();raw=Counter();mismatches=0;observed_games=set()
     for item in board_index["runs"]:
         runid=str(item["run_id"])
         if not runid.isdigit() or runid in seen_runs:raise ValueError("Repeated board run")
@@ -198,6 +201,55 @@ def compute(root,now=None):
                     first[key]=(priority,x)
                 observed_games.add(gid)
 
+            # Only a newer archival schema records this prospective challenger.
+            # Never reconstruct research picks for older snapshots in hindsight.
+            if x.get("v04_research_policy") is not None:
+                if (x.get("v04_research_policy")!=V04_POLICY or
+                    x.get("v04_research_status")!=V04_STATUS or
+                    x.get("v04_direct_score_model")!=V04_SCORE_MODEL or
+                    x.get("v04_direct_source_no_v03_total_reuse") is not True or
+                    x.get("v04_research_not_promoted") is not True or
+                    x.get("home_bias_quarantined") is not True):
+                    raise ValueError("Invalid V04 research source provenance")
+                v04score={
+                    "status":V04_SCORE_STATUS,"model":V04_SCORE_MODEL,
+                    "home_margin":x.get("v04_direct_home_margin"),
+                    "total_points":x.get("v04_direct_total_points"),
+                    "home_points":x.get("v04_direct_home_points"),
+                    "away_points":x.get("v04_direct_away_points"),
+                    "direct_scoring_fit_uses_v03_total":False,
+                    "no_market_lines_in_training":True,
+                    "model_promoted":False}
+                expected=v04_decide(
+                    v04score,spread,total,x.get("market_provider"),line_at,
+                    x["kickoff_utc"],board["capture_utc"],
+                    x.get("qb_verified_at_forecast",0))
+                mapping={
+                    "status":"v04_research_status",
+                    "policy":"v04_research_policy",
+                    "ats_side":"v04_research_ats_side",
+                    "ou_side":"v04_research_ou_side",
+                    "ats_reason":"v04_research_ats_reason",
+                    "ou_reason":"v04_research_ou_reason",
+                    "raw_ats_model_market_gap":"v04_research_ats_gap",
+                    "raw_ou_model_market_gap":"v04_research_ou_gap",
+                    "market_anchored_home_margin":"v04_research_anchored_margin",
+                    "market_anchored_total":"v04_research_anchored_total",
+                    "missing_verified_qb_warning":"v04_research_qb_unknown"}
+                if any(expected[k]!=x.get(v) for k,v in mapping.items()):
+                    raise ValueError("Archived V04 selection changed")
+                for m,line in (("ats",spread),("ou",total)):
+                    if line is None:continue
+                    key=(gid,m)
+                    priority=(captured,runid)
+                    if key not in first_v04 or priority<first_v04[key][0]:
+                        first_v04[key]=(priority,x)
+            elif any(x.get(k) is not None for k in (
+                "v04_research_status","v04_research_ats_side",
+                "v04_research_ou_side","v04_research_ats_gap",
+                "v04_research_ou_gap")):
+                raise ValueError("Partial V04 research receipt")
+
     by_market={"ats":[],"ou":[]};by_week=defaultdict(lambda:defaultdict(list))
     graded_by_game=defaultdict(dict);unsettled=set()
     for (gid,market),(_,x) in first.items():
@@ -230,6 +282,55 @@ def compute(root,now=None):
             "forecast_model":x["forecast_model_version"]})
         row[market]=outcome
 
+    # Earliest authenticated pre-kickoff V04 policy per game/market is fixed:
+    # an early PASS remains a PASS, even if a later snapshot would have won.
+    v04_graded={"ats":[],"ou":[]}
+    v04_eligible=Counter()
+    v04_pass=Counter()
+    v04_week=defaultdict(lambda:defaultdict(list))
+    v04_margin_errors=[];v04_market_margin_errors=[]
+    v04_total_errors=[];v04_market_total_errors=[]
+    v04_home_count=0;v04_winner_correct=0;v04_winner_count=0
+    v04_favorite_correct=0;v04_favorite_count=0
+    for (gid,market),(_,x) in first_v04.items():
+        final=finals.get(gid)
+        if final is None:continue
+        if ((x["home"],x["away"],parse_time(x["kickoff_utc"]))!=
+            (final["home"],final["away"],parse_time(final["kickoff_utc"]))):
+            raise ValueError("V04 research final identity mismatch")
+        if parse_time(final["observed_at_utc"])<=parse_time(x["market_observed_utc"]):
+            raise ValueError("V04 final predates pregame quote")
+        h=final["home_score"];a=final["away_score"]
+        margin=h-a;actual_total=h+a
+        v04_eligible[market]+=1
+        if market=="ats":
+            v04_pred=x["v04_direct_home_margin"]
+            spread=x["market_home_spread"]
+            v04_margin_errors.append(abs(margin-v04_pred))
+            v04_market_margin_errors.append(abs(margin+spread))
+            v04_home_count+=int(v04_pred>0)
+            if margin!=0 and v04_pred!=0:
+                v04_winner_count+=1
+                v04_winner_correct+=int((margin>0)==(v04_pred>0))
+            if margin!=0 and spread!=0:
+                v04_favorite_count+=1
+                v04_favorite_correct+=int((margin>0)==(-spread>0))
+            selection=x["v04_research_ats_side"]
+            value=margin+spread
+            if selection=="AWAY":value=-value
+        else:
+            v04_total_errors.append(abs(actual_total-x["v04_direct_total_points"]))
+            v04_market_total_errors.append(abs(actual_total-x["market_total"]))
+            selection=x["v04_research_ou_side"]
+            value=actual_total-x["market_total"]
+            if selection=="UNDER":value=-value
+        if selection=="PASS":
+            v04_pass[market]+=1
+            continue
+        grade="WIN" if value>0 else "LOSS" if value<0 else "PUSH"
+        v04_graded[market].append(grade)
+        v04_week[_week(x["kickoff_utc"])][market].append(grade)
+
     keys=set(su_by_week)|set(by_week)
     weekly=[]
     for week in sorted(keys):
@@ -253,6 +354,41 @@ def compute(root,now=None):
                    "unmatched_final_identity":mismatches,
                    "duplicate_ats_snapshots_excluded":raw["ats"]-len({g for g,m in first if m=="ats"}),
                    "duplicate_ou_snapshots_excluded":raw["ou"]-len({g for g,m in first if m=="ou"})},
+        "v04_challenger":{
+            "status":"ARCHIVED_PREKICKOFF_V04_MARKET_RESEARCH_GRADES",
+            "policy":V04_POLICY,
+            "ats":_stats(v04_graded["ats"]),
+            "ou":_stats(v04_graded["ou"]),
+            "eligible_with_quote":{"ats":v04_eligible["ats"],"ou":v04_eligible["ou"]},
+            "explicit_passes":{"ats":v04_pass["ats"],"ou":v04_pass["ou"]},
+            "ats_selection_rate":round(len(v04_graded["ats"])/v04_eligible["ats"],5)
+                if v04_eligible["ats"] else None,
+            "ou_selection_rate":round(len(v04_graded["ou"])/v04_eligible["ou"],5)
+                if v04_eligible["ou"] else None,
+            "v04_margin_mae":round(sum(v04_margin_errors)/len(v04_margin_errors),3)
+                if v04_margin_errors else None,
+            "market_margin_mae_paired":round(sum(v04_market_margin_errors)/len(v04_market_margin_errors),3)
+                if v04_market_margin_errors else None,
+            "v04_total_mae":round(sum(v04_total_errors)/len(v04_total_errors),3)
+                if v04_total_errors else None,
+            "market_total_mae_paired":round(sum(v04_market_total_errors)/len(v04_market_total_errors),3)
+                if v04_market_total_errors else None,
+            "v04_su_correct":v04_winner_correct,
+            "v04_su_comparable_games":v04_winner_count,
+            "market_favorite_su_correct":v04_favorite_correct,
+            "market_favorite_su_comparable_games":v04_favorite_count,
+            "v04_home_predicted_with_spread":v04_home_count,
+            "weekly":[{"week":str(w.year)+"-W"+str(w.week).zfill(2),
+                       "ats":_stats(v04_week[w]["ats"]),
+                       "ou":_stats(v04_week[w]["ou"])}
+                      for w in sorted(v04_week)],
+            "unsettled_excluded":len({gid for gid,m in first_v04 if gid not in finals}),
+            "no_historical_retroactive_pick_filling":True,
+            "model_promoted":False,
+            "market_publication_at_model_forecast_authenticated":False,
+            "validated_betting_edge":False,
+            "note":"Earliest archived pre-kickoff V04 research selections, including abstentions. Only observed quotes; market provider publication time at the model forecast is not authenticated. Comparisons to market MAE are paired descriptive diagnostics, not betting ROI."
+        },
         "weekly":weekly,
         "recent":sorted(rows.values(),key=lambda r:(r["kickoff_utc"],r["game_id"]),reverse=True)[:25],
         "note":"SU: frozen 24–72h model forecasts. ATS/totals: earliest pre-kickoff research picks actually displayed with an observed market. Different cohorts, not directly comparable. Odds source publication times are not independently attested. No wagering ROI."
