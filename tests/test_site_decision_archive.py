@@ -101,6 +101,30 @@ class ProspectiveDashboardArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"incoherent"):
             freeze(b,NOW,"888")
 
+    def test_v04_market_research_is_recomputed_not_trusted(self):
+        from scripts.v04_market_challenger import decide
+        b=board();g=b["games"][0]
+        g["home_bias_quarantined"]=True
+        g["model_ats_side"]="PASS"
+        score={"status":"SOURCE_OBSERVED_DIRECT_TEAM_SCORE_MODEL_RESEARCH_ONLY",
+            "model":"V04_INDEPENDENT_OPPONENT_ADJUSTED_SCORES_RESEARCH_ONLY",
+            "home_points":31.,"away_points":20.,"home_margin":11.,
+            "total_points":51.,"direct_scoring_fit_uses_v03_total":False,
+            "no_market_lines_in_training":True,"model_promoted":False}
+        g["v04_direct_scores"]=score
+        g["v04_market_research"]=decide(
+            score,g["market_home_spread"],g["market_total"],
+            g["market_provider"],g["market_observed_utc"],
+            g["kickoff_utc"],NOW.isoformat(),0)
+        row=freeze(b,NOW,"888")["rows"][0]
+        self.assertEqual(row["v04_research_ats_side"],"PASS")
+        self.assertEqual(row["v04_research_ou_side"],"PASS")
+        self.assertEqual(row["displayed_ats_side"],"PASS")
+        self.assertEqual(row["frozen_forecast_home_margin"],10.)
+        g["v04_market_research"]["ats_side"]="HOME"
+        with self.assertRaisesRegex(ValueError,"research policy changed"):
+            freeze(b,NOW,"888")
+
     def test_duplicate_ids_not_allowed(self):
         b=board();b["games"].append(copy.deepcopy(b["games"][0]))
         with self.assertRaises(ValueError):freeze(b,NOW,"888")
