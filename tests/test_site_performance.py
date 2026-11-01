@@ -211,6 +211,7 @@ class SitePerformanceTests(unittest.TestCase):
              "missing_verified_qb_warning":"v04_research_qb_unknown"}
         for key,col in mapping.items():
             self.row[col]=receipt[key]
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
         self.flush()
         result=compute(self.root,NOW)
         self.assertEqual(result["ats"]["decisions"],0)
