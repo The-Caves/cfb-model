@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 from scripts import context_archive as store
 from scripts.game_context import parse_time
+from scripts.v04_market_challenger import decide as v04_decide
 from scripts.personnel_results_archive import _commit_material
 
 ROOT="research_2026/site_board_snapshots"
@@ -107,6 +108,17 @@ def freeze(board,now,run_id):
                 raise ValueError("V04 model score incoherent or unsupported")
         else:
             home_pts=away_pts=pred_margin=pred_total=None
+        # V04 decisions are a separate, immutable as-displayed research track.
+        # Recompute from the archived board inputs to prevent forged picks.
+        research=g.get("v04_market_research")
+        if research is not None:
+            if not isinstance(research,dict) or candidate is None:
+                raise ValueError("V04 research decision without independent score")
+            expected_research=v04_decide(
+                candidate,spread,market_total,provider,market_observed,
+                g["kickoff_utc"],now.isoformat(),g.get("qb_starters_verified",0))
+            if research!=expected_research:
+                raise ValueError("V04 research policy changed or forged")
         discrepancy=round(abs(margin+spread),4) if sp else None
         risk="HIGH_MODEL_MARKET_DISAGREEMENT" if discrepancy is not None and discrepancy>=10 else "NONE"
         high_disagreement+=int(risk!="NONE")
@@ -140,6 +152,17 @@ def freeze(board,now,run_id):
             "v04_research_not_promoted":candidate.get("model_promoted") is False
                 if candidate else None,
             "qb_verified_at_forecast":g.get("qb_starters_verified",0),
+            "v04_research_status":research["status"] if research else None,
+            "v04_research_policy":research["policy"] if research else None,
+            "v04_research_ats_side":research["ats_side"] if research else None,
+            "v04_research_ou_side":research["ou_side"] if research else None,
+            "v04_research_ats_reason":research["ats_reason"] if research else None,
+            "v04_research_ou_reason":research["ou_reason"] if research else None,
+            "v04_research_ats_gap":research["raw_ats_model_market_gap"] if research else None,
+            "v04_research_ou_gap":research["raw_ou_model_market_gap"] if research else None,
+            "v04_research_anchored_margin":research["market_anchored_home_margin"] if research else None,
+            "v04_research_anchored_total":research["market_anchored_total"] if research else None,
+            "v04_research_qb_unknown":research["missing_verified_qb_warning"] if research else None,
         })
     if not rows:raise ValueError("No unstarted games to archive")
     rows.sort(key=lambda g:(g["kickoff_utc"],g["game_id"]))
