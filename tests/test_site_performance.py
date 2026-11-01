@@ -223,6 +223,9 @@ class SitePerformanceTests(unittest.TestCase):
         self.assertEqual(v04["v04_su_correct"],1)
         self.assertFalse(v04["model_promoted"])
         self.row["v04_research_ats_side"]="AWAY"
+        # Recompute the wrapper digest to exercise the independent policy
+        # validation, rather than only the outer tamper-check failure.
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
         self.flush()
         with self.assertRaisesRegex(ValueError,"V04 selection changed"):
             compute(self.root,NOW)
