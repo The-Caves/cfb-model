@@ -61,6 +61,15 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn('scenario["scenario_"+side+"_points"]',self.html)
         self.assertIn("No valid split",self.html)
 
+    def test_v04_market_policy_is_research_only_with_visible_passes(self):
+        self.assertIn("function v04MarketResearch(game)",self.html)
+        self.assertIn("V04_FIXED_RESIDUAL_RULE_20261101_V1",self.html)
+        self.assertIn("V04 research: PASS",self.html)
+        self.assertIn("Unconfirmed QB(s): stronger research thresholds",self.html)
+        self.assertIn("ARCHIVED_PREKICKOFF_V04_MARKET_RESEARCH_GRADES",self.html)
+        self.assertIn("First-quote eligible games",self.html)
+        self.assertNotIn("g.model_home_margin =",self.html)
+
     def test_mobile_and_logo_fallback(self):
         self.assertIn('@media(max-width:580px)',self.html)
         self.assertIn('logoBadge(team,brand)',self.html)
