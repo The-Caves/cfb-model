@@ -15,6 +15,10 @@
 9. **Prospective archive & site performance.** Store V05 independent scores along with V04 and the untouched V03 receipt, then compare V05 with V04 on exactly the same subsequently settled games. Count missing/unknown evidence without rewriting old forecasts.
 10. **CI and audit guardrails.** Test clock cutoffs, duplicates, invalid scores, negative points, neutral symmetry, ablations, no-future-labels, checksum protections, immutable receipts and non-promotion. Real 2026 data benchmark runs in a separate workflow and uploads full per-game results.
 
+## Fixed 50/50 V04–V05 ensemble experiment
+
+A separate `scripts/v05_ensemble_scores.py` module now enforces the same pregame score source cohort, venue, model provenance, and coherent home/away points before calculating a **predeclared equal-weight blend**. The paired heldout benchmark includes `v04_v05_blend50` on exactly the same games as V04 and V05, so a favorable result cannot be manufactured by dropping harder games. No bookmaker line, injury guess or later game result is used. This remains a research-only candidate, not the displayed V04 score, and is not automatically promoted.
+
 ## Important evidence gaps
 
 - **Quarterback starters and injury replacement value:** 2026 pregame sources still have incomplete verification. This milestone makes *no inferred QB adjustment*.
