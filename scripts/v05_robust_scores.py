@@ -60,7 +60,9 @@ def _weighted_ridge(x,y,weights,penalty,robust=True,huber=HUBER_POINT):
     return coeff
 
 
-def fit(rows,decision_utc):
+def fit(rows,decision_utc,half_life_days=HALF_LIFE_DAYS,robust=True):
+    if half_life_days not in (14.,28.,56.) or type(robust) is not bool:
+        raise ValueError("Only preregistered V05 memory/loss ablations are permitted")
     instant=parse_time(decision_utc)
     cutoff=instant.astimezone(ZoneInfo("America/New_York")).date()
     verified=_source_games(rows,instant)
@@ -90,7 +92,7 @@ def fit(rows,decision_utc):
         xx[i,idx[home]]=1.
         xx[i,idx[away]]=-1.
         mm[i]=max(-MARGIN_CAP,min(MARGIN_CAP,margin))-(0. if neutral else HOME_ALLOWANCE)
-        weight[i]=math.exp2(-age/HALF_LIFE_DAYS)
+        weight[i]=math.exp2(-age/half_life_days)
         pointx[2*i,0]=pointx[2*i+1,0]=1.
         pointx[2*i,1]=loc
         pointx[2*i+1,1]=-loc
@@ -104,12 +106,12 @@ def fit(rows,decision_utc):
         team_history[away].append((day,str(row["game_id"]),i,-1))
     weight/=weight.mean()
     strength=_weighted_ridge(xx,mm,weight,np.full(count,RIDGE_STRENGTH),
-                             huber=HUBER_MARGIN)
+                             robust=robust,huber=HUBER_MARGIN)
     scorepenalty=np.full(2*count+2,RIDGE_SCORE)
     scorepenalty[0]=0.
     scorepenalty[1]=HOME_PRIOR
     scorecoeff=_weighted_ridge(pointx,pointy,np.repeat(weight,2),
-                                scorepenalty,huber=HUBER_POINT)
+                                scorepenalty,robust=robust,huber=HUBER_POINT)
     site=float(np.clip(
         HOME_ALLOWANCE+scorecoeff[1],0.,4.5))
     strengths={name:float(strength[idx[name]]) for name in names}
@@ -162,9 +164,9 @@ def fit(rows,decision_utc):
         "team_form":team_form,"team_games":games_count,
         "residual_margin_scale_in_sample":round(margin_sigma,4),
         "residual_team_points_scale_in_sample":round(total_sigma,4),
-        "robust_loss":"HUBER_IRLS_3_PASSES",
+        "robust_loss":"HUBER_IRLS_3_PASSES" if robust else "L2_RIDGE_ABLATION",
         "blowout_margin_cap":MARGIN_CAP,
-        "recency_half_life_days":HALF_LIFE_DAYS,
+        "recency_half_life_days":half_life_days,
         "form_minimum_games":MIN_FORM_GAMES,
         "market_used_for_fit":False,
         "player_availability_effect_inferred":False,
