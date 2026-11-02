@@ -140,6 +140,9 @@ def apply(board,source_rows=None,manifest=None,context=None):
     from scripts.v04_direct_scores import (
         fit as fit_v04_scores, predict as predict_v04_scores,
         MODEL as V04_MODEL, STATUS as V04_STATUS)
+    from scripts.v05_robust_scores import (
+        fit as fit_v05_scores, predict as predict_v05_scores,
+        MODEL as V05_MODEL, STATUS as V05_STATUS)
     if (board.get("schema_version")!=2 or
         board.get("betting_status")!="PASS_UNVALIDATED" or
         not isinstance(board.get("games"),list) or
@@ -163,6 +166,7 @@ def apply(board,source_rows=None,manifest=None,context=None):
              "V03_HOME_BIAS_QUARANTINED" if fail else "V03_HOME_BIAS_NOT_FLAGGED")
     scores={}
     v04_scores={}
+    v05_scores={}
     training_home_margin=None
     training_games=0
     embargoed_same_day=0
@@ -195,6 +199,15 @@ def apply(board,source_rows=None,manifest=None,context=None):
         # V03-total/R1-margin illustrative hybrid. Fit only to this
         # exact, checksum-matched, pre-forecast completed-score snapshot.
         v04_model=fit_v04_scores(prior_rows,forecast.isoformat())
+        # V05 is an entirely independent *shadow*, never silently
+        # replacing V04 score research or the historically frozen V03.
+        v05_model=fit_v05_scores(prior_rows,forecast.isoformat())
+        if (v05_model["source_training_games"]!=len(prior_rows) or
+            v05_model["model"]!=V05_MODEL or
+            v05_model["status"]!=V05_STATUS or
+            v05_model["model_promoted"] is not False or
+            v05_model["market_used_for_fit"] is not False):
+            raise ValueError("V05 training provenance mismatch")
         for g in board["games"]:
             ctx=candidates.get(str(g["game_id"]))
             if ctx is None:continue
@@ -224,6 +237,15 @@ def apply(board,source_rows=None,manifest=None,context=None):
                     v04["model_promoted"] is not False):
                     raise ValueError("V04 score source or experimental status invalid")
                 v04_scores[str(g["game_id"])]=v04
+            v05=predict_v05_scores(v05_model,home,away,ctx["neutral"])
+            if v05 is not None:
+                if (v05["model"]!=V05_MODEL or v05["status"]!=V05_STATUS or
+                    v05["no_market_lines_in_training"] is not True or
+                    v05["no_v03_forecast_reuse"] is not True or
+                    v05["model_promoted"] is not False or
+                    v05["variant"]!="v05_full"):
+                    raise ValueError("V05 shadow integrity failure")
+                v05_scores[str(g["game_id"])]=v05
             scores[str(g["game_id"])]={
                 "status":"SOURCE_MATCHED_OPPONENT_RATING_R1_RESEARCH_ONLY",
                 "score_scenario_status":("HYBRID_R1_MARGIN_WITH_FROZEN_V03_TOTAL_UNVALIDATED"
@@ -247,6 +269,7 @@ def apply(board,source_rows=None,manifest=None,context=None):
     for g in board["games"]:
         g["opponent_rating"]=scores.get(str(g["game_id"]))
         g["v04_direct_scores"]=v04_scores.get(str(g["game_id"]))
+        g["v05_robust_scores"]=v05_scores.get(str(g["game_id"]))
         g["home_bias_quarantined"]=bool(fail)
         if fail and g.get("market_home_spread") is not None:
             # These are withheld from the website decision ledger as well.
@@ -270,6 +293,14 @@ def apply(board,source_rows=None,manifest=None,context=None):
         "source_training_games":max((p["source_training_games"] for p in scores.values()),default=0),
         "opponent_rating_games":len(scores),
         "v04_direct_score_games":len(v04_scores),
+        "v05_robust_shadow_games":len(v05_scores),
+        "v05_model":V05_MODEL,
+        "v05_status":"EXPERIMENTAL_SHADOW_ONLY_NO_PROMOTION",
+        "v05_source_training_games":v05_model["source_training_games"]
+            if source_rows is not None else 0,
+        "v05_thin_history_games":sum(
+            x["thin_history_warning"] for x in v05_scores.values()),
+        "v05_histories_asof_forecast":True,
         "v04_model":V04_MODEL,
         "v04_status":"RESEARCH_PRELIMINARY_NOT_PROSPECTIVELY_PROMOTED",
         "v04_scores_independently_trained":True,
