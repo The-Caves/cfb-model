@@ -70,6 +70,13 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn("First-quote eligible games",self.html)
         self.assertNotIn("g.model_home_margin =",self.html)
 
+    def test_v05_score_challenger_is_collapsed_shadow_only(self):
+        self.assertIn("function v05ShadowScenario(game)",self.html)
+        self.assertIn("V05 robust recency/form alternative",self.html)
+        self.assertIn("V05 shadow (not promoted)",self.html)
+        self.assertIn("ARCHIVED_PREGAME_PAIRED_V05_V04_SHADOW_RESEARCH",self.html)
+        self.assertIn("no model promotion or wagering claims",self.html.lower())
+
     def test_mobile_and_logo_fallback(self):
         self.assertIn('@media(max-width:580px)',self.html)
         self.assertIn('logoBadge(team,brand)',self.html)
