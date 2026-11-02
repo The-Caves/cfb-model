@@ -365,14 +365,14 @@ def compute(root,now=None):
     # Same-exact-game MAE comparison; models only earn credit after the
     # independently archived result is available. No retroactive predictions.
     v05_rows=[];v05_week=defaultdict(list);missing_v05=0
-    for gid,(_,x) in first_v05.items():
+    for gid,(priority,x) in first_v05.items():
         final=finals.get(gid)
         if final is None:
             missing_v05+=1;continue
         if ((x["home"],x["away"],parse_time(x["kickoff_utc"]))!=
             (final["home"],final["away"],parse_time(final["kickoff_utc"]))):
             raise ValueError("V05 source matched-final identity mismatch")
-        if parse_time(final["observed_at_utc"])<=parse_time(x["capture_utc"]) if "capture_utc" in x else False:
+        if parse_time(final["observed_at_utc"])<=priority[0]:
             raise ValueError("V05 final predates displayed research score")
         margin=final["home_score"]-final["away_score"]
         total=final["home_score"]+final["away_score"]
