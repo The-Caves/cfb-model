@@ -6,6 +6,8 @@ on:
       - 'scripts/v05_score_benchmark.py'
       - 'scripts/v05_calibration.py'
       - 'scripts/v05_competition_gate.py'
+      - 'scripts/v05_ensemble_scores.py'
+      - 'tests/test_v05_ensemble_scores.py'
       - 'tests/test_v05_competition_gate.py'
       - 'tests/test_v05_calibration.py'
       - 'tests/test_v05_robust_scores.py'
@@ -36,6 +38,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_v05_score_benchmark.py' -v
           python -m unittest discover -s tests -p 'test_v05_calibration.py' -v
           python -m unittest discover -s tests -p 'test_v05_competition_gate.py' -v
+          python -m unittest discover -s tests -p 'test_v05_ensemble_scores.py' -v
       - name: Retrieve original October 31 source snapshot
         uses: actions/download-artifact@v4
         with:
@@ -62,7 +65,9 @@ jobs:
           assert z['same_team_and_game_ids_for_all_models']
           assert z["v05_interval_diagnostics"]["only_prior_heldout_week_residuals"]
           assert z["v05_interval_diagnostics"]["exchangeability_unverified"]
-          assert set(("v05_full","v05_long_memory","v05_no_robust")) <= set(z["models"])
+          assert set(("v05_full","v05_long_memory","v05_no_robust",
+                      "v04_v05_blend50")) <= set(z["models"])
+          assert z["ensemble_fixed_50_50_predeclared_not_fitted_on_results"]
           assert z["no_automatic_model_selection"]
           assert z["thin_history_fraction"] is not None
           assert len({g['game_id'] for g in z['predictions']})==z['matched_games']

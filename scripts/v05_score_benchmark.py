@@ -15,11 +15,12 @@ from pathlib import Path
 from scripts.v04_direct_scores import fit as fit_v04, predict as predict_v04
 from scripts.v05_robust_scores import fit as fit_v05, predict as predict_v05
 from scripts.v05_calibration import fit as calibrate, evaluate as grade_intervals
+from scripts.v05_ensemble_scores import blend as fixed_blend
 
 STATUS="V05_PAIRED_WEEKLY_CHRONOLOGICAL_RESEARCH_ONLY"
 VARIANTS=("v04","v05_full","v05_no_form",
           "v05_no_margin_form","v05_no_total_form",
-          "v05_long_memory","v05_no_robust")
+          "v05_long_memory","v05_no_robust","v04_v05_blend50")
 
 
 def _stats(rows,variant):
@@ -96,6 +97,7 @@ def evaluate(games,start="2026-09-26",weeks=20):
                  "actual_total":float(game["home_score"])+float(game["away_score"]),
                  "v05_thin_history":full["thin_history_warning"]}
             outputs={"v04":a,"v05_full":full,
+                     "v04_v05_blend50":fixed_blend(a,full),
                      "v05_long_memory":predict_v05(long_memory,game["home"],game["away"],neutral),
                      "v05_no_robust":predict_v05(ordinary_ridge,game["home"],game["away"],neutral)}
             for name in ("v05_no_form","v05_no_margin_form","v05_no_total_form"):
@@ -179,6 +181,7 @@ def evaluate(games,start="2026-09-26",weeks=20):
         "thin_history_fraction":round(sum(r["v05_thin_history"] for r in all_rows)/len(all_rows),5)
                             if all_rows else None,
         "no_automatic_model_selection":True,
+        "ensemble_fixed_50_50_predeclared_not_fitted_on_results":True,
         "no_prospective_promotion_approved":True,
         "note":"Retrospective 2026 scores may have been revised since kickoff. These paired folds do not establish a live ATS/O-U advantage."
     }
