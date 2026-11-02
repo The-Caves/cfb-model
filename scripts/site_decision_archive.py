@@ -14,6 +14,7 @@ from pathlib import Path
 from scripts import context_archive as store
 from scripts.game_context import parse_time
 from scripts.v04_market_challenger import decide as v04_decide
+from scripts.v05_robust_scores import MODEL as V05_MODEL, STATUS as V05_STATUS
 from scripts.personnel_results_archive import _commit_material
 
 ROOT="research_2026/site_board_snapshots"
@@ -119,6 +120,32 @@ def freeze(board,now,run_id):
                 g["kickoff_utc"],now.isoformat(),g.get("qb_starters_verified",0))
             if research!=expected_research:
                 raise ValueError("V04 research policy changed or forged")
+        # A distinct V05 immutable shadow receipt: no retrospective
+        # recomputation and no model / ATS decision replacement.
+        v05=g.get("v05_robust_scores")
+        if v05 is not None:
+            if (not isinstance(v05,dict) or
+                v05.get("status")!=V05_STATUS or v05.get("model")!=V05_MODEL or
+                v05.get("variant")!="v05_full" or
+                v05.get("no_market_lines_in_training") is not True or
+                v05.get("no_v03_forecast_reuse") is not True or
+                v05.get("no_qb_or_injury_inference") is not True or
+                v05.get("model_promoted") is not False or
+                v05.get("uncertainty_not_calibrated") is not True or
+                g.get("home_bias_quarantined") is not True):
+                raise ValueError("V05 research source/status mismatch")
+            v05_hp=v05.get("home_points");v05_ap=v05.get("away_points")
+            v05_m=v05.get("home_margin");v05_t=v05.get("total_points")
+            if (not all(finite(z) for z in (v05_hp,v05_ap,v05_m,v05_t)) or
+                min(v05_hp,v05_ap,v05_t)<0 or
+                abs(v05_hp+v05_ap-v05_t)>.03 or
+                abs(v05_hp-v05_ap-v05_m)>.03 or
+                type(v05.get("thin_history_warning")) is not bool or
+                type(v05.get("source_training_games")) is not int or
+                v05["source_training_games"]<90):
+                raise ValueError("V05 incoherent or untrusted score receipt")
+        else:
+            v05_hp=v05_ap=v05_m=v05_t=None
         discrepancy=round(abs(margin+spread),4) if sp else None
         risk="HIGH_MODEL_MARKET_DISAGREEMENT" if discrepancy is not None and discrepancy>=10 else "NONE"
         high_disagreement+=int(risk!="NONE")
@@ -152,6 +179,15 @@ def freeze(board,now,run_id):
             "v04_research_not_promoted":candidate.get("model_promoted") is False
                 if candidate else None,
             "qb_verified_at_forecast":g.get("qb_starters_verified",0),
+            "v05_shadow_model":v05["model"] if v05 else None,
+            "v05_shadow_status":v05["status"] if v05 else None,
+            "v05_shadow_home_points":v05_hp,
+            "v05_shadow_away_points":v05_ap,
+            "v05_shadow_home_margin":v05_m,
+            "v05_shadow_total_points":v05_t,
+            "v05_shadow_thin_history":v05["thin_history_warning"] if v05 else None,
+            "v05_shadow_source_training_games":v05["source_training_games"] if v05 else None,
+            "v05_shadow_not_promoted":v05["model_promoted"] is False if v05 else None,
             "v04_research_status":research["status"] if research else None,
             "v04_research_policy":research["policy"] if research else None,
             "v04_research_ats_side":research["ats_side"] if research else None,

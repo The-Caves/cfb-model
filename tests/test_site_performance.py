@@ -230,6 +230,44 @@ class SitePerformanceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"V04 selection changed"):
             compute(self.root,NOW)
 
+    def test_v05_first_pregame_shadow_compares_exact_same_final_to_v04(self):
+        self.row["home_bias_quarantined"]=True
+        self.row["displayed_ats_side"]="PASS"
+        self.row.update({
+            "v04_direct_score_model":"V04_INDEPENDENT_OPPONENT_ADJUSTED_SCORES_RESEARCH_ONLY",
+            "v04_direct_home_margin":14.,"v04_direct_total_points":48.,
+            "v04_direct_home_points":31.,"v04_direct_away_points":17.,
+            "v05_shadow_model":"V05_ROBUST_RECENCY_FORM_SCORES_RESEARCH_ONLY",
+            "v05_shadow_status":"SOURCE_OBSERVED_V05_SHADOW_SCORES",
+            "v05_shadow_home_points":27.5,"v05_shadow_away_points":17.5,
+            "v05_shadow_home_margin":10.,"v05_shadow_total_points":45.,
+            "v05_shadow_thin_history":False,
+            "v05_shadow_source_training_games":105,
+            "v05_shadow_not_promoted":True,
+        })
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        x=compute(self.root,NOW)["v05_shadow"]
+        self.assertFalse(x["model_promoted"])
+        self.assertTrue(x["first_pregame_capture_only"])
+        self.assertEqual(x["summary"]["games"],1)
+        self.assertEqual(x["summary"]["v05_margin_mae"],1.)
+        self.assertEqual(x["summary"]["v04_margin_mae"],3.)
+        self.assertEqual(x["summary"]["v05_total_mae"],0.)
+        self.assertEqual(x["summary"]["v04_total_mae"],3.)
+        self.assertEqual(x["summary"]["v05_su_accuracy"],1.)
+        later=dict(self.row)
+        later.update({"v05_shadow_home_margin":-5.,
+                      "v05_shadow_home_points":20.,
+                      "v05_shadow_away_points":25.})
+        later_bundle=self.make_bundle([later],"2026-10-24T17:05:00Z","13")
+        later_path="research_2026/site_board_snapshots/2026/10/24/run-13.json.gz"
+        self.board_index["runs"].append(self.entry(later_bundle,later_path))
+        self.write(later_path,later_bundle,True)
+        self.write(BOARD_INDEX,self.board_index)
+        y=compute(self.root,NOW)["v05_shadow"]
+        self.assertEqual(y["summary"],x["summary"])
+
     def test_publish_to_site_dashboard_without_touching_upcoming_picks(self):
         board=self.root/"dashboard.json"
         source={"schema_version":2,"betting_status":"PASS_UNVALIDATED",

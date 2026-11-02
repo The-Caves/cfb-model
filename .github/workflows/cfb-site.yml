@@ -14,6 +14,10 @@ on:
       - 'scripts/site_market.py'
       - 'scripts/site_home_bias_guard.py'
       - 'scripts/v04_direct_scores.py'
+      - 'scripts/v05_robust_scores.py'
+      - 'scripts/v05_score_benchmark.py'
+      - 'tests/test_v05_robust_scores.py'
+      - 'tests/test_v05_score_benchmark.py'
       - 'scripts/v04_market_challenger.py'
       - 'tests/test_v04_market_challenger.py'
       - 'tests/test_v04_direct_scores.py'
@@ -64,7 +68,10 @@ jobs:
   build:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 14
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -108,6 +115,8 @@ jobs:
           python -m unittest discover -s tests -p 'test_site_home_bias_guard.py' -v
           python -m unittest discover -s tests -p 'test_v04_direct_scores.py' -v
           python -m unittest discover -s tests -p 'test_v04_market_challenger.py' -v
+          python -m unittest discover -s tests -p 'test_v05_robust_scores.py' -v
+          python -m unittest discover -s tests -p 'test_v05_score_benchmark.py' -v
       - name: Test source-matched market comparisons
         run: python -m unittest discover -s tests -p 'test_site_market.py' -v
       - name: Test game-specific QB status and season-passer fallback

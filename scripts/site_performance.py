@@ -26,6 +26,7 @@ from scripts.weekly_profiles import canonical
 from scripts.v04_market_challenger import (
     decide as v04_decide, POLICY as V04_POLICY, STATUS as V04_STATUS)
 from scripts.v04_direct_scores import MODEL as V04_SCORE_MODEL, STATUS as V04_SCORE_STATUS
+from scripts.v05_robust_scores import MODEL as V05_SCORE_MODEL, STATUS as V05_SCORE_STATUS
 
 GRADE_INDEX="research_2026/forecast_grades_index.json"
 BOARD_INDEX="research_2026/site_board_snapshots/index.json"
@@ -118,7 +119,7 @@ def compute(root,now=None):
     if (board_index.get("status")!=BOARD_STATUS or board_index.get("schema_version")!=1
             or not isinstance(board_index.get("runs"),list)):
         raise ValueError("Invalid archived website snapshot index")
-    first={};first_v04={};seen_runs=set();raw=Counter();mismatches=0;observed_games=set()
+    first={};first_v04={};first_v05={};seen_runs=set();raw=Counter();mismatches=0;observed_games=set()
     for item in board_index["runs"]:
         runid=str(item["run_id"])
         if not runid.isdigit() or runid in seen_runs:raise ValueError("Repeated board run")
@@ -250,6 +251,36 @@ def compute(root,now=None):
                 "v04_research_ou_gap")):
                 raise ValueError("Partial V04 research receipt")
 
+            # V05 is an entirely separate score challenger and is graded only
+            # from the first *archived* pre-kickoff score. Older snapshots are
+            # never filled retrospectively after the result is known.
+            if x.get("v05_shadow_model") is not None:
+                hp=x.get("v05_shadow_home_points")
+                ap=x.get("v05_shadow_away_points")
+                pm=x.get("v05_shadow_home_margin")
+                pt=x.get("v05_shadow_total_points")
+                if (x.get("v05_shadow_model")!=V05_SCORE_MODEL or
+                    x.get("v05_shadow_status")!=V05_SCORE_STATUS or
+                    x.get("v05_shadow_not_promoted") is not True or
+                    x.get("home_bias_quarantined") is not True or
+                    type(x.get("v05_shadow_thin_history")) is not bool or
+                    type(x.get("v05_shadow_source_training_games")) is not int or
+                    x["v05_shadow_source_training_games"]<90 or
+                    not all(type(v) in (int,float) and math.isfinite(v)
+                            for v in (hp,ap,pm,pt)) or
+                    min(hp,ap,pt)<0 or
+                    abs(hp+ap-pt)>.03 or abs(hp-ap-pm)>.03 or
+                    x.get("v04_direct_score_model")!=V04_SCORE_MODEL):
+                    raise ValueError("Invalid V05 archived research score")
+                priority=(captured,runid)
+                if gid not in first_v05 or priority<first_v05[gid][0]:
+                    first_v05[gid]=(priority,x)
+            elif any(x.get(k) is not None for k in (
+                "v05_shadow_status","v05_shadow_home_margin",
+                "v05_shadow_total_points","v05_shadow_not_promoted",
+                "v05_shadow_thin_history")):
+                raise ValueError("Partial V05 archived research score")
+
     by_market={"ats":[],"ou":[]};by_week=defaultdict(lambda:defaultdict(list))
     graded_by_game=defaultdict(dict);unsettled=set()
     for (gid,market),(_,x) in first.items():
@@ -331,6 +362,55 @@ def compute(root,now=None):
         v04_graded[market].append(grade)
         v04_week[_week(x["kickoff_utc"])][market].append(grade)
 
+    # Same-exact-game MAE comparison; models only earn credit after the
+    # independently archived result is available. No retroactive predictions.
+    v05_rows=[];v05_week=defaultdict(list);missing_v05=0
+    for gid,(priority,x) in first_v05.items():
+        final=finals.get(gid)
+        if final is None:
+            missing_v05+=1;continue
+        if ((x["home"],x["away"],parse_time(x["kickoff_utc"]))!=
+            (final["home"],final["away"],parse_time(final["kickoff_utc"]))):
+            raise ValueError("V05 source matched-final identity mismatch")
+        if parse_time(final["observed_at_utc"])<=priority[0]:
+            raise ValueError("V05 final predates displayed research score")
+        margin=final["home_score"]-final["away_score"]
+        total=final["home_score"]+final["away_score"]
+        pred=x["v05_shadow_home_margin"];old=x["v04_direct_home_margin"]
+        projected=x["v05_shadow_total_points"]
+        old_total=x["v04_direct_total_points"]
+        if not all(type(v) in (int,float) and math.isfinite(v)
+                   for v in (old,old_total)):
+            raise ValueError("Missing paired V04 score")
+        rec={"id":gid,"actual_margin":margin,"actual_total":total,
+             "v05_margin":pred,"v04_margin":old,
+             "v05_total":projected,"v04_total":old_total,
+             "thin_history":x["v05_shadow_thin_history"]}
+        v05_rows.append(rec)
+        v05_week[_week(x["kickoff_utc"])].append(rec)
+
+    def _paired_shadow(rows):
+        if not rows:
+            return {"games":0,"v05_margin_mae":None,"v04_margin_mae":None,
+                    "v05_total_mae":None,"v04_total_mae":None,
+                    "v05_su_accuracy":None,"v04_su_accuracy":None,
+                    "v05_predicted_home_fraction":None,"thin_history_games":0}
+        n=len(rows)
+        def mae(field,truth):
+            return round(sum(abs(r[field]-r[truth]) for r in rows)/n,3)
+        def acc(field):
+            return round(sum((r[field]>0)==(r["actual_margin"]>0)
+                             for r in rows)/n,5)
+        return {"games":n,
+            "v05_margin_mae":mae("v05_margin","actual_margin"),
+            "v04_margin_mae":mae("v04_margin","actual_margin"),
+            "v05_total_mae":mae("v05_total","actual_total"),
+            "v04_total_mae":mae("v04_total","actual_total"),
+            "v05_su_accuracy":acc("v05_margin"),
+            "v04_su_accuracy":acc("v04_margin"),
+            "v05_predicted_home_fraction":round(sum(r["v05_margin"]>0 for r in rows)/n,5),
+            "thin_history_games":sum(r["thin_history"] for r in rows)}
+
     keys=set(su_by_week)|set(by_week)
     weekly=[]
     for week in sorted(keys):
@@ -388,6 +468,19 @@ def compute(root,now=None):
             "market_publication_at_model_forecast_authenticated":False,
             "validated_betting_edge":False,
             "note":"Earliest archived pre-kickoff V04 research selections, including abstentions. Only observed quotes; market provider publication time at the model forecast is not authenticated. Comparisons to market MAE are paired descriptive diagnostics, not betting ROI."
+        },
+        "v05_shadow":{
+            "status":"ARCHIVED_PREGAME_PAIRED_V05_V04_SHADOW_RESEARCH",
+            "summary":_paired_shadow(v05_rows),
+            "weekly":[{"week":str(w.year)+"-W"+str(w.week).zfill(2),
+                       **_paired_shadow(items)}
+                      for w,items in sorted(v05_week.items())],
+            "unsettled_excluded":missing_v05,
+            "first_pregame_capture_only":True,
+            "model_promoted":False,"safe_for_betting":False,
+            "betting_status":"PASS_UNVALIDATED",
+            "no_historical_retroactive_pick_filling":True,
+            "note":"V05 scores are prospectively archived research shadows. V05 and V04 are compared on exactly the same game IDs after independently observed final scores. Neither model has been promoted."
         },
         "weekly":weekly,
         "recent":sorted(rows.values(),key=lambda r:(r["kickoff_utc"],r["game_id"]),reverse=True)[:25],
