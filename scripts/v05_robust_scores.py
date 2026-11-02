@@ -174,8 +174,8 @@ def fit(rows,decision_utc):
 
 def predict(model,home,away,neutral,variant="v05_full"):
     """All variants use the same past-only fit; no market or QB guesses."""
-    if not isinstance(model,dict) or model.get("status")!=STATUS or
-        model.get("model")!=MODEL or type(neutral) is not bool:
+    if (not isinstance(model,dict) or model.get("status")!=STATUS or
+        model.get("model")!=MODEL or type(neutral) is not bool):
         return None
     if variant not in ("v05_full","v05_no_form","v05_no_margin_form",
                       "v05_no_total_form"):
