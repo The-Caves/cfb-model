@@ -5,6 +5,8 @@ on:
       - 'scripts/v05_robust_scores.py'
       - 'scripts/v05_score_benchmark.py'
       - 'scripts/v05_calibration.py'
+      - 'scripts/v05_competition_gate.py'
+      - 'tests/test_v05_competition_gate.py'
       - 'tests/test_v05_calibration.py'
       - 'tests/test_v05_robust_scores.py'
       - 'tests/test_v05_score_benchmark.py'
@@ -33,6 +35,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_v05_robust_scores.py' -v
           python -m unittest discover -s tests -p 'test_v05_score_benchmark.py' -v
           python -m unittest discover -s tests -p 'test_v05_calibration.py' -v
+          python -m unittest discover -s tests -p 'test_v05_competition_gate.py' -v
       - name: Retrieve original October 31 source snapshot
         uses: actions/download-artifact@v4
         with:
@@ -67,10 +70,25 @@ jobs:
               assert len(fold['game_ids'])==fold['matched_games']
           print('PASS: real historical paired cohort and nonpromotion')
           PY
+          python -m scripts.v05_competition_gate \
+            --benchmark /tmp/v05-paired-score-benchmark.json \
+            --output /tmp/v05-promotion-audit.json | tee /tmp/v05-gate.log
+          cat /tmp/v05-gate.log >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/v05-promotion-audit.json'))
+          assert p['status']=='V05_COMPETITION_EVIDENCE_GATE_RESEARCH_ONLY'
+          assert p['automatic_model_promotion'] is False
+          assert p['production_model_unchanged'] is True
+          assert p['validated_betting_edge'] is False
+          assert not p['verified_prospective_cohort_complete']
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: cfb-v05-matched-robust-research-${{ github.run_id }}
-          path: /tmp/v05-paired-score-benchmark.json
+          path: |
+            /tmp/v05-paired-score-benchmark.json
+            /tmp/v05-promotion-audit.json
           retention-days: 30
           if-no-files-found: warn

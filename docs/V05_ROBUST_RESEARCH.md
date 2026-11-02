@@ -22,6 +22,12 @@
 - **Historical betting line timestamps:** original market publication history cannot be authenticated reliably. V05 is **not** graded ATS on historical data without truly observed pregame lines.
 - **Small evaluation window:** one season of evolving programs and opponents cannot validate probabilistic intervals or profitable ATS. Each shadow prospective cohort accumulates only after the model and source observation were frozen before kickoff.
 
+## Independent model-competition gate
+
+The auditable gate in `scripts/v05_competition_gate.py` requires at least 200 historical paired games across four weeks, **at least 2% improvement on both margin and total MAE**, no decrease in straight-up accuracy, a home-selection fraction within 10 points of actual home-win frequency, and at least 75% observed coverage for *both* nominal 80% intervals on earlier-fold-only residuals. It also separately requires at least 250 genuinely archived prospective decisions over four weeks, authenticated market-quote timing and independently verified final results.
+
+A passing historical experiment **cannot** authorize promotion. The output always states automatic promotion is false. If all checks were ever supported, the gate would only flag readiness for an explicit human review.
+
 ## Promotion criteria
 
 Keep V05 **shadow-only** unless *fresh, genuinely prospective* non-overlapping samples demonstrate paired improvements over V04 and market baselines, calibrated uncertainty, acceptable home/away bias and stable performance across multiple weeks. Never use postgame boxscore starter labels as if known before kickoff. Do not tune a candidate on the same slate and report the fit as an independent win.
@@ -31,5 +37,6 @@ Keep V05 **shadow-only** unless *fresh, genuinely prospective* non-overlapping s
 - `scripts/v05_robust_scores.py`: score model and ablations
 - `scripts/v05_score_benchmark.py`: paired weekly 2026 V04 versus V05 contest
 - `scripts/v05_calibration.py`: earlier-fold-only interval evidence
+- `scripts/v05_competition_gate.py`: fixed metric thresholds, prospective source checks and fail-closed no-promotion audit
 - `scripts/site_home_bias_guard.py`, `scripts/site_decision_archive.py`, `scripts/site_performance.py`: optional source-matched V05 shadow and future objective grades
 - `.github/workflows/cfb-v05-score-research.yml`: real-data run and immutable run artifact
