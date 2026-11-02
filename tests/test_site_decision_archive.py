@@ -125,6 +125,37 @@ class ProspectiveDashboardArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"research policy changed"):
             freeze(b,NOW,"888")
 
+    def test_v05_shadow_freezes_only_sourced_non_promoted_scores(self):
+        b=board();g=b["games"][0]
+        g["home_bias_quarantined"]=True
+        g["model_ats_side"]="PASS"
+        g["v05_robust_scores"]={
+            "status":"SOURCE_OBSERVED_V05_SHADOW_SCORES",
+            "model":"V05_ROBUST_RECENCY_FORM_SCORES_RESEARCH_ONLY",
+            "variant":"v05_full",
+            "home_points":28.,"away_points":22.,"home_margin":6.,
+            "total_points":50.,"source_training_games":105,
+            "thin_history_warning":False,
+            "no_market_lines_in_training":True,
+            "no_v03_forecast_reuse":True,
+            "no_qb_or_injury_inference":True,
+            "uncertainty_not_calibrated":True,"model_promoted":False}
+        snap=freeze(b,NOW,"888")
+        row=snap["rows"][0]
+        self.assertEqual(row["v05_shadow_home_margin"],6.)
+        self.assertEqual(row["v05_shadow_total_points"],50.)
+        self.assertFalse(row["v05_shadow_thin_history"])
+        self.assertTrue(row["v05_shadow_not_promoted"])
+        self.assertEqual(row["frozen_forecast_home_margin"],10.)
+        self.assertEqual(row["displayed_ats_side"],"PASS")
+        g["v05_robust_scores"]["home_points"]=90.
+        with self.assertRaisesRegex(ValueError,"incoherent"):
+            freeze(b,NOW,"888")
+        g["v05_robust_scores"]["home_points"]=28.
+        g["v05_robust_scores"]["no_market_lines_in_training"]=False
+        with self.assertRaisesRegex(ValueError,"source/status"):
+            freeze(b,NOW,"888")
+
     def test_duplicate_ids_not_allowed(self):
         b=board();b["games"].append(copy.deepcopy(b["games"][0]))
         with self.assertRaises(ValueError):freeze(b,NOW,"888")
