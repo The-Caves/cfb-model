@@ -45,6 +45,9 @@ class SiteHomeBiasTests(unittest.TestCase):
         self.assertEqual(audit["quarantined_ats_lines"],20)
         self.assertEqual(audit["opponent_rating_games"],20)
         self.assertEqual(audit["v04_direct_score_games"],20)
+        self.assertEqual(audit["v05_robust_shadow_games"],20)
+        self.assertEqual(audit["v05_thin_history_games"],0)
+        self.assertEqual(audit["v05_source_training_games"],120)
         self.assertFalse(audit["v04_score_uses_v03_total"])
         self.assertFalse(audit["automatic_model_promotion"])
         g=d["games"][0]
@@ -59,6 +62,13 @@ class SiteHomeBiasTests(unittest.TestCase):
         self.assertAlmostEqual(v04["home_points"]+v04["away_points"],v04["total_points"],delta=.02)
         self.assertAlmostEqual(v04["home_points"]-v04["away_points"],v04["home_margin"],delta=.02)
         self.assertFalse(v04["direct_scoring_fit_uses_v03_total"])
+        shadow=g["v05_robust_scores"]
+        self.assertEqual(shadow["status"],"SOURCE_OBSERVED_V05_SHADOW_SCORES")
+        self.assertEqual(shadow["variant"],"v05_full")
+        self.assertFalse(shadow["model_promoted"])
+        self.assertTrue(shadow["no_market_lines_in_training"])
+        self.assertAlmostEqual(shadow["home_points"]+shadow["away_points"],
+                               shadow["total_points"],delta=.02)
         self.assertEqual(g["model_total"],59.62563)
         self.assertEqual(g["opponent_rating"]["home_field_allowance"],2.5)
         self.assertTrue(g["opponent_rating"]["not_prospectively_calibrated"])
@@ -96,6 +106,7 @@ class SiteHomeBiasTests(unittest.TestCase):
         self.assertEqual(d["home_bias_audit"]["status"],"V03_HOME_BIAS_SOURCE_MISSING_FAIL_CLOSED")
         self.assertIsNone(d["games"][0]["opponent_rating"])
         self.assertIsNone(d["games"][0]["v04_direct_scores"])
+        self.assertIsNone(d["games"][0]["v05_robust_scores"])
         self.assertFalse(d["home_bias_audit"]["source_same_forecast_training_run_verified"])
     def test_wrong_game_identity_fails_instead_of_guessing(self):
         ctx=context();ctx["games"][0]["away"]="Another Team"
@@ -110,6 +121,7 @@ class SiteHomeBiasTests(unittest.TestCase):
         self.assertEqual(d["home_bias_audit"]["training_game_count"],119)
         self.assertEqual(d["games"][0]["opponent_rating"]["source_training_games"],119)
         self.assertEqual(d["games"][0]["v04_direct_scores"]["source_training_games"],119)
+        self.assertEqual(d["games"][0]["v05_robust_scores"]["source_training_games"],119)
         self.assertEqual(d["games"][0]["model_home_margin"],3.16947)
         self.assertEqual(d["games"][0]["model_ats_side"],"PASS")
 
