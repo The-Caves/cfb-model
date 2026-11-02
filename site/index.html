@@ -347,6 +347,20 @@ function v04MarketResearch(game){
     r.market_lines_not_model_training_inputs!==true)return null;
  return r;
 }
+function v05ShadowScenario(game){
+ const x=game?.v05_robust_scores;
+ if(game?.home_bias_quarantined!==true ||
+    x?.model!=="V05_ROBUST_RECENCY_FORM_SCORES_RESEARCH_ONLY" ||
+    x?.status!=="SOURCE_OBSERVED_V05_SHADOW_SCORES" ||
+    x?.variant!=="v05_full" || x?.model_promoted!==false ||
+    x?.no_market_lines_in_training!==true ||
+    x?.uncertainty_not_calibrated!==true ||
+    ![x.home_points,x.away_points,x.home_margin,x.total_points].every(Number.isFinite) ||
+    x.home_points<0 || x.away_points<0 ||
+    Math.abs(x.home_points+x.away_points-x.total_points)>.03 ||
+    Math.abs(x.home_points-x.away_points-x.home_margin)>.03)return null;
+ return x;
+}
 function opponentScoreScenario(game){
  const x=game.opponent_rating;
  if(game.home_bias_quarantined!==true||
@@ -549,7 +563,20 @@ function gameCard(g){
    "* V04 directly fits opponent-adjusted team scoring and a separate strength margin from recorded 2026 games. V04 total "+num(v04.total_points)+" · source observed before forecast. Historical results are retrospective; this version is not independently prospectively validated.":
    scoreScenario?"* Illustrated final score uses R1 opponent-adjusted margin and the frozen V03 total ("+num(scoreScenario.scenario_total_points)+"). Not a jointly trained or validated score model.":
    "R1 estimates a margin only; a valid final-score illustration is unavailable."));
-  summary.append(node("div","biasWarning","V03 home-bias alert · V03 withheld: original winner and ATS calls suppressed. V04/R1 are research challengers, not validated betting picks."));
+  const shadow=v05ShadowScenario(g);
+  if(shadow){
+   const description="V05 shadow (not promoted): "+
+      g.away_team+" "+num(shadow.away_points,0)+" · "+
+      g.home_team+" "+num(shadow.home_points,0)+
+      " · Total "+num(shadow.total_points,1)+
+      (shadow.thin_history_warning?" · Thin team history":"")+
+      " · No verified QB effect or calibrated uncertainty";
+   const fold=node("details","detailFold");
+   fold.append(node("summary","","V05 robust recency/form alternative"),
+               node("div","biasNote",description));
+   summary.append(fold);
+  }
+  summary.append(node("div","biasWarning","V03 home-bias alert · V03 withheld: original winner and ATS calls suppressed. V04/R1/V05 are research challengers, not validated betting picks."));
   summary.append(node("div","biasNote","Archived V03 (unreliable): "+(Number.isFinite(g.model_home_margin)?
     (g.model_home_margin>0?g.home_team:g.away_team)+" by "+num(Math.abs(g.model_home_margin)):"unavailable")+
     " · V03 projected total: "+num(g.model_total)+" · No calibrated win probability"));
@@ -680,6 +707,22 @@ function renderPerformance(){
   area.append(node("div","performanceMeta","First-quote eligible games: ATS "+v.eligible_with_quote.ats+" (PASS "+v.explicit_passes.ats+") · Totals "+v.eligible_with_quote.ou+" (PASS "+v.explicit_passes.ou+")"));
   area.append(node("div","performanceMeta","Paired margin MAE: V04 "+num(v.v04_margin_mae,2)+" vs observed market "+num(v.market_margin_mae_paired,2)+" · Total MAE: V04 "+num(v.v04_total_mae,2)+" vs market "+num(v.market_total_mae_paired,2)));
   area.append(node("div","performanceMeta","Research decisions use earliest archived pregame quotes, with abstentions preserved. Not a verified betting edge or ROI."));
+ }
+ const shadow=p.v05_shadow;
+ if(shadow?.status==="ARCHIVED_PREGAME_PAIRED_V05_V04_SHADOW_RESEARCH"){
+  const x=shadow.summary||{};
+  area.append(node("div","performanceMeta","V05 robust model · shadow only · "+(x.games??0)+
+   " paired completed games (compared with V04, not V03 ATS)."));
+  if(x.games){
+   area.append(node("div","performanceMeta","Winner accuracy: V05 "+num(100*x.v05_su_accuracy,1)+
+     "% vs V04 "+num(100*x.v04_su_accuracy,1)+
+     "% · Mean margin error: "+num(x.v05_margin_mae,2)+
+     " vs "+num(x.v04_margin_mae,2)+" pts"));
+   area.append(node("div","performanceMeta","Mean total error: V05 "+num(x.v05_total_mae,2)+
+     " vs V04 "+num(x.v04_total_mae,2)+
+     " pts · Thin-history matchups: "+x.thin_history_games));
+  }
+  area.append(node("div","performanceMeta","Only immutable pre-kickoff V05 shadow predictions are graded; no model promotion or wagering claims."));
  }
  const weekly=byId("performance-weekly");weekly.replaceChildren();
  if(p.weekly?.length)weekly.append(resultTable(["Week","SU","ATS","Totals"],p.weekly,x=>[x.week,resultRecord(x.su),resultRecord(x.ats),resultRecord(x.ou)]));
