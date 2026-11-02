@@ -1,0 +1,68 @@
+name: CFB V05 Robust Scoring Challenger / Paired Research
+on:
+  pull_request:
+    paths:
+      - 'scripts/v05_robust_scores.py'
+      - 'scripts/v05_score_benchmark.py'
+      - 'tests/test_v05_robust_scores.py'
+      - 'tests/test_v05_score_benchmark.py'
+      - 'scripts/site_home_bias_guard.py'
+      - '.github/workflows/cfb-v05-robust-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  paired-v05-scoring-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Isolated V05 and chronological A/B tests
+        run: |
+          python -m unittest discover -s tests -p 'test_v05_robust_scores.py' -v
+          python -m unittest discover -s tests -p 'test_v05_score_benchmark.py' -v
+      - name: Retrieve original October 31 source snapshot
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-2026-data-41213872537
+          run-id: 41213872537
+          repository: ${{ github.repository }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .source-original
+      - name: Paired genuine 2026 weekly V04 vs V05 comparison (never promote)
+        run: |
+          set -euo pipefail
+          test -s .source-original/games_2026.csv
+          python -m scripts.v05_score_benchmark \
+            --games .source-original/games_2026.csv \
+            --output /tmp/v05-paired-score-benchmark.json | tee /tmp/v05-metrics.log
+          cat /tmp/v05-metrics.log >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          z=json.load(open('/tmp/v05-paired-score-benchmark.json',encoding='utf-8'))
+          assert z['status']=='V05_PAIRED_WEEKLY_CHRONOLOGICAL_RESEARCH_ONLY'
+          assert z['matched_games']>100 and z['n_folds']>=3
+          assert not z['score_model_promoted'] and not z['safe_for_betting']
+          assert z['historical_market_lines_used'] is False
+          assert z['same_team_and_game_ids_for_all_models']
+          assert len({g['game_id'] for g in z['predictions']})==z['matched_games']
+          for fold in z['folds']:
+              assert len(fold['game_ids'])==fold['matched_games']
+          print('PASS: real historical paired cohort and nonpromotion')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-v05-matched-robust-research-${{ github.run_id }}
+          path: /tmp/v05-paired-score-benchmark.json
+          retention-days: 30
+          if-no-files-found: warn
