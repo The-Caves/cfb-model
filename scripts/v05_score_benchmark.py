@@ -14,10 +14,12 @@ from pathlib import Path
 
 from scripts.v04_direct_scores import fit as fit_v04, predict as predict_v04
 from scripts.v05_robust_scores import fit as fit_v05, predict as predict_v05
+from scripts.v05_calibration import fit as calibrate, evaluate as grade_intervals
 
 STATUS="V05_PAIRED_WEEKLY_CHRONOLOGICAL_RESEARCH_ONLY"
 VARIANTS=("v04","v05_full","v05_no_form",
-          "v05_no_margin_form","v05_no_total_form")
+          "v05_no_margin_form","v05_no_total_form",
+          "v05_long_memory","v05_no_robust")
 
 
 def _stats(rows,variant):
@@ -64,6 +66,7 @@ def evaluate(games,start="2026-09-26",weeks=20):
                 raise ValueError("Unverified finished score")
     first=dt.date.fromisoformat(start)
     all_rows=[];folds=[]
+    calibrated=[];calibration_folds=[]
     for week in range(weeks):
         begin=first+dt.timedelta(days=7*week)
         end=begin+dt.timedelta(days=7)
@@ -77,6 +80,9 @@ def evaluate(games,start="2026-09-26",weeks=20):
         when=dt.datetime.combine(begin,dt.time(hour=15),tzinfo=dt.timezone.utc).isoformat()
         v04=fit_v04(train,when)
         v05=fit_v05(train,when)
+        long_memory=fit_v05(train,when,half_life_days=56.)
+        ordinary_ridge=fit_v05(train,when,robust=False)
+        cal=calibrate(all_rows,begin.isoformat(),"v05_full")
         sample=[]
         for game in test:
             neutral=game["neutral"]=="True"
@@ -89,8 +95,10 @@ def evaluate(games,start="2026-09-26",weeks=20):
                  "actual_margin":float(game["home_score"])-float(game["away_score"]),
                  "actual_total":float(game["home_score"])+float(game["away_score"]),
                  "v05_thin_history":full["thin_history_warning"]}
-            outputs={"v04":a,"v05_full":full}
-            for name in VARIANTS[2:]:
+            outputs={"v04":a,"v05_full":full,
+                     "v05_long_memory":predict_v05(long_memory,game["home"],game["away"],neutral),
+                     "v05_no_robust":predict_v05(ordinary_ridge,game["home"],game["away"],neutral)}
+            for name in ("v05_no_form","v05_no_margin_form","v05_no_total_form"):
                 outputs[name]=predict_v05(
                     v05,game["home"],game["away"],neutral,variant=name)
             if any(x is None for x in outputs.values()):
@@ -101,13 +109,24 @@ def evaluate(games,start="2026-09-26",weeks=20):
             sample.append(row)
         if not sample:
             continue
+        interval=grade_intervals(sample,cal,"v05_full")
+        if cal:
+            calibrated.append(interval)
+            calibration_folds.append({
+                "week_start":begin.isoformat(),
+                "fitted_from":cal["calibrated_from_games"],
+                "margin_radius":cal["margin_radius"],
+                "total_radius":cal["total_radius"],
+                **interval})
         all_rows.extend(sample)
         folds.append({
             "week_start":begin.isoformat(),
             "training_games":len(train),
             "matched_games":len(sample),
             "game_ids":[x["game_id"] for x in sample],
-            "models":{name:_stats(sample,name) for name in VARIANTS}
+            "models":{name:_stats(sample,name) for name in VARIANTS},
+            "v05_past_holdout_calibration":cal,
+            "v05_interval_results":interval
         })
     if len(all_rows)!=len({r["game_id"] for r in all_rows}):
         raise ValueError("Same holdout graded twice")
@@ -124,6 +143,22 @@ def evaluate(games,start="2026-09-26",weeks=20):
         a["weeks_lower_total_mae"]=sum(
             f["models"][name]["total_mae"]<f["models"]["v04"]["total_mae"]
             for f in folds)
+    # These out-of-sample intervals use exclusively earlier fold residuals.
+    interval_n=sum(r["calibrated_games"] for r in calibrated)
+    interval_diagnostics={
+        "calibrated_games":interval_n,"calibration_folds":len(calibration_folds),
+        "nominal_coverage":.8,
+        "margin_coverage":round(sum(r["margin_coverage"]*r["calibrated_games"]
+              for r in calibrated)/interval_n,5) if interval_n else None,
+        "total_coverage":round(sum(r["total_coverage"]*r["calibrated_games"]
+              for r in calibrated)/interval_n,5) if interval_n else None,
+        "average_margin_width":round(sum(r["mean_margin_width"]*r["calibrated_games"]
+              for r in calibrated)/interval_n,4) if interval_n else None,
+        "average_total_width":round(sum(r["mean_total_width"]*r["calibrated_games"]
+              for r in calibrated)/interval_n,4) if interval_n else None,
+        "only_prior_heldout_week_residuals":True,
+        "exchangeability_unverified":True
+    }
     # No results-based live promotion, even if exploratory folds look good.
     return {
         "status":STATUS,"season":2026,"matched_games":len(all_rows),
@@ -135,6 +170,14 @@ def evaluate(games,start="2026-09-26",weeks=20):
         "historical_market_lines_used":False,
         "same_team_and_game_ids_for_all_models":True,
         "fixed_ablation_variants":list(VARIANTS),
+        "v05_interval_diagnostics":interval_diagnostics,
+        "v05_calibration_folds":calibration_folds,
+        "naive_home_winner_control":{
+             "games":len(all_rows),
+             "su_accuracy":round(sum(r["actual_margin"]>0 for r in all_rows)/len(all_rows),5)
+                            if all_rows else None},
+        "thin_history_fraction":round(sum(r["v05_thin_history"] for r in all_rows)/len(all_rows),5)
+                            if all_rows else None,
         "no_automatic_model_selection":True,
         "no_prospective_promotion_approved":True,
         "note":"Retrospective 2026 scores may have been revised since kickoff. These paired folds do not establish a live ATS/O-U advantage."
