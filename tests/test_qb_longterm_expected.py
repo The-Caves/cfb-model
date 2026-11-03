@@ -68,7 +68,11 @@ class LongTermStarterTests(unittest.TestCase):
         self.assertEqual(exposure["status"],"PASS_NO_SOURCED_PRIOR_QB_EXPOSURE")
 
     def test_not_backdated_into_older_capture(self):
-        before=apply(expected(),REGISTRY,"2026-11-03T18:00:00Z")
+        prior=expected()
+        prior["observed_at_utc"]="2026-11-03T17:59:00Z"
+        for row in prior["games"]:
+            row["observed_at_utc"]="2026-11-03T17:59:00Z"
+        before=apply(prior,REGISTRY,"2026-11-03T18:00:00Z")
         self.assertEqual(before["games"][0]["starter"],"Kamario Taylor")
         self.assertNotIn("official_longterm_out_qb",before["games"][0])
         self.assertEqual(before["qb_longterm_out_audit"]["official_future_team_slots_annotated"],0)
