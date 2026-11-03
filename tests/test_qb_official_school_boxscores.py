@@ -223,4 +223,47 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"does not match independently captured game"):
             parse({**game,"away_score":"25"},cfg,page,"2026-11-03T19:22:00Z")
 
+    def test_oct31_ulm_combined_official_two_team_starters(self):
+        registry=json.loads(Path("config/official_school_qb_boxscores_2026.json").read_text())
+        entries=[e for e in registry["entries"] if str(e["game_id"])=="401871095"]
+        self.assertEqual(len(entries),1)
+        entry=entries[0]
+        self.assertEqual(entry["source_layout"],"COMBINED_STARTERS_BY_TEAM")
+        self.assertEqual((entry["home"],entry["away"],entry["home_score"],entry["away_score"]),
+                         ("UL Monroe Warhawks","Southern Miss Golden Eagles",21,35))
+        game={"game_id":"401871095","date":"2026-10-31",
+              "home":"UL Monroe Warhawks","away":"Southern Miss Golden Eagles",
+              "home_score":"21","away_score":"35",
+              "kickoff_utc":"2026-10-31T19:30:00Z"}
+        page="""<html><body><div>10/31/2026</div><h2>Southern Miss.</h2>
+          <div>35</div> vs <div>21</div><div>ULM</div>
+          <h2>Starters</h2>
+          <h3>USM</h3><table>
+          <tr><td>90</td><td>Stegall,JR</td><td>DL</td></tr>
+          <tr><td>18</td><td>Lyddy,Landry</td><td>QB</td></tr>
+          </table><h3>ULM</h3><table>
+          <tr><td>31</td><td>Wells,Kevontay</td><td>DL</td></tr>
+          <tr><td>10</td><td>Armenta,Aidan</td><td>QB</td></tr>
+          </table><h2>Player Participation</h2>
+          <h3>USM</h3><p>9 Another,Passer</p></body></html>"""
+        rows=parse(game,entry,page,"2026-11-03T19:29:00Z")
+        self.assertEqual({x["team"]:x["starter_player"] for x in rows},
+                         {"Southern Miss Golden Eagles":"Landry Lyddy",
+                          "UL Monroe Warhawks":"Aidan Armenta"})
+        self.assertTrue(all(x["label_status"]==LABEL for x in rows))
+        self.assertTrue(all(x["historical_publication_time_verified"] is False for x in rows))
+        fail=page.replace("<div>35</div> vs <div>21</div>",
+                          "<div>35</div> vs <div>20</div>")
+        with self.assertRaisesRegex(ValueError,"score frame"):
+            parse(game,entry,fail,"2026-11-03T19:29:00Z")
+        duplicated=page.replace("<h3>ULM</h3><table>",
+                                "<h3>ULM</h3><h3>ULM</h3><table>")
+        with self.assertRaisesRegex(ValueError,"duplicate team header"):
+            parse(game,entry,duplicated,"2026-11-03T19:29:00Z")
+        extra=page.replace("<tr><td>10</td><td>Armenta,Aidan</td><td>QB</td></tr>",
+                           "<tr><td>10</td><td>Armenta,Aidan</td><td>QB</td></tr>"+
+                           "<tr><td>9</td><td>Else,Player</td><td>QB</td></tr>")
+        parsed=parse(game,entry,extra,"2026-11-03T19:29:00Z")
+        self.assertIsNone(next(x for x in parsed if x["team"]=="UL Monroe Warhawks")["starter_player"])
+
 if __name__=="__main__":unittest.main()

@@ -56,6 +56,21 @@ def _heading(tokens,label):
     if len(matched)!=1:raise ValueError("School starters team offensive heading absent or duplicated")
     return matched[0]
 
+def _combined_heading(tokens,label):
+    """Manually reviewed Sidearm combined defense+offense starter lists.
+
+    These school pages use one exact team label for each complete starters
+    roster, with no separate 'Offense' header. Never infer starter from
+    passing leaders or the separate 'Player Participation' table.
+    """
+    name=_norm(label)
+    locations=[i+1 for i,item in enumerate(tokens)
+               if _norm(item) in (name,"team_image_alt:"+name)]
+    if len(locations)!=1:
+        raise ValueError("Combined starters have missing/duplicate team header")
+    return locations[0]
+
+
 def _reorder(raw):
     name=" ".join(raw.split())
     if "," not in name:return name
@@ -140,6 +155,9 @@ def parse(game,entry,html,observed_at):
         raise ValueError("School source does not show matching game date")
     # Exact final-score frame, not arbitrary game-wide numeric counts.
     head=" ".join(before)
+    layout=entry.get("source_layout","OFFENSE_SUBTABLES")
+    if layout not in ("OFFENSE_SUBTABLES","COMBINED_STARTERS_BY_TEAM"):
+        raise ValueError("Unknown official boxscore starter table layout")
     # School-published boxscores may place the publishing university
     # second even for an away fixture. The exact visible score order must
     # be independently reviewed per official source, never inferred.
@@ -149,15 +167,25 @@ def parse(game,entry,html,observed_at):
     score_pattern=(r"\b"+re.escape(str(game[first+"_score"]))+
                    r"\b.{0,160}\bFinal\b.{0,160}\b"+
                    re.escape(str(game[second+"_score"]))+r"\b")
+    if layout=="COMBINED_STARTERS_BY_TEAM":
+        # Some official school sites present '35 vs 21' instead of the
+        # earlier Sidearm '35 Final 21' game-header format. This variant
+        # is opt-in for an individually reviewed source, and requires an
+        # exact nearby two-sided score frame before the STARTERS section.
+        score_pattern=(r"\b"+re.escape(str(game[first+"_score"]))+
+                       r"\b.{0,90}\bvs\b.{0,90}\b"+
+                       re.escape(str(game[second+"_score"]))+r"\b")
     if re.search(score_pattern,head,re.I|re.S) is None:
         raise ValueError("School final score frame does not match independent ESPN final")
-    offsets={k:_heading(section,alias) for k,alias in aliases.items()}
+    offsets={k:(_combined_heading(section,alias) if layout=="COMBINED_STARTERS_BY_TEAM"
+                else _heading(section,alias)) for k,alias in aliases.items()}
     if offsets["home"]==offsets["away"]:raise ValueError("Overlapping offensive lineup")
     candidates={}
     for side,begin in offsets.items():
-        finish=min([v for k,v in offsets.items() if v>begin]+
-                   [i for i,x in enumerate(section) if i>begin and _norm(x)=="defense"]+
-                   [len(section)])
+        stops=[v for k,v in offsets.items() if v>begin]+[len(section)]
+        if layout=="OFFENSE_SUBTABLES":
+            stops += [i for i,x in enumerate(section) if i>begin and _norm(x)=="defense"]
+        finish=min(stops)
         candidates[side]=_qbs(section,begin,finish)
     for side,qbs in candidates.items():
         reviewed=entry.get(side+"_starting_qb_name")
