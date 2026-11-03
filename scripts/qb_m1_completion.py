@@ -10,6 +10,7 @@ import datetime as dt
 import json
 import math
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from scripts.game_context import parse_time
 from scripts.qb_expected_starters import STATUS as EXPECTED
@@ -110,7 +111,8 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
         raise ValueError("Invalid actual QB switch count")
     if independently_ready and actual_events<MIN_REPLACEMENT_EVENTS:
         raise ValueError("Trainable QB estimator without verified replacement labels")
-    graded=0; baseline=None; qb_mae=None; v04_mae=None; v04_paired=0; v04_source_verified=False
+    graded=0; baseline=None; qb_mae=None; v04_mae=None; v04_paired=0
+    v04_source_verified=False; v04_graded_archive_verified=False
     if grades is not None:
         _trusted(grades,GRADES,"evaluated_at_utc")
         if parse_time(grades["evaluated_at_utc"])>now:
@@ -127,11 +129,45 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
         v04_mae=group.get("same_game_baseline_v04_mae")
         v04_paired=group.get("same_game_baseline_v04_games",0)
         v04_source_verified=group.get("same_game_v04_pregame_source_hashed") is True
+        audit=grades.get("v04_comparison_audit")
+        if isinstance(audit,dict) and audit.get("status")==(
+              "QB_SHADOW_EARLIER_WEBSITE_V04_PAIRED_AUDIT_RESEARCH_ONLY"):
+            scored=[r for r in grades.get("per_game",[])
+                    if "qb_conditional" in r.get("model_results",{})]
+            if len(scored)!=graded or audit.get("qb_candidate_games")!=graded:
+                raise ValueError("Source-hashed V04 paired report grade denominator mismatch")
+            paired=[r for r in scored if isinstance(r.get("v04_paired_reference"),dict)]
+            if audit.get("same_game_v04_pair_count")!=len(paired):
+                raise ValueError("Source-hashed V04 pair count differs from attached receipts")
+            dates=set()
+            for r in paired:
+                z=r["v04_paired_reference"]
+                capture=parse_time(z["capture_utc"])
+                qb_capture=parse_time(z["qb_shadow_observed_utc"])
+                kickoff=parse_time(z["kickoff_utc"])
+                dates.add(kickoff.astimezone(ZoneInfo("America/New_York")).date().isoformat())
+                stamp=z.get("site_snapshot_sha256")
+                if (capture>qb_capture or kickoff<=qb_capture or
+                    not 0<=(qb_capture-capture).total_seconds()<=21600 or
+                    not isinstance(stamp,str) or len(stamp)!=64 or
+                    z.get("source_hashed_before_qb_decision") is not True or
+                    z.get("no_hindsight_recalculation") is not True or
+                    z.get("market_odds_not_used") is not True):
+                    raise ValueError("Untrusted predecision V04 score receipt")
+            if audit.get("distinct_paired_football_dates")!=len(dates):
+                raise ValueError("V04 paired football-date audit mismatch")
+            v04_graded_archive_verified=(
+                audit.get("predecision_source_hashed_no_hindsight") is True and
+                audit.get("fully_matched_cohort") is True and
+                len(dates)>=3 and len(paired)==graded and graded>0)
     measurable=(graded>=MIN_GRADED_GAMES and
+                v04_graded_archive_verified and
                 type(qb_mae) in (int,float) and math.isfinite(qb_mae) and
                 type(v04_mae) in (int,float) and math.isfinite(v04_mae) and
                 type(v04_paired) is int and v04_paired==graded and
-                v04_source_verified and qb_mae < v04_mae)
+                v04_source_verified and
+                type(baseline) in (int,float) and math.isfinite(baseline) and
+                qb_mae < baseline and qb_mae < v04_mae)
     sections={
         "1A_verified_starting_qb_coverage":{
             "engineering_ready":True,
@@ -161,7 +197,10 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
             "same_cohort_required_baseline":"V04_FROZEN_PREDECISION_SAME_GAME",
             "same_game_v04_paired_games":v04_paired,
             "same_game_v04_source_hashed":v04_source_verified,
+            "v04_per_game_source_receipts_verified":v04_graded_archive_verified,
             "requires_independent_v04_comparison":True,
+            "requires_at_least_3_independent_football_dates":True,
+            "requires_improvement_over_v03_no_qb_ablation":True,
             "calibrated_ats_betting_edge":False}
     }
     complete=all(s["evidence_ready"] for s in sections.values()) and independently_ready
