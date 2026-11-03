@@ -120,6 +120,12 @@ def enrich(grade,qb_shadows,source_snapshots):
     result=copy.deepcopy(grade)
     total=0;matched=0;candidate_error=0.;v04_error=0.
     paired_dates=set()
+    same_intake_dates=set()
+    same_intake_eligible=0
+    same_intake_paired=0
+    same_intake_v04_err=0.
+    same_intake_qb_err=0.
+    same_intake_v03_err=0.
     no_pair={}
     for row in result.get("per_game",[]):
         if "qb_conditional" not in row["model_results"]:
@@ -143,7 +149,9 @@ def enrich(grade,qb_shadows,source_snapshots):
             raise ValueError("QB research prediction not frozen on cited run")
         choices=[]
         contemporaneous=original.get("same_intake_v04")
+        row["v04_same_intake_instrumented"]=contemporaneous is not None
         if contemporaneous is not None:
+            same_intake_eligible+=1
             z=contemporaneous
             source=parse_time(z["source_observed_at_utc"])
             scores=parse_time(z["source_score_retrieved_at_utc"])
@@ -203,6 +211,7 @@ def enrich(grade,qb_shadows,source_snapshots):
             reason="NO_SAME_GAME_V04_BEFORE_QB_ISSUE_WITHIN_6H"
             no_pair[reason]=no_pair.get(reason,0)+1
             row["v04_paired_reference"]=None
+            row["v04_missing_reason"]=reason
             continue
         capture,site_run,digest,margin,control=max(choices,key=lambda x:(x[0],x[1]))
         if capture>decision or capture>=kick:
@@ -231,6 +240,12 @@ def enrich(grade,qb_shadows,source_snapshots):
         paired_dates.add(kick.astimezone(ZoneInfo("America/New_York")).date().isoformat())
         v04_error+=pair["v04_abs_error"]
         candidate_error+=pair["qb_conditional_abs_error"]
+        if pair["v04_source_kind"]=="SAME_INTAKE_BEFORE_QB_SHADOW":
+            same_intake_paired+=1
+            same_intake_dates.add(kick.astimezone(ZoneInfo("America/New_York")).date().isoformat())
+            same_intake_v04_err+=pair["v04_abs_error"]
+            same_intake_qb_err+=pair["qb_conditional_abs_error"]
+            same_intake_v03_err+=row["baseline_v03_abs_error"]
     metric=result["metrics"].get("qb_conditional")
     if not isinstance(metric,dict) or metric.get("games",0)!=total:
         raise ValueError("Mismatched QB-conditional grade denominator")
@@ -245,13 +260,31 @@ def enrich(grade,qb_shadows,source_snapshots):
             round(candidate_error/matched,5) if matched else None)
         metric["v04_paired_subset_control_mae"]=(
             round(v04_error/matched,5) if matched else None)
-        metric["v04_control_policy"]="EARLIER_WEBSITE_V04_WITHIN_6_HOURS_AND_24_72H"
+        metric["v04_control_policy"]="SEPARATE_PRIOR_SITE_OR_SAME_INTAKE_FROZEN_V04"
+    metric["post_instrumentation_eligible_qb_games"]=same_intake_eligible
+    metric["post_instrumentation_paired_qb_games"]=same_intake_paired
+    metric["post_instrumentation_pair_fraction"]=(
+        round(same_intake_paired/same_intake_eligible,5) if same_intake_eligible else None)
+    metric["post_instrumentation_qb_mae"]=(
+        round(same_intake_qb_err/same_intake_paired,5) if same_intake_paired else None)
+    metric["post_instrumentation_v04_mae"]=(
+        round(same_intake_v04_err/same_intake_paired,5) if same_intake_paired else None)
+    metric["post_instrumentation_no_qb_v03_mae"]=(
+        round(same_intake_v03_err/same_intake_paired,5) if same_intake_paired else None)
+    metric["post_instrumentation_distinct_game_dates"]=len(same_intake_dates)
     result["v04_comparison_audit"]={
         "status":STATUS,"qb_candidate_games":total,
         "same_game_v04_pair_count":matched,
         "unpaired_game_count":total-matched,
         "reasons_unpaired":no_pair,
         "snapshot_age_limit_hours":MAX_CAPTURE_LAG_HOURS,
+        "post_instrumentation_eligible_games":same_intake_eligible,
+        "post_instrumentation_paired_games":same_intake_paired,
+        "post_instrumentation_pair_fraction":(
+            round(same_intake_paired/same_intake_eligible,5)
+            if same_intake_eligible else None),
+        "post_instrumentation_distinct_game_dates":len(same_intake_dates),
+        "preinstrumentation_games_reported":total-same_intake_eligible,
         "same_intake_frozen_score_pairs":sum(
             r.get("v04_paired_reference",{}).get("v04_source_kind")==
             "SAME_INTAKE_BEFORE_QB_SHADOW" for r in result["per_game"]
