@@ -113,6 +113,9 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
         raise ValueError("Trainable QB estimator without verified replacement labels")
     graded=0; baseline=None; qb_mae=None; v04_mae=None; v04_paired=0
     v04_source_verified=False; v04_graded_archive_verified=False
+    post_paired=0;post_eligible=0;post_coverage=None
+    post_qb_mae=None;post_v04_mae=None;post_v03_mae=None
+    post_dates=0;post_source_verified=False;post_prospective_lift=False
     if grades is not None:
         _trusted(grades,GRADES,"evaluated_at_utc")
         if parse_time(grades["evaluated_at_utc"])>now:
@@ -166,7 +169,63 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
                 audit.get("predecision_source_hashed_no_hindsight") is True and
                 audit.get("fully_matched_cohort") is True and
                 len(dates)>=3 and len(paired)==graded and graded>0)
-    measurable=(graded>=MIN_GRADED_GAMES and
+            if audit.get("post_instrumentation_eligible_games") is not None:
+                source_cohort=[r for r in scored
+                    if r.get("v04_same_intake_instrumented") is True]
+                post_pairs=[r for r in source_cohort
+                    if isinstance(r.get("v04_paired_reference"),dict)]
+                post_dates=len({parse_time(r["v04_paired_reference"]["kickoff_utc"])
+                    .astimezone(ZoneInfo("America/New_York")).date().isoformat()
+                    for r in post_pairs})
+                post_eligible=len(source_cohort)
+                post_paired=len(post_pairs)
+                if (audit["post_instrumentation_eligible_games"]!=post_eligible or
+                    audit.get("post_instrumentation_paired_games")!=post_paired or
+                    audit.get("post_instrumentation_distinct_game_dates")!=post_dates or
+                    group.get("post_instrumentation_eligible_qb_games")!=post_eligible or
+                    group.get("post_instrumentation_paired_qb_games")!=post_paired or
+                    group.get("post_instrumentation_distinct_game_dates")!=post_dates):
+                    raise ValueError("Post-instrumentation source cohort count mismatch")
+                if any(r["v04_paired_reference"].get("v04_source_kind")!=
+                       "SAME_INTAKE_BEFORE_QB_SHADOW" for r in post_pairs):
+                    raise ValueError("Post-instrumentation source was not frozen same-intake V04")
+                post_coverage=post_paired/post_eligible if post_eligible else None
+                if post_eligible and (type(audit.get("post_instrumentation_pair_fraction"))
+                    not in (int,float) or
+                    abs(audit["post_instrumentation_pair_fraction"]-post_coverage)>1e-4):
+                    raise ValueError("Post-instrumentation missingness hidden")
+                if post_paired:
+                    def mean(values):
+                        if any(type(v) not in (int,float) or not math.isfinite(v)
+                               for v in values):
+                            raise ValueError("Untrusted post-instrumentation score")
+                        return sum(values)/len(values)
+                    post_qb_mae=mean([
+                        r["v04_paired_reference"]["qb_conditional_abs_error"]
+                        for r in post_pairs])
+                    post_v04_mae=mean([
+                        r["v04_paired_reference"]["v04_abs_error"]
+                        for r in post_pairs])
+                    post_v03_mae=mean([r["baseline_v03_abs_error"] for r in post_pairs])
+                    for key,computed in (
+                        ("post_instrumentation_qb_mae",post_qb_mae),
+                        ("post_instrumentation_v04_mae",post_v04_mae),
+                        ("post_instrumentation_no_qb_v03_mae",post_v03_mae)):
+                        val=group.get(key)
+                        if type(val) not in (int,float) or not math.isfinite(val) or
+                           abs(val-computed)>1e-4:
+                            raise ValueError("Post-instrumentation same-cohort MAE mismatch")
+                post_source_verified=(audit.get("predecision_source_hashed_no_hindsight") is True
+                     and post_paired>0 and all(
+                         r["v04_paired_reference"].get("source_hashed_before_qb_decision") is True
+                         for r in post_pairs))
+                post_prospective_lift=(
+                    post_source_verified and post_paired>=MIN_GRADED_GAMES and
+                    post_eligible>=MIN_GRADED_GAMES and
+                    post_coverage is not None and post_coverage>=.90 and
+                    post_dates>=3 and post_qb_mae is not None and
+                    post_qb_mae<post_v04_mae and post_qb_mae<post_v03_mae)
+    legacy_measurable=(graded>=MIN_GRADED_GAMES and
                 v04_graded_archive_verified and
                 type(qb_mae) in (int,float) and math.isfinite(qb_mae) and
                 type(v04_mae) in (int,float) and math.isfinite(v04_mae) and
@@ -174,6 +233,7 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
                 v04_source_verified and
                 type(baseline) in (int,float) and math.isfinite(baseline) and
                 qb_mae < baseline and qb_mae < v04_mae)
+    measurable=legacy_measurable or post_prospective_lift
     sections={
         "1A_verified_starting_qb_coverage":{
             "engineering_ready":True,
@@ -205,6 +265,20 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
             "same_game_v04_source_hashed":v04_source_verified,
             "v04_per_game_source_receipts_verified":v04_graded_archive_verified,
             "requires_independent_v04_comparison":True,
+            "post_instrumentation_eligible_games":post_eligible,
+            "post_instrumentation_v04_paired_games":post_paired,
+            "post_instrumentation_pair_fraction":(
+                round(post_coverage,5) if post_coverage is not None else None),
+            "minimum_post_instrumentation_coverage_fraction":.90,
+            "post_instrumentation_distinct_football_dates":post_dates,
+            "post_instrumentation_qb_mae":(
+                round(post_qb_mae,5) if post_qb_mae is not None else None),
+            "post_instrumentation_v04_mae":(
+                round(post_v04_mae,5) if post_v04_mae is not None else None),
+            "post_instrumentation_no_qb_v03_mae":(
+                round(post_v03_mae,5) if post_v03_mae is not None else None),
+            "post_instrumentation_source_verified":post_source_verified,
+            "post_instrumentation_won_same_game_both_baselines":post_prospective_lift,
             "requires_at_least_3_independent_football_dates":True,
             "requires_improvement_over_v03_no_qb_ablation":True,
             "calibrated_ats_betting_edge":False}
