@@ -112,12 +112,19 @@ def freeze(board,now,run_id):
         # V04 decisions are a separate, immutable as-displayed research track.
         # Recompute from the archived board inputs to prevent forged picks.
         research=g.get("v04_market_research")
+        qb_out_not_replaced=any(
+            isinstance(g.get("official_longterm_qb_absence_"+side),dict) and
+            g["official_longterm_qb_absence_"+side].get("status")==
+                "OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW" and
+            g["official_longterm_qb_absence_"+side].get("verified_replacement_starter") is False
+            for side in ("home","away"))
         if research is not None:
             if not isinstance(research,dict) or candidate is None:
                 raise ValueError("V04 research decision without independent score")
             expected_research=v04_decide(
                 candidate,spread,market_total,provider,market_observed,
-                g["kickoff_utc"],now.isoformat(),g.get("qb_starters_verified",0))
+                g["kickoff_utc"],now.isoformat(),g.get("qb_starters_verified",0),
+                qb_confirmed_season_out_unverified_replacement=qb_out_not_replaced)
             if research!=expected_research:
                 raise ValueError("V04 research policy changed or forged")
         # A distinct V05 immutable shadow receipt: no retrospective
@@ -199,6 +206,15 @@ def freeze(board,now,run_id):
             "v04_research_anchored_margin":research["market_anchored_home_margin"] if research else None,
             "v04_research_anchored_total":research["market_anchored_total"] if research else None,
             "v04_research_qb_unknown":research["missing_verified_qb_warning"] if research else None,
+            "v04_research_qb_official_out_unverified_replacement":(
+                research["qb_confirmed_season_out_unverified_replacement"]
+                if research else None),
+            "official_longterm_qb_absence_sources":[
+                {"side":side,"player":g["official_longterm_qb_absence_"+side]["player"],
+                 "source_url":g["official_longterm_qb_absence_"+side]["source_url"],
+                 "first_eligible_at_utc":g["official_longterm_qb_absence_"+side]["first_eligible_at_utc"]}
+                for side in ("home","away")
+                if isinstance(g.get("official_longterm_qb_absence_"+side),dict)],
         })
     if not rows:raise ValueError("No unstarted games to archive")
     rows.sort(key=lambda g:(g["kickoff_utc"],g["game_id"]))

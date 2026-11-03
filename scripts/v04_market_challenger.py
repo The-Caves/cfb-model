@@ -31,7 +31,8 @@ def finite(value):
 
 
 def decide(score, spread, total, provider, quote_utc, kickoff_utc,
-           captured_utc, qb_verified=0):
+           captured_utc, qb_verified=0,
+           qb_confirmed_season_out_unverified_replacement=False):
     """Choose a research side only when evidence clears conservative gates.
 
     The quote and prediction are independent timestamps; a quote observed
@@ -55,6 +56,8 @@ def decide(score, spread, total, provider, quote_utc, kickoff_utc,
         raise ValueError("V04 score values incoherent")
     if type(qb_verified) is not int or qb_verified not in (0, 1, 2):
         raise ValueError("Invalid verified QB coverage")
+    if type(qb_confirmed_season_out_unverified_replacement) is not bool:
+        raise ValueError("Invalid official QB-out risk marker")
     kickoff = parse_time(kickoff_utc)
     captured = parse_time(captured_utc)
     if captured >= kickoff:
@@ -90,6 +93,12 @@ def decide(score, spread, total, provider, quote_utc, kickoff_utc,
 
     ats, ats_reason = side(ats_gap, min_ats, MAX_ATS, "HOME", "AWAY")
     ou, ou_reason = side(total_gap, min_ou, MAX_OU, "OVER", "UNDER")
+    if qb_confirmed_season_out_unverified_replacement:
+        # The base V04 point forecast cannot estimate a verified QB's
+        # replacement value. An official season-out fact is actionable
+        # evidence to ABSTAIN, never an arbitrary spread downgrade.
+        ats = ou = "PASS"
+        ats_reason = ou_reason = "OFFICIAL_QB_SEASON_OUT_REPLACEMENT_NOT_ESTIMATED"
     return {
         "status": STATUS, "policy": POLICY,
         "ats_side": ats, "ou_side": ou,
@@ -104,6 +113,8 @@ def decide(score, spread, total, provider, quote_utc, kickoff_utc,
         "ats_min_gap": min_ats, "ou_min_gap": min_ou,
         "verified_qbs_at_display": qb_verified,
         "missing_verified_qb_warning": qb_unknown,
+        "qb_confirmed_season_out_unverified_replacement":
+              qb_confirmed_season_out_unverified_replacement,
         "quote_observed_at": quote_utc if sp or tt else None,
         "predefined_not_fitted_on_results": True,
         "score_model_promoted": False,
@@ -121,7 +132,8 @@ def apply(board, now):
         raise ValueError("Unexpected dashboard")
     now = parse_time(now) if isinstance(now, str) else now
     summary = {"eligible_v04_games": 0, "ats_research_sides": 0,
-               "ou_research_sides": 0, "qb_uncertain_games": 0}
+               "ou_research_sides": 0, "qb_uncertain_games": 0,
+               "official_qb_out_no_verified_replacement_passes": 0}
     for game in board["games"]:
         game["v04_market_research"] = None
         score = game.get("v04_direct_scores")
@@ -131,17 +143,25 @@ def apply(board, now):
             raise ValueError("Independent V04 cannot rewrite active V03")
         if parse_time(game["kickoff_utc"]) <= now:
             continue
+        outage_unknown = any(
+            isinstance(game.get("official_longterm_qb_absence_"+side),dict) and
+            game["official_longterm_qb_absence_"+side].get("status")==
+                "OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW" and
+            game["official_longterm_qb_absence_"+side].get("verified_replacement_starter") is False
+            for side in ("home","away"))
         result = decide(
             score, game.get("market_home_spread"), game.get("market_total"),
             game.get("market_provider"), game.get("market_observed_utc"),
             game["kickoff_utc"], now.isoformat(),
             game.get("qb_starters_verified", 0),
+            qb_confirmed_season_out_unverified_replacement=outage_unknown,
         )
         game["v04_market_research"] = result
         summary["eligible_v04_games"] += 1
         summary["ats_research_sides"] += result["ats_side"] != "PASS"
         summary["ou_research_sides"] += result["ou_side"] != "PASS"
         summary["qb_uncertain_games"] += result["missing_verified_qb_warning"]
+        summary["official_qb_out_no_verified_replacement_passes"] += outage_unknown
     board["v04_market_research_audit"] = {
         "status": STATUS, "policy": POLICY, **summary,
         "fixed_policy_not_backtested_or_promoted": True,

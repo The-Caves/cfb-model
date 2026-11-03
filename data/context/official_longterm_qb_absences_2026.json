@@ -1,0 +1,19 @@
+{
+  "status": "REVIEWED_OFFICIAL_LONGTERM_QB_ABSENCE_2026_V1",
+  "season": 2026,
+  "records": [
+    {
+      "team": "Mississippi State Bulldogs",
+      "player": "Kamario Taylor",
+      "position": "QB",
+      "designation": "OUT_REMAINDER_2026",
+      "source_type": "OFFICIAL_UNIVERSITY_STATEMENT",
+      "source_url": "https://hailstate.com/news/2026/10/27/football-statements-on-status-of-quarterback-kamario-taylor",
+      "publisher_host": "hailstate.com",
+      "published_date": "2026-10-27",
+      "first_eligible_at_utc": "2026-11-04T00:00:00Z",
+      "human_reviewed": true,
+      "note": "University explicitly announced a season-ending injury; no backup QB or replacement value is inferred."
+    }
+  ]
+}

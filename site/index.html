@@ -563,6 +563,24 @@ function gameCard(g){
    "* V04 directly fits opponent-adjusted team scoring and a separate strength margin from recorded 2026 games. V04 total "+num(v04.total_points)+" · source observed before forecast. Historical results are retrospective; this version is not independently prospectively validated.":
    scoreScenario?"* Illustrated final score uses R1 opponent-adjusted margin and the frozen V03 total ("+num(scoreScenario.scenario_total_points)+"). Not a jointly trained or validated score model.":
    "R1 estimates a margin only; a valid final-score illustration is unavailable."));
+  // Reviewed university sources are future-only; no retrospective
+  // "known absence" is painted onto a game archived before first review.
+  for(const side of ["home","away"]){
+   const absence=g["official_longterm_qb_absence_"+side];
+   if(absence?.status==="OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW" &&
+      absence?.designation==="OUT_REMAINDER_2026" &&
+      /^https:\/\/[^/]+\/news\/2026\//.test(absence.source_url||"")){
+    const note=node("div","biasNote",
+      "University-confirmed QB season absence: "+absence.player+
+      ". Replacement value unmeasured; original scores unchanged. ");
+    const link=node("a","","Official university statement");
+    link.href=absence.source_url;
+    link.target="_blank";
+    link.rel="noopener noreferrer";
+    note.append(link);
+    summary.append(note);
+   }
+  }
   const shadow=v05ShadowScenario(g);
   if(shadow){
    const description="V05 shadow (not promoted): "+
@@ -616,7 +634,10 @@ function gameCard(g){
  if(v04research)el.append(node("div","biasNote",
    "V04 is an unvalidated, market-anchored research policy. "+
    "A PASS means uncertainty; these are not proven betting edges. "+
-   (v04research.missing_verified_qb_warning?"Unconfirmed QB(s): stronger research thresholds applied.":"")));
+   (v04research.qb_confirmed_season_out_unverified_replacement?
+     "Official QB ruled out; replacement value unverified — ATS and O/U: PASS.":
+     v04research.missing_verified_qb_warning?
+     "Unconfirmed QB(s): stronger research thresholds applied.":"")));
  el.append(tiles);
  el.append(playerOutlook(g));
  if(hasQBRisk(g))el.append(node("div","warningMini","QB availability alert · check the source details"));
