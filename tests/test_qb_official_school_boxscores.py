@@ -266,4 +266,46 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
         parsed=parse(game,entry,extra,"2026-11-03T19:29:00Z")
         self.assertIsNone(next(x for x in parsed if x["team"]=="UL Monroe Warhawks")["starter_player"])
 
+    def test_oct31_two_more_verified_school_gamebooks(self):
+        registry=json.loads(Path("config/official_school_qb_boxscores_2026.json").read_text())
+        cases=[
+         ("401869846","Georgia Southern Eagles","App State Mountaineers",19,3,
+          "Georgia Southern","App State","Max Johnson","Malachi Singleton",
+          "https://gseagles.com/sports/football/stats/2026/app-state/boxscore/17433"),
+         ("401856737","Texas Longhorns","Mississippi State Bulldogs",31,3,
+          "Texas","Mississippi St.","Arch Manning","AJ Swann",
+          "https://texaslonghorns.com/sports/football/stats/2026/mississippi-state/boxscore/22501")]
+        for gid,home,away,hs,aws,home_label,away_label,home_qb,away_qb,url in cases:
+            with self.subTest(game_id=gid):
+                matches=[e for e in registry["entries"] if str(e["game_id"])==gid]
+                self.assertEqual(len(matches),1)
+                e=matches[0]
+                self.assertEqual((e["home"],e["away"],e["home_score"],e["away_score"]),
+                                 (home,away,hs,aws))
+                self.assertEqual(e["source_url"],url)
+                self.assertEqual((e["home_starting_qb_name"],e["away_starting_qb_name"]),
+                                 (home_qb,away_qb))
+                game={"game_id":gid,"date":"2026-10-31",
+                      "home":home,"away":away,
+                      "home_score":str(hs),"away_score":str(aws),
+                      "kickoff_utc":e["kickoff_utc"]}
+                def qrow(name):
+                    first,last=name.rsplit(" ",1)
+                    return "<tr><td>7</td><td>"+last+","+first+"</td><td>QB</td></tr>"
+                html=('<div>10/31/2026</div><p>'+away_label+" "+str(aws)+
+                      " Final "+str(hs)+" "+home_label+'</p><h2>Starters</h2>'+
+                      '<img alt="'+away_label+'"><h3>Offense</h3><table>'+
+                      qrow(away_qb)+'</table><img alt="'+home_label+
+                      '"><h3>Offense</h3><table>'+qrow(home_qb)+
+                      '</table><h2>Player Participation</h2>')
+                rows=parse(game,e,html,"2026-11-03T21:46:00Z")
+                self.assertEqual({r["team"]:r["starter_player"] for r in rows},
+                                 {home:home_qb,away:away_qb})
+                self.assertTrue(all(r["label_status"]==LABEL for r in rows))
+                self.assertTrue(all(r["historical_publication_time_verified"] is False
+                                    for r in rows))
+                with self.assertRaisesRegex(ValueError,"score"):
+                    parse(game,e,html.replace(" Final "+str(hs),
+                        " Final "+str(hs+1)),"2026-11-03T21:46:00Z")
+
 if __name__=="__main__":unittest.main()
