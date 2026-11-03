@@ -99,7 +99,7 @@ def evaluate(games,start="2026-09-26",weeks=20):
                  "actual_margin":float(game["home_score"])-float(game["away_score"]),
                  "actual_total":float(game["home_score"])+float(game["away_score"]),
                  "v05_thin_history":full["thin_history_warning"],
-                 "v06_regime_covered":(len(regime["states"][game["home"]]["games"]) if False else
+                 "v06_regime_covered":(
                         regime["states"][game["home"]]["sufficient_comparison"] and
                         regime["states"][game["away"]]["sufficient_comparison"])}
             outputs={"v04":a,"v05_full":full,
