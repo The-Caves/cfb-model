@@ -224,7 +224,9 @@ def compute(root,now=None):
                 expected=v04_decide(
                     v04score,spread,total,x.get("market_provider"),line_at,
                     x["kickoff_utc"],board["capture_utc"],
-                    x.get("qb_verified_at_forecast",0))
+                    x.get("qb_verified_at_forecast",0),
+                    qb_confirmed_season_out_unverified_replacement=x.get(
+                       "v04_research_qb_official_out_unverified_replacement",False))
                 mapping={
                     "status":"v04_research_status",
                     "policy":"v04_research_policy",
@@ -237,6 +239,9 @@ def compute(root,now=None):
                     "market_anchored_home_margin":"v04_research_anchored_margin",
                     "market_anchored_total":"v04_research_anchored_total",
                     "missing_verified_qb_warning":"v04_research_qb_unknown"}
+                if "v04_research_qb_official_out_unverified_replacement" in x:
+                    mapping["qb_confirmed_season_out_unverified_replacement"]=(
+                       "v04_research_qb_official_out_unverified_replacement")
                 if any(expected[k]!=x.get(v) for k,v in mapping.items()):
                     raise ValueError("Archived V04 selection changed")
                 for m,line in (("ats",spread),("ou",total)):
