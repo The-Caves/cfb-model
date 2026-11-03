@@ -6,6 +6,7 @@ capture, within six hours and in the identical pre-kickoff 24–72h cohort,
 may be used as the V04 control. Missing pairs stay missing; model promotion
 remains prohibited and earlier V03 forecasts remain untouched.
 """
+import argparse
 import copy
 import datetime as dt
 import hashlib
@@ -216,3 +217,26 @@ def enrich(grade,qb_shadows,source_snapshots):
         "no_model_promoted":True,
         "betting_status":"PASS_UNVALIDATED"}
     return result
+
+def run(grades_path,output_path):
+    from scripts.candidate_shadow_grade import read_candidates
+    p=Path(grades_path)
+    grade=json.loads(p.read_text(encoding="utf-8"))
+    qb=read_candidates()["qb"]
+    snapshots=read_site_snapshots(qb)
+    record=enrich(grade,qb,snapshots)
+    target=Path(output_path)
+    target.parent.mkdir(parents=True,exist_ok=True)
+    with target.open("x",encoding="utf-8") as dst:
+        json.dump(record,dst,indent=2,sort_keys=True,allow_nan=False)
+        dst.write("\n")
+    print(json.dumps(record["v04_comparison_audit"],sort_keys=True))
+    return record
+
+
+if __name__=="__main__":
+    p=argparse.ArgumentParser()
+    p.add_argument("--grades",required=True)
+    p.add_argument("--output",required=True)
+    args=p.parse_args()
+    run(args.grades,args.output)
