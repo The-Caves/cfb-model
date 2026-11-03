@@ -34,6 +34,17 @@ An independent postgame settlement [41689626364](https://github.com/The-Caves/cf
 
 A reviewed official [University of Oregon boxscore for Northwestern at Oregon on October 31](https://goducks.com/sports/football/stats/2026/northwestern/boxscore/24384) establishes two *postgame* QBs (Northwestern Aidan Chiles, Oregon Dylan Raiola), score 26–34, and exact date/team identity. This source matches an existing pregame-frozen matchup and is added to the official gamebook source registry for fresh postgame archiving; first exposure is **November 3 or later**, not retroactively October 30. It does not establish either team's next starter or identify an in-game replacement effect. The source's live CI capture must pass before counting any new accepted paired labels.
 
+### November 3 expanded official gamebooks and settlement handoff
+
+The verified school gamebook library now covers **9 reviewed football games / 18 literal after-game starter flags**, confirmed by [read-only live source check 41704138741](https://github.com/The-Caves/cfb-model/actions/runs/41704138741), with no source parse failures. Newly reviewed October 31 matchups with *earlier frozen pregame QB candidates* are:
+
+- [Northwestern at Oregon](https://goducks.com/sports/football/stats/2026/northwestern/boxscore/24384), final Oregon 34–26: Northwestern **Aidan Chiles**, Oregon **Dylan Raiola**. The first postgame settlement archived both, bringing the accepted historical starter-label index from **14 to 16**.
+- [Southern Miss at UL Monroe](https://ulmwarhawks.com/sports/football/stats/2026/southern-miss/boxscore/16562), final Southern Miss 35–21: Southern Miss **Landry Lyddy**, ULM **Aidan Armenta**. Parser support for source-reviewed combined team STARTERS tables passed the same live source audit. These additional two **cannot be counted as persisted training labels until a settlement job commits them**, even though the source extractor independently verified them.
+
+GitHub's shared `cfb-context-state` concurrency queue cancelled the newer [settlement 41704138738](https://github.com/The-Caves/cfb-model/actions/runs/41704138738) while the prior [Oregon settlement 41703635420](https://github.com/The-Caves/cfb-model/actions/runs/41703635420) was still processing. This is not a model or source failure; arrange a fresh `[run-settle]` trigger once the older writer completes, and inspect both the append-only starter ledger and `qb-starter-trainability` summary. A single shared archive writer must remain serialized to avoid source-index corruption.
+
+This work improves the ability to *grade* QB starter scenarios; it does **not** resolve the zero confirmed starters for future games or prove injury-specific replacement value. The primary score model remains V04 until separately validated.
+
 ## Milestone 2 — Evolving team and individual intelligence (retained)
 
 **Status: partially implemented, not complete.** Improve opponent-adjusted recent offense/defense, remove schedule and turnover-luck distortions, distinguish genuine structural changes from one-game outliers, and expand positional participant intelligence (QB/rushing, OL, pass rush and coverage). Existing V05/V06 models are separate, V06 covered only **13 of 301** historical heldout games with enough 3-vs-4 evidence on both teams. Require matched, strictly earlier-game score and quality tests, predeclared ablations, useful prospective lift before any live adjustment.
