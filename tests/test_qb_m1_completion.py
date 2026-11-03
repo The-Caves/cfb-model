@@ -116,6 +116,24 @@ class CompletionTests(unittest.TestCase):
         group["same_game_baseline_v04_mae"]=12.1
         group["same_game_baseline_v04_games"]=100
         group["same_game_v04_pregame_source_hashed"]=True
+        # Summary flags without actual game-by-game predecision receipts
+        # must never clear an evidence threshold.
+        no_receipts=assess(*args,now=NOW)
+        self.assertFalse(no_receipts["milestone_1_evidence_complete"])
+        args[4]["per_game"]=[{"game_id":str(i),
+              "model_results":{"qb_conditional":{}},
+              "v04_paired_reference":{
+                  "capture_utc":"2026-11-05T15:30:00Z",
+                  "qb_shadow_observed_utc":"2026-11-05T16:00:00Z",
+                  "site_snapshot_sha256":"a"*64,
+                  "source_hashed_before_qb_decision":True,
+                  "no_hindsight_recalculation":True,
+                  "market_odds_not_used":True}} for i in range(100)]
+        args[4]["v04_comparison_audit"]={
+            "status":"QB_SHADOW_EARLIER_WEBSITE_V04_PAIRED_AUDIT_RESEARCH_ONLY",
+            "qb_candidate_games":100,"same_game_v04_pair_count":100,
+            "fully_matched_cohort":True,
+            "predecision_source_hashed_no_hindsight":True}
         report=assess(*args,now=NOW)
         self.assertTrue(report["milestone_1_evidence_complete"])
         self.assertFalse(report["milestone_1_ready_for_model_promotion"])
@@ -137,5 +155,31 @@ class CompletionTests(unittest.TestCase):
         group["same_game_v04_pregame_source_hashed"]=True
         group["same_game_baseline_v04_mae"]=10.5
         self.assertFalse(assess(*args,now=NOW)["sections"]["1D_prospective_qb_validation"]["evidence_ready"])
+
+    def test_forged_v04_aggregate_with_bad_pairing_is_rejected(self):
+        args=list(inputs())
+        group=args[4]["metrics"]["qb_conditional"]
+        group.update({"games":1,"same_game_baseline_v04_games":1,
+             "same_game_baseline_v04_mae":12.,
+             "same_game_v04_pregame_source_hashed":True})
+        args[4]["v04_comparison_audit"]={
+             "status":"QB_SHADOW_EARLIER_WEBSITE_V04_PAIRED_AUDIT_RESEARCH_ONLY",
+             "qb_candidate_games":1,"same_game_v04_pair_count":1,
+             "fully_matched_cohort":True,"predecision_source_hashed_no_hindsight":True}
+        args[4]["per_game"]=[{"game_id":"123",
+             "model_results":{"qb_conditional":{}},
+             "v04_paired_reference":{
+                 "capture_utc":"2026-11-05T16:02:00Z",
+                 "qb_shadow_observed_utc":"2026-11-05T16:00:00Z",
+                 "site_snapshot_sha256":"a"*64,
+                 "source_hashed_before_qb_decision":True,
+                 "no_hindsight_recalculation":True,
+                 "market_odds_not_used":True}}]
+        with self.assertRaisesRegex(ValueError,"Untrusted predecision"):
+            assess(*args,now=NOW)
+        args[4]["per_game"][0]["v04_paired_reference"]["capture_utc"]="2026-11-05T15:00:00Z"
+        args[4]["v04_comparison_audit"]["same_game_v04_pair_count"]=0
+        with self.assertRaisesRegex(ValueError,"pair count"):
+            assess(*args,now=NOW)
 
 if __name__=="__main__":unittest.main()
