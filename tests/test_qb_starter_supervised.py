@@ -182,4 +182,47 @@ class SupervisedQBTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"Tampered postgame"):
                 read_archives(base)
 
+    def test_grade_frozen_qb_projected_vs_actual_without_hindsight_features(self):
+        base=build([snapshot()],ledger(),registry(),NOW)
+        audit=base["postgame_frozen_starter_projection_audit"]
+        self.assertEqual(audit["INCORRECT_SOURCE_REVIEWED_POSTGAME"],1)
+        self.assertEqual(audit["CORRECT_SOURCE_REVIEWED_POSTGAME"],0)
+        self.assertEqual(audit["graded_known_projections"],1)
+        self.assertEqual(audit["correct_fraction_if_graded"],0.)
+        self.assertTrue(audit["no_crossweek_established_accuracy"])
+        self.assertTrue(audit["postgame_labels_not_pregame_features"])
+        row=base["examples"][0]
+        self.assertEqual(row["pregame_unconfirmed_projected_starter"],"A One")
+        self.assertEqual(row["actual_starter_player"],"A Two")
+        self.assertEqual(row["pregame_projection_postgame_grade"],
+                         "INCORRECT_SOURCE_REVIEWED_POSTGAME")
+        self.assertTrue(row["postgame_label_not_available_at_pregame"])
+        self.assertFalse(base["model_promoted"])
+
+        reg=registry()
+        reg["entries"][0]["home_starting_qb_name"]="A One"
+        correct=build([snapshot()],ledger(player="A One"),reg,NOW)
+        report=correct["postgame_frozen_starter_projection_audit"]
+        self.assertEqual(report["CORRECT_SOURCE_REVIEWED_POSTGAME"],1)
+        self.assertEqual(report["correct_fraction_if_graded"],1.)
+
+    def test_aggregate_preserves_unknown_and_unlisted_projection_as_abstentions(self):
+        missing=snapshot()
+        missing["games"][0]["candidate"]["expected_starters_by_side"]["home"]["player"]=None
+        result=build([missing],ledger(),registry(),NOW)
+        audit=result["postgame_frozen_starter_projection_audit"]
+        self.assertEqual(audit["UNCONFIRMED_UNKNOWN"],1)
+        self.assertEqual(audit["graded_known_projections"],0)
+        self.assertIsNone(audit["correct_fraction_if_graded"])
+        self.assertFalse(result["ready_for_calibrated_starter_training"])
+
+        absent=snapshot()
+        absent["games"][0]["candidate"]["expected_starters_by_side"]["home"]["player"]="Unlisted Player"
+        out=build([absent],ledger(),registry(),NOW)
+        grade=out["postgame_frozen_starter_projection_audit"]
+        self.assertEqual(grade["PREDECISION_PROJECTED_QB_NOT_IN_FROZEN_SCENARIOS"],1)
+        self.assertEqual(grade["graded_known_projections"],0)
+        self.assertIsNone(grade["correct_fraction_if_graded"])
+
+
 if __name__=="__main__":unittest.main()
