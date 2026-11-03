@@ -82,6 +82,16 @@ The original `candidate_shadow_grade` research-grade artifact is not overwritten
 
 [Relevant original validation plan](V04_VALIDATION_READINESS.md). Milestones 2–5 remain the same and shall not be discarded or automatically promoted.
 
+### November 3 production audit: zero legacy V04 matches and source-aligned remedy
+
+The completed [Data Intake 41734586143](https://github.com/The-Caves/cfb-model/actions/runs/41734586143) passed its code checks but the read-only earlier-website comparator found **0 of 45 eligible QB-conditioned frozen grades** with a valid earlier same-game V04 control in the six-hour/24–72h window. This is a missing *capture-coordination* problem, **not evidence that QB adjustment beat V04**. It is explicitly recorded as 45 unmatched and Milestone 1D remains blocked.
+
+The new `qb_v04_same_intake.py` provides a prospective solution: before the QB forecast is generated, the same GitHub Data Intake freezes the independent V04 model's scores using the already retrieved, checksum-bound football score CSV, dated score manifest, and exact as-observed future fixture context. It employs the **same V04 fit/predict functions** as the website, with the same football-day embargo, no future game scores, no V03 total reuse, and no betting lines. The resulting before-QB score receipt is bound by hash to each QB shadow game **before immutable GitHub archival** and later graded on the same selected game and observed final.
+
+These are independent V04 **same-intake research projections**, **not claims that the public website had displayed the exact same number at that instant**. The pre-existing earlier-site comparison remains available for older runs, but same-intake receipts are distinguished in the per-game audit and never mislabeled as website snapshots. Existing historical forecasts are unchanged, and old unpaired examples cannot be backfilled with these new predictions.
+
+Milestone 1D still needs 100+ actually paired, independent future QB forecasts on at least three game dates, and source-authenticated improvement against active V04 and the no-QB ablation. No QB replacement effect is promoted. Milestones 2–5 remain preserved.
+
 ## Milestone 2 — Evolving team and individual intelligence (retained)
 
 **Status: partially implemented, not complete.** Improve opponent-adjusted recent offense/defense, remove schedule and turnover-luck distortions, distinguish genuine structural changes from one-game outliers, and expand positional participant intelligence (QB/rushing, OL, pass rush and coverage). Existing V05/V06 models are separate, V06 covered only **13 of 301** historical heldout games with enough 3-vs-4 evidence on both teams. Require matched, strictly earlier-game score and quality tests, predeclared ablations, useful prospective lift before any live adjustment.
