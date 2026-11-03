@@ -212,8 +212,9 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
                         ("post_instrumentation_v04_mae",post_v04_mae),
                         ("post_instrumentation_no_qb_v03_mae",post_v03_mae)):
                         val=group.get(key)
-                        if type(val) not in (int,float) or not math.isfinite(val) or
-                           abs(val-computed)>1e-4:
+                        if (type(val) not in (int,float) or
+                            not math.isfinite(val) or
+                            abs(val-computed)>1e-4):
                             raise ValueError("Post-instrumentation same-cohort MAE mismatch")
                 post_source_verified=(audit.get("predecision_source_hashed_no_hindsight") is True
                      and post_paired>0 and all(
