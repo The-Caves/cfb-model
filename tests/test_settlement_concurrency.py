@@ -25,7 +25,7 @@ class SettlementQueueTests(unittest.TestCase):
         source=WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("qb_postgame_starter_archive",source)
         self.assertIn("qb_starter_supervised",source)
-        self.assertIn("source review",source.lower())
+        self.assertIn("qb_gamebook_link_discovery",source)
         self.assertIn("--archive-root .context-state",source)
 
 
