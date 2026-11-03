@@ -19,6 +19,9 @@ on:
       - 'tests/test_v05_robust_scores.py'
       - 'tests/test_v05_score_benchmark.py'
       - 'scripts/v04_market_challenger.py'
+      - 'scripts/official_longterm_qb_absences.py'
+      - 'data/context/official_longterm_qb_absences_2026.json'
+      - 'tests/test_official_longterm_qb_absences.py'
       - 'tests/test_v04_market_challenger.py'
       - 'tests/test_v04_direct_scores.py'
       - 'scripts/v04_score_benchmark.py'
@@ -115,6 +118,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_site_home_bias_guard.py' -v
           python -m unittest discover -s tests -p 'test_v04_direct_scores.py' -v
           python -m unittest discover -s tests -p 'test_v04_market_challenger.py' -v
+          python -m unittest discover -s tests -p 'test_official_longterm_qb_absences.py' -v
           python -m unittest discover -s tests -p 'test_v05_robust_scores.py' -v
           python -m unittest discover -s tests -p 'test_v05_score_benchmark.py' -v
       - name: Test source-matched market comparisons
@@ -188,6 +192,12 @@ jobs:
         run: |
           python -m scripts.site_availability --dashboard site/data/dashboard.json | tee /tmp/site-availability.txt
           cat /tmp/site-availability.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Attach university-verified long-term QB outages without rewriting forecasts
+        run: |
+          python -m scripts.official_longterm_qb_absences \
+            --dashboard site/data/dashboard.json \
+            --registry data/context/official_longterm_qb_absences_2026.json | tee /tmp/official-longterm-qb.txt
+          cat /tmp/official-longterm-qb.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Apply independent V04 market-anchored research policy with strict PASS gates
         run: |
           python -m scripts.v04_market_challenger --dashboard site/data/dashboard.json | tee /tmp/v04-research.txt
