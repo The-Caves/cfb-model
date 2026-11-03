@@ -102,10 +102,40 @@ class CompletionTests(unittest.TestCase):
         args[3]["blocking_reasons"]=[]
         args[3]["summary"]["independently_labeled_in_game_qb_replacements"]=25
         args[4]["metrics"]["qb_conditional"]["games"]=100
+        # A winning comparison against V03 alone is not sufficient. V03
+        # was quarantined for home bias and is not the current score model.
+        not_ready=assess(*args,now=NOW)
+        self.assertFalse(not_ready["milestone_1_evidence_complete"])
+        one=not_ready["sections"]["1D_prospective_qb_validation"]
+        self.assertEqual(one["same_cohort_legacy_v03_mae"],11.6)
+        self.assertIsNone(one["same_cohort_baseline_mae"])
+        self.assertFalse(one["same_game_v04_source_hashed"])
+        # A separately verified, exactly paired frozen V04 comparator is
+        # required (synthetic here; no real source record is forged).
+        group=args[4]["metrics"]["qb_conditional"]
+        group["same_game_baseline_v04_mae"]=12.1
+        group["same_game_baseline_v04_games"]=100
+        group["same_game_v04_pregame_source_hashed"]=True
         report=assess(*args,now=NOW)
         self.assertTrue(report["milestone_1_evidence_complete"])
         self.assertFalse(report["milestone_1_ready_for_model_promotion"])
         self.assertFalse(report["model_promoted"])
 
+
+    def test_v04_comparator_requires_exact_source_paired_games(self):
+        args=list(inputs())
+        group=args[4]["metrics"]["qb_conditional"]
+        group.update({"games":100,"margin_mae":11.0,
+                      "same_game_baseline_v04_mae":12.5,
+                      "same_game_baseline_v04_games":99,
+                      "same_game_v04_pregame_source_hashed":True})
+        r=assess(*args,now=NOW)
+        self.assertFalse(r["sections"]["1D_prospective_qb_validation"]["evidence_ready"])
+        group["same_game_baseline_v04_games"]=100
+        group["same_game_v04_pregame_source_hashed"]=False
+        self.assertFalse(assess(*args,now=NOW)["sections"]["1D_prospective_qb_validation"]["evidence_ready"])
+        group["same_game_v04_pregame_source_hashed"]=True
+        group["same_game_baseline_v04_mae"]=10.5
+        self.assertFalse(assess(*args,now=NOW)["sections"]["1D_prospective_qb_validation"]["evidence_ready"])
 
 if __name__=="__main__":unittest.main()

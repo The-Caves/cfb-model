@@ -66,6 +66,10 @@ Newly paired October 31 university gamebooks are [Texas 31–3 Mississippi State
 
 [PR #58](https://github.com/The-Caves/cfb-model/pull/58) added a postgame-frozen-starter scorecard with distinct CORRECT, INCORRECT, UNKNOWN, and projected QB absent from the frozen roster. It estimates a hit rate only from named pregame projections subsequently linked to independently verified starters, and never promotes automatically. The new scorecard requires a fresh settlement after the code merge before its actual-game totals are available. Even then, eight single-date examples are far too few for calibration or any validated QB-related betting claim.
 
+### QB-score promotion safeguard — benchmark the active model, not V03
+
+The QB conditional model's existing prospective grade file compares each forecast to a **V03** reference. V03 was quarantined for substantial home-field bias, so outperforming it does **not** demonstrate improvement over the site's live **V04** independent scores. Milestone 1D now stays blocked until the grader supplies a **same-game, predecision-frozen, source-hashed V04 margin MAE** on exactly the same QB forecast cohort. Synthetic tests include a V03-only false win, wrong-sized pairing, and candidate performance worse than V04. This restriction does not invent missing archived V04 comparisons: the necessary paired V04 grade collector remains future engineering work. No automatic model promotion is permitted.
+
 ## Milestone 2 — Evolving team and individual intelligence (retained)
 
 **Status: partially implemented, not complete.** Improve opponent-adjusted recent offense/defense, remove schedule and turnover-luck distortions, distinguish genuine structural changes from one-game outliers, and expand positional participant intelligence (QB/rushing, OL, pass rush and coverage). Existing V05/V06 models are separate, V06 covered only **13 of 301** historical heldout games with enough 3-vs-4 evidence on both teams. Require matched, strictly earlier-game score and quality tests, predeclared ablations, useful prospective lift before any live adjustment.
