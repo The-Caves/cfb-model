@@ -8,6 +8,7 @@ labels, or prospective held-out forecast lift. The report is research-only.
 import argparse
 import datetime as dt
 import json
+import math
 from pathlib import Path
 
 from scripts.game_context import parse_time
@@ -109,7 +110,7 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
         raise ValueError("Invalid actual QB switch count")
     if independently_ready and actual_events<MIN_REPLACEMENT_EVENTS:
         raise ValueError("Trainable QB estimator without verified replacement labels")
-    graded=0; baseline=None; qb_mae=None
+    graded=0; baseline=None; qb_mae=None; v04_mae=None; v04_paired=0; v04_source_verified=False
     if grades is not None:
         _trusted(grades,GRADES,"evaluated_at_utc")
         if parse_time(grades["evaluated_at_utc"])>now:
@@ -120,12 +121,17 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
             raise ValueError("Invalid paired forecast grade count")
         qb_mae=group.get("margin_mae")
         baseline=group.get("same_game_baseline_v03_mae")
-    # A passing cohort must demonstrate actual score improvement, not merely
-    # existence of results or an estimated points effect from one matchup.
+        # V03 is quarantined because of home bias. Surpassing its MAE
+        # cannot certify a modern QB challenger. Until a separate archived
+        # same-game V04 score comparator is source-verified, keep 1D blocked.
+        v04_mae=group.get("same_game_baseline_v04_mae")
+        v04_paired=group.get("same_game_baseline_v04_games",0)
+        v04_source_verified=group.get("same_game_v04_pregame_source_hashed") is True
     measurable=(graded>=MIN_GRADED_GAMES and
-                type(qb_mae) in (int,float) and
-                type(baseline) in (int,float) and
-                qb_mae < baseline)
+                type(qb_mae) in (int,float) and math.isfinite(qb_mae) and
+                type(v04_mae) in (int,float) and math.isfinite(v04_mae) and
+                type(v04_paired) is int and v04_paired==graded and
+                v04_source_verified and qb_mae < v04_mae)
     sections={
         "1A_verified_starting_qb_coverage":{
             "engineering_ready":True,
@@ -150,7 +156,12 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
             "evidence_ready":measurable and independently_ready,
             "paired_qb_games":graded,"minimum_graded_games":MIN_GRADED_GAMES,
             "qb_candidate_margin_mae":qb_mae,
-            "same_cohort_baseline_mae":baseline,
+            "same_cohort_legacy_v03_mae":baseline,
+            "same_cohort_baseline_mae":v04_mae,
+            "same_cohort_required_baseline":"V04_FROZEN_PREDECISION_SAME_GAME",
+            "same_game_v04_paired_games":v04_paired,
+            "same_game_v04_source_hashed":v04_source_verified,
+            "requires_independent_v04_comparison":True,
             "calibrated_ats_betting_edge":False}
     }
     complete=all(s["evidence_ready"] for s in sections.values()) and independently_ready
