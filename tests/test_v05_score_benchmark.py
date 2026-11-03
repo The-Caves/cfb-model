@@ -21,6 +21,13 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(report["folds"][0]["training_games"],91)
         self.assertEqual(report["folds"][1]["training_games"],104)
         self.assertTrue(all(x["v05_full_total"]>=20. for x in report["predictions"]))
+        self.assertTrue(report["v06_regime_fixed_3_recent_vs_4_prior_ablation"])
+        self.assertTrue(report["v06_only_prior_football_days"])
+        self.assertFalse(report["v06_coach_news_or_unverified_qb_effect_used"])
+        self.assertTrue(0 <= report["v06_evaluable_matched_games"] <= 26)
+        self.assertEqual(report["models"]["v06_no_change"]["games"],26)
+        self.assertTrue(all(x["v06_full_total"]>=20. for x in report["predictions"]))
+        self.assertTrue(all(x["v06_full_total"]<=110. for x in report["predictions"]))
 
     def test_future_targets_cannot_change_predictions(self):
         baseline=evaluate(games(),start="2026-10-24",weeks=1)
