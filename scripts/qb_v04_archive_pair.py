@@ -219,7 +219,7 @@ def enrich(grade,qb_shadows,source_snapshots):
               "capture_utc":capture.isoformat(),
               "qb_shadow_observed_utc":decision.isoformat(),
               "site_snapshot_run_id":site_run,
-              "site_snapshot_sha256":digest,
+              "site_snapshot_sha256":digest if site_run is not None else None,
               "model_forecast_sha256":control["frozen_forecast_sha256"],
               "observation_lag_minutes":round((decision-capture).total_seconds()/60,3),
               "source_hashed_before_qb_decision":True,
