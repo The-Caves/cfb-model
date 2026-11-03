@@ -220,7 +220,7 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
         self.assertTrue(all(r["not_from_passing_leader"] is True for r in rows))
         # This outcome is an *after-game* label, never a 10/30 pregame fact.
         self.assertTrue(all(r["historical_publication_time_verified"] is False for r in rows))
-        with self.assertRaisesRegex(ValueError,"score"):
+        with self.assertRaisesRegex(ValueError,"does not match independently captured game"):
             parse({**game,"away_score":"25"},cfg,page,"2026-11-03T19:22:00Z")
 
 if __name__=="__main__":unittest.main()
