@@ -16,11 +16,13 @@ from scripts.v04_direct_scores import fit as fit_v04, predict as predict_v04
 from scripts.v05_robust_scores import fit as fit_v05, predict as predict_v05
 from scripts.v05_calibration import fit as calibrate, evaluate as grade_intervals
 from scripts.v05_ensemble_scores import blend as fixed_blend
+from scripts.v06_regime_shift import fit as fit_regime, predict as predict_regime
 
 STATUS="V05_PAIRED_WEEKLY_CHRONOLOGICAL_RESEARCH_ONLY"
 VARIANTS=("v04","v05_full","v05_no_form",
           "v05_no_margin_form","v05_no_total_form",
-          "v05_long_memory","v05_no_robust","v04_v05_blend50")
+          "v05_long_memory","v05_no_robust","v04_v05_blend50",
+          "v06_full","v06_no_change","v06_margin_only","v06_scoring_only")
 
 
 def _stats(rows,variant):
@@ -83,6 +85,7 @@ def evaluate(games,start="2026-09-26",weeks=20):
         v05=fit_v05(train,when)
         long_memory=fit_v05(train,when,half_life_days=56.)
         ordinary_ridge=fit_v05(train,when,robust=False)
+        regime=fit_regime(train,when,v05)
         cal=calibrate(all_rows,begin.isoformat(),"v05_full")
         sample=[]
         for game in test:
@@ -95,8 +98,15 @@ def evaluate(games,start="2026-09-26",weeks=20):
                  "home":game["home"],"away":game["away"],
                  "actual_margin":float(game["home_score"])-float(game["away_score"]),
                  "actual_total":float(game["home_score"])+float(game["away_score"]),
-                 "v05_thin_history":full["thin_history_warning"]}
+                 "v05_thin_history":full["thin_history_warning"],
+                 "v06_regime_covered":(len(regime["states"][game["home"]]["games"]) if False else
+                        regime["states"][game["home"]]["sufficient_comparison"] and
+                        regime["states"][game["away"]]["sufficient_comparison"])}
             outputs={"v04":a,"v05_full":full,
+                     "v06_full":predict_regime(regime,v05,game["home"],game["away"],neutral),
+                     "v06_no_change":predict_regime(regime,v05,game["home"],game["away"],neutral,variant="v06_no_change"),
+                     "v06_margin_only":predict_regime(regime,v05,game["home"],game["away"],neutral,variant="v06_margin_only"),
+                     "v06_scoring_only":predict_regime(regime,v05,game["home"],game["away"],neutral,variant="v06_scoring_only"),
                      "v04_v05_blend50":fixed_blend(a,full),
                      "v05_long_memory":predict_v05(long_memory,game["home"],game["away"],neutral),
                      "v05_no_robust":predict_v05(ordinary_ridge,game["home"],game["away"],neutral)}
@@ -182,6 +192,10 @@ def evaluate(games,start="2026-09-26",weeks=20):
                             if all_rows else None,
         "no_automatic_model_selection":True,
         "ensemble_fixed_50_50_predeclared_not_fitted_on_results":True,
+        "v06_regime_fixed_3_recent_vs_4_prior_ablation":True,
+        "v06_evaluable_matched_games":sum(r["v06_regime_covered"] for r in all_rows),
+        "v06_only_prior_football_days":True,
+        "v06_coach_news_or_unverified_qb_effect_used":False,
         "no_prospective_promotion_approved":True,
         "note":"Retrospective 2026 scores may have been revised since kickoff. These paired folds do not establish a live ATS/O-U advantage."
     }
