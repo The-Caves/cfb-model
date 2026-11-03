@@ -123,6 +123,9 @@ class CompletionTests(unittest.TestCase):
         args[4]["per_game"]=[{"game_id":str(i),
               "model_results":{"qb_conditional":{}},
               "v04_paired_reference":{
+                  "kickoff_utc":["2026-11-07T20:00:00Z",
+                                 "2026-11-14T20:00:00Z",
+                                 "2026-11-21T20:00:00Z"][i%3],
                   "capture_utc":"2026-11-05T15:30:00Z",
                   "qb_shadow_observed_utc":"2026-11-05T16:00:00Z",
                   "site_snapshot_sha256":"a"*64,
@@ -132,11 +135,18 @@ class CompletionTests(unittest.TestCase):
         args[4]["v04_comparison_audit"]={
             "status":"QB_SHADOW_EARLIER_WEBSITE_V04_PAIRED_AUDIT_RESEARCH_ONLY",
             "qb_candidate_games":100,"same_game_v04_pair_count":100,
+            "distinct_paired_football_dates":3,
             "fully_matched_cohort":True,
             "predecision_source_hashed_no_hindsight":True}
         report=assess(*args,now=NOW)
         self.assertTrue(report["milestone_1_evidence_complete"])
         self.assertFalse(report["milestone_1_ready_for_model_promotion"])
+        # One football date with many games cannot validate QB effects.
+        single=copy.deepcopy(args)
+        for rec in single[4]["per_game"]:
+            rec["v04_paired_reference"]["kickoff_utc"]="2026-11-07T20:00:00Z"
+        single[4]["v04_comparison_audit"]["distinct_paired_football_dates"]=1
+        self.assertFalse(assess(*single,now=NOW)["milestone_1_evidence_complete"])
         self.assertFalse(report["model_promoted"])
 
 
@@ -165,10 +175,12 @@ class CompletionTests(unittest.TestCase):
         args[4]["v04_comparison_audit"]={
              "status":"QB_SHADOW_EARLIER_WEBSITE_V04_PAIRED_AUDIT_RESEARCH_ONLY",
              "qb_candidate_games":1,"same_game_v04_pair_count":1,
+             "distinct_paired_football_dates":1,
              "fully_matched_cohort":True,"predecision_source_hashed_no_hindsight":True}
         args[4]["per_game"]=[{"game_id":"123",
              "model_results":{"qb_conditional":{}},
              "v04_paired_reference":{
+                 "kickoff_utc":"2026-11-07T20:00:00Z",
                  "capture_utc":"2026-11-05T16:02:00Z",
                  "qb_shadow_observed_utc":"2026-11-05T16:00:00Z",
                  "site_snapshot_sha256":"a"*64,
