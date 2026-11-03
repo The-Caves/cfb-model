@@ -196,6 +196,18 @@ def build(shadows,ledger,reviewed_registry,asof_utc,verify_sources=False):
         unknown=exposure.get("unknown_weight",1.)
         if type(unknown) not in (float,int) or not 0<=unknown<=1:
             raise ValueError("Invalid frozen unknown QB exposure")
+        projected=slot.get("player")
+        if projected is not None and not isinstance(projected,str):
+            raise ValueError("Non-string pregame QB projection")
+        projected_key=player_key(projected or "")
+        if not projected_key:
+            projected_grade="UNCONFIRMED_UNKNOWN"
+        elif projected_key not in names:
+            projected_grade="PREDECISION_PROJECTED_QB_NOT_IN_FROZEN_SCENARIOS"
+        elif projected_key==true_key:
+            projected_grade="CORRECT_SOURCE_REVIEWED_POSTGAME"
+        else:
+            projected_grade="INCORRECT_SOURCE_REVIEWED_POSTGAME"
         features=[]
         for key,(name,player) in sorted(names.items()):
             usage=weights.get(key,0.)
@@ -221,11 +233,28 @@ def build(shadows,ledger,reviewed_registry,asof_utc,verify_sources=False):
             "starter_expected_source_confidence":slot.get("confidence"),
             "unknown_pregame_pass_exposure":unknown,
             "actual_starter_player":actual,
+            "pregame_unconfirmed_projected_starter":projected,
+            "pregame_projection_postgame_grade":projected_grade,
+            "postgame_label_not_available_at_pregame":True,
             "actual_starter_source_url":source["source_url"],
             "actual_starter_source_sha256":source["source_payload_sha256"],
             "actual_starter_observed_utc":source["captured_at_utc"],
             "candidates":features,"not_validated_for_betting":True})
     distinct_dates={parse_time(row["kickoff_utc"]).date().isoformat() for row in examples}
+    postgame_audit={key:sum(x["pregame_projection_postgame_grade"]==key for x in examples)
+        for key in ("CORRECT_SOURCE_REVIEWED_POSTGAME",
+                    "INCORRECT_SOURCE_REVIEWED_POSTGAME",
+                    "UNCONFIRMED_UNKNOWN",
+                    "PREDECISION_PROJECTED_QB_NOT_IN_FROZEN_SCENARIOS")}
+    attempted=(postgame_audit["CORRECT_SOURCE_REVIEWED_POSTGAME"]+
+               postgame_audit["INCORRECT_SOURCE_REVIEWED_POSTGAME"])
+    postgame_audit["graded_known_projections"]=attempted
+    postgame_audit["correct_fraction_if_graded"]=(
+        round(postgame_audit["CORRECT_SOURCE_REVIEWED_POSTGAME"]/attempted,6)
+        if attempted else None)
+    postgame_audit["no_crossweek_established_accuracy"]=len(distinct_dates)<4
+    postgame_audit["no_promoted_starting_qb_confirmation"]=True
+    postgame_audit["postgame_labels_not_pregame_features"]=True
     enough=(len(examples)>=MIN_LABELED_SLOTS and
             len(distinct_dates)>=MIN_DISTINCT_FOOTBALL_DATES and
             accepted_labels>0 and len(examples)/accepted_labels>=MIN_ROSTER_MATCH_FRACTION)
@@ -234,6 +263,7 @@ def build(shadows,ledger,reviewed_registry,asof_utc,verify_sources=False):
         "minimum_labeled_slots":MIN_LABELED_SLOTS,
         "minimum_distinct_game_dates":MIN_DISTINCT_FOOTBALL_DATES,
         "minimum_roster_match_fraction":MIN_ROSTER_MATCH_FRACTION,
+        "postgame_frozen_starter_projection_audit":postgame_audit,
         "summary":{"archived_qb_shadows":len(seen_runs),
             "predecisional_eligible_team_slots":len(selected),
             "independently_accepted_postgame_labels_in_eligible_slots":accepted_labels,

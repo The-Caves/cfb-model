@@ -45,6 +45,19 @@ GitHub's shared `cfb-context-state` concurrency queue cancelled the newer [settl
 
 This work improves the ability to *grade* QB starter scenarios; it does **not** resolve the zero confirmed starters for future games or prove injury-specific replacement value. The primary score model remains V04 until separately validated.
 
+### November 3 QB1/backup gamebook expansion and honest forecast evaluation
+
+University-published offensive STARTERS now have **11 independently reviewed October 24–31 boxscore sources**, yielding **22 actual-starter labels** in a source-only CI capture; 4 newly observed October 31 players are from:
+
+- [Texas 31–3 Mississippi State](https://texaslonghorns.com/sports/football/stats/2026/mississippi-state/boxscore/22501): **Arch Manning**, **AJ Swann** (not team leading-passer inference). Critically, the frozen pregame Mississippi State QB projection was Parker Puckett; the gamebook says Swann. This provides a falsifiable mistake to evaluate, but a hindsight starter switch cannot change the 10/31 frozen spread.
+- [Georgia Southern 19–3 App State](https://gseagles.com/sports/football/stats/2026/app-state/boxscore/17433): **Max Johnson**, **Malachi Singleton**. The Georgia Southern freeze was UNKNOWN, so the grader must count this as abstention, **not** a correct projection.
+
+Official source check [41725949018](https://github.com/The-Caves/cfb-model/actions/runs/41725949018) succeeded with **22/22 unambiguous QB starter flags and zero failed sources**. The postgame ledger and same-cohort trainable-example counts are separate; source acceptance alone does not certify training readiness.
+
+The new `qb_starter_supervised.py` forecast scorecard grades only **already frozen** starter identities against subsequent independently source-verified starters. It distinguishes CORRECT, INCORRECT, UNKNOWN, and pregame projected names missing from its frozen roster; records known-pick accuracy only over graded projections and discloses small-sample/single-week limitations. It never counts postgame source labels as known at prediction time or promotes a QB model based on a few gamebooks.
+
+Neither real game-specific pregame starter coverage nor a causal injury replacement points model is complete. Continue the next prospective football weeks and manual validation of actual official gamebooks before training. The Milestones 2–5 below remain on the roadmap unchanged.
+
 ## Milestone 2 — Evolving team and individual intelligence (retained)
 
 **Status: partially implemented, not complete.** Improve opponent-adjusted recent offense/defense, remove schedule and turnover-luck distortions, distinguish genuine structural changes from one-game outliers, and expand positional participant intelligence (QB/rushing, OL, pass rush and coverage). Existing V05/V06 models are separate, V06 covered only **13 of 301** historical heldout games with enough 3-vs-4 evidence on both teams. Require matched, strictly earlier-game score and quality tests, predeclared ablations, useful prospective lift before any live adjustment.
