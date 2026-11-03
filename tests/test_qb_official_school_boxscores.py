@@ -189,4 +189,38 @@ class OfficialBoxScoreStarterTests(unittest.TestCase):
                   "401858497":"2026-10-24T19:30:00Z",
                   "401858499":"2026-10-24T19:30:00Z",
                   "401858500":"2026-10-24T23:30:00Z"}[gid])
+    def test_oct31_oregon_northwestern_verified_postgame_starters(self):
+        manifest=json.loads(Path("config/official_school_qb_boxscores_2026.json").read_text())
+        matches=[r for r in manifest["entries"] if str(r["game_id"])=="401858505"]
+        self.assertEqual(len(matches),1)
+        cfg=matches[0]
+        self.assertEqual((cfg["home"],cfg["away"],cfg["home_score"],cfg["away_score"]),
+                         ("Oregon Ducks","Northwestern Wildcats",34,26))
+        self.assertEqual(cfg["source_url"],
+                         "https://goducks.com/sports/football/stats/2026/northwestern/boxscore/24384")
+        self.assertEqual((cfg["home_starting_qb_name"],cfg["away_starting_qb_name"]),
+                         ("Dylan Raiola","Aidan Chiles"))
+        game={"game_id":"401858505","date":"2026-10-31",
+              "home":"Oregon Ducks","away":"Northwestern Wildcats",
+              "home_score":"34","away_score":"26",
+              "kickoff_utc":"2026-10-31T19:30:00Z"}
+        page="""<html><main><h1>Northwestern vs Oregon</h1>
+          10/31/2026 Northwestern 26 Final 34 Oregon
+          <h2>Starters</h2>
+          <section><img alt="Northwestern"><h3>Offense</h3>
+          <table><tr><td>0</td><td>Chiles,Aidan</td><td>QB</td></tr></table></section>
+          <section><img alt="Oregon"><h3>Offense</h3>
+          <table><tr><td>8</td><td>Raiola,Dylan</td><td>QB</td></tr></table></section>
+          <h2>Player Participation</h2>
+        </main></html>"""
+        rows=parse(game,cfg,page,"2026-11-03T19:22:00Z")
+        self.assertEqual({r["team"]:r["starter_player"] for r in rows},{
+            "Oregon Ducks":"Dylan Raiola","Northwestern Wildcats":"Aidan Chiles"})
+        self.assertTrue(all(r["label_status"]==LABEL for r in rows))
+        self.assertTrue(all(r["not_from_passing_leader"] is True for r in rows))
+        # This outcome is an *after-game* label, never a 10/30 pregame fact.
+        self.assertTrue(all(r["historical_publication_time_verified"] is False for r in rows))
+        with self.assertRaisesRegex(ValueError,"score"):
+            parse({**game,"away_score":"25"},cfg,page,"2026-11-03T19:22:00Z")
+
 if __name__=="__main__":unittest.main()
