@@ -290,7 +290,7 @@ def build(frozen,joined,expected,passers,training_rows,observed_at_utc):
          "safe_for_betting":False,"betting_status":"PASS_UNVALIDATED"}
 
 def run(forecast_file,joined_file,expected_file,passers_file,games_file,
-        advanced_file,advanced_manifest,score_manifest,output):
+        advanced_file,advanced_manifest,score_manifest,output,v04_file=None):
     frozen=json.loads(Path(forecast_file).read_text())["record"]
     joined=json.loads(Path(joined_file).read_text())
     expected=json.loads(Path(expected_file).read_text())
@@ -299,6 +299,10 @@ def run(forecast_file,joined_file,expected_file,passers_file,games_file,
         games_file,advanced_file,advanced_manifest,score_manifest,joined)
     training=_fixed_rows(games,advanced,parse_time(joined["captured_at_utc"]))
     result=build(frozen,joined,expected,passers,training,dt.datetime.now(dt.timezone.utc).isoformat())
+    if v04_file:
+        from scripts.qb_v04_same_intake import attach
+        v04=json.loads(Path(v04_file).read_text(encoding="utf-8"))
+        result=attach(result,v04)
     path=Path(output);path.parent.mkdir(parents=True,exist_ok=True)
     with path.open("x") as f:json.dump(result,f,indent=2,allow_nan=False);f.write("\n")
     print(json.dumps({"status":STATUS,**result["summary"],
@@ -310,6 +314,7 @@ if __name__=="__main__":
     for key in ("forecast","joined","expected","passers","games","advanced",
                 "advanced-manifest","score-manifest","output"):
         p.add_argument("--"+key,required=True)
+    p.add_argument("--v04")
     a=p.parse_args()
     run(a.forecast,a.joined,a.expected,a.passers,a.games,a.advanced,
-        a.advanced_manifest,a.score_manifest,a.output)
+        a.advanced_manifest,a.score_manifest,a.output,a.v04)
