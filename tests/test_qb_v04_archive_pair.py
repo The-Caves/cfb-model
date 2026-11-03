@@ -18,15 +18,19 @@ QB_TIME="2026-10-29T14:00:00Z"
 
 
 def sample(issued="2026-10-29T13:00:00Z",home="Home",margin=2.):
+    # Test source clock must ALWAYS precede the claimed captured website
+    # snapshot, even for scenarios captured far from the candidate.
+    forecast_stamp=(dt.datetime.fromisoformat(issued.replace("Z","+00:00"))-
+                    dt.timedelta(minutes=10)).isoformat()
     snapshot={
         "status":SITE_STATUS,"schema_version":1,"betting_status":"PASS_UNVALIDATED",
         "capture_utc":issued,"dashboard_run_id":"777",
-        "model_forecast_observed_utc":"2026-10-29T12:00:00Z",
+        "model_forecast_observed_utc":forecast_stamp,
         "model_forecast_sha256":"c"*64,
         "rows":[{
             "game_id":"123","home":home,"away":"Away",
             "kickoff_utc":"2026-10-31T19:00:00Z",
-            "frozen_forecast_observed_utc":"2026-10-29T12:00:00Z",
+            "frozen_forecast_observed_utc":forecast_stamp,
             "frozen_forecast_sha256":"c"*64,
             "v04_direct_score_model":V04_MODEL,
             "v04_direct_home_margin":margin,
