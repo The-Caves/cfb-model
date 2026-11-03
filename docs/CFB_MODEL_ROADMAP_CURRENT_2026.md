@@ -92,6 +92,12 @@ These are independent V04 **same-intake research projections**, **not claims tha
 
 Milestone 1D still needs 100+ actually paired, independent future QB forecasts on at least three game dates, and source-authenticated improvement against active V04 and the no-QB ablation. No QB replacement effect is promoted. Milestones 2–5 remain preserved.
 
+### Predeclared post-instrumentation QA cohort — prevents false perpetual gate failures
+
+The source-hashed V04 collection began only on November 3. Existing 45 previously graded QB research games have **no independently archived contemporaneous V04 score** and will remain visibly unpaired forever; they must not be retroactively supplied one. Requiring all old results to carry the new data would make Milestone 1D structurally impossible. The new audit separately counts **all** graded games (including prior missing baseline controls) and the source-declared **post-instrumentation** QB forecast cohort.
+
+Research readiness can therefore be tested on *the correctly selected post-instrumentation cohort*: at least **100 genuinely paired QB+V04 games**, on **three distinct football dates**, with **at least 90% pairing coverage among all QB-conditional games that were flagged as instrumented before outcomes**. Missing scores count against coverage, not silently removed. The QB model must beat **both V04 and the no-QB V03 research ablation** on the exact same paired games; those control errors are recalculated and checked against the game-level receipts, not accepted from aggregate claims. Game identity, source SHA, predecision/forecast clock and model PASS requirements remain mandatory. This is a *necessary research evidence gate*, not permission for automated promotion or an assertion of injury-causal impacts. Earlier unpaired 45 remain in the performance report.
+
 ## Milestone 2 — Evolving team and individual intelligence (retained)
 
 **Status: partially implemented, not complete.** Improve opponent-adjusted recent offense/defense, remove schedule and turnover-luck distortions, distinguish genuine structural changes from one-game outliers, and expand positional participant intelligence (QB/rushing, OL, pass rush and coverage). Existing V05/V06 models are separate, V06 covered only **13 of 301** historical heldout games with enough 3-vs-4 evidence on both teams. Require matched, strictly earlier-game score and quality tests, predeclared ablations, useful prospective lift before any live adjustment.
