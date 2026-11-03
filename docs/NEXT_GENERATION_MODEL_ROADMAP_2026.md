@@ -1,5 +1,7 @@
 # Next-generation CFB research program — October 30, 2026
 
+> **Current November 3 status:** For the prioritized five-milestone implementation and the Milestone 1 verified-QB acceptance gates, see [CFB_MODEL_ROADMAP_CURRENT_2026.md](CFB_MODEL_ROADMAP_CURRENT_2026.md). This earlier document preserves the original design and is not a declaration that QB starter/replacement evidence is complete. The live website uses V04 independent scoring, with V05 as shadow.
+
 ## Principles
 
 The five milestones are one connected system. Preserve the live V03 forecast and the
