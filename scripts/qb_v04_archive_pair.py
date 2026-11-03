@@ -13,6 +13,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from scripts import context_archive as store
 from scripts.candidate_shadow_archive import validate as verify_candidate
@@ -117,6 +118,7 @@ def enrich(grade,qb_shadows,source_snapshots):
         site.append((capture,run,h,ids))
     result=copy.deepcopy(grade)
     total=0;matched=0;candidate_error=0.;v04_error=0.
+    paired_dates=set()
     no_pair={}
     for row in result.get("per_game",[]):
         if "qb_conditional" not in row["model_results"]:
@@ -175,6 +177,7 @@ def enrich(grade,qb_shadows,source_snapshots):
         if not math.isfinite(outcome):
             raise ValueError("Untrusted actual home margin")
         pair={"v04_frozen_home_margin":margin,
+              "kickoff_utc":original["kickoff_utc"],
               "v04_abs_error":round(abs(margin-outcome),5),
               "qb_conditional_abs_error":row["model_results"]["qb_conditional"]["abs_error"],
               "capture_utc":capture.isoformat(),
@@ -188,6 +191,7 @@ def enrich(grade,qb_shadows,source_snapshots):
               "no_hindsight_recalculation":True}
         row["v04_paired_reference"]=pair
         matched+=1
+        paired_dates.add(kick.astimezone(ZoneInfo("America/New_York")).date().isoformat())
         v04_error+=pair["v04_abs_error"]
         candidate_error+=pair["qb_conditional_abs_error"]
     metric=result["metrics"].get("qb_conditional")
@@ -211,6 +215,7 @@ def enrich(grade,qb_shadows,source_snapshots):
         "unpaired_game_count":total-matched,
         "reasons_unpaired":no_pair,
         "snapshot_age_limit_hours":MAX_CAPTURE_LAG_HOURS,
+        "distinct_paired_football_dates":len(paired_dates),
         "fully_matched_cohort":bool(total and matched==total),
         "predecision_source_hashed_no_hindsight":True,
         "no_market_odds_fit":True,
