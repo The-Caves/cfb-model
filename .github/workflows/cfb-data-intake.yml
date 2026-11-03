@@ -573,6 +573,12 @@ jobs:
         run: |
           python -m scripts.candidate_shadow_grade \
             --output "data/pregame_evidence/qb-venue-grading-${{ github.run_id }}.json"
+      - name: Compare archived QB shadow grades with only earlier SHA-verified V04 website scores
+        run: |
+          python -m scripts.qb_v04_archive_pair \
+            --grades "data/pregame_evidence/qb-venue-grading-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/qb-v04-paired-grading-${{ github.run_id }}.json" | tee /tmp/qb-v04-paired.txt
+          cat /tmp/qb-v04-paired.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Evaluate Milestone 1 completion against independent QB evidence
         run: |
           python -m scripts.qb_m1_completion \
@@ -580,7 +586,7 @@ jobs:
             --coverage "data/pregame_evidence/qb-confirmation-coverage-${{ github.run_id }}.json" \
             --shadow "data/pregame_evidence/qb-conditional-shadow-${{ github.run_id }}.json" \
             --trainability "data/pregame_evidence/step3e-${{ github.run_id }}/qb-trainability-readiness.json" \
-            --grades "data/pregame_evidence/qb-venue-grading-${{ github.run_id }}.json" \
+            --grades "data/pregame_evidence/qb-v04-paired-grading-${{ github.run_id }}.json" \
             --output "data/pregame_evidence/qb-milestone1-completion-${{ github.run_id }}.json" | tee /tmp/qb-m1-completion.log
           cat /tmp/qb-m1-completion.log >> "$GITHUB_STEP_SUMMARY"
           python - <<'PY'
@@ -604,6 +610,7 @@ jobs:
           name: cfb-qb-milestone1-${{ github.run_id }}
           path: |
             data/pregame_evidence/qb-milestone1-completion-*.json
+            data/pregame_evidence/qb-v04-paired-grading-*.json
             data/pregame_evidence/qb-confirmation-coverage-*.json
             data/pregame_evidence/qb-conditional-shadow-*.json
             data/pregame_evidence/step3e-*/qb-trainability-readiness.json
