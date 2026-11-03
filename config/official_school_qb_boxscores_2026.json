@@ -1,7 +1,7 @@
 {
   "status": "MANUALLY_REVIEWED_OFFICIAL_SCHOOL_POSTGAME_BOXSCORES",
   "season": 2026,
-  "notes": "Each source URL has been checked as an official university game-specific boxscore with a literal STARTERS offense QB table, not preseason depth charts or passer volume. Add entries only with reviewed exact game/score identity. Four additional 2026-10-24 official university boxscores reviewed against real final scores and explicit offense QB starters; in Iowa and Michigan State the actual starter is NOT the leading passer. October 31 Oregon vs Northwestern was independently reviewed from University of Oregon Athletics (team/date/final and literal offensive starting-QB table). It is a postgame source, never a backdated pregame QB confirmation. University of Louisiana Monroe October 31 combined team starters page (USM/ULM) has been reviewed for game identity, 35-21 final, and explicit one-QB rows; independently captured pregame forecast remains untouched.",
+  "notes": "Each source URL has been checked as an official university game-specific boxscore with a literal STARTERS offense QB table, not preseason depth charts or passer volume. Add entries only with reviewed exact game/score identity. Four additional 2026-10-24 official university boxscores reviewed against real final scores and explicit offense QB starters; in Iowa and Michigan State the actual starter is NOT the leading passer. October 31 Oregon vs Northwestern was independently reviewed from University of Oregon Athletics (team/date/final and literal offensive starting-QB table). It is a postgame source, never a backdated pregame QB confirmation. University of Louisiana Monroe October 31 combined team starters page (USM/ULM) has been reviewed for game identity, 35-21 final, and explicit one-QB rows; independently captured pregame forecast remains untouched. Verified additional 2026-10-31 Georgia Southern and Texas gamebook starters as *postgame* observations on November 3. Their starter facts must not be backfilled into 10/30 predecision inputs.",
   "entries": [
     {
       "season": 2026,
@@ -182,6 +182,46 @@
       "home_starting_qb_name": "Aidan Armenta",
       "away_starting_qb_name": "Landry Lyddy",
       "reference": "UL Monroe official 2026 Oct 31 football boxscore: Southern Miss 35, ULM 21, one explicitly listed QB in each team starters list; postgame source not a pregame declaration"
+    },
+    {
+      "season": 2026,
+      "game_id": "401869846",
+      "game_date_et": "2026-10-31",
+      "home": "Georgia Southern Eagles",
+      "away": "App State Mountaineers",
+      "home_score": 19,
+      "away_score": 3,
+      "kickoff_utc": "2026-10-31T22:30:00Z",
+      "home_source_label": "Georgia Southern",
+      "away_source_label": "App State",
+      "scoreboard_first_side": "away",
+      "source_url": "https://gseagles.com/sports/football/stats/2026/app-state/boxscore/17433",
+      "publisher_hostname": "gseagles.com",
+      "reviewed_official_publisher": true,
+      "source_section": "Starters > App State/Georgia Southern Offense > QB",
+      "home_starting_qb_name": "Max Johnson",
+      "away_starting_qb_name": "Malachi Singleton",
+      "reference": "Reviewed Georgia Southern University Oct 31 2026 football gamebook, 19–3, with exact two-team starters table"
+    },
+    {
+      "season": 2026,
+      "game_id": "401856737",
+      "game_date_et": "2026-10-31",
+      "home": "Texas Longhorns",
+      "away": "Mississippi State Bulldogs",
+      "home_score": 31,
+      "away_score": 3,
+      "kickoff_utc": "2026-10-31T23:30:00Z",
+      "home_source_label": "Texas",
+      "away_source_label": "Mississippi St.",
+      "scoreboard_first_side": "away",
+      "source_url": "https://texaslonghorns.com/sports/football/stats/2026/mississippi-state/boxscore/22501",
+      "publisher_hostname": "texaslonghorns.com",
+      "reviewed_official_publisher": true,
+      "source_section": "Starters > Mississippi St./Texas Offense > QB",
+      "home_starting_qb_name": "Arch Manning",
+      "away_starting_qb_name": "AJ Swann",
+      "reference": "Reviewed University of Texas Oct 31 official 31–3 Mississippi State gamebook; explicit postgame starter QB list, not leading passer"
     }
   ]
 }
