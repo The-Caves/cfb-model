@@ -10,6 +10,7 @@ the verified QB evidence system remains separate and still incomplete.
 """
 import datetime as dt
 import math
+from statistics import median
 from collections import defaultdict
 from zoneinfo import ZoneInfo
 
@@ -44,10 +45,14 @@ def _signal(records,field,cap):
                 "consistent_recent_games":0,"raw_change":None}
     newest=records[-RECENT:]
     older=records[-HISTORY_MIN:-RECENT]
-    reference=_mean([x[field] for x in older])
-    recent=_mean([x[field] for x in newest])
+    # Median-to-median change is resistant to one unlucky late score
+    # and to a single anomalous game inside the older comparison set.
+    reference=median([x[field] for x in older])
+    recent=median([x[field] for x in newest])
     difference=recent-reference
-    supportive=sum((x[field]-reference)*difference>0 for x in newest)
+    supportive=sum(((x[field]-reference)*difference>0 and
+                    abs(x[field]-reference)>=MIN_MOVE/2)
+                    for x in newest)
     # No post-hoc selection of "best" trend or reacting to one upset.
     if supportive<2 or abs(difference)<MIN_MOVE:
         shift=0.
