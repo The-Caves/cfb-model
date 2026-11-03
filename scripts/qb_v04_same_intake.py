@@ -76,6 +76,68 @@ def build(context,rows,manifest,issued_utc,raw_scores_sha256,raw_manifest_sha256
         "model_promoted":False,"betting_status":"PASS_UNVALIDATED"}
 
 
+def attach(qb,control):
+    """Bind already-frozen same-intake V04 receipts before archiving QB."""
+    if (qb.get("model_promoted") is not False or
+        qb.get("betting_status")!="PASS_UNVALIDATED" or
+        control.get("status")!=STATUS or
+        control.get("model")!=MODEL or
+        control.get("direct_score_fit_uses_v03") is not False or
+        control.get("market_used_for_fit") is not False or
+        control.get("model_promoted") is not False):
+        raise ValueError("Invalid QB/V04 research binding")
+    issued=parse_time(qb["observed_at_utc"])
+    control_at=parse_time(control["observed_at_utc"])
+    scores_at=parse_time(control["score_source_retrieved_at_utc"])
+    fixture_at=parse_time(control["fixture_source_captured_at_utc"])
+    if not scores_at<=fixture_at<=control_at<=issued:
+        raise ValueError("V04 score source observed after QB forecast")
+    lookup={str(r["game_id"]):r for r in control["games"]}
+    if len(lookup)!=len(control["games"]):raise ValueError("Repeated V04 source game")
+    if len({str(r["game_id"]) for r in qb["games"]})!=len(qb["games"]):
+        raise ValueError("Repeated QB scenario game")
+    source_sha=checksum(control)
+    for q in qb["games"]:
+        gid=str(q["game_id"])
+        z=lookup.get(gid)
+        if z is None:raise ValueError("No same-intake V04 forecast for QB scenario")
+        if (q["home"]!=z["home"] or q["away"]!=z["away"] or
+            parse_time(q["kickoff_utc"])!=parse_time(z["kickoff_utc"]) or
+            parse_time(q["kickoff_utc"])<=issued):
+            raise ValueError("Same-intake V04 game/clock changed")
+        prediction=z["v04_direct_score"]
+        if prediction is not None:
+            if (prediction.get("status")!=V04_STATUS or prediction.get("model")!=MODEL or
+                prediction.get("direct_scoring_fit_uses_v03_total") is not False or
+                prediction.get("no_market_lines_in_training") is not True or
+                prediction.get("model_promoted") is not False or
+                prediction.get("source_training_games")!=control["source_training_games"]):
+                raise ValueError("Untrusted same-intake V04 model receipt")
+        q["same_intake_v04"]={
+            "source_class":STATUS,
+            "source_bundle_sha256":source_sha,
+            "source_observed_at_utc":control_at.isoformat(),
+            "source_score_retrieved_at_utc":scores_at.isoformat(),
+            "source_fixture_observed_at_utc":fixture_at.isoformat(),
+            "source_scoreboard_sha256":control["scoreboard_csv_sha256"],
+            "source_manifest_sha256":control["scoreboard_manifest_sha256"],
+            "source_training_rows_sha256":control["training_score_rows_sha256"],
+            "source_context_sha256":control["fixture_context_sha256"],
+            "home_margin":prediction["home_margin"] if prediction else None,
+            "total_points":prediction["total_points"] if prediction else None,
+            "status":prediction["status"] if prediction else "V04_TEAM_NOT_IN_PRIOR_HISTORY",
+            "model":MODEL,
+            "market_used_for_fit":False,
+            "no_v03_scores_used":True,
+            "before_qb_shadow_issued":True,
+            "not_a_published_website_snapshot":True,
+            "model_promoted":False}
+    qb["same_intake_v04_source_sha256"]=source_sha
+    qb["same_intake_v04_source_observed_at_utc"]=control_at.isoformat()
+    qb["summary"]["same_intake_v04_game_scores"]=sum(
+        r["same_intake_v04"]["home_margin"] is not None for r in qb["games"])
+    return qb
+
 def run(context_file,games_csv,manifest_file,output):
     with open(games_csv,newline="",encoding="utf-8") as handle:
         rows=list(csv.DictReader(handle))
