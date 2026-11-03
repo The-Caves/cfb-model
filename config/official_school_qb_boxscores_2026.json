@@ -1,7 +1,7 @@
 {
   "status": "MANUALLY_REVIEWED_OFFICIAL_SCHOOL_POSTGAME_BOXSCORES",
   "season": 2026,
-  "notes": "Each source URL has been checked as an official university game-specific boxscore with a literal STARTERS offense QB table, not preseason depth charts or passer volume. Add entries only with reviewed exact game/score identity. Four additional 2026-10-24 official university boxscores reviewed against real final scores and explicit offense QB starters; in Iowa and Michigan State the actual starter is NOT the leading passer.",
+  "notes": "Each source URL has been checked as an official university game-specific boxscore with a literal STARTERS offense QB table, not preseason depth charts or passer volume. Add entries only with reviewed exact game/score identity. Four additional 2026-10-24 official university boxscores reviewed against real final scores and explicit offense QB starters; in Iowa and Michigan State the actual starter is NOT the leading passer. October 31 Oregon vs Northwestern was independently reviewed from University of Oregon Athletics (team/date/final and literal offensive starting-QB table). It is a postgame source, never a backdated pregame QB confirmation.",
   "entries": [
     {
       "season": 2026,
@@ -141,6 +141,26 @@
       "source_section": "Starters > Southern California/Wisconsin Offense > QB",
       "season": 2026,
       "reviewed_official_publisher": true
+    },
+    {
+      "season": 2026,
+      "game_id": "401858505",
+      "game_date_et": "2026-10-31",
+      "home": "Oregon Ducks",
+      "away": "Northwestern Wildcats",
+      "home_score": 34,
+      "away_score": 26,
+      "kickoff_utc": "2026-10-31T19:30:00Z",
+      "home_source_label": "Oregon",
+      "away_source_label": "Northwestern",
+      "source_url": "https://goducks.com/sports/football/stats/2026/northwestern/boxscore/24384",
+      "publisher_hostname": "goducks.com",
+      "reviewed_official_publisher": true,
+      "scoreboard_first_side": "away",
+      "source_section": "Starters > Northwestern/Oregon Offense > QB",
+      "reference": "University of Oregon Athletics official October 31 Northwestern–Oregon boxscore; 26–34 final, offensive STARTERS list Aidan Chiles and Dylan Raiola",
+      "home_starting_qb_name": "Dylan Raiola",
+      "away_starting_qb_name": "Aidan Chiles"
     }
   ]
 }
