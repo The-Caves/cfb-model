@@ -1,0 +1,52 @@
+# College Football Model — current prioritized roadmap (November 3, 2026)
+
+This is the **current handoff and order of work**. The existing [next-generation design](NEXT_GENERATION_MODEL_ROADMAP_2026.md), [V05 robust scoring](V05_ROBUST_RESEARCH.md), [V06 opponent-adjusted trajectory experiment](V06_REGIME_RESEARCH.md), and [long-term QB source controls](OFFICIAL_LONGTERM_QB_ABSENCE_RESEARCH.md) remain relevant. Nothing in this roadmap authorizes automatic score-model promotion, changing a past prediction, or claiming a validated ATS advantage.
+
+**Current live website:** V04 independent score projections with market-anchored research PASS gates; V05 displayed as shadow, V06 an additional chronological benchmark. V03 remains quarantined for home bias. Frozen predictions and market quotes are archived separately from final labels.
+
+## Milestone 1 — Verified quarterback intelligence (current)
+
+The *engineering* for several components exists, but **the milestone is not complete just because code or CI passes**. The authoritative evidence report is `scripts/qb_m1_completion.py`, stored from every actual Data Intake in `data/pregame_evidence/qb-milestone1-completion-RUN.json` and in the `cfb-qb-milestone1-RUN` artifact.
+
+| Step | Implemented mechanism | Required real-world evidence / completion gate |
+|---|---|---|
+| **1A. Confirm game-specific starters & availability** | Nationwide candidate directory, official-news review worklist, game-week sourced notes, strict independent reviewed-starter history, current scenario rank/counter-source checks. New `qb_longterm_expected` excludes a reviewed university season-OUT player from next-game projected starter scenarios, preserves UNKNOWN, and does not invent QB2 starter status. | At least **25%** of active team-game starter slots explicitly verified pregame for research readiness, with original publisher/observation timestamps. A third-party QB1, season leading passer, availability designation, or reviewed article that mentions a previous game **is not confirmation**. Work toward much higher nationwide coverage. |
+| **1B. Named player historical profiles** | Named passer EPA/play and observed pass shares, within-team comparisons, defensive-opponent prior-date context, last-game roles, experimental passer-exposure scenarios. Existing same-run QB research forecasts are archived. | Demonstrate player-specific observable sample on live prospectively frozen games; past publication revisions are still not authenticated; transfer/rushing/pressure contributions are not yet complete. |
+| **1C. QB1-to-QB2 impact** | `qb_conditional_forecast` & `qb_defense_adjusted_peer` estimate regularized *conditional experimental* margin changes, with no automatic backup penalty. `qb_trainability_audit` blocks independent causal replacement training without verified labels. | At least **25 independently verified replacement participation events**, **60 two-sided starter-reviewed games**, enough labelled games, and *properly timestamped* pregame features/official actual-starter postgame identity. The absence of these labels blocks any claim of a verified QB replacement point value. |
+| **1D. Historical & prospective validation** | Frozen candidate shadows, source-hashed archival, and `candidate_shadow_grade` compare against exactly the same V03 research grades. New `qb_m1_completion` cross-checks same-game IDs, source clocks and sample coverage, and publishes failures explicitly. | At least **100 same-cohort, independently settled QB-conditional research forecasts** with actual margin error improvement against a frozen reference, plus replacement event and starter verification readiness. Test against V04 and a market baseline on the same independent prospective cohort before manual review. |
+
+**Latest known blockers:** reviewed *game-specific* QB coverage remains near zero; current historical Step 3E manifests do not encode independently named actual starters and replacement participation; there are no warranted causal replacement-value coefficients. The official Mississippi State Kamario Taylor season-ending source first becomes eligible for *newly made* reports on November 4 UTC. Previously frozen Texas–Mississippi State forecasts remain unchanged. Official season-OUT plus unverified replacement triggers V04 ATS/O-U research PASS, not a guessed downgrade.
+
+**Step 1A code is integrated, but evidence is not complete.** Do not call Milestone 1 complete or move directly to live QB-adjusted scores until the true evidence tests pass. A newer data-intake report should supersede any dated coverage percentages above.
+
+### Milestone 1 deliverables and operational checks
+
+- `scripts/qb_longterm_expected.py` — future-only long-term QB OUT filter between `qb_expected_starters` and `qb_confirmation_coverage`; preserve playable backups as scenarios, but leave next-game starter UNKNOWN until directly verified.
+- `scripts/qb_m1_completion.py` — combined identity/time/coverage/held-out acceptance report, run after the same-run candidate-shadow grade. `milestone_1_evidence_complete` may remain false indefinitely while real sources are missing: this is the correct behavior.
+- Data Intake publishes `cfb-qb-milestone1-RUN` with QB coverage, shadow, trainability, and completion receipts for review. Run `python -m unittest discover -s tests -p 'test_qb_longterm_expected.py' -v` and `test_qb_m1_completion.py`; then run the full suite and verify an actual Data Intake run.
+- No named QB is manufactured from roster rank or a passing leader; no missing report means healthy; no post-game label becomes a pregame input.
+
+## Milestone 2 — Evolving team and individual intelligence (retained)
+
+**Status: partially implemented, not complete.** Improve opponent-adjusted recent offense/defense, remove schedule and turnover-luck distortions, distinguish genuine structural changes from one-game outliers, and expand positional participant intelligence (QB/rushing, OL, pass rush and coverage). Existing V05/V06 models are separate, V06 covered only **13 of 301** historical heldout games with enough 3-vs-4 evidence on both teams. Require matched, strictly earlier-game score and quality tests, predeclared ablations, useful prospective lift before any live adjustment.
+
+## Milestone 3 — Advanced opponent-specific matchup scoring (retained)
+
+**Status: research prototype.** Connect run-heavy teams versus rushing defense, pass EPA versus pressure/coverage, QB responses to pressure, offensive line vs opponent defensive front, explosive plays, early-down success, fourth-down and red-zone outcomes. Carry explicit unavailable and source-time flags. Train only from time-correct actual matchups and compare each feature family to the unmodified reference on identical future games, not on favorable anecdotes.
+
+## Milestone 4 — Full-game possession simulation (retained)
+
+**Status: prototype, not calibrated.** Derive genuine historical drives, field position, pace, time remaining, possession and scoring event attribution, correlated possessions and overtime handling. Produce SU, ATS, and game-total distributions only after authentic predecision model context and lines are available. Check out-of-sample calibration against independent future scores, including extreme margins and totals.
+
+## Milestone 5 — Independent model competition and promotion (retained)
+
+**Status: paired evaluation infrastructure implemented; predictive superiority unproven.** Compare V04, V05, V06, mixtures, other challengers, and the contemporaneous sportsbook on **exactly the same games**. Freeze each model, line timestamp, QB availability, confidence, PASS, result and cancellation before kickoff. Require independent market close snapshots and multiple prospective weeks. Track winner accuracy, absolute margin/total error, signed bias, ATS/O-U on *actual issued research selections*, PASS coverage, and calibrated edge probabilities. Existing `v05_competition_gate` deliberately forbids automatic promotion, even if a backtest improves.
+
+## Next work after this Milestone 1 engineering pass
+
+1. Review a *new* real intake artifact's verified starter count and actual postgame gamebook starter labels. Prioritize official university/coach statements rather than trying to guess every QB1.
+2. Expand the registry of **verified original source articles** only when the publication and observation timestamps are defensible. Do not backdate newly found sources into previous slates.
+3. Crosswalk independently observed QB1/QB2 past participation with previous team/transfer history, train a calibrated opponent-adjusted replacement challenger from actually verified events, and keep low-coverage games PASS.
+4. Grade it prospectively before promoting, then resume Milestones 2 → 5 in this documented order.
+
+**Non-negotiable:** A green CI run means code works; it does not mean the quarterback evidence or prediction accuracy requirement has been met.

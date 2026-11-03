@@ -373,6 +373,11 @@ jobs:
             --role "data/pregame_evidence/qb-role-features-${{ github.run_id }}.json" \
             --aliases data/archive/2026_team_aliases.csv \
             --output "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json"
+      - name: Exclude university-verified season-out QBs from future projected starters
+        run: |
+          python -m scripts.qb_longterm_expected \
+            --expected "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json" \
+            --registry data/context/official_longterm_qb_absences_2026.json
       - name: Prioritize QB confirmation source review by kickoff and disagreement
         run: |
           python -m scripts.qb_confirmation_coverage \
@@ -568,6 +573,42 @@ jobs:
         run: |
           python -m scripts.candidate_shadow_grade \
             --output "data/pregame_evidence/qb-venue-grading-${{ github.run_id }}.json"
+      - name: Evaluate Milestone 1 completion against independent QB evidence
+        run: |
+          python -m scripts.qb_m1_completion \
+            --expected "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json" \
+            --coverage "data/pregame_evidence/qb-confirmation-coverage-${{ github.run_id }}.json" \
+            --shadow "data/pregame_evidence/qb-conditional-shadow-${{ github.run_id }}.json" \
+            --trainability "data/pregame_evidence/step3e-${{ github.run_id }}/qb-trainability-readiness.json" \
+            --grades "data/pregame_evidence/qb-venue-grading-${{ github.run_id }}.json" \
+            --output "data/pregame_evidence/qb-milestone1-completion-${{ github.run_id }}.json" | tee /tmp/qb-m1-completion.log
+          cat /tmp/qb-m1-completion.log >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import glob,json
+          paths=glob.glob("data/pregame_evidence/qb-milestone1-completion-*.json")
+          assert len(paths)==1
+          report=json.load(open(paths[0]))
+          assert report["status"]=="CFB_MILESTONE1_QB_COMPLETION_AUDIT_V1"
+          assert report["milestone_1_ready_for_model_promotion"] is False
+          assert report["model_promoted"] is False
+          assert report["remaining_roadmap_milestones"]==[
+            "2_Evolving_team_and_individual_intelligence",
+            "3_Advanced_opponent_specific_matchups",
+            "4_Validated_drive_level_game_simulation",
+            "5_Paired_prospective_model_competition"]
+          print("QB Milestone 1 evidence gate frozen; only actual reviewed sources count")
+          PY
+      - name: Upload QB Milestone 1 audit and future development backlog
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-qb-milestone1-${{ github.run_id }}
+          path: |
+            data/pregame_evidence/qb-milestone1-completion-*.json
+            data/pregame_evidence/qb-confirmation-coverage-*.json
+            data/pregame_evidence/qb-conditional-shadow-*.json
+            data/pregame_evidence/step3e-*/qb-trainability-readiness.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload paired shadow model performance audit
         uses: actions/upload-artifact@v4
         with:
