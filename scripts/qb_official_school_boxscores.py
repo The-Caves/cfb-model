@@ -172,9 +172,9 @@ def parse(game,entry,html,observed_at):
         # earlier Sidearm '35 Final 21' game-header format. This variant
         # is opt-in for an individually reviewed source, and requires an
         # exact nearby two-sided score frame before the STARTERS section.
-        score_pattern=(r"\\b"+re.escape(str(game[first+"_score"]))+
-                       r"\\b.{0,90}\\bvs\\b.{0,90}\\b"+
-                       re.escape(str(game[second+"_score"]))+r"\\b")
+        score_pattern=(r"\b"+re.escape(str(game[first+"_score"]))+
+                       r"\b.{0,90}\bvs\b.{0,90}\b"+
+                       re.escape(str(game[second+"_score"]))+r"\b")
     if re.search(score_pattern,head,re.I|re.S) is None:
         raise ValueError("School final score frame does not match independent ESPN final")
     offsets={k:(_combined_heading(section,alias) if layout=="COMBINED_STARTERS_BY_TEAM"
