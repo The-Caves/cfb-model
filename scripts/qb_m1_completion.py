@@ -1,0 +1,197 @@
+"""Milestone 1 acceptance report: distinguish implemented research from real coverage.
+
+Validates exact team/game identities and source-time order across previously
+created expected-QB, confirmation, conditioned shadow, and trainability audits.
+A green CI build cannot substitute for verified starters, independent QB1/QB2
+labels, or prospective held-out forecast lift. The report is research-only.
+"""
+import argparse
+import datetime as dt
+import json
+from pathlib import Path
+
+from scripts.game_context import parse_time
+from scripts.qb_expected_starters import STATUS as EXPECTED
+from scripts.qb_confirmation_coverage import STATUS as COVERAGE
+from scripts.qb_conditional_forecast import STATUS as SHADOW
+from scripts.qb_trainability_audit import STATUS as TRAINABILITY
+from scripts.candidate_shadow_grade import STATUS as GRADES
+
+STATUS="CFB_MILESTONE1_QB_COMPLETION_AUDIT_V1"
+MIN_VERIFIED_SLOTS_FRACTION=.25
+MIN_GRADED_GAMES=100
+MIN_REPLACEMENT_EVENTS=25
+
+
+def _trusted(item,status,clock=None):
+    if (not isinstance(item,dict) or item.get("status")!=status or
+        item.get("betting_status")!="PASS_UNVALIDATED" or
+        item.get("model_promoted") is not False):
+        raise ValueError("Untrusted milestone audit input: "+status)
+    if clock and parse_time(item[clock]).tzinfo is None:
+        raise ValueError("Unzoned source evidence")
+
+
+def assess(expected,coverage,shadow,trainability,grades=None,now=None):
+    _trusted(expected,EXPECTED,"observed_at_utc")
+    _trusted(coverage,COVERAGE,"observed_at_utc")
+    _trusted(shadow,SHADOW,"observed_at_utc")
+    if (not isinstance(trainability,dict) or
+        trainability.get("status")!=TRAINABILITY or
+        trainability.get("betting_status")!="PASS_UNVALIDATED" or
+        trainability.get("automatic_model_promotion") is not False or
+        trainability.get("trained_qb_replacement_value") is not False or
+        not isinstance(trainability.get("checks"),dict)):
+        raise ValueError("Untrusted QB replacement trainability report")
+    now=parse_time(now or dt.datetime.now(dt.timezone.utc).isoformat())
+    clocks=[parse_time(x["observed_at_utc"]) for x in (expected,coverage,shadow)]
+    if any(t>now for t in clocks) or clocks[1]<clocks[0] or clocks[2]<clocks[0]:
+        raise ValueError("QB audit inputs observed outside safe forecast chronology")
+    expected_rows=expected.get("games")
+    coverage_rows=coverage.get("rows")
+    shadow_rows=shadow.get("games")
+    if any(not isinstance(v,list) for v in (expected_rows,coverage_rows,shadow_rows)):
+        raise ValueError("Missing real source-aligned QB row arrays")
+    def slots(rows):
+        result={}
+        for r in rows:
+            key=(str(r["game_id"]),r["team"])
+            if key in result:raise ValueError("Duplicate QB team/game")
+            result[key]=r
+        return result
+    exp=slots(expected_rows)
+    cov=slots(coverage_rows)
+    if set(exp)!=set(cov) or expected.get("team_slots")!=len(exp):
+        raise ValueError("Expected and review QB game/team cohorts differ")
+    fixtures={}
+    for key,e in exp.items():
+        c=cov[key]
+        if (e["team"]!=c["team"] or e["opponent"]!=c["opponent"] or
+            parse_time(e["kickoff_utc"])!=parse_time(c["kickoff_utc"]) or
+            parse_time(e["kickoff_utc"])<=clocks[0] or
+            bool(e["is_confirmed_starter"])!=bool(c["confirmed_starter"]) or
+            e.get("starter")!=c.get("expected_starter")):
+            raise ValueError("QB source/review identity or starter claim changed")
+        gid=key[0]
+        slot=fixtures.setdefault(gid,{"teams":set(),"kickoffs":set()})
+        slot["teams"].add(e["team"])
+        slot["kickoffs"].add(parse_time(e["kickoff_utc"]))
+    if any(len(v["teams"])!=2 or len(v["kickoffs"])!=1 for v in fixtures.values()):
+        raise ValueError("Missing or malformed two-sided football matchup")
+    shadow_games={}
+    for s in shadow_rows:
+        gid=str(s["game_id"])
+        if gid in shadow_games:raise ValueError("Duplicate QB scenario forecast")
+        shadow_games[gid]=s
+        if (s.get("home") not in fixtures.get(gid,{}).get("teams",set()) or
+            s.get("away") not in fixtures[gid]["teams"] or
+            s["home"]==s["away"] or
+            parse_time(s["kickoff_utc"]) not in fixtures[gid]["kickoffs"] or
+            s.get("candidate",{}).get("model_promoted") is not False):
+            raise ValueError("QB shadow is not the same pregame source fixture")
+    if not set(shadow_games).issubset(fixtures):
+        raise ValueError("QB shadow contains unmatched game")
+    confirmed=sum(e["is_confirmed_starter"] is True for e in exp.values())
+    if (confirmed!=coverage.get("summary",{}).get("confirmed") or
+        confirmed!=expected.get("summary",{}).get("confirmed_starters")):
+        raise ValueError("Contradictory verified starter counts")
+    n=len(exp)
+    research_coverage=confirmed/n if n else 0.
+    source_ready=research_coverage>=MIN_VERIFIED_SLOTS_FRACTION
+    conditional=sum(s["candidate"].get("status")=="QB_PLAYER_CONDITIONAL_SHADOW"
+                    for s in shadow_rows)
+    if conditional!=shadow.get("summary",{}).get("games_with_qb_conditional_adjustment"):
+        raise ValueError("Untrusted player-conditioned forecast count")
+    training_checks=trainability["checks"]
+    independently_ready=trainability.get("ready_to_train_injury_qb_model") is True and all(training_checks.values())
+    actual_events=trainability.get("summary",{}).get("independently_labeled_in_game_qb_replacements",0)
+    if type(actual_events) is not int or actual_events<0:
+        raise ValueError("Invalid actual QB switch count")
+    if independently_ready and actual_events<MIN_REPLACEMENT_EVENTS:
+        raise ValueError("Trainable QB estimator without verified replacement labels")
+    graded=0; baseline=None; qb_mae=None
+    if grades is not None:
+        _trusted(grades,GRADES,"evaluated_at_utc")
+        if parse_time(grades["evaluated_at_utc"])>now:
+            raise ValueError("Unobserved future QB shadow grades")
+        group=grades.get("metrics",{}).get("qb_conditional") or {}
+        graded=group.get("games",0)
+        if type(graded) is not int or graded<0:
+            raise ValueError("Invalid paired forecast grade count")
+        qb_mae=group.get("margin_mae")
+        baseline=group.get("same_game_baseline_v03_mae")
+    # A passing cohort must demonstrate actual score improvement, not merely
+    # existence of results or an estimated points effect from one matchup.
+    measurable=(graded>=MIN_GRADED_GAMES and
+                type(qb_mae) in (int,float) and
+                type(baseline) in (int,float) and
+                qb_mae < baseline)
+    sections={
+        "1A_verified_starting_qb_coverage":{
+            "engineering_ready":True,
+            "evidence_ready":source_ready,
+            "confirmed_game_team_slots":confirmed,"future_game_team_slots":n,
+            "verified_fraction":round(research_coverage,5),
+            "minimum_coverage_fraction":MIN_VERIFIED_SLOTS_FRACTION},
+        "1B_qb_specific_historical_profiles":{
+            "engineering_ready":True,
+            "evidence_ready":conditional>0,
+            "prospective_conditional_games":conditional,
+            "historical_publication_time_authenticated":False},
+        "1C_measured_qb_replacement_value":{
+            "engineering_ready":True,
+            "evidence_ready":independently_ready,
+            "actual_independently_labeled_replacements":actual_events,
+            "required_replacement_events":MIN_REPLACEMENT_EVENTS,
+            "trainability_blockers":trainability.get("blocking_reasons",[]),
+            "causal_player_points_validated":False},
+        "1D_prospective_qb_validation":{
+            "engineering_ready":True,
+            "evidence_ready":measurable and independently_ready,
+            "paired_qb_games":graded,"minimum_graded_games":MIN_GRADED_GAMES,
+            "qb_candidate_margin_mae":qb_mae,
+            "same_cohort_baseline_mae":baseline,
+            "calibrated_ats_betting_edge":False}
+    }
+    complete=all(s["evidence_ready"] for s in sections.values()) and independently_ready
+    blocked=[k for k,v in sections.items() if not v["evidence_ready"]]
+    return {"status":STATUS,"season":2026,"asof_utc":now.isoformat(),
+        "engineering_workflow_integrated":True,
+        "milestone_1_evidence_complete":complete,
+        "milestone_1_ready_for_model_promotion":False,
+        "sections":sections,"blocked_sections":blocked,
+        "remaining_roadmap_milestones":[
+            "2_Evolving_team_and_individual_intelligence",
+            "3_Advanced_opponent_specific_matchups",
+            "4_Validated_drive_level_game_simulation",
+            "5_Paired_prospective_model_competition"],
+        "unverified_starter_not_assumed_healthy":True,
+        "historical_forecasts_not_rewritten":True,
+        "automatic_score_adjustment_from_qb_absence":False,
+        "betting_status":"PASS_UNVALIDATED","model_promoted":False}
+
+
+def run(expected,coverage,shadow,trainability,output,grades=None):
+    def load(p):
+        return json.loads(Path(p).read_text(encoding="utf-8"))
+    result=assess(load(expected),load(coverage),load(shadow),
+                  load(trainability),load(grades) if grades else None)
+    path=Path(output)
+    path.parent.mkdir(parents=True,exist_ok=True)
+    if path.exists():raise FileExistsError("Cannot overwrite milestone evidence")
+    path.write_text(json.dumps(result,indent=2,sort_keys=True,allow_nan=False)+"\n",
+                    encoding="utf-8")
+    print(json.dumps({"status":STATUS,
+         "engineering_workflow_integrated":True,
+         "milestone_1_evidence_complete":result["milestone_1_evidence_complete"],
+         "blocked_sections":result["blocked_sections"]},sort_keys=True))
+    return result
+
+
+if __name__=="__main__":
+    p=argparse.ArgumentParser()
+    for name in ("expected","coverage","shadow","trainability","output"):
+        p.add_argument("--"+name,required=True)
+    p.add_argument("--grades")
+    a=p.parse_args()
+    run(a.expected,a.coverage,a.shadow,a.trainability,a.output,a.grades)
