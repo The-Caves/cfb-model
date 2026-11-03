@@ -54,7 +54,10 @@ def _signal(records,field,cap):
                     abs(x[field]-reference)>=MIN_MOVE/2)
                     for x in newest)
     # No post-hoc selection of "best" trend or reacting to one upset.
-    if supportive<2 or abs(difference)<MIN_MOVE:
+    # Require *all three* most recent games to support the same
+    # opponent-adjusted direction. A single rout with two normal results
+    # cannot pass a persistency test.
+    if supportive<RECENT or abs(difference)<MIN_MOVE:
         shift=0.
     else:
         # Prior shrinkage, dead zone and capped effective team score change.
