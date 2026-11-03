@@ -468,6 +468,13 @@ jobs:
           path: data/pregame_evidence/shadow-forecast-*.json
           retention-days: 30
           if-no-files-found: error
+      - name: Freeze same-intake independent V04 baseline BEFORE QB shadow issuance
+        run: |
+          python -m scripts.qb_v04_same_intake \
+            --context data/context/upcoming_game_context_2026.json \
+            --games data/games_2026.csv \
+            --manifest data/manifest.json \
+            --output "data/pregame_evidence/qb-v04-source-${{ github.run_id }}.json"
       - name: Freeze player-conditioned QB performance research predictions (not V03)
         run: |
           python -m scripts.qb_conditional_forecast \
@@ -479,6 +486,7 @@ jobs:
             --advanced data/advanced/team_game_advanced_2026.csv \
             --advanced-manifest data/advanced/advanced_manifest.json \
             --score-manifest data/manifest.json \
+            --v04 "data/pregame_evidence/qb-v04-source-${{ github.run_id }}.json" \
             --output "data/pregame_evidence/qb-conditional-shadow-${{ github.run_id }}.json"
       - name: Persist QB-conditional shadow forecast to immutable GitHub history
         run: |
@@ -489,7 +497,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cfb-qb-conditional-shadow-${{ github.run_id }}
-          path: data/pregame_evidence/qb-conditional-shadow-*.json
+          path: |
+            data/pregame_evidence/qb-conditional-shadow-*.json
+            data/pregame_evidence/qb-v04-source-*.json
           retention-days: 30
           if-no-files-found: error
       - name: Freeze venue and lightly-weighted travel predictions as a second shadow

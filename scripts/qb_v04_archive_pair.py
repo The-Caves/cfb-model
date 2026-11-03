@@ -20,7 +20,8 @@ from scripts.candidate_shadow_archive import validate as verify_candidate
 from scripts.candidate_shadow_grade import STATUS as GRADE_STATUS
 from scripts.game_context import parse_time
 from scripts.site_decision_archive import INDEX as SITE_INDEX, STATUS as SITE_STATUS
-from scripts.v04_direct_scores import MODEL as V04_MODEL
+from scripts.v04_direct_scores import MODEL as V04_MODEL,STATUS as V04_STATUS
+from scripts.qb_v04_same_intake import STATUS as SAME_INTAKE_STATUS
 
 STATUS="QB_SHADOW_EARLIER_WEBSITE_V04_PAIRED_AUDIT_RESEARCH_ONLY"
 MAX_CAPTURE_LAG_HOURS=6
@@ -141,30 +142,63 @@ def enrich(grade,qb_shadows,source_snapshots):
             or abs(float(qb_value)-float(row["model_results"]["qb_conditional"]["prediction"]))>1e-5):
             raise ValueError("QB research prediction not frozen on cited run")
         choices=[]
-        for capture,site_run,digest,records in site:
-            since=(decision-capture).total_seconds()/3600
-            if not 0<=since<=MAX_CAPTURE_LAG_HOURS:continue
-            lead=(kick-capture).total_seconds()/3600
-            if not 24<=lead<=72:continue
-            control=records.get(gid)
-            if control is None:continue
-            if (control.get("home"),control.get("away"),
-                parse_time(control.get("kickoff_utc"))) !=(
-                row["home"],row["away"],kick):
-                raise ValueError("V04 archived team or kickoff differs from QB grade")
-            if control.get("v04_direct_home_margin") is None:continue
-            if (control.get("v04_direct_score_model")!=V04_MODEL or
-                control.get("v04_direct_source_no_v03_total_reuse") is not True or
-                control.get("v04_research_not_promoted") is not True or
-                control.get("home_bias_quarantined") is not True or
-                parse_time(control["frozen_forecast_observed_utc"])>capture or
-                not isinstance(control.get("frozen_forecast_sha256"),str) or
-                len(control["frozen_forecast_sha256"])!=64):
-                raise ValueError("Untrusted independently archived V04 score receipt")
-            margin=control["v04_direct_home_margin"]
-            if type(margin) not in (int,float) or not math.isfinite(margin) or abs(margin)>55:
-                raise ValueError("Invalid frozen V04 score margin")
-            choices.append((capture,site_run,digest,float(margin),control))
+        contemporaneous=original.get("same_intake_v04")
+        if contemporaneous is not None:
+            z=contemporaneous
+            source=parse_time(z["source_observed_at_utc"])
+            scores=parse_time(z["source_score_retrieved_at_utc"])
+            fixture=parse_time(z["source_fixture_observed_at_utc"])
+            digest=z.get("source_bundle_sha256")
+            if (z.get("source_class")!=SAME_INTAKE_STATUS or
+                z.get("model")!=V04_MODEL or
+                z.get("market_used_for_fit") is not False or
+                z.get("no_v03_scores_used") is not True or
+                z.get("before_qb_shadow_issued") is not True or
+                z.get("not_a_published_website_snapshot") is not True or
+                z.get("model_promoted") is not False or
+                digest!=shadow.get("same_intake_v04_source_sha256") or
+                not isinstance(digest,str) or len(digest)!=64 or
+                any(not isinstance(z.get(k),str) or len(z[k])!=64 for k in
+                    ("source_scoreboard_sha256","source_manifest_sha256",
+                     "source_training_rows_sha256","source_context_sha256")) or
+                not scores<=fixture<=source<=decision or
+                source>=kick or z.get("status") not in
+                    (V04_STATUS,"V04_TEAM_NOT_IN_PRIOR_HISTORY")):
+                raise ValueError("Untrusted earlier same-intake V04 score receipt")
+            m=z.get("home_margin")
+            if m is not None:
+                if (z.get("status")!=V04_STATUS or type(m) not in (int,float)
+                    or not math.isfinite(m) or abs(m)>55):
+                    raise ValueError("Invalid same-intake V04 score")
+                choices.append((source,None,digest,float(m),{
+                    "frozen_forecast_sha256":shadow["baseline_forecast_sha256"],
+                    "source_kind":"SAME_INTAKE_BEFORE_QB_SHADOW",
+                    "market_odds_not_used":True}))
+        else:
+          for capture,site_run,digest,records in site:
+              since=(decision-capture).total_seconds()/3600
+              if not 0<=since<=MAX_CAPTURE_LAG_HOURS:continue
+              lead=(kick-capture).total_seconds()/3600
+              if not 24<=lead<=72:continue
+              control=records.get(gid)
+              if control is None:continue
+              if (control.get("home"),control.get("away"),
+                  parse_time(control.get("kickoff_utc"))) !=(
+                  row["home"],row["away"],kick):
+                  raise ValueError("V04 archived team or kickoff differs from QB grade")
+              if control.get("v04_direct_home_margin") is None:continue
+              if (control.get("v04_direct_score_model")!=V04_MODEL or
+                  control.get("v04_direct_source_no_v03_total_reuse") is not True or
+                  control.get("v04_research_not_promoted") is not True or
+                  control.get("home_bias_quarantined") is not True or
+                  parse_time(control["frozen_forecast_observed_utc"])>capture or
+                  not isinstance(control.get("frozen_forecast_sha256"),str) or
+                  len(control["frozen_forecast_sha256"])!=64):
+                  raise ValueError("Untrusted independently archived V04 score receipt")
+              margin=control["v04_direct_home_margin"]
+              if type(margin) not in (int,float) or not math.isfinite(margin) or abs(margin)>55:
+                  raise ValueError("Invalid frozen V04 score margin")
+              choices.append((capture,site_run,digest,float(margin),control))
         if not choices:
             reason="NO_SAME_GAME_V04_BEFORE_QB_ISSUE_WITHIN_6H"
             no_pair[reason]=no_pair.get(reason,0)+1
@@ -177,18 +211,21 @@ def enrich(grade,qb_shadows,source_snapshots):
         if not math.isfinite(outcome):
             raise ValueError("Untrusted actual home margin")
         pair={"v04_frozen_home_margin":margin,
+              "v04_source_kind":control.get("source_kind","EARLIER_WEBSITE_SNAPSHOT"),
+              "v04_source_receipt_sha256":digest,
               "kickoff_utc":original["kickoff_utc"],
               "v04_abs_error":round(abs(margin-outcome),5),
               "qb_conditional_abs_error":row["model_results"]["qb_conditional"]["abs_error"],
               "capture_utc":capture.isoformat(),
               "qb_shadow_observed_utc":decision.isoformat(),
               "site_snapshot_run_id":site_run,
-              "site_snapshot_sha256":digest,
+              "site_snapshot_sha256":digest if site_run is not None else None,
               "model_forecast_sha256":control["frozen_forecast_sha256"],
               "observation_lag_minutes":round((decision-capture).total_seconds()/60,3),
               "source_hashed_before_qb_decision":True,
               "market_odds_not_used":True,
-              "no_hindsight_recalculation":True}
+              "no_hindsight_recalculation":True,
+              "not_claimed_as_simultaneously_published_website_score":True}
         row["v04_paired_reference"]=pair
         matched+=1
         paired_dates.add(kick.astimezone(ZoneInfo("America/New_York")).date().isoformat())
@@ -215,6 +252,10 @@ def enrich(grade,qb_shadows,source_snapshots):
         "unpaired_game_count":total-matched,
         "reasons_unpaired":no_pair,
         "snapshot_age_limit_hours":MAX_CAPTURE_LAG_HOURS,
+        "same_intake_frozen_score_pairs":sum(
+            r.get("v04_paired_reference",{}).get("v04_source_kind")==
+            "SAME_INTAKE_BEFORE_QB_SHADOW" for r in result["per_game"]
+            if r.get("v04_paired_reference") is not None),
         "distinct_paired_football_dates":len(paired_dates),
         "fully_matched_cohort":bool(total and matched==total),
         "predecision_source_hashed_no_hindsight":True,

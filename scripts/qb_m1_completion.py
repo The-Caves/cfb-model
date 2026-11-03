@@ -146,8 +146,14 @@ def assess(expected,coverage,shadow,trainability,grades=None,now=None):
                 qb_capture=parse_time(z["qb_shadow_observed_utc"])
                 kickoff=parse_time(z["kickoff_utc"])
                 dates.add(kickoff.astimezone(ZoneInfo("America/New_York")).date().isoformat())
-                stamp=z.get("site_snapshot_sha256")
-                if (capture>qb_capture or kickoff<=qb_capture or
+                kind=z.get("v04_source_kind","EARLIER_WEBSITE_SNAPSHOT")
+                stamp=z.get("v04_source_receipt_sha256",z.get("site_snapshot_sha256"))
+                if (kind not in ("SAME_INTAKE_BEFORE_QB_SHADOW",
+                                 "EARLIER_WEBSITE_SNAPSHOT") or
+                    (kind=="SAME_INTAKE_BEFORE_QB_SHADOW" and
+                     (z.get("site_snapshot_sha256") is not None or
+                      z.get("site_snapshot_run_id") is not None)) or
+                    capture>qb_capture or kickoff<=qb_capture or
                     not 0<=(qb_capture-capture).total_seconds()<=21600 or
                     not isinstance(stamp,str) or len(stamp)!=64 or
                     z.get("source_hashed_before_qb_decision") is not True or
