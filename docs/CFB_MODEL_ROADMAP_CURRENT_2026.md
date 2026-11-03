@@ -26,6 +26,14 @@ The *engineering* for several components exists, but **the milestone is not comp
 - Data Intake publishes `cfb-qb-milestone1-RUN` with QB coverage, shadow, trainability, and completion receipts for review. Run `python -m unittest discover -s tests -p 'test_qb_longterm_expected.py' -v` and `test_qb_m1_completion.py`; then run the full suite and verify an actual Data Intake run.
 - No named QB is manufactured from roster rank or a passing leader; no missing report means healthy; no post-game label becomes a pregame input.
 
+### November 3 real intake and postgame source evidence
+
+The full Data Intake [41699478351](https://github.com/The-Caves/cfb-model/actions/runs/41699478351) succeeded. Its acceptance artifact measured **148 upcoming team-game slots, zero officially confirmed starters, 127 named unconfirmed projected starters, 71 QB-conditional research forecasts, 45 early prospective QB grades, and zero independently labeled in-game replacements**. QB conditional mean absolute margin error was 12.59498 versus the exact same-cohort V03 reference's 12.60667, not a demonstrated lift.
+
+An independent postgame settlement [41689626364](https://github.com/The-Caves/cfb-model/actions/runs/41689626364) reported **14 accepted postgame QB labels across the archive, zero labels overlapping the 114 eligible frozen pregame team-game slots, and 100 review targets**. The settlement's academic-ready gate remains closed even though official labels are on file.
+
+A reviewed official [University of Oregon boxscore for Northwestern at Oregon on October 31](https://goducks.com/sports/football/stats/2026/northwestern/boxscore/24384) establishes two *postgame* QBs (Northwestern Aidan Chiles, Oregon Dylan Raiola), score 26–34, and exact date/team identity. This source matches an existing pregame-frozen matchup and is added to the official gamebook source registry for fresh postgame archiving; first exposure is **November 3 or later**, not retroactively October 30. It does not establish either team's next starter or identify an in-game replacement effect. The source's live CI capture must pass before counting any new accepted paired labels.
+
 ## Milestone 2 — Evolving team and individual intelligence (retained)
 
 **Status: partially implemented, not complete.** Improve opponent-adjusted recent offense/defense, remove schedule and turnover-luck distortions, distinguish genuine structural changes from one-game outliers, and expand positional participant intelligence (QB/rushing, OL, pass rush and coverage). Existing V05/V06 models are separate, V06 covered only **13 of 301** historical heldout games with enough 3-vs-4 evidence on both teams. Require matched, strictly earlier-game score and quality tests, predeclared ablations, useful prospective lift before any live adjustment.
