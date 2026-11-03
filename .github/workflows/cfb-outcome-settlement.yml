@@ -7,12 +7,16 @@ on:
     - cron: '37 10 * 1,8-12 *'
 permissions:
   contents: write
-concurrency:
-  group: cfb-context-state
-  cancel-in-progress: false
 jobs:
   settle:
     if: github.event_name != 'push' || contains(github.event.head_commit.message, '[run-settle]')
+    # Acquire the shared archive lock ONLY for a job that will actually write.
+    # A top-level workflow lock is acquired even when a push's job is skipped,
+    # and GitHub cancels an older queued settlement to make room for that
+    # irrelevant push. Keep all genuine archive writers serialized.
+    concurrency:
+      group: cfb-context-state
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 18
     env:
