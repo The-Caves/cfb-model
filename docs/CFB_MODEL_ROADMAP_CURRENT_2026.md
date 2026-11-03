@@ -58,6 +58,14 @@ The new `qb_starter_supervised.py` forecast scorecard grades only **already froz
 
 Neither real game-specific pregame starter coverage nor a causal injury replacement points model is complete. Continue the next prospective football weeks and manual validation of actual official gamebooks before training. The Milestones 2–5 below remain on the roadmap unchanged.
 
+### Verified November 3 expanded QB settlement and first QB-selection audit
+
+The completed [settlement 41726199391](https://github.com/The-Caves/cfb-model/actions/runs/41726199391) archived **22 unique actual-starting-QB labels** (zero conflicts) and paired **8** with immutable, 24–72-hour pregame QB shadows on **one football date** (Oct. 31). The manual source backlog fell to **92**. The calibrated replacement model is not ready.
+
+Newly paired October 31 university gamebooks are [Texas 31–3 Mississippi State](https://texaslonghorns.com/sports/football/stats/2026/mississippi-state/boxscore/22501) (Arch Manning, AJ Swann) and [Georgia Southern 19–3 App State](https://gseagles.com/sports/football/stats/2026/app-state/boxscore/17433) (Max Johnson, Malachi Singleton). These are **postgame evidence**, not earlier pregame confirmations. Mississippi State's frozen projected starter was Parker Puckett, not AJ Swann; Georgia Southern's was UNKNOWN. These are diagnostic error and abstention examples.
+
+[PR #58](https://github.com/The-Caves/cfb-model/pull/58) added a postgame-frozen-starter scorecard with distinct CORRECT, INCORRECT, UNKNOWN, and projected QB absent from the frozen roster. It estimates a hit rate only from named pregame projections subsequently linked to independently verified starters, and never promotes automatically. The new scorecard requires a fresh settlement after the code merge before its actual-game totals are available. Even then, eight single-date examples are far too few for calibration or any validated QB-related betting claim.
+
 ## Milestone 2 — Evolving team and individual intelligence (retained)
 
 **Status: partially implemented, not complete.** Improve opponent-adjusted recent offense/defense, remove schedule and turnover-luck distortions, distinguish genuine structural changes from one-game outliers, and expand positional participant intelligence (QB/rushing, OL, pass rush and coverage). Existing V05/V06 models are separate, V06 covered only **13 of 301** historical heldout games with enough 3-vs-4 evidence on both teams. Require matched, strictly earlier-game score and quality tests, predeclared ablations, useful prospective lift before any live adjustment.
