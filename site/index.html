@@ -566,19 +566,23 @@ function gameCard(g){
   // Reviewed university sources are future-only; no retrospective
   // "known absence" is painted onto a game archived before first review.
   for(const side of ["home","away"]){
-   const absence=g["official_longterm_qb_absence_"+side];
-   if(absence?.status==="OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW" &&
-      absence?.designation==="OUT_REMAINDER_2026" &&
-      /^https:\/\/[^/]+\/news\/2026\//.test(absence.source_url||"")){
-    const note=node("div","biasNote",
-      "University-confirmed QB season absence: "+absence.player+
-      ". Replacement value unmeasured; original scores unchanged. ");
-    const link=node("a","","Official university statement");
-    link.href=absence.source_url;
-    link.target="_blank";
-    link.rel="noopener noreferrer";
-    note.append(link);
-    summary.append(note);
+   const recent=g["official_longterm_qb_absences_"+side];
+   const legacy=g["official_longterm_qb_absence_"+side];
+   const absences=Array.isArray(recent)?recent:(legacy?[legacy]:[]);
+   for(const absence of absences){
+    if(absence?.status==="OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW" &&
+       absence?.designation==="OUT_REMAINDER_2026" &&
+       /^https:\/\/[^/]+\/news\/2026\//.test(absence.source_url||"")){
+     const note=node("div","biasNote",
+       "University-confirmed QB season absence: "+absence.player+
+       ". Replacement value unmeasured; original scores unchanged. ");
+     const link=node("a","","Official university statement");
+     link.href=absence.source_url;
+     link.target="_blank";
+     link.rel="noopener noreferrer";
+     note.append(link);
+     summary.append(note);
+    }
    }
   }
   const shadow=v05ShadowScenario(g);
