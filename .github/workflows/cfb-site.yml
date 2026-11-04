@@ -295,6 +295,18 @@ jobs:
           assert d["qb_availability_display"]["confirms_starting_qb"] is False
           assert d["qb_depth_display"]["confirmed_starting_QB_from_chart"] is False
           assert d["qb_depth_display"]["changes_frozen_model_picks"] is False
+          from scripts.site_depthchart import select_pregame_qb
+          assert all(g.get("qb_pregame_"+side)==select_pregame_qb(
+                       g,side,g.get("qb_depth_"+side) or [])
+                     for g in d["games"] for side in ("home","away")), (
+                     "Website QB selection differs from source-reviewed personnel")
+          assert all(g["qb_pregame_"+side]["historical_passing_leader_used"] is False
+                     and g["qb_pregame_"+side]["changes_frozen_model_scores"] is False
+                     for g in d["games"] for side in ("home","away"))
+          assert all(row["player"]==g["qb_pregame_"+row["team_side"]]["player"]
+                     for g in d["games"] for row in g["player_props"]["entries"]
+                     if row["metric"]=="passing_yards"), (
+                     "PlayerForm passing QB does not match game card")
           assert d["matchup_display"]["changes_frozen_model"] is False
           assert d["player_stat_performance"]["player_stat_accuracy_not_market_betting_prop_accuracy"] is True
           props=d["player_prop_display"]
