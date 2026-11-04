@@ -213,6 +213,12 @@ def chart_for_teams(board,alias_file,fetch=download,max_workers=7):
                     "unmatched_index_keys":sorted(k for k in index.pages if k not in key_to_name)[:30],
                     "failures":sorted(failures,key=lambda r:r["team"])[:150]}
 
+def qb_name_key(value):
+    # E.J. Smith, EJ Smith and E J Smith match as the same athlete label
+    # for availability/exclusion checks, without changing team alias rules.
+    return re.sub(r"[^a-z0-9]","",str(value or "").casefold())
+
+
 def select_pregame_qb(game,side,ranks):
     """One conservative identity for display, stat outlook and future research.
 
@@ -229,31 +235,31 @@ def select_pregame_qb(game,side,ranks):
     for row in official:
         if row.get("status") in ("OUT","OUT_FIRST_HALF","DOUBTFUL",
                                   "SUSPENDED","CONFLICT_REVIEW"):
-            blocked.add(normalized(row.get("player")))
+            blocked.add(qb_name_key(row.get("player")))
     for row in longterm:
         if (isinstance(row,dict) and
             row.get("designation")=="OUT_REMAINDER_2026" and
             row.get("status")=="OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW"):
-            blocked.add(normalized(row.get("player")))
+            blocked.add(qb_name_key(row.get("player")))
     blocked.discard("")
     exclusions=[{"player":p["player"],"depth_rank":p["rank"]}
-                for p in ranks if normalized(p["player"]) in blocked]
+                for p in ranks if qb_name_key(p["player"]) in blocked]
     candidate=None;status="UNKNOWN";rank=None;source_url=None;observed=None
     if stated.get("status")=="CONFLICT_REVIEW":
         status="CONFLICT_REVIEW"
     elif stated.get("status")=="CONFIRMED_OFFICIAL" and stated.get("player"):
-        if normalized(stated["player"]) in blocked:
+        if qb_name_key(stated["player"]) in blocked:
             status="CONFLICT_REVIEW"
         else:
             candidate=stated["player"]
             status="CONFIRMED_THIS_GAME"
             rank=next((x["rank"] for x in ranks
-                       if normalized(x["player"])==normalized(candidate)),None)
+                       if qb_name_key(x["player"])==qb_name_key(candidate)),None)
             source_url=stated.get("source_url")
             observed=stated.get("observed_at_utc")
     else:
         first=next((x for x in ranks
-                    if normalized(x["player"]) not in blocked),None)
+                    if qb_name_key(x["player"]) not in blocked),None)
         if first:
             candidate=first["player"]
             status="PROJECTED_DEPTH_CHART"
