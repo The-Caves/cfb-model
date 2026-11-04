@@ -3,7 +3,7 @@
 All writes target context-state only. History uses compressed JSON, leaving the
 main code branch untouched. Workflow token requires contents:write. Never log token.
 """
-import argparse,base64,datetime as dt,gzip,hashlib,json,os,urllib.error,urllib.parse,urllib.request
+import argparse,base64,datetime as dt,gzip,hashlib,http.client,json,os,socket,time,urllib.error,urllib.parse,urllib.request
 from pathlib import Path
 from scripts.context_delta import snapshot_changes
 from scripts.qb_review_archive import close_qb_review
@@ -22,16 +22,29 @@ def api(method,path,payload=None):
                  "X-GitHub-Api-Version":"2022-11-28","User-Agent":"cfb-context-archive/0.1",
                  "Content-Type":"application/json"},
         data=json.dumps(payload).encode() if payload is not None else None)
-    try:
-        with urllib.request.urlopen(request,timeout=20) as resp:return json.loads(resp.read())
-    except urllib.error.HTTPError as exc:
-        if exc.code==404:return None
-        # Git tree 422 can mean eventual blob indexing or a permanent schema
-        # error; expose the bounded public validation message, never headers
-        # or request data containing the GitHub auth token.
-        detail=(exc.read(900).decode("utf-8","replace") if exc.code==422 and
-                method=="POST" and path.endswith("/git/trees") else "")
-        raise RuntimeError(f"GitHub {method} {path} failed with HTTP {exc.code}: {detail}") from exc
+    # A transient GitHub read disconnect must not destroy a long intake job
+    # that has already safely frozen the same original observations. Only
+    # retry idempotent GET requests; never replay create/update writes.
+    attempts=3 if method=="GET" else 1
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(request,timeout=20) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as exc:
+            if exc.code==404:return None
+            if method=="GET" and exc.code in (502,503,504) and attempt+1<attempts:
+                time.sleep(.5*(attempt+1));continue
+            # Git tree 422 can mean eventual blob indexing or permanent
+            # schema error. Never echo credentials or raw request headers.
+            detail=(exc.read(900).decode("utf-8","replace") if exc.code==422 and
+                    method=="POST" and path.endswith("/git/trees") else "")
+            raise RuntimeError(f"GitHub {method} {path} failed with HTTP {exc.code}: {detail}") from exc
+        except (urllib.error.URLError,http.client.RemoteDisconnected,
+                ConnectionResetError,TimeoutError,socket.timeout) as exc:
+            if attempt+1<attempts:
+                time.sleep(.5*(attempt+1));continue
+            raise RuntimeError(
+                f"GitHub {method} {path} temporary connection failure: {type(exc).__name__}") from exc
 def repo_path():
     repo=os.environ.get("GITHUB_REPOSITORY","")
     if repo.count("/")!=1:raise ValueError("GITHUB_REPOSITORY not set")
