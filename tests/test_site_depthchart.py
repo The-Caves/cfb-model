@@ -2,7 +2,7 @@
 import datetime as dt,unittest,json,tempfile
 from pathlib import Path
 from scripts.site_depthchart import (INDEX,SOURCE,IndexParser,TableParser,
-    extract_chart,overlay,chart_for_teams,clean_name,normalized,candidate_name,source_updated,run,depth_link,select_pregame_qb)
+    extract_chart,overlay,chart_for_teams,clean_name,normalized,candidate_name,source_updated,run,depth_link,select_pregame_qb,qb_name_key)
 UTC=dt.timezone.utc
 NOW=dt.datetime(2026,10,24,14,tzinfo=UTC)
 def board():
@@ -76,6 +76,24 @@ class DepthTests(unittest.TestCase):
         q=overlay(b,{"Mississippi State Bulldogs":chart()},NOW)["games"][0]["qb_pregame_home"]
         self.assertEqual(q["status"],"CONFLICT_REVIEW")
         self.assertIsNone(q["player"])
+
+    def test_initials_in_official_absence_match_dotted_chart_name(self):
+        self.assertEqual(qb_name_key("E.J. Archield"),qb_name_key("EJ Archield"))
+        b=board()
+        b["games"][0]["qb_availability_home"]=[
+            {"player":"EJ Archield","status":"OUT"}]
+        ranks=[
+            {"player":"E.J. Archield","rank":1,
+             "source_url":"https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?id=123&s=msu",
+             "observed_at_utc":"2026-10-24T13:00:00Z"},
+            {"player":"Another QB","rank":2,
+             "source_url":"https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?id=123&s=msu",
+             "observed_at_utc":"2026-10-24T13:00:00Z"}]
+        q=select_pregame_qb(b["games"][0],"home",ranks)
+        self.assertEqual(q["player"],"Another QB")
+        self.assertEqual(q["depth_rank"],2)
+        self.assertEqual([x["player"] for x in q["excluded_chart_candidates"]],
+                         ["E.J. Archield"])
 
     def test_no_current_chart_never_selects_prior_passing_leader(self):
         result=overlay(board(),{},NOW)
