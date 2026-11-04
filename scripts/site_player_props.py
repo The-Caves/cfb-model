@@ -120,6 +120,9 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
         for kick,val,name in items:by_id_prior[(pid,stat)].append((kick,val))
     for history in (curr,by_id_prior):
         for val in history.values():val.sort(key=lambda r:r[0])
+    # Keep the player identity across passing and rushing stat categories:
+    # an injured QB must not reappear as a rushing-yard candidate.
+    qb_athletes={(pid,team) for (pid,team,stat) in curr if stat=="passing_yards"}
     # First build opponent defense from all PRIOR completed real 2026 games.
     from_game=defaultdict(lambda:defaultdict(list))
     teams_by_game={}
@@ -176,8 +179,37 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                                       g.get("player_availability_"+side,[]))
                           if _name(a.get("player"))==_name(name)]
                 reported_statuses={a.get("status") for a in matching}
+                # Official university season-OUT announcements are separate
+                # from conference game reports. Historical box-score volume
+                # MUST NOT restore an unavailable QB to a current stat card.
+                outages=g.get("official_longterm_qb_absences_"+side)
+                if outages is None:
+                    legacy=g.get("official_longterm_qb_absence_"+side)
+                    outages=[legacy] if isinstance(legacy,dict) else []
+                is_qb=stat=="passing_yards" or (pid,teamid) in qb_athletes
+                out_player=next((a for a in outages
+                    if isinstance(a,dict) and a.get("position")=="QB" and
+                    a.get("designation")=="OUT_REMAINDER_2026" and
+                    a.get("status")=="OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW" and
+                    _name(a.get("player"))==_name(name)),None) if is_qb else None
+                if out_player:
+                    blocked["OFFICIAL_UNIVERSITY_SEASON_OUT_QB"]+=1
+                    continue
                 if reported_statuses & (NO_OPENING_START|{"CONFLICT_REVIEW"}):
                     blocked["OFFICIAL_PLAYER_REPORTED_UNAVAILABLE_OR_CONFLICT"]+=1
+                    continue
+                # Where an independently reviewed game-specific QB starter is
+                # known, an alternate passer is a conditional backup, not a
+                # credible active starter prop for this exact game.
+                starter=g.get("qb_"+side) or {}
+                if (stat=="passing_yards" and
+                    starter.get("status")=="CONFIRMED_OFFICIAL" and
+                    _name(starter.get("player"))!=_name(name)):
+                    blocked["OTHER_QB_WHEN_STARTER_CONFIRMED"]+=1
+                    continue
+                if (stat=="passing_yards" and
+                    starter.get("status")=="CONFLICT_REVIEW"):
+                    blocked["OFFICIAL_STARTER_EVIDENCE_CONFLICT"]+=1
                     continue
                 official_status=(next(iter(reported_statuses)) if len(reported_statuses)==1
                                  else "CONFLICT_REVIEW" if len(reported_statuses)>1
