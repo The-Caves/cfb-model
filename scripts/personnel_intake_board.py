@@ -174,9 +174,16 @@ def build(context, expected, registry, observed_at_utc):
                 "kickoff_utc": g["kickoff_utc"], "observed_at_utc": now.isoformat(),
                 "report_coverage": injury["coverage_status"],
                 "unlisted_player_status": "UNKNOWN",
-                "current_qb_candidate": None if conflict else candidate,
+                # Only directly reviewed THIS-game starter evidence may
+                # populate the model-eligible starter field. The separate
+                # historical/chart candidate remains a scenario, never a
+                # factual answer to "who starts?".
+                "current_qb_candidate": candidate if confirmed and not conflict else None,
+                "historical_or_chart_qb_scenario": candidate if
+                    starter_evidence == "PROJECTED_NOT_CONFIRMED" else None,
                 "current_qb_evidence": starter_evidence,
                 "confirmed_qb_starter": bool(confirmed and not conflict),
+                "starter_eligible_for_model_input": bool(confirmed and not conflict),
                 "qb_candidate_not_participation_confirmation": True,
                 "players": observed_players,
                 "quarantined_evidence": injury["quarantined_evidence"],
