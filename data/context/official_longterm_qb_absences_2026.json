@@ -14,6 +14,32 @@
       "first_eligible_at_utc": "2026-11-04T00:00:00Z",
       "human_reviewed": true,
       "note": "University explicitly announced a season-ending injury; no backup QB or replacement value is inferred."
+    },
+    {
+      "team": "Miami (OH) RedHawks",
+      "player": "David McComb",
+      "position": "QB",
+      "designation": "OUT_REMAINDER_2026",
+      "source_type": "OFFICIAL_UNIVERSITY_STATEMENT",
+      "source_url": "https://miamiredhawks.com/news/2026/10/29/football-redhawks-put-win-streak-on-the-line-versus-buffalo-on-tuesday",
+      "publisher_host": "miamiredhawks.com",
+      "published_date": "2026-10-29",
+      "first_eligible_at_utc": "2026-11-03T23:43:37Z",
+      "human_reviewed": true,
+      "note": "Official Miami University preview documents season-ending quarterback absence. Expected successor Caleb Heavner is not an independently confirmed game-day starter. Newly observed reports only; never backfill past forecast inputs."
+    },
+    {
+      "team": "Miami (OH) RedHawks",
+      "player": "Thomas Gotkowski",
+      "position": "QB",
+      "designation": "OUT_REMAINDER_2026",
+      "source_type": "OFFICIAL_UNIVERSITY_STATEMENT",
+      "source_url": "https://miamiredhawks.com/news/2026/10/29/football-redhawks-put-win-streak-on-the-line-versus-buffalo-on-tuesday",
+      "publisher_host": "miamiredhawks.com",
+      "published_date": "2026-10-29",
+      "first_eligible_at_utc": "2026-11-03T23:43:37Z",
+      "human_reviewed": true,
+      "note": "Official Miami University preview documents season-ending quarterback absence. Expected successor Caleb Heavner is not an independently confirmed game-day starter. Newly observed reports only; never backfill past forecast inputs."
     }
   ]
 }
