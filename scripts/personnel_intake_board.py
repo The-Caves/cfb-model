@@ -99,10 +99,27 @@ def build(context, expected, registry, observed_at_utc):
             injury = injury_rows[(gid, team)]
             q = qb_slots.get((gid, team))
             by_player = {}
+            collisions = set()
+            quarantined_aliases = []
             for item in injury["reported_players"]:
                 who = key(item["player"])
-                if not who or who in by_player:
-                    raise ValueError("Duplicate official player designation")
+                if not who:
+                    quarantined_aliases.append({"player":"",
+                        "reason":"UNMATCHABLE_NORMALIZED_PLAYER_ID"})
+                    continue
+                if who in collisions:
+                    continue
+                if who in by_player:
+                    # Different spellings may collapse to one normalized
+                    # name (e.g. D.J. Smith vs DJ Smith). Quarantine BOTH,
+                    # not arbitrarily pick an OUT or AVAILABLE declaration.
+                    previous=by_player.pop(who)
+                    collisions.add(who)
+                    quarantined_aliases.append({
+                        "player":previous["player"],
+                        "reason":"NORMALIZED_PLAYER_ID_COLLISION_REQUIRES_REVIEW"})
+                    counts["normalized_player_id_collisions"] += 1
+                    continue
                 status = item["reported_status"]
                 if status not in SUPPORTED:
                     raise ValueError("Unsupported official player designation")
@@ -168,7 +185,7 @@ def build(context, expected, registry, observed_at_utc):
             counts["projected_unconfirmed_qb_slots"] += starter_evidence == "PROJECTED_NOT_CONFIRMED"
             counts["unknown_or_conflicted_qb_slots"] += starter_evidence in ("UNKNOWN", "CONFLICT_REVIEW")
             counts["official_player_designations"] += len(observed_players)
-            counts["quarantined_rows"] += len(injury["quarantined_evidence"])
+            counts["quarantined_rows"] += len(injury["quarantined_evidence"]) + len(quarantined_aliases)
             rows.append({
                 "game_id": gid, "team": team, "opponent": opponent, "side": side,
                 "kickoff_utc": g["kickoff_utc"], "observed_at_utc": now.isoformat(),
@@ -186,7 +203,7 @@ def build(context, expected, registry, observed_at_utc):
                 "starter_eligible_for_model_input": bool(confirmed and not conflict),
                 "qb_candidate_not_participation_confirmation": True,
                 "players": observed_players,
-                "quarantined_evidence": injury["quarantined_evidence"],
+                "quarantined_evidence": injury["quarantined_evidence"] + quarantined_aliases,
                 "no_inferred_healthy_players": True,
                 "injury_points_estimated": False})
     return {
