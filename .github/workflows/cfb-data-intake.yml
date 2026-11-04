@@ -380,6 +380,7 @@ jobs:
             --registry data/context/official_longterm_qb_absences_2026.json
       - name: Consolidate all-position injury and verified QB evidence into an as-of personnel board
         run: |
+          set -euo pipefail
           python -m scripts.personnel_intake_board \
             --context data/context/upcoming_game_context_2026.json \
             --expected "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json" \
