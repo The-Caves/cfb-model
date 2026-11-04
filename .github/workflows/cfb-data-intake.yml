@@ -378,6 +378,15 @@ jobs:
           python -m scripts.qb_longterm_expected \
             --expected "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json" \
             --registry data/context/official_longterm_qb_absences_2026.json
+      - name: Consolidate all-position injury and verified QB evidence into an as-of personnel board
+        run: |
+          python -m scripts.personnel_intake_board \
+            --context data/context/upcoming_game_context_2026.json \
+            --expected "data/pregame_evidence/qb-expected-starters-${{ github.run_id }}.json" \
+            --registry data/context/official_longterm_qb_absences_2026.json \
+            --output "data/pregame_evidence/personnel-intake-board-${{ github.run_id }}.json" | tee /tmp/personnel-intake-board.txt
+          cat /tmp/personnel-intake-board.txt >> "$GITHUB_STEP_SUMMARY"
+          echo "Unreported personnel remains UNKNOWN; this evidence board does not adjust scores or prove participation." >> "$GITHUB_STEP_SUMMARY"
       - name: Prioritize QB confirmation source review by kickoff and disagreement
         run: |
           python -m scripts.qb_confirmation_coverage \
@@ -392,6 +401,7 @@ jobs:
           path: |
             data/pregame_evidence/qb-role-features-*.json
             data/pregame_evidence/qb-expected-starters-*.json
+            data/pregame_evidence/personnel-intake-board-*.json
             data/pregame_evidence/qb-confirmation-coverage-*.json
             data/pregame_evidence/qb-confirmation-review-*.csv
           retention-days: 30
