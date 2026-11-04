@@ -42,9 +42,10 @@ def apply(board,registry,now):
              eligible-dt.datetime.combine(pub,dt.time.min,tzinfo=dt.timezone.utc)
              ).total_seconds()<3600:
             raise ValueError("QB outage first-use timestamp predates source")
-        if rec["team"] in index:
-            raise ValueError("Multiple conflicting QB records for school")
-        index[rec["team"]]=(rec,eligible)
+        key=(rec["team"]," ".join(rec["player"].casefold().split()))
+        if key in index:
+            raise ValueError("Multiple conflicting QB records for school and player")
+        index[key]=(rec,eligible)
     known=set()
     applied=0
     blocked=0
@@ -56,33 +57,48 @@ def apply(board,registry,now):
         for side in ("home","away"):
             key="official_longterm_qb_absence_"+side
             game[key]=None
+            game["official_longterm_qb_absences_"+side]=[]
             team=game[side+"_team"]
-            entry=index.get(team)
-            if not entry or not when<kickoff:continue
-            record,eligible=entry
-            if when<eligible:continue  # never backdate this newly reviewed source
-            if kickoff.year!=2026:
-                continue
-            qb=game.get("qb_"+side)
-            confirmed=bool(isinstance(qb,dict) and
-                           qb.get("status")=="CONFIRMED_OFFICIAL" and
-                           qb.get("player")!=record["player"])
-            game[key]={
-                "status":"OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW",
-                "player":record["player"],"position":"QB",
-                "source_url":record["source_url"],
-                "published_date":record["published_date"],
-                "first_eligible_at_utc":record["first_eligible_at_utc"],
-                "designation":record["designation"],
-                "verified_replacement_starter":confirmed,
-                "replacement_value_calibrated":False,
-                "changes_frozen_score":False,
-                "source_type":record["source_type"]}
+            if not when<kickoff or kickoff.year!=2026:continue
+            eligible_records=sorted(
+                (rec for (school,_), (rec,first) in index.items()
+                 if school==team and first<=when),
+                key=lambda rec:rec["player"].casefold())
+            if not eligible_records:continue
+            qb=game.get("qb_"+side) or {}
+            claimed=str(qb.get("player") or "").casefold()
+            out_names={rec["player"].casefold() for rec in eligible_records}
+            confirmed=bool(qb.get("status")=="CONFIRMED_OFFICIAL" and
+                           claimed and claimed not in out_names)
+            # A claimed confirmed starter who is officially season-OUT is a
+            # contradiction requiring review, not a usable replacement.
+            if qb.get("status")=="CONFIRMED_OFFICIAL" and claimed in out_names:
+                game["qb_"+side]={**qb,"status":"CONFLICT_REVIEW",
+                    "description":"Reviewed season-ending QB absence contradicts starter claim"}
+            for record in eligible_records:
+                outage={
+                    "status":"OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW",
+                    "player":record["player"],"position":"QB",
+                    "source_url":record["source_url"],
+                    "published_date":record["published_date"],
+                    "first_eligible_at_utc":record["first_eligible_at_utc"],
+                    "designation":record["designation"],
+                    "verified_replacement_starter":confirmed,
+                    "replacement_value_calibrated":False,
+                    "changes_frozen_score":False,
+                    "source_type":record["source_type"]}
+                game["official_longterm_qb_absences_"+side].append(outage)
+            # Backward compatibility with existing V04 research PASS gate.
+            game[key]=game["official_longterm_qb_absences_"+side][0]
             applied+=1
             blocked+=int(not confirmed)
     board["official_longterm_qb_absence_audit"]={
         "status":AUDIT,"reviewed_records":len(index),
         "future_team_sides_with_verified_longterm_absence":applied,
+        "reviewed_unavailable_qb_players":len(index),
+        "active_future_outage_player_records":sum(
+            len(g.get("official_longterm_qb_absences_"+side,[]))
+            for g in board["games"] for side in ("home","away")),
         "team_sides_without_verified_replacement":blocked,
         "score_predictions_unchanged":True,
         "outage_does_not_imply_starter_confirmation":True,
