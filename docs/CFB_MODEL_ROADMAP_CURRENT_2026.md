@@ -4,6 +4,44 @@ This is the **current handoff and order of work**. The existing [next-generation
 
 **Current live website:** V04 independent score projections with market-anchored research PASS gates; V05 displayed as shadow, V06 an additional chronological benchmark. V03 remains quarantined for home bias. Frozen predictions and market quotes are archived separately from final labels.
 
+## Practical game-day deliverable — stop splitting Milestone 1
+
+**User-facing goal:** Before each game, show a named **expected** quarterback if credible
+current depth-chart evidence exists; flag all officially reported unavailable /
+questionable players by position; update near kickoff; distinguish
+`CONFIRMED_THIS_GAME`, `PROJECTED_DEPTH_CHART`, and `UNKNOWN`.
+Never select the presumed QB by historical yards or silently substitute a
+historical team passing leader into a player prop. A game-specific
+confirmation is still a stronger claim than an expected starter.
+
+**What now works:** The same centralized HD Intelligence official conference
+feed handles SEC, Big Ten, ACC, Big 12, MAC, and American; Gameweek availability
+is polled by the site overlay. The displayed QB defaults to a current
+third-party depth-chart projection *only* when the candidate is not ruled
+out, and is labelled unconfirmed. PlayerForm passing scenarios now require a
+reviewed confirmed QB or current ranked chart QB; if no matching named
+player has valid historical stat sample, abstain rather than showing the
+former high-yardage passer. Frozen game score forecasts are not rewritten.
+Tests enforce the name-selection invariant.
+
+**Remaining real blocker:** A free universal feed that confirms actual
+starting lineups 60 minutes before every FBS kickoff has **not** been
+verified. Availability designations are not starter assignments, and
+official conference reports may be pending early in the week or never
+issued for nonconference games. Do not write "confirmed" from an absence of
+injury reports. The pipeline must show current coverage counts and source
+timestamps; false certainty is worse than an honest projected starter.
+
+**One finish line, not infinite 1A.x steps:** Have the automated pregame
+website display current sourced expected QBs, exclusions, uncertainty, and
+updated player projections for upcoming actual games; empirically check
+against eventual named gamebook starters and report misidentifications.
+Keep the separate **research validation** thresholds below unchanged;
+reaching the practical display goal does not imply that replacement-effect
+training, independent prospective predictive lift, or betting validation
+has passed. We should proceed with later model work in parallel rather
+than using research perfection as a reason never to advance.
+
 ## Milestone 1 — Verified quarterback intelligence (current)
 
 The *engineering* for several components exists, but **the milestone is not complete just because code or CI passes**. The authoritative evidence report is `scripts/qb_m1_completion.py`, stored from every actual Data Intake in `data/pregame_evidence/qb-milestone1-completion-RUN.json` and in the `cfb-qb-milestone1-RUN` artifact.
