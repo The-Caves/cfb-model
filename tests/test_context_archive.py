@@ -17,6 +17,27 @@ class ArchiveTests(unittest.TestCase):
         self.assertEqual(result["games"][0]["game_id"],"2")
         self.assertEqual(result["collection_started_utc"],"2026-10-24T19:58:00Z")
         self.assertEqual(result["asof_utc"],"2026-10-24T20:01:00+00:00")
+    def test_transient_github_get_disconnect_retries_without_retrying_writes(self):
+        import http.client,io,os
+        from unittest.mock import patch
+        from scripts.context_archive import api
+        class Reply:
+            def __enter__(self):return self
+            def __exit__(self,*args):return False
+            def read(self):return b'{"object":{"sha":"ok"}}'
+        with patch.dict(os.environ,{"GITHUB_TOKEN":"dummy"}):
+            with patch("scripts.context_archive.urllib.request.urlopen",
+                       side_effect=[http.client.RemoteDisconnected("transient"),Reply()]) as fetch:
+                with patch("scripts.context_archive.time.sleep") as sleep:
+                    self.assertEqual(api("GET","/repos/example/test/git/refs"),{"object":{"sha":"ok"}})
+                self.assertEqual(fetch.call_count,2)
+                sleep.assert_called_once()
+            with patch("scripts.context_archive.urllib.request.urlopen",
+                       side_effect=http.client.RemoteDisconnected("transient")) as fetch:
+                with self.assertRaisesRegex(RuntimeError,"temporary connection failure"):
+                    api("POST","/repos/example/test/git/trees",{"tree":[]})
+                self.assertEqual(fetch.call_count,1)
+
     def test_restore_empty_branch(self):
         from scripts.context_archive import restore
         import tempfile
