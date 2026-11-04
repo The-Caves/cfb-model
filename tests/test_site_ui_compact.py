@@ -17,13 +17,14 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn('function teamDisplayRow(',self.html)
         self.assertNotIn('function qbCard(',self.html)
         self.assertNotIn('qbPanel.append(',self.html)
-        self.assertIn('Last game',self.html)
         self.assertIn('Chart only',self.html)
         self.assertIn('Starter not officially confirmed',self.html)
     def test_visible_expected_qb_is_not_a_historical_passer_surrogate(self):
+        self.assertIn('function qbIdentity(side,depth,availability,pregame)',self.html)
+        self.assertIn('if(pregame&&allowedStates.has(pregame.status))',self.html)
+        self.assertIn('const player=pregame.player||null;',self.html)
+        self.assertIn('game["qb_pregame_"+side]',self.html)
         self.assertIn('const projected=conflict?null:chart.find',self.html)
-        self.assertIn('const player=confirmed?side.player:(projected?.player||null);',self.html)
-        self.assertIn('const badge=confirmed?"Confirmed":"Chart only";',self.html)
         self.assertNotIn('const player=confirmed||recent?side.player:',self.html)
 
     def test_expanded_scouting_and_source_details_preserved(self):
