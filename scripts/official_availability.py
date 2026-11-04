@@ -1,4 +1,4 @@
-"""Live, pregame, official SEC/Big Ten student-athlete availability extraction.
+"""Live, pregame, structured official conference football availability extraction.
 
 Public structured publisher endpoints from official conference report embeds.
 Only current reports, never historical archive, are accepted as pregame evidence.
@@ -13,12 +13,19 @@ from scripts.availability_context import FIELDS
 
 ROOT="https://app.hdintelligence.com"
 PUBLISH_PATH="/api/get-publish-public"
-CONFERENCES={"SEC":"SEC","B10":"B10","ACC":"ACC","B12":"B12"}
+# These six conferences use the same public HD Intelligence report embed.
+# MAC and American were verified against the source= / conf= parameters of
+# their official athletic-conference webpages (2026 report portal), not inferred
+# from an unrelated ESPN injury page or third-party depth chart.
+CONFERENCES={"SEC":"SEC","B10":"B10","ACC":"ACC","B12":"B12",
+             "MAC":"MAC","American":"American"}
 SOURCE_PAGE={
   "SEC":"https://www.secsports.com/fbreports",
   "B10":"https://bigten.org/sports/2026/9/10/FB_Availability_Reports.aspx",
   "ACC":"https://theacc.com/sports/2025/8/28/availability-reporting-football.aspx",
-  "B12":"https://big12sports.com/sports/2025/8/14/FBreporting.aspx?lv=true"}
+  "B12":"https://big12sports.com/sports/2025/8/14/FBreporting.aspx?lv=true",
+  "MAC":"https://getsomemaction.com/sports/2026/7/28/FB_0728265050.aspx.aspx",
+  "American":"https://theamerican.org/sports/2026/8/6/football_player_availability.aspx"}
 TIMEZONES={"CT":"America/Chicago","ET":"America/New_York",
            "MT":"America/Denver","PT":"America/Los_Angeles"}
 STATUS_MAP={"Out":"OUT","Out - (1st Half)":"OUT_FIRST_HALF","Out (1st Half)":"OUT_FIRST_HALF",
