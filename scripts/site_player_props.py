@@ -202,10 +202,6 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                     legacy=g.get("official_longterm_qb_absence_"+side)
                     outages=[legacy] if isinstance(legacy,dict) else []
                 is_qb=stat=="passing_yards" or (pid,teamid) in qb_athletes
-                if (stat=="rushing_yards" and is_qb and
-                    (not current_qb or _name(name)!=_name(current_qb))):
-                    blocked["QB_RUSHER_NOT_CURRENT_EXPECTED_QB"]+=1
-                    continue
                 out_player=next((a for a in outages
                     if isinstance(a,dict) and a.get("position")=="QB" and
                     a.get("designation")=="OUT_REMAINDER_2026" and
@@ -213,6 +209,10 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                     _name(a.get("player"))==_name(name)),None) if is_qb else None
                 if out_player:
                     blocked["OFFICIAL_UNIVERSITY_SEASON_OUT_QB"]+=1
+                    continue
+                if (stat=="rushing_yards" and is_qb and
+                    (not current_qb or _name(name)!=_name(current_qb))):
+                    blocked["QB_RUSHER_NOT_CURRENT_EXPECTED_QB"]+=1
                     continue
                 if reported_statuses & (NO_OPENING_START|{"CONFLICT_REVIEW"}):
                     blocked["OFFICIAL_PLAYER_REPORTED_UNAVAILABLE_OR_CONFLICT"]+=1
