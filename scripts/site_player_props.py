@@ -256,10 +256,48 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                     "over_probability":None,
                     "source_observed_at_utc":now.isoformat(),
                 })
-            # One glance: max one QB passing, one rushing and one receiving
-            # candidate per team; rank by past team opportunity/production.
+            # Select QB passer by CURRENT named evidence, NEVER by the
+            # largest historical passing-yard average. A chart is only a
+            # projected roster order; this is a conditional stat scenario.
+            # If no sourced current candidate has passing history, PASS
+            # rather than substituting an unrelated former QB.
+            latest=g.get("qb_"+side) or {}
+            available_reports=g.get("qb_availability_"+side,[]) or []
+            bad_status=NO_OPENING_START|{"CONFLICT_REVIEW"}
+            unavailable_names={_name(a.get("player")) for a in available_reports
+                               if a.get("status") in bad_status}
+            outages=g.get("official_longterm_qb_absences_"+side)
+            if outages is None:
+                prior=g.get("official_longterm_qb_absence_"+side)
+                outages=[prior] if isinstance(prior,dict) else []
+            unavailable_names.update(_name(a.get("player")) for a in outages
+                if isinstance(a,dict) and
+                   a.get("status")=="OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW")
+            reviewed=(latest.get("status")=="CONFIRMED_OFFICIAL" and
+                      _name(latest.get("player")) not in unavailable_names)
+            chart=g.get("qb_depth_"+side) or []
+            chart=sorted((x for x in chart if isinstance(x,dict) and
+                          x.get("player") and x.get("rank") in (1,2,3)),
+                         key=lambda x:x["rank"])
+            ranked=next((p["player"] for p in chart
+                         if _name(p["player"]) not in unavailable_names),None)
+            current_qb=(latest["player"] if reviewed else
+                        None if latest.get("status")=="CONFLICT_REVIEW" else ranked)
+            qb_evidence=("CONFIRMED_OFFICIAL_THIS_GAME" if reviewed else
+                         "THIRD_PARTY_DEPTH_CHART_PROJECTION" if current_qb else
+                         "UNKNOWN_NO_ACCEPTED_CURRENT_QB")
             for stat in PICK:
                 subset=[p for p in picks if p["metric"]==stat]
+                if stat=="passing_yards":
+                    if current_qb is None:
+                        blocked["NO_CURRENT_STARTER_OR_DEPTH_CHART_QB"]+=1
+                        continue
+                    subset=[p for p in subset if _name(p["player"])==_name(current_qb)]
+                    if not subset:
+                        blocked["NO_HISTORICAL_SAMPLE_FOR_EXPECTED_QB"]+=1
+                        continue
+                    subset[0]["qb_identity_evidence"]=qb_evidence
+                    subset[0]["not_confirmed_starter"]=not reviewed
                 subset.sort(key=lambda p:(-p["projection"],-p["recent_games"],p["player_id"]))
                 if subset:entries.append(subset[0])
         if entries:
@@ -296,6 +334,8 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
         "valid_over_under_model_edges":False,
         "research_prior_and_matchup_components_jointly_validated":False,
         "all_player_participation_verified":False,
+        "qb_passing_entries_require_confirmed_or_current_depth_name":True,
+        "history_only_passing_leaders_not_projections":True,
         "description":"Conditional player-stat research projections, observed recorded-opportunity shares and game-specific reports for all positions; not snaps, sportsbook props or confirmed participation."}
     return board
 
