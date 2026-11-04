@@ -54,6 +54,27 @@ class OfficialOutageTests(unittest.TestCase):
         result=apply(past,REGISTRY,"2026-11-04T02:00:00Z")
         self.assertIsNone(result["games"][0]["official_longterm_qb_absence_home"])
 
+    def test_two_official_miami_qb_outages_are_retained_and_never_change_scores(self):
+        b=board()
+        b["games"][0]["home_team"]="Miami (OH) RedHawks"
+        b["games"][0]["away_team"]="Buffalo Bulls"
+        b["games"][0]["kickoff_utc"]="2026-11-07T20:00:00Z"
+        original=copy.deepcopy(b["games"][0]["v04_direct_scores"])
+        out=apply(b,REGISTRY,"2026-11-04T02:00:00Z")
+        game=out["games"][0]
+        self.assertEqual(
+            {r["player"] for r in game["official_longterm_qb_absences_home"]},
+            {"David McComb","Thomas Gotkowski"})
+        self.assertEqual(game["v04_direct_scores"],original)
+        self.assertEqual(out["official_longterm_qb_absence_audit"]["active_future_outage_player_records"],2)
+        self.assertEqual(out["official_longterm_qb_absence_audit"]["future_team_sides_with_verified_longterm_absence"],1)
+        self.assertFalse(game["official_longterm_qb_absence_home"]["verified_replacement_starter"])
+        older=board()
+        older["games"][0]["home_team"]="Miami (OH) RedHawks"
+        older["games"][0]["kickoff_utc"]="2026-11-03T23:30:00Z"
+        older=apply(older,REGISTRY,"2026-11-03T23:20:00Z")
+        self.assertEqual(older["games"][0]["official_longterm_qb_absences_home"],[])
+
     def test_current_verified_replacement_is_distinct_from_outage(self):
         b=board()
         b["games"][0]["qb_home"]={"status":"CONFIRMED_OFFICIAL","player":"Other QB"}
