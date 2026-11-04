@@ -47,7 +47,9 @@ def board():
         "model":"V03","games":[{"game_id":"999","home_team":"A","away_team":"B",
          "kickoff_utc":KICK,"model_home_margin":4.3,"model_total":48.5,
          "model_home_points":26.4,"model_away_points":22.1,
-         "qb_availability_home":[],"qb_availability_away":[]}]}
+         "qb_availability_home":[],"qb_availability_away":[],
+         "qb_depth_home":[{"player":"QB One","rank":1},{"player":"Replacement QB","rank":2}],
+         "qb_depth_away":[{"player":"QB Two","rank":1}]}]}
 
 class SitePlayerFormTests(unittest.TestCase):
     def test_sourced_upcoming_player_stat_outlook_not_betting_prop(self):
@@ -66,6 +68,40 @@ class SitePlayerFormTests(unittest.TestCase):
             for p in row["player_props"]["entries"]))
         self.assertTrue(all(p["player_participation_status"]!="CONFIRMED_ACTIVE"
             for p in row["player_props"]["entries"]))
+
+    def test_no_current_qb_evidence_passes_passing_projection_even_with_stats(self):
+        src=board()
+        src["games"][0]["qb_depth_home"]=[]
+        src["games"][0]["qb_depth_away"]=[]
+        src["games"][0]["qb_home"]={"player":"QB One","status":"RECENT_GAME_PASSER"}
+        out=overlay(src,boxes(2026),boxes(2025),schedule(2026),schedule(2025),OBS)
+        entries=out["games"][0]["player_props"]["entries"]
+        self.assertFalse(any(p["metric"]=="passing_yards" for p in entries))
+        self.assertEqual(out["player_prop_display"]["unavailable_by_reason"][
+            "NO_CURRENT_STARTER_OR_DEPTH_CHART_QB"],2)
+        self.assertTrue(out["player_prop_display"][
+            "history_only_passing_leaders_not_projections"])
+
+    def test_depth_projected_qb_not_replaced_by_more_productive_previous_passer(self):
+        src=board()
+        src["games"][0]["qb_depth_home"]=[
+            {"player":"Replacement QB","rank":1},{"player":"QB One","rank":2}]
+        extra=[]
+        for i in (1,2,3):
+            extra.append({"game_id":202600+i,"season":2026,"team_id":10,
+                 "athlete_id":777,"athlete_name":"Replacement QB",
+                 "category":"passing","passingYards":"120",
+                 "passingTouchdowns":"1","interceptions":"0",
+                 "completions/passingAttempts":"9/20"})
+        out=overlay(src,boxes(2026)+extra,boxes(2025),
+                    schedule(2026),schedule(2025),OBS)
+        home=[p for p in out["games"][0]["player_props"]["entries"]
+              if p["metric"]=="passing_yards" and p["team_side"]=="home"]
+        self.assertEqual(len(home),1)
+        self.assertEqual(home[0]["player"],"Replacement QB")
+        self.assertEqual(home[0]["qb_identity_evidence"],
+                         "THIRD_PARTY_DEPTH_CHART_PROJECTION")
+        self.assertTrue(home[0]["not_confirmed_starter"])
 
     def test_official_out_qb_excluded_without_assuming_backup(self):
         src=board()
