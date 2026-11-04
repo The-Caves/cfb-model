@@ -20,6 +20,12 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn('Last game',self.html)
         self.assertIn('Chart only',self.html)
         self.assertIn('Starter not officially confirmed',self.html)
+    def test_visible_expected_qb_is_not_a_historical_passer_surrogate(self):
+        self.assertIn('const projected=conflict?null:chart.find',self.html)
+        self.assertIn('const player=confirmed?side.player:(projected?.player||null);',self.html)
+        self.assertIn('const badge=confirmed?"Confirmed":"Chart only";',self.html)
+        self.assertNotIn('const player=confirmed||recent?side.player:',self.html)
+
     def test_expanded_scouting_and_source_details_preserved(self):
         self.assertIn('function scoutingPanel(',self.html)
         self.assertIn('function qbDetails(',self.html)
