@@ -109,7 +109,7 @@ def merge(board,rows,now,manifest=None):
         counts["games_with_actionable_qb_designations"]+=int(g.pop("_qb_has_actionable",False))
     board["qb_availability_display"]={
         **counts,
-        "source":"Official SEC/Big Ten/ACC/Big 12 published availability reporting",
+        "source":"Official SEC/Big Ten/ACC/Big 12/MAC/American published availability reporting",
         "observed_at_utc":now.isoformat(),
         "evidence_is_game_specific":True,
         "confirms_starting_qb":False,
