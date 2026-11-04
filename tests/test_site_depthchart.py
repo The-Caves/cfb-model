@@ -2,7 +2,7 @@
 import datetime as dt,unittest,json,tempfile
 from pathlib import Path
 from scripts.site_depthchart import (INDEX,SOURCE,IndexParser,TableParser,
-    extract_chart,overlay,chart_for_teams,clean_name,normalized,candidate_name,source_updated,run,depth_link)
+    extract_chart,overlay,chart_for_teams,clean_name,normalized,candidate_name,source_updated,run,depth_link,select_pregame_qb)
 UTC=dt.timezone.utc
 NOW=dt.datetime(2026,10,24,14,tzinfo=UTC)
 def board():
@@ -46,6 +46,43 @@ class DepthTests(unittest.TestCase):
         self.assertEqual(game["qb_home"]["status"],"RECENT_GAME_PASSER")
         self.assertEqual(game["model_home_margin"],4.5)
         self.assertFalse(b["qb_depth_display"]["changes_frozen_model_picks"])
+    def test_one_pregame_identity_excludes_officially_out_chart_qb(self):
+        b=board()
+        b["games"][0]["qb_availability_home"]=[{"player":"Kamario Taylor","status":"OUT"}]
+        b["games"][0]["official_longterm_qb_absences_home"]=[
+            {"player":"Kamario Taylor","designation":"OUT_REMAINDER_2026",
+             "status":"OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW"}]
+        out=overlay(b,{"Mississippi State Bulldogs":chart()},NOW)
+        q=out["games"][0]["qb_pregame_home"]
+        self.assertEqual(q["player"],"Parker Puckett")
+        self.assertEqual(q["status"],"PROJECTED_DEPTH_CHART")
+        self.assertEqual(q["depth_rank"],2)
+        self.assertTrue(q["not_confirmed"])
+        self.assertFalse(q["historical_passing_leader_used"])
+        self.assertEqual([x["player"] for x in q["excluded_chart_candidates"]],
+                         ["Kamario Taylor"])
+        self.assertEqual(out["games"][0]["model_home_margin"],4.5)
+
+    def test_confirmed_starter_wins_chart_but_out_conflict_never_promoted(self):
+        b=board()
+        b["games"][0]["qb_home"]={"status":"CONFIRMED_OFFICIAL",
+            "player":"Parker Puckett","source_url":"https://university.example/news"}
+        q=overlay(b,{"Mississippi State Bulldogs":chart()},NOW)["games"][0]["qb_pregame_home"]
+        self.assertEqual(q["status"],"CONFIRMED_THIS_GAME")
+        self.assertEqual(q["player"],"Parker Puckett")
+        b=board()
+        b["games"][0]["qb_home"]={"status":"CONFIRMED_OFFICIAL","player":"Kamario Taylor"}
+        b["games"][0]["qb_availability_home"]=[{"player":"Kamario Taylor","status":"OUT"}]
+        q=overlay(b,{"Mississippi State Bulldogs":chart()},NOW)["games"][0]["qb_pregame_home"]
+        self.assertEqual(q["status"],"CONFLICT_REVIEW")
+        self.assertIsNone(q["player"])
+
+    def test_no_current_chart_never_selects_prior_passing_leader(self):
+        result=overlay(board(),{},NOW)
+        q=result["games"][0]["qb_pregame_home"]
+        self.assertEqual(q["status"],"UNKNOWN")
+        self.assertIsNone(q["player"])
+
     def test_future_capture_and_kickoff_quarantined(self):
         future=chart();future["observed_at_utc"]="2026-10-24T15:00:00Z"
         b=overlay(board(),{"Mississippi State Bulldogs":future},NOW)
