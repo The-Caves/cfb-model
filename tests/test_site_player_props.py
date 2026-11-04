@@ -74,6 +74,46 @@ class SitePlayerFormTests(unittest.TestCase):
         self.assertFalse(any(p["player"]=="QB One" for p in out["games"][0]["player_props"]["entries"]))
         self.assertFalse(out["player_prop_display"]["all_player_participation_verified"])
 
+    def test_official_season_out_qb_is_not_selected_by_historical_yardage(self):
+        src=board()
+        src["games"][0]["official_longterm_qb_absences_home"]=[
+            {"player":"QB One","position":"QB",
+             "designation":"OUT_REMAINDER_2026",
+             "status":"OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW"},
+            {"player":"QB Three","position":"QB",
+             "designation":"OUT_REMAINDER_2026",
+             "status":"OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW"}]
+        current=boxes(2026)
+        for i in (1,2,3):
+            current.extend([
+                {"game_id":202600+i,"season":2026,"team_id":10,
+                 "athlete_id":111,"athlete_name":"QB One",
+                 "category":"rushing","rushingYards":"80",
+                 "rushingAttempts":"10","rushingTouchdowns":"1"},
+                {"game_id":202600+i,"season":2026,"team_id":10,
+                 "athlete_id":777,"athlete_name":"Replacement QB",
+                 "category":"passing","passingYards":"150",
+                 "passingTouchdowns":"1","interceptions":"0",
+                 "completions/passingAttempts":"12/20"}])
+        before=src["games"][0]["model_home_margin"]
+        out=overlay(src,current,boxes(2025),schedule(2026),schedule(2025),OBS)
+        entries=out["games"][0]["player_props"]["entries"]
+        self.assertFalse(any(p["player"]=="QB One" for p in entries))
+        self.assertEqual(next(p for p in entries if p["metric"]=="passing_yards"
+                              and p["team_side"]=="home")["player"],"Replacement QB")
+        self.assertEqual(out["games"][0]["model_home_margin"],before)
+        self.assertGreaterEqual(out["player_prop_display"]["unavailable_by_reason"][
+            "OFFICIAL_UNIVERSITY_SEASON_OUT_QB"],2)
+
+    def test_verified_game_starter_excludes_other_passer_without_changing_scores(self):
+        src=board()
+        src["games"][0]["qb_home"]={"status":"CONFIRMED_OFFICIAL","player":"Different QB"}
+        out=overlay(src,boxes(2026),boxes(2025),schedule(2026),schedule(2025),OBS)
+        entries=out["games"][0]["player_props"]["entries"]
+        self.assertFalse(any(p["player"]=="QB One" and p["metric"]=="passing_yards"
+                             for p in entries))
+        self.assertEqual(out["games"][0]["model_total"],48.5)
+
     def test_all_position_injuries_suppress_out_and_flag_questionable(self):
         src=board()
         src["games"][0]["player_availability_home"]=[
