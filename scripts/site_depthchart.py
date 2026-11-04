@@ -258,8 +258,8 @@ def select_pregame_qb(game,side,ranks):
             candidate=first["player"]
             status="PROJECTED_DEPTH_CHART"
             rank=first["rank"]
-            source_url=first["source_url"]
-            observed=first["observed_at_utc"]
+            source_url=first.get("source_url")
+            observed=first.get("observed_at_utc")
     return {"player":candidate,"status":status,"depth_rank":rank,
             "source_url":source_url,"observed_at_utc":observed,
             "source_type":("REVIEWED_GAME_SPECIFIC_STARTER" if status=="CONFIRMED_THIS_GAME"
