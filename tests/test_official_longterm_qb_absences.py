@@ -75,6 +75,17 @@ class OfficialOutageTests(unittest.TestCase):
         older=apply(older,REGISTRY,"2026-11-03T23:20:00Z")
         self.assertEqual(older["games"][0]["official_longterm_qb_absences_home"],[])
 
+    def test_recent_passing_leader_is_hidden_when_officially_out(self):
+        b=board()
+        b["games"][0]["home_team"]="Miami (OH) RedHawks"
+        b["games"][0]["qb_home"]={
+            "status":"RECENT_GAME_PASSER","player":"David McComb",
+            "source_url":"https://www.espn.com/"}
+        out=apply(b,REGISTRY,"2026-11-04T02:00:00Z")
+        self.assertEqual(out["games"][0]["qb_home"]["status"],"UNKNOWN")
+        self.assertIsNone(out["games"][0]["qb_home"]["player"])
+        self.assertEqual(len(out["games"][0]["official_longterm_qb_absences_home"]),2)
+
     def test_current_verified_replacement_is_distinct_from_outage(self):
         b=board()
         b["games"][0]["qb_home"]={"status":"CONFIRMED_OFFICIAL","player":"Other QB"}
