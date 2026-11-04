@@ -47,9 +47,10 @@ def apply(expected, registry, now):
         pub=dt.date.fromisoformat(source["published_date"])
         if first.date()<pub or pub.year!=2026:
             raise ValueError("QB source embargo predates published statement")
-        if source["team"] in records:
+        key=(source["team"],player_key(source["player"]))
+        if key in records:
             raise ValueError("Duplicate or conflicting team QB source")
-        records[source["team"]]=(source,first)
+        records[key]=(source,first)
     result=copy.deepcopy(expected)
     seen=set()
     applied=0;not_starter=0;removed=0;confirmed_conflicts=0
@@ -59,23 +60,23 @@ def apply(expected, registry, now):
         if key in seen:raise ValueError("Repeated expected QB game/team")
         seen.add(key)
         if kickoff<=observed:continue
-        item=records.get(row["team"])
-        if item is None or observed<item[1] or kickoff.year!=2026:continue
-        source,first=item
-        name=player_key(source["player"])
+        entries=sorted(
+            (src for (team,_), (src,first) in records.items()
+             if team==row["team"] and first<=observed),
+            key=lambda src:player_key(src["player"]))
+        if not entries or kickoff.year!=2026:continue
+        names={player_key(source["player"]) for source in entries}
         starter=row.get("starter")
-        if row.get("is_confirmed_starter") is True and starter and player_key(starter)==name:
-            # Conflicting university facts need human resolution; never silently
-            # replace an independently reviewed game-specific starter.
+        if row.get("is_confirmed_starter") is True and starter and player_key(starter) in names:
+            # A reviewed game-specific confirmation conflicting with official
+            # season-OUT evidence must be investigated, not overwritten.
             confirmed_conflicts+=1
             raise ValueError("Confirmed starter contradicts season-ending QB OUT")
         before=len(row.get("scenarios",[]))
         row["scenarios"]=[s for s in row.get("scenarios",[])
-                          if player_key(s.get("player") or "")!=name]
+                          if player_key(s.get("player") or "") not in names]
         removed+=before-len(row["scenarios"])
-        if starter and player_key(starter)==name:
-            if row.get("is_confirmed_starter") is True:
-                raise ValueError("Cannot demote reviewed true starter")
+        if starter and player_key(starter) in names:
             row["starter"]=None
             row["starter_status"]="UNKNOWN_OFFICIAL_SEASON_OUT_NO_VERIFIED_REPLACEMENT"
             row["confidence"]="UNKNOWN"
@@ -84,7 +85,7 @@ def apply(expected, registry, now):
             row["depth_label"]="UNKNOWN"
             row["is_confirmed_starter"]=False
             not_starter+=1
-        row["official_longterm_out_qb"]={
+        row["official_longterm_out_qbs"]=[{
             "player":source["player"],"designation":source["designation"],
             "source_url":source["source_url"],
             "published_date":source["published_date"],
@@ -93,7 +94,9 @@ def apply(expected, registry, now):
             "does_not_confirm_replacement":True,
             "does_not_change_score":True,
             "historical_source_available_at_previous_forecast":False}
-        # The newly observed source cannot inherit the prior QB-slate timestamp.
+            for source in entries]
+        row["official_longterm_out_qb"]=row["official_longterm_out_qbs"][0]
+        # Newly observed source evidence cannot inherit an older timestamp.
         row["original_expected_starter_observed_at_utc"]=row["observed_at_utc"]
         row["observed_at_utc"]=observed.isoformat()
         applied+=1
@@ -108,6 +111,8 @@ def apply(expected, registry, now):
     result["qb_longterm_out_audit"]={
         "status":STATUS,
         "official_future_team_slots_annotated":applied,
+        "official_absent_qb_players":sum(
+            len(r.get("official_longterm_out_qbs",[])) for r in result["games"]),
         "projected_out_qbs_changed_to_unknown":not_starter,
         "unavailable_qb_scenarios_removed":removed,
         "official_source_review_conflicts":confirmed_conflicts,
