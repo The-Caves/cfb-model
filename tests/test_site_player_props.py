@@ -103,6 +103,53 @@ class SitePlayerFormTests(unittest.TestCase):
                          "THIRD_PARTY_DEPTH_CHART_PROJECTION")
         self.assertTrue(home[0]["not_confirmed_starter"])
 
+    def test_passing_projection_uses_exact_same_qb_decision_as_website(self):
+        src=board()
+        out=overlay(src,boxes(2026),boxes(2025),
+                    schedule(2026),schedule(2025),OBS)
+        g=out["games"][0]
+        self.assertEqual(g["qb_pregame_home"]["player"],"QB One")
+        self.assertEqual(g["qb_pregame_home"]["status"],"PROJECTED_DEPTH_CHART")
+        self.assertEqual(next(p for p in g["player_props"]["entries"]
+                              if p["metric"]=="passing_yards" and
+                              p["team_side"]=="home")["player"],
+                         g["qb_pregame_home"]["player"])
+        self.assertFalse(g["qb_pregame_home"]["historical_passing_leader_used"])
+
+    def test_stale_or_divergent_pregame_identity_fails_closed(self):
+        src=board()
+        src["games"][0]["qb_pregame_home"]={
+            "player":"QB One","status":"CONFIRMED_THIS_GAME"}
+        with self.assertRaisesRegex(ValueError,"Conflicting quarterback identity"):
+            overlay(src,boxes(2026),boxes(2025),
+                    schedule(2026),schedule(2025),OBS)
+
+    def test_old_qb_rushing_volume_does_not_replace_current_qb(self):
+        src=board()
+        src["games"][0]["qb_depth_home"]=[
+            {"player":"Replacement QB","rank":1},
+            {"player":"QB One","rank":2}]
+        current=boxes(2026)
+        for i in (1,2,3):
+            current.extend([
+                {"game_id":202600+i,"season":2026,"team_id":10,
+                 "athlete_id":111,"athlete_name":"QB One",
+                 "category":"rushing","rushingYards":"180",
+                 "rushingAttempts":"13","rushingTouchdowns":"1"},
+                {"game_id":202600+i,"season":2026,"team_id":10,
+                 "athlete_id":777,"athlete_name":"Replacement QB",
+                 "category":"passing","passingYards":"110",
+                 "passingTouchdowns":"1","interceptions":"0",
+                 "completions/passingAttempts":"12/20"}])
+        out=overlay(src,current,boxes(2025),schedule(2026),
+                    schedule(2025),OBS)
+        g=out["games"][0]
+        self.assertFalse(any(p["player"]=="QB One" and p["metric"]=="rushing_yards"
+                             for p in g["player_props"]["entries"]))
+        self.assertEqual(g["qb_pregame_home"]["player"],"Replacement QB")
+        self.assertGreaterEqual(out["player_prop_display"]["unavailable_by_reason"][
+            "QB_RUSHER_NOT_CURRENT_EXPECTED_QB"],1)
+
     def test_official_out_qb_excluded_without_assuming_backup(self):
         src=board()
         src["games"][0]["qb_availability_home"]=[{"player":"QB One","status":"OUT"}]
