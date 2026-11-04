@@ -278,17 +278,28 @@ function marketTile(label,line,selection,edge){
 }
 
 function identityKey(value){return String(value||"").toLowerCase().replace(/[^a-z0-9]+/g,"").trim()}
-function qbIdentity(side,depth,availability){
+function qbIdentity(side,depth,availability,pregame){
  const chart=Array.isArray(depth)?depth.filter(p=>[1,2,3].includes(p.rank)&&p.player):[];
  const reported=Array.isArray(availability)?availability:[];
  const statusFor=name=>reported.find(a=>identityKey(a.player)===identityKey(name))?.status||null;
+ const allowedStates=new Set(["CONFIRMED_THIS_GAME","PROJECTED_DEPTH_CHART","UNKNOWN","CONFLICT_REVIEW"]);
+ if(pregame&&allowedStates.has(pregame.status)){
+  // The same source-authenticated pregame identity drives the QB headline
+  // and PlayerForm. Never recalculate a new starter from past passing stats.
+  const player=pregame.player||null;
+  const official=pregame.status==="CONFIRMED_THIS_GAME";
+  const rank=Number(pregame.depth_rank);
+  const role=rank>=1&&rank<=3?"QB"+rank:player?"QB":"QB?";
+  return {player,role,badge:official?"Confirmed":"Chart only",
+          noCurrent:!official,source:pregame.source_type,
+          medical:player?statusFor(player):null};
+ }
  const unavailable=new Set(["OUT","OUT_FIRST_HALF","SUSPENDED","DOUBTFUL","CONFLICT_REVIEW"]);
  const confirmed=side?.status==="CONFIRMED_OFFICIAL"&&Boolean(side?.player)&&
                  !unavailable.has(statusFor(side.player));
  const conflict=side?.status==="CONFLICT_REVIEW";
- // No previous-game passing leader or historical yardage can establish
- // the CURRENT projected starter. Current source-labelled depth is a
- // low-certainty projection only; official game-specific proof wins.
+ // Legacy archived data may predate unified QB identity. Still refuse to
+ // infer future starters from past leading passer volume.
  const projected=conflict?null:chart.find(p=>!unavailable.has(statusFor(p.player)));
  const player=confirmed?side.player:(projected?.player||null);
  const found=chart.find(p=>identityKey(p.player)===identityKey(player));
@@ -298,17 +309,15 @@ function qbIdentity(side,depth,availability){
          source:confirmed?"official":projected?"chart":"unknown",
          medical:player?statusFor(player):null};
 }
-function shortQB(side,depth,availability){
- const q=qbIdentity(side,depth,availability),label=node("div","teamSub");
+function shortQB(side,depth,availability,pregame){
+ const q=qbIdentity(side,depth,availability,pregame),label=node("div","teamSub");
  label.append(node("span","qbRank"+(q.role==="QB?"?" qbWarn":""),q.role));
  label.append(node("span","",q.player||"Not available"));
  label.append(node("span","qbSourceMini"," · "+(q.player?q.badge+" · unconfirmed": "Unknown")));
- // The confirmation label should be unambiguously different.
  if(q.player&&q.badge==="Confirmed")label.lastChild.textContent=" · Confirmed";
  if(q.player&&q.medical&&q.medical!=="AVAILABLE")
    label.append(node("span","qbWarn"," · "+q.medical.replaceAll("_"," ")));
  label.title=q.badge==="Confirmed"?"Reviewed official game-specific starter":
-   q.badge==="Last game"?"Previous game's passer, not confirmed next-game starter":
    q.badge==="Chart only"?"Third-party QB depth chart projection, not confirmed starter":
    "No reliable quarterback name";
  return label;
@@ -383,7 +392,7 @@ function teamDisplayRow(game,side){
  if(/^#[0-9a-f]{6}$/i.test(brand?.color||""))row.style.setProperty("--school-color",brand.color);
  const left=node("div","teamIdentity"),name=node("div","teamLabel");
  name.append(node("div","teamName",team));
- name.append(shortQB(game["qb_"+side],game["qb_depth_"+side],game["qb_availability_"+side]));
+ name.append(shortQB(game["qb_"+side],game["qb_depth_"+side],game["qb_availability_"+side],game["qb_pregame_"+side]));
  left.append(logoBadge(team,brand),name);
  const score=node("div","scoreBox"),v04=v04ScoreScenario(game),
     scenario=v04?null:opponentScoreScenario(game);
@@ -401,8 +410,13 @@ function qbDetails(game){
  const body=node("div","detailBody");
  for(const side of ["away","home"]){
   const team=game[side+"_team"],depth=game["qb_depth_"+side]||[],
-   player=game["qb_"+side],availability=game["qb_availability_"+side]||[];
-  body.append(node("div","sourceLine",team+": "+(player?.status==="CONFIRMED_OFFICIAL"?"Official starter confirmed":"Starter not officially confirmed")));
+   player=game["qb_"+side],availability=game["qb_availability_"+side]||[],
+   pregame=game["qb_pregame_"+side];
+  body.append(node("div","sourceLine",team+": "+(pregame?.status==="CONFIRMED_THIS_GAME"||(!pregame&&player?.status==="CONFIRMED_OFFICIAL")?"Official starter confirmed":"Starter not officially confirmed")));
+  if(pregame?.status==="PROJECTED_DEPTH_CHART")
+   body.append(node("div","sourceLine","Expected QB (unconfirmed): "+pregame.player));
+  if(pregame?.status==="CONFLICT_REVIEW")
+   body.append(node("div","availabilityLine","Conflicting quarterback availability evidence; starter withheld"));
   if(depth.length){
    body.append(node("div","sourceLine","Depth (third-party): "+depth.map(p=>"QB"+p.rank+" "+p.player).join(" · ")));
    const url=depth[0]?.source_url;
