@@ -36,6 +36,19 @@ POSITION_SET={"QB","RB","WR","TE","OL","DL","EDGE","LB","CB","DB","S","K","P"}
 POSITION_ALIASES={"ILB":"LB","OLB":"LB","MLB":"LB","DE":"EDGE",
                   "DT":"DL","NT":"DL","OT":"OL","OG":"OL","C":"OL",
                   "FS":"S","SS":"S","FB":"RB"}
+# Only unambiguous, conference-scoped aliases are accepted. "Miami" is
+# ambiguous nationally: the MAC page means Miami (Ohio), whereas ACC pages
+# must not be remapped to Ohio. Unknown team text still fails exact fixture
+# matching; never guess from player names or the game betting line.
+CONFERENCE_TEAM_ALIASES={
+    "MAC":{"Miami":"Miami (OH)","Miami (Ohio)":"Miami (OH)",
+           "Massachusetts":"UMass","UMass":"UMass"},
+    "American":{"South Florida":"USF","South Fla.":"USF",
+                "Florida Atlantic":"Florida Atlantic",
+                "FAU":"Florida Atlantic",
+                "Texas San Antonio":"UTSA","UT San Antonio":"UTSA",
+                "Alabama Birmingham":"UAB"},
+}
 GAME_DAY_FORMAT="%Y-%m-%d"
 def request_public(conference,timeout=25,max_bytes=30_000_000):
     payload=json.dumps({"sport":"Football","organization":conference,"conference":conference}).encode()
@@ -131,6 +144,13 @@ def game_for_card(card,games,aliases,now):
 
 def extract(conference,feed,games,aliases,captured):
     """Transform a live public feed into timestamped, scoreboard-matched records."""
+    if conference not in CONFERENCES:
+        raise ValueError("Unsupported official conference")
+    scoped_aliases=dict(aliases)
+    for publisher,canonical in CONFERENCE_TEAM_ALIASES.get(conference,{}).items():
+        if canonical not in aliases:
+            raise ValueError("Unknown conference-scoped official school alias")
+        scoped_aliases[publisher]=aliases[canonical]
     now=parse_time(captured)
     records=[];meta={"conference":conference,"card_count":len(feed),"report_cards":[],"status":"FETCHED"}
     seen=set()
@@ -138,7 +158,7 @@ def extract(conference,feed,games,aliases,captured):
         report={"publisher_card_id":str(card_id),"type":str(card.get("ReportType","")) if isinstance(card,dict) else "",
                 "source_url":SOURCE_PAGE[conference]}
         meta["report_cards"].append(report)
-        g,match=game_for_card(card,games,aliases,now) if isinstance(card,dict) else (None,"INVALID_CARD")
+        g,match=game_for_card(card,games,scoped_aliases,now) if isinstance(card,dict) else (None,"INVALID_CARD")
         report["game_match"]=match
         if not g:continue
         report["game_id"]=g["game_id"]
@@ -154,7 +174,7 @@ def extract(conference,feed,games,aliases,captured):
         parsed=[]
         excluded_exempt=0
         for side in gamesides:
-            team=aliases[side["teamDisplayName"]]
+            team=scoped_aliases[side["teamDisplayName"]]
             rawrows=side.get("rows")
             if not isinstance(rawrows,list):
                 report["publication_status"]="MISSING_TEAM_PLAYER_ROWS";parsed=[];break
