@@ -76,6 +76,22 @@ class IntakeBoardTests(unittest.TestCase):
         self.assertFalse(result["original_scores_changed"])
         self.assertFalse(result["model_promoted"])
 
+    def test_normalized_name_collision_quarantines_all_candidates(self):
+        context,expected=fixture()
+        row=context["games"][0]["injury_reports"][0]
+        context["games"][0]["injury_reports"].append({
+            **row,"player":"Starting-RB","status":"AVAILABLE",
+            "published_at_utc":"2026-11-05T13:30:00Z",
+            "captured_at_utc":"2026-11-05T13:35:00Z"})
+        result=build(context,expected,REGISTRY,AT)
+        home=result["games"][0]
+        self.assertFalse(any(x["player"] in ("Starting RB","Starting-RB")
+                             for x in home["players"]))
+        self.assertEqual(result["summary"]["normalized_player_id_collisions"],1)
+        self.assertIn("NORMALIZED_PLAYER_ID_COLLISION_REQUIRES_REVIEW",
+                      {x["reason"] for x in home["quarantined_evidence"]})
+        self.assertFalse(home["starter_eligible_for_model_input"])
+
     def test_unavailable_qb_cannot_be_reported_confirmed(self):
         context,expected=fixture()
         expected["games"][0]["is_confirmed_starter"]=True
