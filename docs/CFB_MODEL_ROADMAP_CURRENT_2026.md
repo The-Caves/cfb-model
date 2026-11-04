@@ -122,3 +122,20 @@ Research readiness can therefore be tested on *the correctly selected post-instr
 4. Grade it prospectively before promoting, then resume Milestones 2 → 5 in this documented order.
 
 **Non-negotiable:** A green CI run means code works; it does not mean the quarterback evidence or prediction accuracy requirement has been met.
+
+## November 3 — Miami (Ohio) injured-QB selection incident and safer player inputs
+
+**Observed public evidence:** Miami University's [October 29 Buffalo preview](https://miamiredhawks.com/news/2026/10/29/football-redhawks-put-win-streak-on-the-line-versus-buffalo-on-tuesday) explicitly says **David McComb and Thomas Gotkowski will miss the remainder of 2026**. It says **Caleb Heavner is expected** to make his fifth start November 3; this is a strong dated university *expectation*, **not** an independently verified literal starter confirmation. FanDuel not offering McComb is a warning signal, not a stand-alone proof of injury or starting status.
+
+**Root cause confirmed in code:** `scripts/site_player_props.py` originally selects the highest projected passer from historical ESPN boxes even when `scripts/official_longterm_qb_absences.py` has separate reviewed university season-OUT data. The source registries also previously permitted only one long-term-out QB per team, losing multi-QB cases. Official SEC/Big Ten/ACC/Big 12 gameweek availability does not guarantee MAC or nationwide injury coverage. Historical passing leader, third-party QB1 chart and sportsbook prop listing are not starter confirmations.
+
+**Fix committed:** The reviewed source registry now holds **both** Miami absences with distinct `team + player` keys and a first-use timestamp (no backdating). The official-outage dashboard and future expected-starter scenario filters apply all eligible QBs, preserve conflicts and provenance, and do not infer the next starter or alter archived scoring. PlayerForm excludes the same unavailable QB from passing *and QB rushing* forecasts, includes an independently reviewed game-specific starter gate, and retains existing all-position conference OUT/DOUBTFUL/SUSPENDED/CONFLICT suppression. QB header and university absence notices now avoid promoting a previously reported injured passer. Unit tests cover duplicate QBs, pre-source and pregame cutoffs, fallback selection, and immutable V04 scores.
+
+**Still incomplete / acceptance gates (Milestone 1 and later Milestones 2–5):**
+1. Obtain much broader **free, official, source-dated injury/availability coverage** for all FBS teams, including independents and MAC, and player identity with **correct position/team/season/game**. Track coverage and report `UNKNOWN` rather than healthy when missing. Do not derive a diagnosis from a boxscore, prop board or unofficial rumor.
+2. Feed time-safe, verified all-position participation context into *newly frozen* model training/features. QB replacements, missing RB/WR targets, offensive-line units, DB coverage and pass rush need observed participant usage and opponent interactions; do not invent player-point penalties or overwrite earlier forecasts.
+3. Keep **expected vs confirmed** QB identities distinct; a university future tense "expected" statement may inform a projected scenario, never a confirmed starter count.
+4. Establish opponent-adjusted, position-specific leave-one-out/ablation tests on *held-out future games* versus the concurrently frozen V04 score model. Measure starter identification accuracy, position/source coverage, margin/total MAE and confidence/PASS performance, with explicit source-time gates. V04 remains the site's active unvalidated scores until independently better evidence exists.
+
+**Validation:** GitHub Actions Data Intake and CFB Research Dashboard jobs must run and pass on the final code commit; check actual run receipts rather than relying on this dated documentation. The incident fix addresses **incorrect player display/projection and uncertainty gating**, not yet calibrated injury-driven score recalculation. All historical pre-review archived forecasts stay unchanged.
+
