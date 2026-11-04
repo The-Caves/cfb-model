@@ -75,6 +75,9 @@ def apply(board,registry,now):
             if qb.get("status")=="CONFIRMED_OFFICIAL" and claimed in out_names:
                 game["qb_"+side]={**qb,"status":"CONFLICT_REVIEW",
                     "description":"Reviewed season-ending QB absence contradicts starter claim"}
+            elif claimed in out_names and qb.get("status")=="RECENT_GAME_PASSER":
+                game["qb_"+side]={**qb,"player":None,"status":"UNKNOWN",
+                    "description":"Earlier passing leader is officially season-OUT; replacement unconfirmed"}
             for record in eligible_records:
                 outage={
                     "status":"OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW",
