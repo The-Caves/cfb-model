@@ -168,6 +168,20 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
             teamid=_id(s[side+"_id"])
             opponent=_id(s[("away" if side=="home" else "home")+"_id"])
             picks=[]
+            # The display, pregame context and player projections MUST
+            # select one identical current QB. Do not independently rank
+            # passing-yard histories to determine who's expected to play.
+            selection=select_pregame_qb(g,side,g.get("qb_depth_"+side) or [])
+            saved=g.get("qb_pregame_"+side)
+            if saved is not None and saved!=selection:
+                raise ValueError("Conflicting quarterback identity between depth overlay and player model")
+            g["qb_pregame_"+side]=selection
+            current_qb=selection["player"]
+            reviewed=selection["status"]=="CONFIRMED_THIS_GAME"
+            qb_evidence=("CONFIRMED_OFFICIAL_THIS_GAME" if reviewed else
+                         "THIRD_PARTY_DEPTH_CHART_PROJECTION" if
+                         selection["status"]=="PROJECTED_DEPTH_CHART" else
+                         "UNKNOWN_NO_ACCEPTED_CURRENT_QB")
             for (pid,team,stat),items in curr.items():
                 if team!=teamid:continue
                 observed=[(kick,val) for kick,val,_ in items if kick<now]
@@ -188,6 +202,10 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                     legacy=g.get("official_longterm_qb_absence_"+side)
                     outages=[legacy] if isinstance(legacy,dict) else []
                 is_qb=stat=="passing_yards" or (pid,teamid) in qb_athletes
+                if (stat=="rushing_yards" and is_qb and
+                    (not current_qb or _name(name)!=_name(current_qb))):
+                    blocked["QB_RUSHER_NOT_CURRENT_EXPECTED_QB"]+=1
+                    continue
                 out_player=next((a for a in outages
                     if isinstance(a,dict) and a.get("position")=="QB" and
                     a.get("designation")=="OUT_REMAINDER_2026" and
@@ -257,20 +275,6 @@ def overlay(board,box2026,box2025,schedule2026,schedule2025,observed_at_utc,
                     "over_probability":None,
                     "source_observed_at_utc":now.isoformat(),
                 })
-            # The display, pregame context and player projections MUST
-            # select one identical current QB. Do not independently rank
-            # passing-yard histories to determine who's expected to play.
-            selection=select_pregame_qb(g,side,g.get("qb_depth_"+side) or [])
-            saved=g.get("qb_pregame_"+side)
-            if saved is not None and saved!=selection:
-                raise ValueError("Conflicting quarterback identity between depth overlay and player model")
-            g["qb_pregame_"+side]=selection
-            current_qb=selection["player"]
-            reviewed=selection["status"]=="CONFIRMED_THIS_GAME"
-            qb_evidence=("CONFIRMED_OFFICIAL_THIS_GAME" if reviewed else
-                         "THIRD_PARTY_DEPTH_CHART_PROJECTION" if
-                         selection["status"]=="PROJECTED_DEPTH_CHART" else
-                         "UNKNOWN_NO_ACCEPTED_CURRENT_QB")
             for stat in PICK:
                 subset=[p for p in picks if p["metric"]==stat]
                 if stat=="passing_yards":
