@@ -213,12 +213,74 @@ def chart_for_teams(board,alias_file,fetch=download,max_workers=7):
                     "unmatched_index_keys":sorted(k for k in index.pages if k not in key_to_name)[:30],
                     "failures":sorted(failures,key=lambda r:r["team"])[:150]}
 
+def select_pregame_qb(game,side,ranks):
+    """One conservative identity for display, stat outlook and future research.
+
+    Reports exclude named players; they do not confirm their replacements.
+    Past-game passing leaders never become current starters through this path.
+    """
+    stated=game.get("qb_"+side) or {}
+    official=game.get("qb_availability_"+side) or []
+    longterm=game.get("official_longterm_qb_absences_"+side)
+    if longterm is None:
+        legacy=game.get("official_longterm_qb_absence_"+side)
+        longterm=[legacy] if isinstance(legacy,dict) else []
+    blocked=set()
+    for row in official:
+        if row.get("status") in ("OUT","OUT_FIRST_HALF","DOUBTFUL",
+                                  "SUSPENDED","CONFLICT_REVIEW"):
+            blocked.add(normalized(row.get("player")))
+    for row in longterm:
+        if (isinstance(row,dict) and
+            row.get("designation")=="OUT_REMAINDER_2026" and
+            row.get("status")=="OFFICIAL_SEASON_OUT_VERIFIED_AFTER_SOURCE_REVIEW"):
+            blocked.add(normalized(row.get("player")))
+    blocked.discard("")
+    exclusions=[{"player":p["player"],"depth_rank":p["rank"]}
+                for p in ranks if normalized(p["player"]) in blocked]
+    candidate=None;status="UNKNOWN";rank=None;source_url=None;observed=None
+    if stated.get("status")=="CONFLICT_REVIEW":
+        status="CONFLICT_REVIEW"
+    elif stated.get("status")=="CONFIRMED_OFFICIAL" and stated.get("player"):
+        if normalized(stated["player"]) in blocked:
+            status="CONFLICT_REVIEW"
+        else:
+            candidate=stated["player"]
+            status="CONFIRMED_THIS_GAME"
+            rank=next((x["rank"] for x in ranks
+                       if normalized(x["player"])==normalized(candidate)),None)
+            source_url=stated.get("source_url")
+            observed=stated.get("observed_at_utc")
+    else:
+        first=next((x for x in ranks
+                    if normalized(x["player"]) not in blocked),None)
+        if first:
+            candidate=first["player"]
+            status="PROJECTED_DEPTH_CHART"
+            rank=first["rank"]
+            source_url=first["source_url"]
+            observed=first["observed_at_utc"]
+    return {"player":candidate,"status":status,"depth_rank":rank,
+            "source_url":source_url,"observed_at_utc":observed,
+            "source_type":("REVIEWED_GAME_SPECIFIC_STARTER" if status=="CONFIRMED_THIS_GAME"
+                           else SOURCE if status=="PROJECTED_DEPTH_CHART"
+                           else "NONE"),
+            "excluded_chart_candidates":exclusions,
+            "official_unavailable_names":sorted(blocked),
+            "not_confirmed":status!="CONFIRMED_THIS_GAME",
+            "historical_passing_leader_used":False,
+            "changes_frozen_model_scores":False}
+
+
 def overlay(board,charts,now,coverage=None):
     if board.get("schema_version")!=2 or board.get("betting_status")!="PASS_UNVALIDATED":
         raise ValueError("Wrong research data clearance")
     metrics={"teams_charted":len(charts),"games_with_both_charts":0,
              "slots_ranked":0,"last_passer_matched_to_chart":0,
-             "official_starters_promoted":0}
+             "official_starters_promoted":0,
+             "pregame_qbs_confirmed":0,"pregame_qbs_projected":0,
+             "pregame_qbs_unknown_or_conflicted":0,
+             "officially_unavailable_chart_qbs_excluded":0}
     for game in board["games"]:
         both=True
         for side in ("away","home"):
@@ -239,6 +301,12 @@ def overlay(board,charts,now,coverage=None):
                         "source_updated_et":source.get("source_updated_et"),
                         "confirmed_starter":False})
             game["qb_depth_"+side]=ranks
+            selected=select_pregame_qb(game,side,ranks)
+            game["qb_pregame_"+side]=selected
+            metrics["pregame_qbs_confirmed"]+=int(selected["status"]=="CONFIRMED_THIS_GAME")
+            metrics["pregame_qbs_projected"]+=int(selected["status"]=="PROJECTED_DEPTH_CHART")
+            metrics["pregame_qbs_unknown_or_conflicted"]+=int(selected["status"] in ("UNKNOWN","CONFLICT_REVIEW"))
+            metrics["officially_unavailable_chart_qbs_excluded"]+=len(selected["excluded_chart_candidates"])
             both &= bool(ranks)
             metrics["slots_ranked"]+=len(ranks)
             reported=game.get("qb_"+side) or {}
