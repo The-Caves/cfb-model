@@ -1,5 +1,8 @@
 # College Football Prediction Model (2026 season)
 
+> **Repository identity guard for every chat, tool run, automation, or handoff:** This is the **CFB (college football)** project only, `The-Caves/cfb-model`, default branch `main`. The separate CBB (college basketball) project must never be mixed into this repo. Before editing, verify the full GitHub owner/repository, README sport, and branch. Never cross-import fixtures, players, source archives, odds, scores, tests, websites, models, or workflows between CFB and CBB. If identity is uncertain, stop before writing. Resume football work from [the current 2026 CFB milestone roadmap](docs/CFB_MODEL_ROADMAP_CURRENT_2026.md); inspect actual latest CI and frozen data rather than assuming a previous chat finished. Preserve Milestones 1–5, evidence time gates, and `PASS_UNVALIDATED`.
+
+
 **Project status: Research / not validated for betting.** Predictions must remain `PASS_UNVALIDATED` until timestamp-safe walk-forward evaluation demonstrates credible performance. Successful code tests or ingestion jobs do **not** establish prediction accuracy.
 
 This public repository holds a reproducible 2026 college football data and model-development pipeline. It ingests scoreboard results and play-by-play features, archives audited pregame context, and will eventually evaluate straight-up (SU), against-the-spread (ATS) and totals (O/U) forecasts. Do not report subjective picks as generated model outputs.
