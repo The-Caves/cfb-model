@@ -18,8 +18,46 @@ class PublishedOfficialTests(unittest.TestCase):
         self.assertEqual((p["position"],p["status"]),("QB","OUT"))
         self.assertEqual(p["player"],"Sample Quarterback")
     def test_major_conference_official_sources_registered(self):
-        self.assertEqual(set(CONFERENCES),{"SEC","B10","ACC","B12"})
+        self.assertEqual(set(CONFERENCES),{"SEC","B10","ACC","B12","MAC","American"})
         self.assertEqual(set(SOURCE_PAGE),set(CONFERENCES))
+    def test_mac_miami_oh_is_not_miami_fl_and_maintains_current_report_status(self):
+        g={"game_id":"101","date_et":"2026-11-03",
+           "home":"Miami (OH) RedHawks","away":"Buffalo Bulls",
+           "kickoff_utc":"2026-11-04T00:00:00Z"}
+        reg={**ALIASES,"Miami (OH)":"Miami (OH) RedHawks",
+             "Miami (FL)":"Miami Hurricanes","Buffalo":"Buffalo Bulls",
+             "UMass":"Massachusetts Minutemen",
+             "USF":"South Florida Bulls","Florida Atlantic":"Florida Atlantic Owls",
+             "UTSA":"UTSA Roadrunners","UAB":"UAB Blazers"}
+        c=card(published="2026-11-03",clock="12:00:00")
+        c["footer"]["date"]="2026-11-03"
+        c["games"][0]["teamDisplayName"]="Miami"
+        c["games"][1]["teamDisplayName"]="Buffalo"
+        rows,qa=extract("MAC",{"card-1":c},[g],reg,"2026-11-03T20:00:00Z")
+        self.assertEqual(qa["official_reports_accepted"],1)
+        self.assertEqual({r["team"] for r in rows},
+                         {"Miami (OH) RedHawks","Buffalo Bulls"})
+        self.assertNotIn("Miami Hurricanes",{r["team"] for r in rows})
+        self.assertTrue(all(r["game_id"]=="101" for r in rows))
+        rows2,qa2=extract("ACC",{"card-1":c},[g],reg,"2026-11-03T20:00:00Z")
+        self.assertEqual(rows2,[])
+        self.assertEqual(qa2["official_reports_accepted"],0)
+
+    def test_american_usf_canonical_alias_does_not_require_per_school_scraper(self):
+        g={"game_id":"202","date_et":"2026-11-03",
+           "home":"South Florida Bulls","away":"Florida Atlantic Owls",
+           "kickoff_utc":"2026-11-04T00:00:00Z"}
+        reg={**ALIASES,"USF":"South Florida Bulls","Florida Atlantic":"Florida Atlantic Owls",
+             "UTSA":"UTSA Roadrunners","UAB":"UAB Blazers"}
+        c=card(published="2026-11-03",clock="12:00:00")
+        c["footer"]["date"]="2026-11-03"
+        c["games"][0]["teamDisplayName"]="South Florida"
+        c["games"][1]["teamDisplayName"]="Florida Atlantic"
+        rows,qa=extract("American",{"card-1":c},[g],reg,"2026-11-03T20:00:00Z")
+        self.assertEqual(qa["official_reports_accepted"],1)
+        self.assertEqual({r["team"] for r in rows},
+                         {"South Florida Bulls","Florida Atlantic Owls"})
+
     def test_out_first_half_is_not_limited_or_full_game_out(self):
         for publisher in ("Out (1st Half)", "Out - (1st Half)"):
             p=parse_player({"name":"OL #77 Example Lineman","status":publisher})
