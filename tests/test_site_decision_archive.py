@@ -28,6 +28,38 @@ class ProspectiveDashboardArchiveTests(unittest.TestCase):
         self.assertEqual(snap["summary"]["model_market_high_disagreements"],0)
         self.assertFalse(snap["market_publication_time_authenticated"])
         self.assertNotEqual(row["market_observed_utc"],snap["model_forecast_observed_utc"])
+    def test_snapshot_archives_current_sourced_expected_qb_for_future_accuracy_grading(self):
+        from scripts.site_depthchart import select_pregame_qb
+        b=board();g=b["games"][0]
+        g["qb_home"]={"player":"Former Passer","status":"RECENT_GAME_PASSER"}
+        g["qb_depth_home"]=[{
+            "player":"Actual Chart QB","rank":1,
+            "source_url":"https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?id=123&s=home",
+            "observed_at_utc":"2026-10-24T15:00:00Z"}]
+        g["qb_availability_home"]=[]
+        g["qb_pregame_home"]=select_pregame_qb(g,"home",g["qb_depth_home"])
+        snap=freeze(b,NOW,"888")
+        home=snap["rows"][0]["qb_pregame_expected_home"]
+        self.assertEqual(home["player"],"Actual Chart QB")
+        self.assertEqual(home["status"],"PROJECTED_DEPTH_CHART")
+        self.assertFalse(home["game_specific_confirmed"])
+        self.assertTrue(home["historical_passer_not_a_starter"])
+        self.assertIsNone(snap["rows"][0]["qb_pregame_expected_away"])
+        g["qb_pregame_home"]["player"]="Former Passer"
+        with self.assertRaisesRegex(ValueError,"contradicts source"):
+            freeze(b,NOW,"888")
+
+    def test_qb_prediction_source_must_precede_display_and_kickoff(self):
+        from scripts.site_depthchart import select_pregame_qb
+        b=board();g=b["games"][0]
+        g["qb_depth_home"]=[{
+            "player":"Chart QB","rank":1,
+            "source_url":"https://www.ourlads.com/ncaa-football-depth-charts/depth-chart.aspx?id=123&s=home",
+            "observed_at_utc":"2026-10-24T15:50:00Z"}]
+        g["qb_pregame_home"]=select_pregame_qb(g,"home",g["qb_depth_home"])
+        with self.assertRaisesRegex(ValueError,"source provenance"):
+            freeze(b,NOW,"888")
+
     def test_larger_than_ten_point_model_market_gap_is_flagged(self):
         b=board()
         b["games"][0]["model_home_margin"]=28.0
