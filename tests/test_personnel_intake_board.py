@@ -62,7 +62,11 @@ class IntakeBoardTests(unittest.TestCase):
         self.assertEqual(away["unlisted_player_status"],"UNKNOWN")
         self.assertEqual(home["current_qb_evidence"],"CONFLICT_REVIEW")
         self.assertIsNone(home["current_qb_candidate"])
+        self.assertFalse(home["starter_eligible_for_model_input"])
         self.assertEqual(away["current_qb_evidence"],"PROJECTED_NOT_CONFIRMED")
+        self.assertIsNone(away["current_qb_candidate"])
+        self.assertEqual(away["historical_or_chart_qb_scenario"],"Other QB")
+        self.assertFalse(away["starter_eligible_for_model_input"])
         self.assertEqual({(x["player"],x["position"],x["status"]) for x in home["players"]},
                          {("Starting RB","RB","OUT"),
                           ("Backup WR","WR","QUESTIONABLE"),
@@ -98,6 +102,7 @@ class IntakeBoardTests(unittest.TestCase):
         r=build(context,expected,REGISTRY,AT)
         self.assertTrue(r["games"][0]["confirmed_qb_starter"])
         self.assertEqual(r["games"][0]["current_qb_candidate"],"Available QB")
+        self.assertTrue(r["games"][0]["starter_eligible_for_model_input"])
 
     def test_conflicting_university_and_conference_claims_are_review_only(self):
         context,expected=fixture()
