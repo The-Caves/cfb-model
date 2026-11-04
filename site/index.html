@@ -280,18 +280,23 @@ function marketTile(label,line,selection,edge){
 function identityKey(value){return String(value||"").toLowerCase().replace(/[^a-z0-9]+/g,"").trim()}
 function qbIdentity(side,depth,availability){
  const chart=Array.isArray(depth)?depth.filter(p=>[1,2,3].includes(p.rank)&&p.player):[];
- const confirmed=side?.status==="CONFIRMED_OFFICIAL"&&Boolean(side?.player);
- const recent=side?.status==="RECENT_GAME_PASSER"&&Boolean(side?.player);
- // Official confirmed name wins. Otherwise recent game participation can
- // identify a different QB from a potentially stale QB1 chart.
- const player=confirmed||recent?side.player:(chart[0]?.player||null);
+ const reported=Array.isArray(availability)?availability:[];
+ const statusFor=name=>reported.find(a=>identityKey(a.player)===identityKey(name))?.status||null;
+ const unavailable=new Set(["OUT","OUT_FIRST_HALF","SUSPENDED","DOUBTFUL","CONFLICT_REVIEW"]);
+ const confirmed=side?.status==="CONFIRMED_OFFICIAL"&&Boolean(side?.player)&&
+                 !unavailable.has(statusFor(side.player));
+ const conflict=side?.status==="CONFLICT_REVIEW";
+ // No previous-game passing leader or historical yardage can establish
+ // the CURRENT projected starter. Current source-labelled depth is a
+ // low-certainty projection only; official game-specific proof wins.
+ const projected=conflict?null:chart.find(p=>!unavailable.has(statusFor(p.player)));
+ const player=confirmed?side.player:(projected?.player||null);
  const found=chart.find(p=>identityKey(p.player)===identityKey(player));
  const role=found?"QB"+found.rank:player?"QB":"QB?";
- const badge=confirmed?"Confirmed":recent?"Last game":"Chart only";
- const noCurrent=!confirmed;
- const reported=(availability||[]).find(a=>identityKey(a.player)===identityKey(player));
- return {player,role,badge,noCurrent,source:confirmed?"official":recent?"recent":"chart",
-         medical:reported?.status||null};
+ const badge=confirmed?"Confirmed":"Chart only";
+ return {player,role,badge,noCurrent:!confirmed,
+         source:confirmed?"official":projected?"chart":"unknown",
+         medical:player?statusFor(player):null};
 }
 function shortQB(side,depth,availability){
  const q=qbIdentity(side,depth,availability),label=node("div","teamSub");
