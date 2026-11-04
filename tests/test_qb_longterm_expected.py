@@ -67,6 +67,24 @@ class LongTermStarterTests(unittest.TestCase):
         self.assertEqual(exposure["unknown_weight"],1.)
         self.assertEqual(exposure["status"],"PASS_NO_SOURCED_PRIOR_QB_EXPOSURE")
 
+    def test_multiple_miami_qb_outages_remove_all_without_inventing_heavner(self):
+        x=expected()
+        x["games"][0]["team"]="Miami (OH) RedHawks"
+        x["games"][0]["opponent"]="Other School"
+        x["games"][0]["starter"]="David McComb"
+        x["games"][0]["scenarios"]=[
+            {"player":"David McComb","depth_rank":1},
+            {"player":"Thomas Gotkowski","depth_rank":2},
+            {"player":"Caleb Heavner","depth_rank":3}]
+        out=apply(x,REGISTRY,NOW)
+        slot=out["games"][0]
+        self.assertIsNone(slot["starter"])
+        self.assertEqual([s["player"] for s in slot["scenarios"]],["Caleb Heavner"])
+        self.assertEqual({v["player"] for v in slot["official_longterm_out_qbs"]},
+                         {"David McComb","Thomas Gotkowski"})
+        self.assertEqual(out["qb_longterm_out_audit"]["unavailable_qb_scenarios_removed"],2)
+        self.assertFalse(out["qb_longterm_out_audit"]["replacement_starter_inferred"])
+
     def test_not_backdated_into_older_capture(self):
         prior=expected()
         prior["observed_at_utc"]="2026-11-03T17:59:00Z"
