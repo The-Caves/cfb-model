@@ -14,6 +14,7 @@ from pathlib import Path
 from scripts import context_archive as store
 from scripts.game_context import parse_time
 from scripts.v04_market_challenger import decide as v04_decide
+from scripts.site_depthchart import select_pregame_qb, allowed as depth_url_allowed
 from scripts.v05_robust_scores import MODEL as V05_MODEL, STATUS as V05_STATUS
 from scripts.personnel_results_archive import _commit_material
 
@@ -86,6 +87,39 @@ def freeze(board,now,run_id):
             if over!="PASS":ou+=1
         elif tt:
             raise ValueError("Observed total without computed side")
+        # Preserve the exact expected QB identity shown BEFORE kickoff, so
+        # subsequent independently reviewed gamebooks can grade accuracy.
+        # Legacy snapshots without this field remain explicitly unobserved.
+        qb_identity={}
+        for qside in ("home","away"):
+            pre=g.get("qb_pregame_"+qside)
+            if pre is None:
+                qb_identity[qside]=None
+                continue
+            expected=select_pregame_qb(g,qside,g.get("qb_depth_"+qside) or [])
+            if pre!=expected:
+                raise ValueError("Published QB selection contradicts source overlay")
+            status=pre["status"]
+            player=pre["player"]
+            source_url=pre["source_url"]
+            observed=pre["observed_at_utc"]
+            if status in ("CONFIRMED_THIS_GAME","PROJECTED_DEPTH_CHART"):
+                if (not isinstance(player,str) or not player or
+                    not isinstance(source_url,str) or not source_url.startswith("https://") or
+                    not observed or parse_time(observed)>now or
+                    parse_time(observed)>=kickoff):
+                    raise ValueError("Current QB name lacks pregame source provenance")
+                if status=="PROJECTED_DEPTH_CHART" and not depth_url_allowed(source_url):
+                    raise ValueError("Projected QB must originate from reviewed depth chart")
+            elif status not in ("UNKNOWN","CONFLICT_REVIEW") or player is not None:
+                raise ValueError("Unknown QB cannot claim a named active starter")
+            qb_identity[qside]={
+                "player":player,"status":status,
+                "source_url":source_url,"source_observed_at_utc":observed,
+                "depth_rank":pre["depth_rank"],
+                "game_specific_confirmed":status=="CONFIRMED_THIS_GAME",
+                "historical_passer_not_a_starter":True,
+                "not_used_to_rewrite_frozen_score":True}
         # Freeze the ACTUALLY DISPLAYED independent V04 research score
         # alongside (never replacing) the original V03 forecast receipts.
         candidate=g.get("v04_direct_scores")
@@ -186,6 +220,8 @@ def freeze(board,now,run_id):
             "v04_research_not_promoted":candidate.get("model_promoted") is False
                 if candidate else None,
             "qb_verified_at_forecast":g.get("qb_starters_verified",0),
+            "qb_pregame_expected_home":qb_identity["home"],
+            "qb_pregame_expected_away":qb_identity["away"],
             "v05_shadow_model":v05["model"] if v05 else None,
             "v05_shadow_status":v05["status"] if v05 else None,
             "v05_shadow_home_points":v05_hp,
