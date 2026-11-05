@@ -8,10 +8,12 @@ the simulation remains an unconstrained shadow and reports that limitation.
 import math
 from collections import defaultdict
 from urllib.parse import urlsplit
+from zoneinfo import ZoneInfo
 from scripts.game_context import parse_time
 
 STATUS="REVIEWED_PAST_TEAM_PLAY_ATTEMPT_BUDGETS_RESEARCH_ONLY"
 MIN_GAMES_PER_TEAM=3
+EASTERN=ZoneInfo("America/New_York")
 
 
 def _https(value):
@@ -57,7 +59,7 @@ def prepare(bundle,target,possession_rows,decision):
         observed=parse_time(r["captured_at_utc"])
         if (not clock<final<=observed<=when or
             not clock<parse_time(target["kickoff_utc"]) or
-            clock.date().isoformat()>=target["date"]):
+            clock.astimezone(EASTERN).date().isoformat()>=target["date"]):
             raise ValueError("Budgets are postgame, postdecision or same football day")
         if (r.get("complete_team_attempts_reviewed") is not True or
             not _https(r.get("source_url"))):
