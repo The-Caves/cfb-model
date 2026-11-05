@@ -95,6 +95,10 @@ def simulate(gamefit,player_history,prior_possessions,target,decision_utc,quotes
         names.add((pid,team))
         if item["team"] not in (target["home"],target["away"]):
             raise ValueError("Unknown home/away side")
+        if budget_by_side is not None:
+            side="home" if item["team"]==target["home"] else "away"
+            if team!=str(target["team_ids"][side]):
+                raise ValueError("Wrong-team player ID in reviewed team attempt budget matchup")
         if (item.get("availability") not in ("CONFIRMED_ACTIVE","UNCONFIRMED_EXPECTED")
             or parse_time(item["availability_observed_at_utc"])>now):
             insufficient.append({"player_id":pid,"reason":"AVAILABILITY_UNKNOWN_OR_OUT"})
