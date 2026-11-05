@@ -854,6 +854,90 @@ function renderPerformance(){
  if(p.recent?.length)games.append(resultTable(["Away @ Home","Final A–H","SU","ATS","Totals"],p.recent,x=>[x.away+" @ "+x.home,x.score,resultSymbol(x.su),resultSymbol(x.ats),resultSymbol(x.ou)]));
  else games.append(node("div","performanceMeta","No eligible completed games."));
 }
+// LIVE: actual ESPN scores and only the last properly archived PRE-KICKOFF
+// V04 prediction. Never use the current score to synthesize a new model pick.
+function liveGameCard(g){
+ const el=node("article","game liveGame");
+ const top=node("div","gameTop");
+ top.append(node("span","liveBadge","● LIVE · "+(g.description||"In progress")),
+            node("span","small","ESPN score"));
+ el.append(top);
+ const rows=node("div","liveScoreRows");
+ for(const side of ["away","home"]){
+  const row=node("div","liveTeam");
+  row.append(node("b","",g[side+"_team"]));
+  row.append(node("strong","",String(g[side+"_score"])));
+  rows.append(row);
+ }
+ el.append(rows);
+ const snap=g.pregame;
+ if(snap?.pre_kickoff_archive_verified===true){
+  const box=node("div","livePregame");
+  box.append(node("b","","Archived before kickoff · V04 research"));
+  box.append(node("p","",g.away_team+" "+num(snap.archived_away_points,0)+
+    " · "+g.home_team+" "+num(snap.archived_home_points,0)+
+    " (total "+num(snap.archived_total,1)+")"));
+  const ats=snap.archived_ats_side==="HOME"?g.home_team+" ATS":
+            snap.archived_ats_side==="AWAY"?g.away_team+" ATS":"PASS";
+  const ou=["OVER","UNDER"].includes(snap.archived_ou_side)?snap.archived_ou_side:"PASS";
+  box.append(node("p","small","Pregame ATS: "+ats+
+    " · Pregame O/U: "+ou+" · No in-game model adjustment"));
+  if(snap.archived_model_observed_at_utc)
+   box.append(node("div","small","Archived "+fmtDate.format(dateOf(snap.archived_model_observed_at_utc))));
+  el.append(box);
+ }else{
+  el.append(node("div","liveNoModel",
+   "No verified pre-kickoff V04 snapshot for this game. Live picks are withheld."));
+ }
+ return el;
+}
+function renderLive(){
+ if(!data)return;
+ const listed=Array.isArray(data.live_games)?data.live_games:[];
+ const live=listed.filter(g=>g.state==="in"&&Number.isInteger(g.home_score)&&Number.isInteger(g.away_score));
+ byId("live-count").textContent=live.length;
+ byId("live-tab-count").textContent=live.length;
+ const captured=data.live_display?.observed_at_utc;
+ byId("live-updated").textContent=captured?"Scores checked "+fmtDate.format(dateOf(captured)):
+   "Live ESPN source not yet checked";
+ if(!live.length){
+  const box=node("div","empty");
+  box.append(node("b","",!data.live_display?"Live feed not available":
+    data.live_display.fetch_failures?.length?"No verified live score currently available":"No games in progress"));
+  box.append(node("span","",!data.live_display?
+    "The website build has not included a live-score snapshot.":
+    data.live_display.fetch_failures?.length?
+      "ESPN could not be reached for every requested date. Scores and picks are not inferred.":
+      "Games will appear here when ESPN reports in-progress scores and the dashboard publishes an update."));
+  byId("live-games").replaceChildren(box);
+  return;
+ }
+ byId("live-games").replaceChildren(...live.map(liveGameCard));
+}
+async function refreshLive(){
+ const button=byId("refresh-live");
+ button.disabled=true;
+ try{
+  const response=await fetch("./data/dashboard.json",{cache:"no-store"});
+  if(!response.ok)throw Error("Live scoreboard refresh unavailable");
+  const newer=await response.json();
+  if(newer.schema_version!==2||newer.betting_status!=="PASS_UNVALIDATED"||
+     !Array.isArray(newer.games)||newer.live_display?.status!==
+       "ESPN_LIVE_SCORE_WITH_IMMUTABLE_PREGAME_SNAPSHOT_RESEARCH_ONLY")
+   throw Error("Untrusted live scoreboard response");
+  // Only replace from a newer published, first-party dashboard. This does not
+  // change the GitHub context-state forecast and performance archives.
+  if(!data.live_display?.observed_at_utc||
+     dateOf(newer.live_display.observed_at_utc)>=dateOf(data.live_display.observed_at_utc)){
+   data=newer;
+   renderPerformance();updateDayNav();render();renderLive();renderLive();
+  }
+ }catch(e){
+  byId("live-updated").textContent="Live refresh unavailable · using last published score";
+  console.error(e);
+ }finally{button.disabled=false}
+}
+
 function render(){
  if(!data)return;
  const now=new Date(),future=data.games.filter(g=>dateOf(g.kickoff_utc)>now);
@@ -902,9 +986,19 @@ function render(){
 }
 for(const button of document.querySelectorAll("[data-tab]"))button.addEventListener("click",()=>{
  for(const other of document.querySelectorAll("[data-tab]")){
- const active=other===button;other.setAttribute("aria-selected",String(active));
- byId(other.dataset.tab).classList.toggle("hidden",!active);
- }});
+  const active=other===button;other.setAttribute("aria-selected",String(active));
+  byId(other.dataset.tab).classList.toggle("hidden",!active);
+ }
+ document.querySelector(".dayShell").classList.toggle("hidden",button.dataset.tab!=="matchups");
+ if(button.dataset.tab==="live")renderLive();
+});
+byId("refresh-live").addEventListener("click",refreshLive);
+// Refresh only when someone is viewing Live. The data is still the most
+// recently *published* scoreboard, never an invented live probability.
+setInterval(()=>{
+ if(document.querySelector('[data-tab="live"]').getAttribute("aria-selected")==="true")
+  refreshLive();
+},120000);
 for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id==="query"?"input":"change",render);
 (async()=>{
  try{
