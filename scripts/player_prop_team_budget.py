@@ -40,6 +40,8 @@ def prepare(bundle,target,possession_rows,decision):
         not all(str(identities[s]).isdigit() for s in ("home","away")) or
         identities["home"]==identities["away"]):
         raise ValueError("Reviewed team play budgets require exact two-team IDs")
+    if target.get("date")!=parse_time(target["kickoff_utc"]).astimezone(EASTERN).date().isoformat():
+        raise ValueError("Target football calendar day contradicts kickoff")
     if (str(bundle.get("target_game_id"))!=str(target["game_id"]) or
         bundle.get("target_kickoff_utc")!=target["kickoff_utc"]):
         raise ValueError("Budget fixture cannot be reused for a different game")
@@ -57,7 +59,7 @@ def prepare(bundle,target,possession_rows,decision):
         clock=parse_time(r["kickoff_utc"])
         final=parse_time(r["outcome_known_at_utc"])
         observed=parse_time(r["captured_at_utc"])
-        if (not clock<final<=observed<=when or
+        if (not clock<final<=observed<=parse_time(bundle["observed_at_utc"])<=when or
             not clock<parse_time(target["kickoff_utc"]) or
             clock.astimezone(EASTERN).date().isoformat()>=target["date"]):
             raise ValueError("Budgets are postgame, postdecision or same football day")
