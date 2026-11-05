@@ -57,7 +57,7 @@ on:
     - cron: '17,47 14-23 * * 6'
     # Game-night scoreboard captures every ~30 min (UTC). The build and
     # archive stay separate: current scores NEVER recompute frozen picks.
-    - cron: '17,47 23 * * 2-6'
+    - cron: '17,47 23 * * 2-5'
     - cron: '17,47 0-3 * * 0,3-6'
   # A successful ingestion writes a NEW immutable source snapshot to
   # context-state. Publish it immediately instead of waiting for a 30-min
