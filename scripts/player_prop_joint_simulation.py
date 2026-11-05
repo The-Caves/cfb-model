@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 from scripts.game_context import parse_time
 from scripts.player_prop_history import STATUS as PLAYER_HISTORY, STATS, COUNT_STATS
 from scripts.game_simulation_research import validate_inputs, _sample
+from scripts.player_prop_team_budget import prepare as prepare_team_budget, conserve_trial
 
 STATUS="POSSESSION_CONDITIONED_PROP_SIM_RESEARCH_ONLY"
 POS_SOURCE="OBSERVED_PRIOR_TEAM_POSSESSIONS_RESEARCH_ONLY"
@@ -71,7 +72,7 @@ def _source_rows(player_history,possessions,target,when):
     return candidates
 
 def simulate(gamefit,player_history,prior_possessions,target,decision_utc,quotes=None,
-             trials=1500,seed=2026):
+             trials=1500,seed=2026,team_attempt_budgets=None):
     validate_inputs(gamefit,decision_utc)
     now=parse_time(decision_utc)
     if target["kickoff_utc"]!=gamefit["kickoff_utc"] or (
@@ -84,6 +85,8 @@ def simulate(gamefit,player_history,prior_possessions,target,decision_utc,quotes
     if quotes is not None and (quotes.get("status")!="NCAAF_PLAYER_PROP_SOURCE_CAPTURE_RESEARCH_ONLY" or
         str(quotes.get("espn_game_id"))!=str(target["game_id"])):
         raise ValueError("Prop bookmaker and ESPN fixture mismatch")
+    budget_by_side,budget_state=prepare_team_budget(
+        team_attempt_budgets,target,prior_possessions.get("rows",[]),now.isoformat())
     candidates=_source_rows(player_history,prior_possessions,target,now)
     eligible=[];insufficient=[];names=set()
     for item in target.get("players",[]):
@@ -112,6 +115,7 @@ def simulate(gamefit,player_history,prior_possessions,target,decision_utc,quotes
     dist=gamefit["distributions"]
     output=defaultdict(lambda:defaultdict(list))
     home_scores=[];away_scores=[];common_counts=[]
+    unallocated=defaultdict(list)
     for trial in range(trials):
         draw=_sample(rng,dist["possessions"],"weight")
         counts={side:draw.get(side+"_count",draw.get("count")) for side in ("home","away")}
@@ -126,6 +130,7 @@ def simulate(gamefit,player_history,prior_possessions,target,decision_utc,quotes
             scores[side]=score
         home_scores.append(scores["home"]);away_scores.append(scores["away"])
         common_counts.append(counts)
+        sampled_trial={}
         for item,past,coverage in eligible:
             key=str(item["player_id"])
             # Draw the *same prior game* vector for all stats of this player.
@@ -135,9 +140,26 @@ def simulate(gamefit,player_history,prior_possessions,target,decision_utc,quotes
             _,values,old_count=vector
             side="home" if item["team"]==target["home"] else "away"
             pace=counts[side]/old_count
-            for stat in STATS:
-                if coverage[stat]<3 or values.get(stat) is None:continue
-                output[key][stat].append(_stat(values[stat]*pace,stat))
+            proposed={stat:_stat(values[stat]*pace,stat)
+                      for stat in STATS if coverage[stat]>=3 and values.get(stat) is not None}
+            sampled_trial[key]={"side":side,"values":proposed}
+        if budget_by_side is not None:
+            caps={}
+            for side in ("home","away"):
+                history=budget_by_side[side]
+                sample=_sample(rng,[{"row":x,"weight":.78**i}
+                                    for i,x in enumerate(history)],"weight")["row"]
+                old_pos=sample["historical_possessions"]
+                caps[side]={stat:min(110,max(0,int(round(
+                    sample[stat]*counts[side]/old_pos))))
+                    for stat in ("passing_attempts","rushing_attempts")}
+            remainder=conserve_trial(sampled_trial,caps)
+            for side,items in remainder.items():
+                for stat,value in items.items():
+                    unallocated[(side,stat)].append(value)
+        for pid,sampled in sampled_trial.items():
+            for stat,value in sampled["values"].items():
+                output[pid][stat].append(value)
     quote_idx=defaultdict(list)
     if quotes is not None:
         for q in quotes.get("quotes",[]):
@@ -184,16 +206,25 @@ def simulate(gamefit,player_history,prior_possessions,target,decision_utc,quotes
             "player_scenarios":report,"excluded":insufficient,
             "script_conditioning_fitted":False,
             "team_level_stat_conservation_fitted":False,
+            "team_attempt_budget_status":budget_state,
+            "team_attempt_budget_applied":budget_by_side is not None,
+            "team_attempt_budget_unallocated_average":{
+                side:{stat:round(sum(unallocated[(side,stat)])/trials,3)
+                      for stat in ("passing_attempts","rushing_attempts",
+                                   "receptions_upper_bound_unallocated")}
+                for side in ("home","away")} if budget_by_side is not None else {},
+            "stat_budget_conservation_excludes_unmodeled_players":True,
             "historical_first_publication_verified":False,
             "prop_market_edge_validated":False,
             "model_promoted":False,"safe_for_betting":False,
             "betting_status":"PASS_UNVALIDATED"}
 
-def run(fit_path,history_path,pos_path,game_path,decision,output,quote_path=None,trials=1500):
+def run(fit_path,history_path,pos_path,game_path,decision,output,quote_path=None,
+        trials=1500,budget_path=None):
     read=lambda x:json.loads(Path(x).read_text(encoding="utf-8"))
     r=simulate(read(fit_path),read(history_path),read(pos_path),
                read(game_path),decision,read(quote_path) if quote_path else None,
-               trials=trials)
+               trials=trials,team_attempt_budgets=read(budget_path) if budget_path else None)
     path=Path(output);path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(r,indent=2,allow_nan=False)+"\n",encoding="utf-8")
     return r
@@ -203,5 +234,7 @@ if __name__=="__main__":
     for name in ("fit","history","possessions","game","decision","output"):
         p.add_argument("--"+name,required=True)
     p.add_argument("--quotes");p.add_argument("--trials",type=int,default=1500)
+    p.add_argument("--team-attempt-budgets")
     a=p.parse_args()
-    run(a.fit,a.history,a.possessions,a.game,a.decision,a.output,a.quotes,a.trials)
+    run(a.fit,a.history,a.possessions,a.game,a.decision,a.output,a.quotes,a.trials,
+        a.team_attempt_budgets)
