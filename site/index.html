@@ -311,6 +311,11 @@ header{background:linear-gradient(180deg,#111d31 0%,#0c1727 100%);border-color:#
  <div id="performance-scoring" class="state">Loading archived performance…</div>
 </div>
 <div class="panel" style="margin-top:14px">
+ <h3>Model history · cumulative</h3>
+ <p class="performanceLegend">Historical scores stay on their original model. V03, V04 and V05 have different eligible-game groups; only paired comparisons are directly comparable. V07 is not promoted or graded.</p>
+ <div id="performance-models" class="state">Loading versioned historical grades…</div>
+</div>
+<div class="panel" style="margin-top:14px">
  <h3>Results by week</h3>
  <div id="performance-weekly" class="state">Loading weekly grades…</div>
 </div>
@@ -817,6 +822,7 @@ function renderPerformance(){
  if(!p||p.status!=="ARCHIVED_PROSPECTIVE_MODEL_PERFORMANCE_RESEARCH_ONLY"){
   byId("performance-scoring").textContent="Archived grades unavailable; no outcomes inferred.";
   byId("performance-weekly").textContent="No archived weekly results.";
+  byId("performance-models").textContent="No archived model-version grades.";
   byId("performance-games").textContent="No graded games.";return;
  }
  for(const k of ["su","ats","ou"]){byId(k).textContent=resultRecord(p[k]);byId(k+"-meta").textContent=resultMeta(p[k]);}
@@ -847,6 +853,31 @@ function renderPerformance(){
   }
   area.append(node("div","performanceMeta","Only immutable pre-kickoff V05 shadow predictions are graded; no model promotion or wagering claims."));
  }
+ // Version-specific performance is append-only across website/model updates.
+ // Cohorts differ; never blend SU, ATS or totals into one fake winning record.
+ const versionArea=byId("performance-models");versionArea.replaceChildren();
+ const fmtMAE=x=>Number.isFinite(x)?num(x,2)+" pts":"—";
+ const modelRows=[{
+  model:"V03 · archived",cohort:"Frozen SU / as-displayed markets",
+  su:resultRecord(p.su),ats:resultRecord(p.ats),ou:resultRecord(p.ou),
+  margin:fmtMAE(score.margin_mae),total:fmtMAE(score.total_mae)}];
+ if(v?.status==="ARCHIVED_PREKICKOFF_V04_MARKET_RESEARCH_GRADES"){
+  modelRows.push({model:"V04 · current display",cohort:"Research selections · PASS preserved",
+    su:v.v04_su_comparable_games? v.v04_su_correct+"/"+v.v04_su_comparable_games:"—",
+    ats:resultRecord(v.ats),ou:resultRecord(v.ou),
+    margin:fmtMAE(v.v04_margin_mae),total:fmtMAE(v.v04_total_mae)});
+ }
+ if(shadow?.status==="ARCHIVED_PREGAME_PAIRED_V05_V04_SHADOW_RESEARCH"){
+  const a=shadow.summary||{};
+  modelRows.push({model:"V05 · shadow",cohort:"Same-game paired comparison vs V04 · "+(a.games??0)+" games",
+    su:a.games&&Number.isFinite(a.v05_su_accuracy)?num(a.v05_su_accuracy*100,1)+"%":"—",
+    ats:"—",ou:"—",margin:fmtMAE(a.v05_margin_mae),total:fmtMAE(a.v05_total_mae)});
+ }
+ modelRows.push({model:"V07 · unpromoted",cohort:"Personnel research · not graded",
+   su:"—",ats:"—",ou:"—",margin:"—",total:"—"});
+ versionArea.append(resultTable(
+   ["Model","Cohort","SU","ATS","Totals","Margin MAE","Total MAE"],
+   modelRows,x=>[x.model,x.cohort,x.su,x.ats,x.ou,x.margin,x.total]));
  const weekly=byId("performance-weekly");weekly.replaceChildren();
  if(p.weekly?.length)weekly.append(resultTable(["Week","SU","ATS","Totals"],p.weekly,x=>[x.week,resultRecord(x.su),resultRecord(x.ats),resultRecord(x.ou)]));
  else weekly.append(node("div","performanceMeta","No archived weekly results."));
