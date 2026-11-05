@@ -1,0 +1,56 @@
+name: CFB Player Workload Source Probe
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-workload-source-probe.yml'
+      - 'scripts/player_prop_team_budget.py'
+      - 'scripts/player_prop_team_box_source.py'
+      - 'scripts/player_prop_team_box_probe.py'
+      - 'scripts/player_prop_joint_simulation.py'
+      - 'tests/test_player_prop_team_budget.py'
+      - 'tests/test_player_prop_team_box_source.py'
+permissions:
+  contents: read
+jobs:
+  source-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Validate CFB opportunity budgets and correlated simulation
+        run: |
+          python -m unittest discover -s tests -p 'test_player_prop_joint_simulation.py' -v
+          python -m unittest discover -s tests -p 'test_player_prop_team_budget.py' -v
+          python -m unittest discover -s tests -p 'test_player_prop_team_box_source.py' -v
+      - name: Fetch and inspect actual 2026 ESPN box, drive and schedule sources
+        run: |
+          set -euo pipefail
+          python -m scripts.player_prop_team_box_probe --output data/research/workload-source-receipt.json
+          python - <<'PY'
+          import json,os
+          x=json.load(open('data/research/workload-source-receipt.json'))
+          lines=[
+            '## CFB team opportunity source readiness',
+            f"- Eligible upcoming games evaluated: {x['upcoming_games_examined']}",
+            f"- Games with >=3 source-matched prior team-box/drive observations per team: {x['matched_both_side_history']}",
+            '- Official pregame starting lineups verified: 0 (not this source)',
+            '- Retroactive 2026 source publication timing: NOT authenticated',
+            '- Betting / live model promotion: NONE',
+          ]
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write('\n'.join(lines)+'\n')
+          PY
+      - name: Preserve auditable observed-time source coverage result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-workload-source-probe-${{ github.run_id }}
+          path: data/research/workload-source-receipt.json
+          retention-days: 14
+          if-no-files-found: ignore
