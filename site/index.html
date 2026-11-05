@@ -274,6 +274,10 @@ header{background:linear-gradient(180deg,#111d31 0%,#0c1727 100%);border-color:#
  .compactSummary{margin:8px 0;gap:8px}
 }
 
+.liveActions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.refreshLive{border:1px solid #397f6d;border-radius:8px;background:#163a36;color:#a9f0d7;padding:7px 11px;font-size:11px;font-weight:750}
+.refreshLive:hover{background:#215449}
+.refreshLive:disabled{opacity:.55}
 </style></head>
 <body>
 <header><div class="wrap">
@@ -294,7 +298,7 @@ header{background:linear-gradient(180deg,#111d31 0%,#0c1727 100%);border-color:#
 <select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="depth">With QB depth-chart ranks</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option><option value="player">With player projections</option><option value="player-qb">With QB passing projection</option><option value="player-rush">With rushing projection</option><option value="player-rec">With receiving projection</option></select>
 </div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
-<section id="live" role="tabpanel" class="hidden"><div class="row"><h2>Games in progress</h2><span class="liveSourceStamp" id="live-updated">Checking ESPN scores…</span></div><p class="small liveIntro">Current scores are observed ESPN results. All model estimates below are archived from <b>before kickoff</b>; live win probabilities and in-game picks are not yet validated or available.</p><div class="grid" id="live-games" aria-live="polite"><div class="empty"><b>Checking live games</b>Waiting for verified scoreboard data.</div></div></section>
+<section id="live" role="tabpanel" class="hidden"><div class="row"><h2>Games in progress</h2><div class="liveActions"><span class="liveSourceStamp" id="live-updated">Checking ESPN scores…</span><button class="refreshLive" id="refresh-live" type="button">Refresh</button></div></div><p class="small liveIntro">Current scores are observed ESPN results. All model estimates below are archived from <b>before kickoff</b>; live win probabilities and in-game picks are not yet validated or available.</p><div class="grid" id="live-games" aria-live="polite"><div class="empty"><b>Checking live games</b>Waiting for verified scoreboard data.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden">
 <p class="performanceLegend"><b>Lifetime performance stays intact across model versions.</b> V03 frozen forecasts, V04 research picks, V05 shadow comparisons and PlayerForm results retain their separate grades and original observation dates; no model switch resets history.</p>
 <div class="results">
