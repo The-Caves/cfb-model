@@ -209,19 +209,84 @@ footer{border-top:1px solid var(--line);color:#879fb5;font-size:11px;margin-top:
  .teamSub{white-space:normal}
 }
 
+
+/* Simplified match center. Purple = experimental model; blue = market; green = live actual. */
+:root{--bg:#0a1120;--surface:#101c2c;--surface-2:#18263b;--line:#2b3b52;
+      --mint:#78dbc1;--sky:#98c6ff;--violet:#b7a6fa;--subtle:#93a9c1;--gold:#f6c784}
+body{background:radial-gradient(ellipse 67% 16% at 75% 0%,#1c2949 0%,transparent 90%),var(--bg)}
+header{background:linear-gradient(180deg,#111d31 0%,#0c1727 100%);border-color:#2b3b50}
+.brandMark{background:#40375d;color:#d8ccff;border-color:#675991}
+.top .pill{border-color:#534978;background:#25213c;color:#cfc5f4}
+.hero{padding:21px 0 17px}
+.hero h1{font-size:clamp(25px,3.1vw,36px)}
+.heroStat{background:#151f34;border-color:#343e60;min-width:95px}
+.tab[aria-selected=true]{background:#302b4a;border-color:#655990;color:#e8e1ff}
+.game{padding:13px 15px;border-color:#314258;border-radius:13px;box-shadow:0 10px 25px #00000015}
+.game:before{width:3px;background:linear-gradient(#b7a6fa,#6699e6)}
+.gameTop{margin-bottom:7px}
+.game .modelTag{background:#25213e;border-color:#4e437b;color:#cabefa;font-size:10px;text-transform:none;letter-spacing:0}
+.teamRow{background:#162336;border-color:var(--school-color,#405473);padding:6px 9px}
+.teamStack{gap:4px}
+.teamSub{margin-top:2px}
+.scoreBox .score{color:#ddd4ff;font-size:24px}
+.compactSummary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0;color:#b2c5de;font-size:11px}
+.compactSummary .favorite{color:#d4c6ff;font-size:12px}
+.compactSummary .scoreTotal{color:#a9c5ec;font-size:11px}
+.marketTiles{gap:7px}
+.marketTile{padding:8px 10px;background:#101e31;border-color:#2f4663}
+.marketTile .marketLabel{letter-spacing:.035em;text-transform:none;font-size:10px}
+.marketTile .marketValue{font-size:12px}
+.marketTile .researchSide{color:#81b8ff;font-size:10px}
+.marketTile:nth-child(2) .researchSide{color:#80ddc5}
+.gameMore{margin-top:10px;border-top:1px solid #2d3e54}
+.gameMore>summary{cursor:pointer;font-size:11px;font-weight:750;color:#c3b7f5;padding:10px 2px 2px}
+.gameMore>summary:hover{color:#e1d9ff}
+.gameMore[open]>summary{margin-bottom:9px}
+.gameMore .modelSummary{margin:8px 0}
+.gameMore .marketMeta{margin-top:9px}
+.gameMore .playerFocus{margin-top:10px}
+.gameMore .scouting{margin-top:9px}
+.gameRisk{font-size:10px;color:#f2c690;margin-top:8px}
+.liveTabCount{display:inline-block;border-radius:20px;background:#1d3840;padding:1px 6px;color:#80ecc9;margin-left:3px;font-variant-numeric:tabular-nums}
+.liveSourceStamp{color:#8ddfbe;font-size:11px}
+.liveIntro{line-height:1.6;margin:4px 0 17px}
+.liveGame{border-color:#31775d}
+.liveGame:before{background:#40d3a2}
+.liveBadge{border-radius:20px;background:#153f37;border:1px solid #32806a;color:#83e9c3;font-size:10px;font-weight:800;padding:5px 9px}
+.liveGame .scoreBox .score{color:#83e9c3}
+.liveScore{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.liveScoreRows{display:flex;flex-direction:column;gap:8px}
+.liveTeam{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#172b36;border-radius:8px;padding:9px 11px}
+.liveTeam b{color:#f0f6ff;font-size:12px}
+.liveTeam strong{font-size:24px;color:#8ee9c4;font-variant-numeric:tabular-nums}
+.livePregame{border:1px solid #493f6e;background:#1b1b30;border-radius:10px;padding:10px 12px;margin-top:10px}
+.livePregame b{color:#d5c7ff;font-size:11px}
+.livePregame p{font-size:11px;color:#b7c6dc;line-height:1.5;margin:5px 0}
+.livePregame .small{font-size:10px}
+.liveNoModel{color:#a4b5c9;font-size:11px;margin-top:9px}
+@media(max-width:580px){
+ .heroStat{min-width:0;padding:8px;gap:5px}
+ .heroStat b{font-size:18px}
+ .heroStat small{font-size:9px}
+ .marketTile{padding:8px}
+ .game{padding:11px}
+ .game .scoreBox .score{font-size:23px}
+ .compactSummary{margin:8px 0;gap:8px}
+}
+
 </style></head>
 <body>
 <header><div class="wrap">
-  <div class="top"><div class="brand"><span class="brandMark">CF</span> CFB <span>LAB</span> <span class="small">/ 2026</span></div><div class="pill">Live research board</div></div>
+  <div class="top"><div class="brand"><span class="brandMark">CF</span> CFB <span>LAB</span> <span class="small">/ 2026</span></div><div class="pill">Research · unvalidated</div></div>
   <div class="hero">
-    <div><div class="kicker">COLLEGE FOOTBALL · GAME CENTER</div><h1>Every matchup. One clear view.</h1><p class="intro">Model projections, observed market lines and team scouting in a faster, cleaner dashboard. Eastern kickoff times.</p></div>
-    <div class="heroStats"><div class="heroStat"><b id="upcoming-count">—</b><small>Upcoming</small></div><div class="heroStat"><b id="today-count">—</b><small>Today (ET)</small></div></div>
+    <div><div class="kicker">COLLEGE FOOTBALL · GAME CENTER</div><h1>Games, picks &amp; live scores.</h1><p class="intro">V04 research projections, observed markets and live ESPN scores. Deeper scouting is available when you open a matchup.</p></div>
+    <div class="heroStats"><div class="heroStat"><b id="upcoming-count">—</b><small>Upcoming</small></div><div class="heroStat"><b id="today-count">—</b><small>Today (ET)</small></div><div class="heroStat"><b id="live-count">—</b><small>Live now</small></div></div>
   </div>
 </div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
 <main class="wrap">
-<div class="warning"><b>Research only · unvalidated.</b> Frozen score estimates remain unchanged. Player projections are conditional stat outlooks, not real sportsbook lines or validated betting edges.</div>
+<div class="warning"><b>Research only · unvalidated.</b> V04 is the latest displayed score challenger, not a proven betting model. Live ESPN scores never change the frozen pregame picks or lifetime performance history.</div>
 <div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span><span id="player-model-id">Player outlook pending</span></div>
-<nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Matchups</button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Performance</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Data &amp; sources</button></nav>
+<nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Matchups</button><button role="tab" class="tab" data-tab="live" aria-selected="false">Live <span id="live-tab-count" class="liveTabCount">0</span></button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Performance</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Data &amp; sources</button></nav>
 <section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern. Scores are model estimates, not live results.</p>
 <div class="tool">
 <input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
@@ -229,7 +294,9 @@ footer{border-top:1px solid var(--line);color:#879fb5;font-size:11px;margin-top:
 <select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="depth">With QB depth-chart ranks</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option><option value="player">With player projections</option><option value="player-qb">With QB passing projection</option><option value="player-rush">With rushing projection</option><option value="player-rec">With receiving projection</option></select>
 </div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
+<section id="live" role="tabpanel" class="hidden"><div class="row"><h2>Games in progress</h2><span class="liveSourceStamp" id="live-updated">Checking ESPN scores…</span></div><p class="small liveIntro">Current scores are observed ESPN results. All model estimates below are archived from <b>before kickoff</b>; live win probabilities and in-game picks are not yet validated or available.</p><div class="grid" id="live-games" aria-live="polite"><div class="empty"><b>Checking live games</b>Waiting for verified scoreboard data.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden">
+<p class="performanceLegend"><b>Lifetime performance stays intact across model versions.</b> V03 frozen forecasts, V04 research picks, V05 shadow comparisons and PlayerForm results retain their separate grades and original observation dates; no model switch resets history.</p>
 <div class="results">
  <div class="panel"><div class="small">Frozen model · SU</div><div class="metric" id="su">—</div><div class="performanceMeta" id="su-meta">Awaiting verified final-score grades</div></div>
  <div class="panel"><div class="small">As-displayed · ATS</div><div class="metric" id="ats">—</div><div class="performanceMeta" id="ats-meta">Awaiting pregame market and final</div></div>
