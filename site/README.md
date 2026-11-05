@@ -231,3 +231,14 @@ R1/V03 illustration or show unavailable. Each source-matched
 V04 pregame score is saved as its own separate research field in
 the game's site decision receipt for future genuine prospective
 competition against V03.
+
+## November 5, 2026: streamlined game center, lifetime grades and Live tab
+
+The primary matchup card is intentionally small: game time, the two projected score lines, the **V04 current displayed research** winner/total and concise actual-market comparisons. PlayerForm conditional stat estimates, source-reviewed injury/QB context, advanced scouting, and V05 alternatives remain accessible under **Player outlooks, injuries & scouting** but are hidden until expanded. The page uses separate purple model, blue market, teal live-score and amber injury/uncertainty treatments. No inference or scoring coefficients were changed by these interface updates.
+
+**Do not reset performance when the displayed model changes.** The Performance tab still reads the immutable cumulative `context-state` archive via `scripts/site_performance.py` and `scripts/site_player_stat_performance.py`. V03 frozen original predictions, V04 challenger selections, V05 shadows and PlayerForm stat grades remain separate research cohorts. V04 is the latest eligible model shown on pregame cards; V05 and V07 are still non-promoted experiments. Displaying a higher version number must never imply proven forecasting superiority.
+
+The dedicated **Live** tab obtains only ESPN `state=in` actual game scores from `scripts/site_live.py`. It matches game ID, actual teams, kickoff and source capture time to the latest **immutable V04 pre-kickoff website snapshot** if one exists. A missing or invalid pregame snapshot is explicitly shown as unavailable, never fabricated from a post-kickoff forecast. The tab intentionally does **not** show an in-game win probability or recomputed ATS/total selection: these require a separately trained, calibrated, prospectively frozen in-game model. It does **not** change the original pregame model data or lifetime performance.
+
+The static GitHub Pages site publishes score snapshots at build time, not continuously streaming ESPN data. Extra game-night workflow clocks target roughly 30-minute refreshes (subject to GitHub Actions queue and source access); the Live tab checks for a newer published dashboard every two minutes while visible and provides a manual refresh button. Each card/source panel shows ESPN observation time. Scores may be stale between builds, and the capture can be unavailable. No AWS, paid data feed or new billing service is used.
+
