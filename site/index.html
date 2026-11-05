@@ -1013,7 +1013,9 @@ for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id===
  data=d;
  byId("captured").textContent="Forecast: "+fmtDate.format(dateOf(d.forecast_observed_utc));
  byId("refreshed").textContent="Board refreshed: "+fmtDate.format(dateOf(d.generated_at_utc));
- byId("runid").textContent=d.forecast_run_id;byId("modelid").textContent=d.model;
+ byId("runid").textContent=d.forecast_run_id;
+ byId("modelid").textContent="V04 current display (independent score research) · "+
+   "V03 frozen baseline: "+d.model+" · V05/V07 shadows not promoted";
  const prop=d.player_prop_display||{};
  byId("player-model-id").textContent="Player stats: "+(prop.model||"not available")+" · conditional";
  byId("propmodelid").textContent=prop.model||"Not available";
