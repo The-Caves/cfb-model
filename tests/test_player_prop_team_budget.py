@@ -5,7 +5,7 @@ import unittest
 from scripts.player_prop_team_budget import (
     STATUS, bounded_counts, conserve_trial, prepare)
 from scripts.player_prop_joint_simulation import simulate
-from tests.test_player_prop_joint_simulation import (
+from test_player_prop_joint_simulation import (
     fitted,player_history,possessions,target,DEC,KICK)
 
 
