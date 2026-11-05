@@ -102,6 +102,13 @@ class BudgetTests(unittest.TestCase):
         self.assertEqual(prepare(bad,t,p["rows"],DEC)[1],
                          "PASS_INSUFFICIENT_COMPLETE_HISTORICAL_TEAM_ATTEMPTS")
 
+    def test_budget_source_cannot_mix_team_ids_of_selected_players(self):
+        t,p=inputs()
+        t["players"][0]["team_id"]="20"
+        with self.assertRaisesRegex(ValueError,"Wrong-team player ID"):
+            simulate(fitted(),player_history(),p,t,DEC,trials=100,
+                     team_attempt_budgets=source())
+
     def test_optional_verified_workload_budget_changes_player_opportunities_not_scores(self):
         t,p=inputs()
         original=simulate(fitted(),player_history(),p,t,DEC,trials=200,seed=42)
