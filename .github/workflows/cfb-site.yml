@@ -6,6 +6,8 @@ on:
     paths:
       - 'site/**'
       - 'scripts/site_export.py'
+      - 'scripts/site_live.py'
+      - 'tests/test_site_live.py'
       - 'scripts/site_performance.py'
       - 'tests/test_site_performance.py'
       - 'scripts/site_decision_archive.py'
@@ -53,6 +55,10 @@ on:
   schedule:
     - cron: '33 11,14,17,20,23 * * *'
     - cron: '17,47 14-23 * * 6'
+    # Game-night scoreboard captures every ~30 min (UTC). The build and
+    # archive stay separate: current scores NEVER recompute frozen picks.
+    - cron: '17,47 23 * * 2-6'
+    - cron: '17,47 0-3 * * 0,3-6'
   # A successful ingestion writes a NEW immutable source snapshot to
   # context-state. Publish it immediately instead of waiting for a 30-min
   # Saturday clock tick near kickoff. A failed intake must not publish
@@ -105,6 +111,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_site_player_stat_performance.py' -v
       - name: Test deduplicated prospective performance audit
         run: python -m unittest discover -s tests -p 'test_site_performance.py' -v
+      - name: Test sourced live ESPN scores and immutable pregame V04 matching
+        run: python -m unittest discover -s tests -p 'test_site_live.py' -v
       - name: Test ESPN-sourced team colors and logos do not change forecasts
         run: python -m unittest discover -s tests -p 'test_site_team_branding.py' -v
       - name: Test recorded opportunity-share evidence and chronological baseline
@@ -262,6 +270,27 @@ jobs:
           else:
               assert result["status"]=="NO_SETTLED_PLAYER_STAT_RESEARCH_GRADE_YET"
               print("No archived player grade exists; no result imputed.")
+          PY
+      - name: Overlay observed ESPN in-progress scores with archived PRE-kickoff research picks
+        run: |
+          set -euo pipefail
+          python -m scripts.site_live --dashboard site/data/dashboard.json --archive-root .context-state | tee /tmp/site-live.txt
+          cat /tmp/site-live.txt >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          b=json.load(open("site/data/dashboard.json"))
+          live=b["live_display"]
+          assert live["status"]=="ESPN_LIVE_SCORE_WITH_IMMUTABLE_PREGAME_SNAPSHOT_RESEARCH_ONLY"
+          assert live["original_pregame_forecasts_changed"] is False
+          assert live["historical_grades_changed"] is False
+          assert live["in_game_model_updates_available"] is False
+          assert all(row["state"]=="in" and row["in_game_model_update"] is None
+                     for row in b["live_games"])
+          assert all(row["pregame"] is None or
+                     (row["pregame"]["pre_kickoff_archive_verified"] is True and
+                      row["pregame"]["updated_after_kickoff"] is False)
+                     for row in b["live_games"])
+          print("Live score overlays did not modify archived forecast/grade.")
           PY
       - name: Report earliest today research matchups without betting claims
         run: |
