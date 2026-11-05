@@ -109,6 +109,17 @@ class BudgetTests(unittest.TestCase):
             simulate(fitted(),player_history(),p,t,DEC,trials=100,
                      team_attempt_budgets=source())
 
+    def test_forged_local_football_day_and_unobserved_bundle_rows_rejected(self):
+        t,p=inputs()
+        t["date"]="2026-11-01"
+        with self.assertRaisesRegex(ValueError,"football calendar day"):
+            prepare(source(),t,p["rows"],DEC)
+        t,p=inputs()
+        b=source()
+        b["observed_at_utc"]="2026-10-27T15:00:00Z"
+        with self.assertRaisesRegex(ValueError,"postgame"):
+            prepare(b,t,p["rows"],DEC)
+
     def test_optional_verified_workload_budget_changes_player_opportunities_not_scores(self):
         t,p=inputs()
         original=simulate(fitted(),player_history(),p,t,DEC,trials=200,seed=42)
