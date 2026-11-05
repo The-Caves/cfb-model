@@ -116,7 +116,9 @@ class BudgetTests(unittest.TestCase):
         self.assertEqual(original["player_scenarios"][0]["metrics"]["passing_attempts"]["mean"],30)
         self.assertEqual(adjusted["mean_simulated_home_score"],30)
         self.assertEqual(adjusted["mean_simulated_away_score"],0)
-        self.assertEqual(adjusted["team_attempt_budget_unallocated_average"]["away"]["passing_attempts"],17)
+        # Away has nine projected possessions vs ten in the reviewed
+        # historical source; 17 * 9/10 rounds to 15 attempts.
+        self.assertEqual(adjusted["team_attempt_budget_unallocated_average"]["away"]["passing_attempts"],15)
         self.assertFalse(adjusted["prop_market_edge_validated"])
         self.assertFalse(adjusted["model_promoted"])
         self.assertEqual(adjusted["betting_status"],"PASS_UNVALIDATED")
