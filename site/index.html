@@ -468,7 +468,7 @@ function teamDisplayRow(game,side){
    game["model_"+side+"_points"];
  score.append(node("div","score",Number.isFinite(n)?num(n,0):"—"),
               node("div","scoreHint",game.home_bias_quarantined?
-                (v04?"V04 direct*":scenario?"Hybrid estimate*":"No valid split"):"Projected"));
+                (v04?"V04 model":scenario?"R1 estimate":"No valid split"):"Projected"));
  row.append(left,score);return row;
 }
 function qbDetails(game){
@@ -627,10 +627,8 @@ function opponentMargin(g){
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
-            node("span","modelTag",g.home_bias_quarantined?
-   (v04ScoreScenario(g)?"Scores · V04 directly trained · research":
-    "Score scenario · R1 margin / V03 total"):
-   "Score · "+String(data?.model||"V03")+" · research"));
+            node("span","modelTag",v04ScoreScenario(g)?"V04 · current research":
+                 g.home_bias_quarantined?"R1 · alternative":"V03 · archived research"));
  el.append(top);
  const teams=node("div","teamStack");
  teams.append(teamDisplayRow(g,"away"),teamDisplayRow(g,"home"));
@@ -695,7 +693,16 @@ function gameCard(g){
     num(g.research_home_win_probability*100,0)+"% home win (uncal.)":"Win probability unavailable")));
   summary.append(secondary);
  }
- el.append(summary);
+ const visible=node("div","compactSummary");
+ visible.append(node("span","favorite",lead));
+ const visibleTotal=v04?v04.total_points:g.model_total;
+ visible.append(node("span","scoreTotal","Model total · "+num(visibleTotal,1)));
+ el.append(visible);
+ // Keep the score/lean and market glance at the card level; full analyses
+ // only appear on explicit expansion. No forecast inputs are modified here.
+ const more=node("details","gameMore");
+ more.append(node("summary","","Player outlooks, injuries & scouting"));
+ more.append(summary);
  const tiles=node("div","marketTiles");
  let spreadLine="No line",atsPick=null,totalLine="No line",ouPick=null;
  const v04research=quarantined?v04MarketResearch(g):null;
@@ -721,7 +728,7 @@ function gameCard(g){
               marketTile("Observed O/U",totalLine,ouPick,
                quarantined?(v04research?.ou_side==="PASS"?null:
                   Math.abs(v04research?.raw_ou_model_market_gap)):g.ou_edge_points));
- if(v04research)el.append(node("div","biasNote",
+ if(v04research)more.append(node("div","biasNote",
    "V04 is an unvalidated, market-anchored research policy. "+
    "A PASS means uncertainty; these are not proven betting edges. "+
    (v04research.qb_confirmed_season_out_unverified_replacement?
@@ -729,16 +736,17 @@ function gameCard(g){
      v04research.missing_verified_qb_warning?
      "Unconfirmed QB(s): stronger research thresholds applied.":"")));
  el.append(tiles);
- el.append(playerOutlook(g));
- if(hasQBRisk(g))el.append(node("div","warningMini","QB availability alert · check the source details"));
+ more.append(playerOutlook(g));
+ if(hasQBRisk(g))el.append(node("div","gameRisk","QB availability uncertainty · open details"));
  if(!quarantined&&Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
-  el.append(node("div","marginAlert","Large model / spread difference ("+num(g.ats_edge_points)+" pts). Research only; not a validated edge."));
+  more.append(node("div","marginAlert","Large model / spread difference ("+num(g.ats_edge_points)+" pts). Research only; not a validated edge."));
  }
- const scouting=scoutingPanel(g);if(scouting)el.append(scouting);
- el.append(qbDetails(g));
- el.append(node("div","marketMeta",
+ const scouting=scoutingPanel(g);if(scouting)more.append(scouting);
+ more.append(qbDetails(g));
+ more.append(node("div","marketMeta",
   g.market_provider?"Market: ESPN / "+g.market_provider+" · "+fmtDate.format(dateOf(g.market_observed_utc))+" · independently observed":
   "Market line unavailable · ATS/O-U comparisons withheld"));
+ el.append(more);
  return el;
 }
 
