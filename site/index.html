@@ -893,7 +893,7 @@ const ESPN_LIVE_URL="https://site.api.espn.com/apis/site/v2/sports/football/coll
 let liveClientGames=null,liveClientObserved=null,liveClientError=false,liveInFlight=false;
 function espnScore(value){
  const text=String(value??"");
- return /^\\d{1,3}$/.test(text)&&Number(text)<=200?Number(text):null;
+ return /^\d{1,3}$/.test(text)&&Number(text)<=200?Number(text):null;
 }
 function parseEspnLive(payload,observedAt){
  if(!payload||!Array.isArray(payload.events))throw Error("Malformed ESPN live scoreboard");
@@ -901,7 +901,7 @@ function parseEspnLive(payload,observedAt){
  for(const event of payload.events){
   const id=String(event?.id||"");
   const status=event?.status||{},kind=status.type||{};
-  if(!/^\\d+$/.test(id)||kind.state!=="in"||kind.completed===true)continue;
+  if(!/^\d+$/.test(id)||kind.state!=="in"||kind.completed===true)continue;
   const comps=event.competitions;
   if(!Array.isArray(comps)||comps.length!==1)continue;
   const comp=comps[0];
@@ -1128,7 +1128,7 @@ setInterval(()=>{
  if(!document.hidden&&
     document.querySelector('[data-tab="live"]').getAttribute("aria-selected")==="true")
   refreshLive();
-},30000);
+},60000);
 document.addEventListener("visibilitychange",()=>{
  if(!document.hidden&&
     document.querySelector('[data-tab="live"]').getAttribute("aria-selected")==="true")
