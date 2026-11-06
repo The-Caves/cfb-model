@@ -1159,7 +1159,7 @@ for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id===
  const market=d.market_display||{};
  const extra=" Market source: "+(market.source||"unavailable")+". Observed spread: "+(market.usable_spreads||0)+" games; totals: "+(market.usable_totals||0)+" games. No historical publication-time authentication.";
  byId("limitations").textContent=(d.data_limitations||[]).join(" ")+extra;
- renderPerformance();updateDayNav();render();
+ renderPerformance();updateDayNav();render();renderLive();
  }catch(error){
  byId("captured").textContent="Unable to load research snapshot";byId("refreshed").textContent="See GitHub Actions";
  empty("No verified data published","The research build may have failed or no model archive was found. Games, lines and picks will not be fabricated.");
