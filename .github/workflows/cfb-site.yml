@@ -8,6 +8,7 @@ on:
       - 'scripts/site_export.py'
       - 'scripts/site_live.py'
       - 'tests/test_site_live.py'
+      - 'tests/test_site_live_browser.py'
       - 'scripts/site_performance.py'
       - 'tests/test_site_performance.py'
       - 'scripts/site_decision_archive.py'
@@ -112,7 +113,26 @@ jobs:
       - name: Test deduplicated prospective performance audit
         run: python -m unittest discover -s tests -p 'test_site_performance.py' -v
       - name: Test sourced live ESPN scores and immutable pregame V04 matching
-        run: python -m unittest discover -s tests -p 'test_site_live.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_site_live.py' -v
+          python -m unittest discover -s tests -p 'test_site_live_browser.py' -v
+      - name: Check whether ESPN allows free cross-origin browser score access
+        run: |
+          python - <<'PY'
+          import urllib.request
+          url="https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?limit=1"
+          request=urllib.request.Request(url,headers={
+              "Origin":"https://the-caves.github.io",
+              "User-Agent":"cfb-site-live-cors-diagnostic/2026"})
+          try:
+              with urllib.request.urlopen(request,timeout=8) as r:
+                  origin=r.headers.get("Access-Control-Allow-Origin")
+                  print("ESPN browser CORS:",origin or "NO ACCESS-CONTROL-ALLOW-ORIGIN HEADER")
+                  if origin not in ("*","https://the-caves.github.io"):
+                      print("Direct browser live score may be blocked; existing GitHub snapshot fallback remains.")
+          except Exception as exc:
+              print("ESPN browser CORS not verifiable:",type(exc).__name__)
+          PY
       - name: Test ESPN-sourced team colors and logos do not change forecasts
         run: python -m unittest discover -s tests -p 'test_site_team_branding.py' -v
       - name: Test recorded opportunity-share evidence and chronological baseline
