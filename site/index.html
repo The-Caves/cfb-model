@@ -887,11 +887,111 @@ function renderPerformance(){
 }
 // LIVE: actual ESPN scores and only the last properly archived PRE-KICKOFF
 // V04 prediction. Never use the current score to synthesize a new model pick.
+// ESPN's no-key browser scoreboard is an OPTIONAL live display source.
+// It is NOT an official supported API and NEVER changes archived forecasts.
+const ESPN_LIVE_URL="https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard";
+let liveClientGames=null,liveClientObserved=null,liveClientError=false,liveInFlight=false;
+function espnScore(value){
+ const text=String(value??"");
+ return /^\\d{1,3}$/.test(text)&&Number(text)<=200?Number(text):null;
+}
+function parseEspnLive(payload,observedAt){
+ if(!payload||!Array.isArray(payload.events))throw Error("Malformed ESPN live scoreboard");
+ const games=[];
+ for(const event of payload.events){
+  const id=String(event?.id||"");
+  const status=event?.status||{},kind=status.type||{};
+  if(!/^\\d+$/.test(id)||kind.state!=="in"||kind.completed===true)continue;
+  const comps=event.competitions;
+  if(!Array.isArray(comps)||comps.length!==1)continue;
+  const comp=comps[0];
+  const people=comp.competitors||[];
+  const away=people.filter(x=>x.homeAway==="away");
+  const home=people.filter(x=>x.homeAway==="home");
+  if(away.length!==1||home.length!==1)continue;
+  const awayName=away[0]?.team?.displayName,homeName=home[0]?.team?.displayName;
+  const as=espnScore(away[0]?.score),hs=espnScore(home[0]?.score);
+  const kickoff=comp.date||event.date;
+  if(!awayName||!homeName||as===null||hs===null||
+     !kickoff||!Number.isFinite(Date.parse(kickoff))||
+     Date.parse(kickoff)>Date.parse(observedAt))continue;
+  const known=(data?.live_games||[]).find(row=>String(row.game_id)===id&&
+    identityKey(row.home_team)===identityKey(homeName)&&
+    identityKey(row.away_team)===identityKey(awayName)&&
+    Math.abs(Date.parse(row.kickoff_utc)-Date.parse(kickoff))<=15*60*1000);
+  games.push({
+    game_id:id,home_team:homeName,away_team:awayName,
+    home_score:hs,away_score:as,kickoff_utc:kickoff,
+    period:Number.isInteger(status.period)?status.period:null,
+    clock:String(status.displayClock||"").slice(0,18),
+    description:String(kind.shortDetail||kind.description||"Live").slice(0,52),
+    state:"in",source:"ESPN_BROWSER_SCOREBOARD_ACTUAL_SCORE",
+    source_observed_at_utc:observedAt,
+    pregame:known?.pregame?.pre_kickoff_archive_verified===true?known.pregame:null,
+    has_archived_pregame_model:known?.pregame?.pre_kickoff_archive_verified===true,
+    in_game_model_update:null,in_game_model_validated:false
+  });
+ }
+ return games;
+}
+function easternEspnDay(when){
+ const p=new Intl.DateTimeFormat("en-US",{
+   timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"
+ }).formatToParts(when);
+ const get=type=>p.find(x=>x.type===type)?.value||"";
+ return get("year")+get("month")+get("day");
+}
+function liveRequestUrls(when){
+ const date=easternEspnDay(when);
+ const hour=Number(new Intl.DateTimeFormat("en-US",{
+   timeZone:"America/New_York",hour:"2-digit",hourCycle:"h23"
+ }).format(when));
+ const days=[date];
+ // Just after midnight Eastern a game may belong to yesterday's date.
+ if(hour<4)days.push(easternEspnDay(new Date(when.getTime()-24*3600000)));
+ const urls=[];
+ for(const day of days){
+  urls.push(ESPN_LIVE_URL+"?dates="+day+"&limit=500&groups=80");
+  // The ungrouped feed fills games occasionally absent from group 80.
+  urls.push(ESPN_LIVE_URL+"?dates="+day+"&limit=500");
+ }
+ return urls;
+}
+async function liveBrowserFetch(){
+ const now=new Date(),observedAt=now.toISOString();
+ const results=await Promise.allSettled(liveRequestUrls(now).map(async url=>{
+  const controller=new AbortController();
+  const abort=setTimeout(()=>controller.abort(),10000);
+  try{
+   const response=await fetch(url,{mode:"cors",cache:"no-store",
+                                     credentials:"omit",signal:controller.signal});
+   if(!response.ok)throw Error("ESPN live HTTP "+response.status);
+   return parseEspnLive(await response.json(),observedAt);
+  }finally{clearTimeout(abort)}
+ }));
+ const ok=results.filter(x=>x.status==="fulfilled");
+ if(!ok.length)throw Error("All direct ESPN score feeds unavailable");
+ const byId=new Map();
+ for(const outcome of ok){
+  for(const game of outcome.value){
+   const old=byId.get(game.game_id);
+   if(old&&(old.home_score!==game.home_score||old.away_score!==game.away_score)){
+    // Two ESPN responses can be cached at different instants. Prefer the
+    // higher scoring-progress snapshot; do not combine scores between feeds.
+    if(game.home_score+game.away_score<=old.home_score+old.away_score)continue;
+   }
+   byId.set(game.game_id,game);
+  }
+ }
+ return {games:[...byId.values()].sort((a,b)=>a.kickoff_utc.localeCompare(b.kickoff_utc)),
+         observedAt};
+}
 function liveGameCard(g){
  const el=node("article","game liveGame");
  const top=node("div","gameTop");
- top.append(node("span","liveBadge","● LIVE · "+(g.description||"In progress")),
-            node("span","small","ESPN score"));
+ const isDirect=g.source==="ESPN_BROWSER_SCOREBOARD_ACTUAL_SCORE";
+ top.append(node("span","liveBadge",(isDirect?"● LIVE":"LAST PUBLISHED")+" · "+(g.description||"In progress")),
+            node("span","small",isDirect?"ESPN direct":"ESPN snapshot"));
  el.append(top);
  const rows=node("div","liveScoreRows");
  for(const side of ["away","home"]){
@@ -924,49 +1024,47 @@ function liveGameCard(g){
 }
 function renderLive(){
  if(!data)return;
- const listed=Array.isArray(data.live_games)?data.live_games:[];
+ const listed=liveClientGames??(Array.isArray(data.live_games)?data.live_games:[]);
  const live=listed.filter(g=>g.state==="in"&&Number.isInteger(g.home_score)&&Number.isInteger(g.away_score));
  byId("live-count").textContent=live.length;
  byId("live-tab-count").textContent=live.length;
- const captured=data.live_display?.observed_at_utc;
- byId("live-updated").textContent=captured?"Scores checked "+fmtDate.format(dateOf(captured)):
+ const captured=liveClientObserved||data.live_display?.observed_at_utc;
+ const source=liveClientObserved?"ESPN direct · ":"Last published · ";
+ const failure=liveClientError?" · Direct scores unavailable":"";
+ byId("live-updated").textContent=captured?source+fmtDate.format(dateOf(captured))+failure:
    "Live ESPN source not yet checked";
  if(!live.length){
   const box=node("div","empty");
-  box.append(node("b","",!data.live_display?"Live feed not available":
-    data.live_display.fetch_failures?.length?"No verified live score currently available":"No games in progress"));
-  box.append(node("span","",!data.live_display?
-    "The website build has not included a live-score snapshot.":
-    data.live_display.fetch_failures?.length?
-      "ESPN could not be reached for every requested date. Scores and picks are not inferred.":
-      "Games will appear here when ESPN reports in-progress scores and the dashboard publishes an update."));
+  box.append(node("b","",liveClientError?"Direct ESPN unavailable":
+     !data.live_display?"Live feed not available":"No games in progress"));
+  box.append(node("span","",liveClientError?
+   "Showing the latest available published snapshot. ESPN browser requests may be blocked or unavailable.":
+   "Live games appear when ESPN reports them as in progress. Pregame projections are never rewritten."));
   byId("live-games").replaceChildren(box);
   return;
  }
  byId("live-games").replaceChildren(...live.map(liveGameCard));
 }
 async function refreshLive(){
+ if(liveInFlight||document.hidden)return;
+ liveInFlight=true;
  const button=byId("refresh-live");
  button.disabled=true;
  try{
-  const response=await fetch("./data/dashboard.json",{cache:"no-store"});
-  if(!response.ok)throw Error("Live scoreboard refresh unavailable");
-  const newer=await response.json();
-  if(newer.schema_version!==2||newer.betting_status!=="PASS_UNVALIDATED"||
-     !Array.isArray(newer.games)||newer.live_display?.status!==
-       "ESPN_LIVE_SCORE_WITH_IMMUTABLE_PREGAME_SNAPSHOT_RESEARCH_ONLY")
-   throw Error("Untrusted live scoreboard response");
-  // Only replace from a newer published, first-party dashboard. This does not
-  // change the GitHub context-state forecast and performance archives.
-  if(!data.live_display?.observed_at_utc||
-     dateOf(newer.live_display.observed_at_utc)>=dateOf(data.live_display.observed_at_utc)){
-   data=newer;
-   renderPerformance();updateDayNav();render();renderLive();renderLive();
-  }
- }catch(e){
-  byId("live-updated").textContent="Live refresh unavailable · using last published score";
-  console.error(e);
- }finally{button.disabled=false}
+  const update=await liveBrowserFetch();
+  // Zero active games is a valid current ESPN state, not a reason to keep a
+  // stale last-published game visible indefinitely.
+  liveClientGames=update.games;liveClientObserved=update.observedAt;
+  liveClientError=false;
+ }catch(error){
+  liveClientError=true;
+  // Last successfully retrieved direct scores may have gone stale.
+  // Fall back to the signed website snapshot; label it last published.
+  liveClientGames=null;liveClientObserved=null;
+  console.warn("ESPN direct live score unavailable; using published fallback",error);
+ }finally{
+  liveInFlight=false;button.disabled=false;renderLive();
+ }
 }
 
 function render(){
@@ -1021,15 +1119,21 @@ for(const button of document.querySelectorAll("[data-tab]"))button.addEventListe
   byId(other.dataset.tab).classList.toggle("hidden",!active);
  }
  document.querySelector(".dayShell").classList.toggle("hidden",button.dataset.tab!=="matchups");
- if(button.dataset.tab==="live")renderLive();
+ if(button.dataset.tab==="live"){renderLive();refreshLive();}
 });
 byId("refresh-live").addEventListener("click",refreshLive);
 // Refresh only when someone is viewing Live. The data is still the most
 // recently *published* scoreboard, never an invented live probability.
 setInterval(()=>{
- if(document.querySelector('[data-tab="live"]').getAttribute("aria-selected")==="true")
+ if(!document.hidden&&
+    document.querySelector('[data-tab="live"]').getAttribute("aria-selected")==="true")
   refreshLive();
-},120000);
+},30000);
+document.addEventListener("visibilitychange",()=>{
+ if(!document.hidden&&
+    document.querySelector('[data-tab="live"]').getAttribute("aria-selected")==="true")
+  refreshLive();
+});
 for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id==="query"?"input":"change",render);
 (async()=>{
  try{
