@@ -56,7 +56,11 @@ def _team_game(g,team,advanced,turnover=None):
       "pass_explosive_allowed":pct(opponent,"explosive_pass","pass_plays"),
       "pressure_allowed":pct(offense,"pressure_count","pressure_observed"),
       "pressure_generated":pct(opponent,"pressure_count","pressure_observed"),
+      # 2026 PBP redzone_success is a PLAY-level indicator, not red-zone
+      # trip scoring. Defensive allowance is the OPPOSING offense's plays.
+      # No fabricated scoring conversion percentage.
       "redzone_success":pct(offense,"redzone_success","redzone_plays"),
+      "redzone_success_allowed":pct(opponent,"redzone_success","redzone_plays"),
       "drives":float(offense.get("drives") or 0) or None,
       "plays_per_drive":pct(offense,"drive_plays_sum","drives"),
       "turnovers_committed":(player_turnover.get("turnovers_committed")
@@ -71,7 +75,8 @@ def _profile(hist):
            "pass_success_allowed","pass_rate","run_explosive_off",
            "pass_explosive_off","pass_explosive_allowed",
            "pressure_allowed","pressure_generated","redzone_success",
-           "drives","plays_per_drive","turnovers_committed","takeaways")
+           "redzone_success_allowed","drives","plays_per_drive",
+           "turnovers_committed","takeaways")
     result={k:mean(x.get(k) for x in last) for k in names}
     result["prior_games"]=len(hist)
     def count(key):return sum(x.get(key) is not None for x in last)
@@ -125,6 +130,10 @@ def matchup(home,away):
       "away_pressure_exposure":blend(away.get("pressure_allowed"),home.get("pressure_generated")),
       "home_redzone_conversion":home.get("redzone_success"),
       "away_redzone_conversion":away.get("redzone_success"),
+      "home_redzone_play_vs_defense":blend(
+          home.get("redzone_success"),away.get("redzone_success_allowed")),
+      "away_redzone_play_vs_defense":blend(
+          away.get("redzone_success"),home.get("redzone_success_allowed")),
       "home_drive_tempo":home.get("plays_per_drive"),
       "away_drive_tempo":away.get("plays_per_drive"),
       "home_turnover_risk_proxy":blend(home.get("turnovers_committed"),away.get("takeaways")),
