@@ -227,6 +227,24 @@ jobs:
           path: data/model_v03/nextgen-matched-walkforward.json
           retention-days: 30
           if-no-files-found: error
+      - name: Compare opponent-style V08 vs V04 on identical heldout score games (non-promoted)
+        run: |
+          set -euo pipefail
+          python -m scripts.v08_matchup_v04_comparison \
+            --games data/games_2026.csv \
+            --advanced data/advanced/team_game_advanced_2026.csv \
+            --manifest data/advanced/advanced_manifest.json \
+            --turnovers data/model_v03/espn-verified-turnovers.json \
+            --output data/model_v03/v08-matchup-v04-retrospective.json | tee /tmp/v08-matched-research.txt
+          cat /tmp/v08-matched-research.txt >> "$GITHUB_STEP_SUMMARY"
+          echo "V08 is retrospective PBP research, NOT the live score model. No V04 predictions changed." >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve exact-cohort V08 matchup-vs-V04 research grade
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-v08-matchup-v04-${{ github.run_id }}
+          path: data/model_v03/v08-matchup-v04-retrospective.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Verify named city time zones for the prospective travel source
         run: |
           python -m scripts.city_timezone_refresh \
