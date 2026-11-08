@@ -38,6 +38,15 @@ def _team_game(g,team,advanced,turnover=None):
     opponent=grouped.get(other,{})
     def pct(a,n,d):return rate(a,n,d) if a else None
     player_turnover=turnover.get((str(g["game_id"]),team)) if turnover else None
+    # Count a team's giveaways per its offensive drive; match defensive
+    # takeaways against the OTHER team's drives in the same completed game.
+    # Missing historical PBP drives are UNKNOWN, never zero turnovers.
+    offense_drives=float(offense.get("drives") or 0)
+    opponent_drives=float(opponent.get("drives") or 0)
+    giveaway_rate=(player_turnover["turnovers_committed"]/offense_drives
+                   if player_turnover and offense_drives>=1 else None)
+    takeaway_rate=(player_turnover["takeaways_observed"]/opponent_drives
+                   if player_turnover and opponent_drives>=1 else None)
     return {"game_id":str(g["game_id"]),"date":g["date"],"team":team,
       "opponent":other,"points":int(g["home_score"] if team==g["home"] else g["away_score"]),
       "margin":int(g["home_score"])-int(g["away_score"]) if team==g["home"] else
@@ -63,6 +72,8 @@ def _team_game(g,team,advanced,turnover=None):
       "redzone_success_allowed":pct(opponent,"redzone_success","redzone_plays"),
       "drives":float(offense.get("drives") or 0) or None,
       "plays_per_drive":pct(offense,"drive_plays_sum","drives"),
+      "giveaway_rate_per_drive":giveaway_rate,
+      "takeaway_rate_per_defensive_drive":takeaway_rate,
       "turnovers_committed":(player_turnover.get("turnovers_committed")
                              if player_turnover else None),
       "takeaways":(player_turnover.get("takeaways_observed")
@@ -76,7 +87,8 @@ def _profile(hist):
            "pass_explosive_off","pass_explosive_allowed",
            "pressure_allowed","pressure_generated","redzone_success",
            "redzone_success_allowed","drives","plays_per_drive",
-           "turnovers_committed","takeaways")
+           "turnovers_committed","takeaways",
+           "giveaway_rate_per_drive","takeaway_rate_per_defensive_drive")
     result={k:mean(x.get(k) for x in last) for k in names}
     result["prior_games"]=len(hist)
     def count(key):return sum(x.get(key) is not None for x in last)
@@ -85,6 +97,10 @@ def _profile(hist):
     result["run_def_games"]=count("run_def_allowed")
     result["pass_def_games"]=count("pass_def_allowed")
     result["turnover_verified_games"]=count("turnovers_committed")
+    # At least two distinct prior complete score+drive observations.
+    for field in ("giveaway_rate_per_drive",
+                  "takeaway_rate_per_defensive_drive"):
+        if count(field)<2:result[field]=None
     result["run_stopped_games"]=sum(x["run_off"] is not None and x["run_off"]<=0 for x in last)
     result["run_successful_games"]=sum(x["run_off"] is not None and x["run_off"]>0 for x in last)
     # Running stopped means nonpositive EPA, not simply low raw rushing yards.
@@ -137,7 +153,13 @@ def matchup(home,away):
       "home_drive_tempo":home.get("plays_per_drive"),
       "away_drive_tempo":away.get("plays_per_drive"),
       "home_turnover_risk_proxy":blend(home.get("turnovers_committed"),away.get("takeaways")),
-      "away_turnover_risk_proxy":blend(away.get("turnovers_committed"),home.get("takeaways"))}
+      "away_turnover_risk_proxy":blend(away.get("turnovers_committed"),home.get("takeaways")),
+      "home_turnover_risk_per_drive":blend(
+          home.get("giveaway_rate_per_drive"),
+          away.get("takeaway_rate_per_defensive_drive")),
+      "away_turnover_risk_per_drive":blend(
+          away.get("giveaway_rate_per_drive"),
+          home.get("takeaway_rate_per_defensive_drive"))}
 def validated_turnovers(bundle,scoreboard):
     if bundle is None:return {}
     if (bundle.get("status")!="ESPN_COMPLETED_BOXSCORE_TURNOVERS_RESEARCH_ONLY" or
