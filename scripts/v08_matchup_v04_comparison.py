@@ -31,7 +31,8 @@ FAMILIES={
  "explosives_vs_defense":EXPLOSIVES+(
        "nonlinear_home_pass_explosiveness_vs_away_pass_def",
        "nonlinear_away_pass_explosiveness_vs_home_pass_def"),
- "redzone_play_success":REDZONE,
+ "redzone_play_success":REDZONE+(
+     "home_redzone_play_vs_defense","away_redzone_play_vs_defense"),
  "giveaways_vs_takeaways":TURNOVERS,
  "combined":ADJUSTED+PRESSURE+EXPLOSIVES+REDZONE+TURNOVERS+TRAJECTORY,
 }
@@ -46,9 +47,10 @@ def _baseline(games,matched,at):
           dt.date.fromisoformat(at)]
     vmodel=v04.fit(past,at+"T12:00:00+00:00")
     baseline={}
+    originals={str(g["game_id"]):g for g in games}
     for row in matched:
         gid=str(row["game_id"])
-        original=next((g for g in games if str(g["game_id"])==gid),None)
+        original=originals.get(gid)
         if original is None:raise ValueError("Matchup has no matched ESPN source game")
         # Strong source pairing: a PBP matchup row cannot swap opponent
         # identities or alter actual score labels in a retrospective replay.
@@ -74,12 +76,19 @@ def evaluate(games,rows,start="2026-09-26",min_train=MIN_TRAINING,
     ids={str(g["game_id"]) for g in games}
     if len(ids)!=len(games):raise ValueError("Duplicate ESPN scoreboard game")
     observed=set()
+    source_games={str(g["game_id"]):g for g in games}
     for row in rows:
         gid=str(row["game_id"])
-        if (gid in observed or gid not in ids or
+        original=source_games.get(gid)
+        if (gid in observed or original is None or
             row.get("betting_status")!="PASS_UNVALIDATED" or
             row.get("feature_evidence_status")!="RETROSPECTIVE_NOT_PUBLICATION_VERIFIED"):
             raise ValueError("Untrusted/duplicate retrospective feature game")
+        if (row["home"],row["away"],row["date"],row["kickoff_utc"],
+            int(row["home_score"]),int(row["away_score"])) != (
+            original["home"],original["away"],original["date"],
+            original["kickoff_utc"],int(original["home_score"]),int(original["away_score"])):
+            raise ValueError("V04 and matchup source identity mismatch")
         observed.add(gid)
     last=max(dt.date.fromisoformat(g["date"]) for g in games)
     first=dt.date.fromisoformat(start)
