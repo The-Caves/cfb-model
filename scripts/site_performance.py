@@ -13,7 +13,7 @@ import hashlib
 import json
 import math
 import re
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, namedtuple
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -61,8 +61,13 @@ def _stats(values):
     return {"wins":c["WIN"],"losses":c["LOSS"],"pushes":c["PUSH"],
             "decisions":n,"win_rate":round(c["WIN"]/n,5) if n else None}
 
+# A full isocalendar() also includes WEEKDAY; grouping on all three
+# accidentally produced multiple rows labelled e.g. "2026-W45".
+# Keep the named year/week interface for existing record formatting.
+ISOWeek=namedtuple("ISOWeek","year week")
 def _week(kickoff):
-    return parse_time(kickoff).astimezone(EASTERN).date().isocalendar()
+    date=parse_time(kickoff).astimezone(EASTERN).date().isocalendar()
+    return ISOWeek(date.year,date.week)
 def _label(kickoff):
     d=parse_time(kickoff).astimezone(EASTERN).date()
     return d.isoformat()+" ("+d.strftime("%a")+")"
