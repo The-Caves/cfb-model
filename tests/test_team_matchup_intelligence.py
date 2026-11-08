@@ -97,6 +97,25 @@ class MatchupTests(unittest.TestCase):
         self.assertIsNone(rows[1]["home_run_edge"])
         self.assertIsNone(rows[1]["home_run_adj_edge"])
 
+    def test_redzone_opponent_interaction_is_play_level_and_uses_defensive_allowance(self):
+        g=game(9,"2026-09-15")
+        rows=adv(g)
+        # Home offense's success 1/4, away offense's 3/4.
+        rows[g["home"]]["redzone_success"]="1"
+        rows[g["home"]]["redzone_plays"]="4"
+        rows[g["away"]]["redzone_success"]="3"
+        rows[g["away"]]["redzone_plays"]="4"
+        h=_profile([_team_game(g,g["home"],rows)])
+        a=_profile([_team_game(g,g["away"],rows)])
+        result=matchup(h,a)
+        self.assertAlmostEqual(result["home_redzone_play_vs_defense"],.25)
+        self.assertAlmostEqual(result["away_redzone_play_vs_defense"],.75)
+        self.assertNotIn("redzone_trip_conversion",result)
+        # Missing redzone defensive plays must stay unknown, not act as
+        # an automatically weak or strong red-zone defense.
+        a["redzone_success_allowed"]=None
+        self.assertIsNone(matchup(h,a)["home_redzone_play_vs_defense"])
+
     def test_turnover_missing_not_zero_or_healthy(self):
         g=game(1,"2026-09-01")
         no=_team_game(g,"A",adv(g))
