@@ -328,12 +328,22 @@ def compute(root,now=None):
     v04_total_errors=[];v04_market_total_errors=[]
     v04_home_count=0;v04_winner_correct=0;v04_winner_count=0
     v04_favorite_correct=0;v04_favorite_count=0
+    v04_identity_quarantine={};v05_identity_quarantine={}
     for (gid,market),(_,x) in first_v04.items():
         final=finals.get(gid)
         if final is None:continue
         if ((x["home"],x["away"],parse_time(x["kickoff_utc"]))!=
             (final["home"],final["away"],parse_time(final["kickoff_utc"]))):
-            raise ValueError("V04 research final identity mismatch")
+            # An early immutable kickoff can differ from the later
+            # observed final (schedule changes or source identity errors).
+            # Never grade a mismatched pair, but preserve every other
+            # valid archived grade and surface the exact conflict.
+            v04_identity_quarantine[gid]={
+                "snapshot":{"home":x["home"],"away":x["away"],
+                            "kickoff_utc":x["kickoff_utc"]},
+                "final":{"home":final["home"],"away":final["away"],
+                         "kickoff_utc":final["kickoff_utc"]}}
+            continue
         if parse_time(final["observed_at_utc"])<=parse_time(x["market_observed_utc"]):
             raise ValueError("V04 final predates pregame quote")
         h=final["home_score"];a=final["away_score"]
@@ -376,7 +386,12 @@ def compute(root,now=None):
             missing_v05+=1;continue
         if ((x["home"],x["away"],parse_time(x["kickoff_utc"]))!=
             (final["home"],final["away"],parse_time(final["kickoff_utc"]))):
-            raise ValueError("V05 source matched-final identity mismatch")
+            v05_identity_quarantine[gid]={
+                "snapshot":{"home":x["home"],"away":x["away"],
+                            "kickoff_utc":x["kickoff_utc"]},
+                "final":{"home":final["home"],"away":final["away"],
+                         "kickoff_utc":final["kickoff_utc"]}}
+            continue
         if parse_time(final["observed_at_utc"])<=priority[0]:
             raise ValueError("V05 final predates displayed research score")
         margin=final["home_score"]-final["away_score"]
@@ -468,6 +483,7 @@ def compute(root,now=None):
                        "ou":_stats(v04_week[w]["ou"])}
                       for w in sorted(v04_week)],
             "unsettled_excluded":len({gid for gid,m in first_v04 if gid not in finals}),
+            "final_identity_quarantined_games":len(v04_identity_quarantine),
             "no_historical_retroactive_pick_filling":True,
             "model_promoted":False,
             "market_publication_at_model_forecast_authenticated":False,
@@ -481,6 +497,7 @@ def compute(root,now=None):
                        **_paired_shadow(items)}
                       for w,items in sorted(v05_week.items())],
             "unsettled_excluded":missing_v05,
+            "final_identity_quarantined_games":len(v05_identity_quarantine),
             "first_pregame_capture_only":True,
             "model_promoted":False,"safe_for_betting":False,
             "betting_status":"PASS_UNVALIDATED",
@@ -488,6 +505,11 @@ def compute(root,now=None):
             "note":"V05 scores are prospectively archived research shadows. V05 and V04 are compared on exactly the same game IDs after independently observed final scores. Neither model has been promoted."
         },
         "weekly":weekly,
+        "source_identity_quarantine":{
+            "status":"SOURCE_IDENTITY_MISMATCH_EXCLUDED_FROM_RESEARCH_GRADE",
+            "v04":v04_identity_quarantine,"v05":v05_identity_quarantine,
+            "never_regrade_with_postkickoff_source":True,
+            "frozen_forecast_archives_modified":False},
         "recent":sorted(rows.values(),key=lambda r:(r["kickoff_utc"],r["game_id"]),reverse=True)[:25],
         "note":"SU: frozen 24–72h model forecasts. ATS/totals: earliest pre-kickoff research picks actually displayed with an observed market. Different cohorts, not directly comparable. Odds source publication times are not independently attested. No wagering ROI."
     }
