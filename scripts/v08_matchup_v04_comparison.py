@@ -33,7 +33,8 @@ FAMILIES={
        "nonlinear_away_pass_explosiveness_vs_home_pass_def"),
  "redzone_play_success":REDZONE+(
      "home_redzone_play_vs_defense","away_redzone_play_vs_defense"),
- "giveaways_vs_takeaways":TURNOVERS,
+ "giveaways_vs_takeaways":TURNOVERS+(
+     "home_turnover_risk_per_drive","away_turnover_risk_per_drive"),
  "combined":ADJUSTED+PRESSURE+EXPLOSIVES+REDZONE+TURNOVERS+TRAJECTORY,
 }
 MIN_TRAINING=90
