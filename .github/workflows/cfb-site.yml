@@ -178,6 +178,24 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"],"a") as f:
               f.write("run_id="+run+"\n")
           PY
+      - name: Await original same-run score artifact (bounded; never use a different model run)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_RUN: ${{ steps.original_forecast.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          artifact="cfb-2026-data-$SOURCE_RUN"
+          for attempt in $(seq 1 12); do
+            id=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts?per_page=100" --jq ".artifacts[] | select(.name == \"$artifact\" and .expired == false) | .id" | head -1) || true
+            if [[ "$id" =~ ^[0-9]+$ ]]; then
+              echo "Verified $artifact available as artifact $id (attempt $attempt)."
+              exit 0
+            fi
+            echo "Original data artifact for $SOURCE_RUN not yet available (attempt $attempt/12)."
+            sleep 10
+          done
+          echo "::error::Source artifact $artifact remains unavailable. No other run may be substituted. Data Intake may still be publishing; a later site run will retry."
+          exit 1
       - name: Load original same-run score data, model source and kickoff identities
         uses: actions/download-artifact@v4
         with:
@@ -258,6 +276,7 @@ jobs:
           cat /tmp/team-branding.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Publish cumulative graded performance from archived prospectively captured evidence
         run: |
+          set -euo pipefail
           python -m scripts.site_performance             --archive-root .context-state             --dashboard site/data/dashboard.json | tee /tmp/site-performance.txt
           cat /tmp/site-performance.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Refresh current context-state grade receipt immediately before publish
@@ -271,6 +290,7 @@ jobs:
           git -C .context-state rev-parse --short HEAD
       - name: Overlay independently settled player-stat MAE research grades
         run: |
+          set -euo pipefail
           python -m scripts.site_player_stat_performance \
             --archive-root .context-state \
             --dashboard site/data/dashboard.json | tee /tmp/player-form-grades.txt
