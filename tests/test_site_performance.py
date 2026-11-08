@@ -268,6 +268,16 @@ class SitePerformanceTests(unittest.TestCase):
         y=compute(self.root,NOW)["v05_shadow"]
         self.assertEqual(y["summary"],x["summary"])
 
+    def test_weekly_history_groups_multiple_days_into_one_isoweek(self):
+        from scripts.site_performance import _week
+        tue=_week("2026-11-04T01:00:00Z")
+        fri=_week("2026-11-07T02:00:00Z")
+        sat=_week("2026-11-07T20:30:00Z")
+        self.assertEqual(tue,fri)
+        self.assertEqual(fri,sat)
+        self.assertEqual((tue.year,tue.week),(2026,45))
+        self.assertNotEqual(_week("2026-10-31T20:00:00Z"),tue)
+
     def test_changed_final_kickoff_is_quarantined_not_graded_as_v04_or_v05(self):
         from scripts.v04_market_challenger import decide
         from scripts.v04_direct_scores import STATUS as V04_STATUS, MODEL as V04_MODEL
