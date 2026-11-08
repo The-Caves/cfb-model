@@ -268,6 +268,67 @@ class SitePerformanceTests(unittest.TestCase):
         y=compute(self.root,NOW)["v05_shadow"]
         self.assertEqual(y["summary"],x["summary"])
 
+    def test_changed_final_kickoff_is_quarantined_not_graded_as_v04_or_v05(self):
+        from scripts.v04_market_challenger import decide
+        from scripts.v04_direct_scores import STATUS as V04_STATUS, MODEL as V04_MODEL
+        self.row["home_bias_quarantined"]=True
+        self.row["displayed_ats_side"]="PASS"
+        self.row.update({
+            "v04_direct_score_model":V04_MODEL,
+            "v04_direct_source_no_v03_total_reuse":True,
+            "v04_research_not_promoted":True,
+            "v04_direct_home_margin":14.,
+            "v04_direct_total_points":48.,
+            "v04_direct_home_points":31.,
+            "v04_direct_away_points":17.,
+            "qb_verified_at_forecast":2,
+            "v05_shadow_model":"V05_ROBUST_RECENCY_FORM_SCORES_RESEARCH_ONLY",
+            "v05_shadow_status":"SOURCE_OBSERVED_V05_SHADOW_SCORES",
+            "v05_shadow_home_points":27.5,"v05_shadow_away_points":17.5,
+            "v05_shadow_home_margin":10.,"v05_shadow_total_points":45.,
+            "v05_shadow_thin_history":False,
+            "v05_shadow_source_training_games":105,
+            "v05_shadow_not_promoted":True,
+        })
+        score={"status":V04_STATUS,"model":V04_MODEL,
+               "home_margin":14.,"total_points":48.,
+               "home_points":31.,"away_points":17.,
+               "direct_scoring_fit_uses_v03_total":False,
+               "no_market_lines_in_training":True,"model_promoted":False}
+        receipt=decide(score,self.row["market_home_spread"],
+            self.row["market_total"],self.row["market_provider"],
+            self.row["market_observed_utc"],KICK,CAPTURE,2)
+        mapping={"status":"v04_research_status","policy":"v04_research_policy",
+            "ats_side":"v04_research_ats_side","ou_side":"v04_research_ou_side",
+            "ats_reason":"v04_research_ats_reason",
+            "ou_reason":"v04_research_ou_reason",
+            "raw_ats_model_market_gap":"v04_research_ats_gap",
+            "raw_ou_model_market_gap":"v04_research_ou_gap",
+            "market_anchored_home_margin":"v04_research_anchored_margin",
+            "market_anchored_total":"v04_research_anchored_total",
+            "missing_verified_qb_warning":"v04_research_qb_unknown"}
+        for old,new in mapping.items():self.row[new]=receipt[old]
+        # The official settled-game record was later revised to an earlier
+        # kickoff. The original forecast is immutable, not retroactively
+        # relabeled or graded against a suspect time/identity.
+        self.final["kickoff_utc"]="2026-10-24T18:30:00Z"
+        self.final_index["games"]["100"].update({
+            "kickoff_utc":self.final["kickoff_utc"],
+            "sha256":sha(self.final)})
+        self.board_index["runs"]=[self.entry(self.bundle,self.bpath)]
+        self.flush()
+        result=compute(self.root,NOW)
+        self.assertEqual(result["su"]["wins"],1)
+        self.assertEqual(result["ats"]["decisions"],0)
+        self.assertEqual(result["v04_challenger"]["eligible_with_quote"]["ats"],0)
+        self.assertEqual(result["v05_shadow"]["summary"]["games"],0)
+        q=result["source_identity_quarantine"]
+        self.assertEqual(set(q["v04"]),{"100"})
+        self.assertEqual(set(q["v05"]),{"100"})
+        self.assertEqual(q["v04"]["100"]["snapshot"]["kickoff_utc"],KICK)
+        self.assertEqual(q["v04"]["100"]["final"]["kickoff_utc"],self.final["kickoff_utc"])
+        self.assertFalse(q["frozen_forecast_archives_modified"])
+
     def test_publish_to_site_dashboard_without_touching_upcoming_picks(self):
         board=self.root/"dashboard.json"
         source={"schema_version":2,"betting_status":"PASS_UNVALIDATED",
