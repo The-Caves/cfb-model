@@ -117,6 +117,28 @@ class MatchupTests(unittest.TestCase):
         a["redzone_success_allowed"]=None
         self.assertIsNone(matchup(h,a)["home_redzone_play_vs_defense"])
 
+    def test_prior_turnover_risk_is_per_drive_and_opponent_specific(self):
+        games=[game(i,(dt.date(2026,9,1)+dt.timedelta(days=i)).isoformat())
+               for i in (1,3)]
+        histories={"A":[],"B":[]}
+        for g in games:
+            rows=adv(g)
+            two=turnovers(g)
+            observed=validated_turnovers(two,[g])
+            histories["A"].append(_team_game(g,"A",rows,observed))
+            histories["B"].append(_team_game(g,"B",rows,observed))
+        h=_profile(histories["A"]);a=_profile(histories["B"])
+        # 2 verified giveaways per 10 drives; B has 2 takeaways per
+        # 10 opponent drives, without treating a turnover as a constant
+        # number of opponent points or proof of repeatable interceptions.
+        self.assertAlmostEqual(h["giveaway_rate_per_drive"],.2)
+        self.assertAlmostEqual(a["takeaway_rate_per_defensive_drive"],.2)
+        self.assertAlmostEqual(matchup(h,a)["home_turnover_risk_per_drive"],.2)
+        single=_profile(histories["A"][:1])
+        self.assertIsNone(single["giveaway_rate_per_drive"])
+        a["takeaway_rate_per_defensive_drive"]=None
+        self.assertIsNone(matchup(h,a)["home_turnover_risk_per_drive"])
+
     def test_turnover_missing_not_zero_or_healthy(self):
         g=game(1,"2026-09-01")
         no=_team_game(g,"A",adv(g))
