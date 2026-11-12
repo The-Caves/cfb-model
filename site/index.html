@@ -575,6 +575,17 @@ footer{color:#b5a4c6;border-color:#473354}
  .schoolBadge{width:34px;height:34px;flex-basis:34px}.teamName{font-size:12px}
  .teamRow .scoreBox .score{font-size:23px}
 }
+
+/* Explicitly outrank the legacy green brand selectors. */
+header .brand span:not(.brandMark):not(.brandSeason){color:#fff}
+header .brand .brandSeason{color:#c6afdc}
+.liveSourceStamp{color:#d9b9ff}
+@media(max-width:699px){
+ .meta{margin:2px 0 1px}
+ .meta #refreshed{display:none}
+ .meta #market-refreshed{color:#bda4d7}
+ #matchups>.small{margin:2px 0 4px;font-size:10px}
+}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top">
@@ -588,7 +599,7 @@ footer{color:#b5a4c6;border-color:#473354}
 
 <div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Board snapshot pending</span><span id="market-refreshed">Book: published snapshot</span><span id="player-model-id">Player outlook pending</span></div>
 <nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Games</button><button role="tab" class="tab" data-tab="live" aria-selected="false">Live <span id="live-tab-count" class="liveTabCount">0</span></button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Results</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Sources</button></nav>
-<section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern · Scores are pregame model estimates, not live scores</p>
+<section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">Kickoffs ET · Frozen pregame projections</p>
 <div class="quickFilters" role="group" aria-label="Quick game filters"><button class="quickFilter" type="button" data-quick="all" aria-pressed="true">All games</button><button class="quickFilter" type="button" data-quick="lines" aria-pressed="false">With odds</button><button class="quickFilter" type="button" data-quick="ats" aria-pressed="false">Spread picks</button><button class="quickFilter" type="button" data-quick="ou" aria-pressed="false">Totals</button><button class="quickFilter" type="button" data-quick="player" aria-pressed="false">Player outlooks</button></div>
 <details class="filterPanel" id="filter-panel"><summary>Search teams &amp; advanced filters</summary><div class="tool">
 <input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
