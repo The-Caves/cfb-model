@@ -13,6 +13,20 @@ from scripts.game_context import parse_time
 
 BASE="https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
 
+def american_moneyline(value):
+    """Accept only source-provided American prices, never derive from spreads."""
+    if type(value) is str:
+        value=value.strip()
+        if value.startswith("+"): value=value[1:]
+        if not value or not value.lstrip("-").isdigit(): return None
+        value=int(value)
+    if type(value) is float and (not math.isfinite(value) or not value.is_integer()):
+        return None
+    if type(value) not in (int,float) or not math.isfinite(value): return None
+    value=int(value)
+    return value if 100 <= abs(value) <= 10000 else None
+
+
 def normalize(payload, retrieved_at_utc):
     observed=parse_time(retrieved_at_utc)
     if not isinstance(payload,dict) or not isinstance(payload.get("events"),list):
@@ -37,7 +51,12 @@ def normalize(payload, retrieved_at_utc):
                 # require numeric spread and total fields for trusted capture.
                 spread=offer.get("spread")
                 total=offer.get("overUnder")
-                if type(spread) not in (int,float) and type(total) not in (int,float):
+                h_odds=offer.get("homeTeamOdds") or {}
+                a_odds=offer.get("awayTeamOdds") or {}
+                home_ml=american_moneyline(h_odds.get("moneyLine")) if isinstance(h_odds,dict) else None
+                away_ml=american_moneyline(a_odds.get("moneyLine")) if isinstance(a_odds,dict) else None
+                if (type(spread) not in (int,float) and type(total) not in (int,float)
+                    and (home_ml is None or away_ml is None)):
                     continue
                 provider=offer.get("provider") or {}
                 provider_name=provider.get("name") if isinstance(provider,dict) else None
@@ -66,6 +85,8 @@ def normalize(payload, retrieved_at_utc):
                     "raw_total":total if type(total) in (int,float) else None,
                     "spread_semantics":"EXPLICIT_FAVORITE_FLAGS" if signed is not None else "UNVERIFIED_DO_NOT_GRADE_ATS",
                     "market_home_spread":signed,
+                    "market_home_moneyline":home_ml,
+                    "market_away_moneyline":away_ml,
                     "total_points":total if type(total) in (int,float) and 0<total<150 else None,
                     "source_publication_time_verified":False
                 })
