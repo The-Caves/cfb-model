@@ -429,7 +429,7 @@ footer{padding:20px 0;margin-top:34px}
 <select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="depth">With QB depth-chart ranks</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option><option value="player">With player projections</option><option value="player-qb">With QB passing projection</option><option value="player-rush">With rushing projection</option><option value="player-rec">With receiving projection</option></select>
 </div>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
-<section id="live" role="tabpanel" class="hidden"><div class="row"><h2>Games in progress</h2><div class="liveActions"><span class="liveSourceStamp" id="live-updated">Checking ESPN scores…</span><button class="refreshLive" id="refresh-live" type="button">Refresh</button></div></div><p class="small liveIntro">Current scores are observed ESPN results. All model estimates below are archived from <b>before kickoff</b>; live win probabilities and in-game picks are not yet validated or available.</p><div class="grid" id="live-games" aria-live="polite"><div class="empty"><b>Checking live games</b>Waiting for verified scoreboard data.</div></div></section>
+<section id="live" role="tabpanel" class="hidden"><div class="row"><h2>Games in progress</h2><div class="liveActions"><span class="liveSourceStamp" id="live-updated">Checking ESPN scores…</span><button class="refreshLive" id="refresh-live" type="button">Refresh</button></div></div><p class="small liveIntro">Actual ESPN scores alongside the model's <b>original pre-kickoff forecast</b>. The projected favorite stays visible if they fall behind. Live sportsbook lines and recalculated win probabilities are not available; the original pick never changes.</p><div class="grid" id="live-games" aria-live="polite"><div class="empty"><b>Checking live games</b>Waiting for verified scoreboard data.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden">
 <p class="performanceLegend"><b>Lifetime performance stays intact across model versions.</b> V03 frozen forecasts, V04 research picks, V05 shadow comparisons and PlayerForm results retain their separate grades and original observation dates; no model switch resets history.</p>
 <div class="results">
@@ -1181,8 +1181,45 @@ function liveGameCard(g){
   const ats=snap.archived_ats_side==="HOME"?g.home_team+" ATS":
             snap.archived_ats_side==="AWAY"?g.away_team+" ATS":"PASS";
   const ou=["OVER","UNDER"].includes(snap.archived_ou_side)?snap.archived_ou_side:"PASS";
+  const homeMargin=snap.archived_home_margin;
+  const projectedFavorite=Number.isFinite(homeMargin)&&homeMargin!==0?
+    (homeMargin>0?g.home_team:g.away_team):null;
+  const actualMargin=g.home_score-g.away_score;
+  const liveLeader=actualMargin===0?"Tied":
+    (actualMargin>0?g.home_team:g.away_team)+" by "+Math.abs(actualMargin);
+  const modelLabel=projectedFavorite?
+    projectedFavorite+" by "+num(Math.abs(homeMargin),1):"No directional projection";
+  const comparisons=node("div","liveVs");
+  const projected=node("div","");
+  projected.append(node("small","","Pregame model favorite"),node("strong","",modelLabel));
+  const actual=node("div","");
+  actual.append(node("small","","Current scoreboard"),node("strong","",liveLeader));
+  comparisons.append(projected,actual);box.append(comparisons);
+  if(projectedFavorite&&actualMargin!==0&&
+     ((homeMargin>0&&actualMargin<0)||(homeMargin<0&&actualMargin>0))){
+    box.append(node("p","livePregameMarkets",
+      "The pregame model favorite is currently trailing by "+Math.abs(actualMargin)+
+      ". This is historical model context, not an updated live win probability."));
+  }
   box.append(node("p","small","Pregame ATS: "+ats+
     " · Pregame O/U: "+ou+" · No in-game model adjustment"));
+  const quote=[];
+  if(Number.isFinite(snap.archived_market_home_spread)){
+    const v=snap.archived_market_home_spread;
+    quote.push("Home spread "+(v>0?"+":"")+num(v,1));
+  }
+  if(Number.isFinite(snap.archived_market_total))
+    quote.push("Pregame O/U "+num(snap.archived_market_total,1));
+  if(americanPrice(snap.archived_market_home_moneyline)!=="—"&&
+     americanPrice(snap.archived_market_away_moneyline)!=="—")
+    quote.push("Pregame moneyline "+shortTeam(g.away_team)+" "+
+      americanPrice(snap.archived_market_away_moneyline)+" / "+
+      shortTeam(g.home_team)+" "+americanPrice(snap.archived_market_home_moneyline));
+  const book=node("div","livePregameMarkets",
+    (snap.archived_market_provider?"Pregame bookmaker: "+snap.archived_market_provider+" · ":"")+
+    (quote.length?quote.join(" · "):"No archived verified sportsbook quote")+
+    " · Not current in-play odds");
+  box.append(book);
   if(snap.archived_model_observed_at_utc)
    box.append(node("div","small","Archived "+fmtDate.format(dateOf(snap.archived_model_observed_at_utc))));
   el.append(box);
