@@ -408,6 +408,37 @@ footer{padding:20px 0;margin-top:34px}
  .marketTile .researchSide{font-size:10px}.panel{padding:16px}.results .panel{padding:17px}
  .results .metric{font-size:33px}.liveTeam strong{font-size:28px}
 }
+
+/* Slender mobile game-day entry: cards above the fold; search is a disclosure. */
+.filterPanel{margin:0 0 15px}
+.filterPanel>summary{display:none}
+.filterPanel .tool{margin:8px 0 0}
+@media(max-width:699px){
+ .top{min-height:38px}
+ .brand{font-size:15px}.brandMark{width:33px;height:33px;border-radius:10px}
+ .top .pill{font-size:9px;padding:5px 9px}
+ .hero{padding:7px 0 11px;gap:8px}
+ .hero .kicker{display:none}
+ .hero h1{font-size:25px;line-height:1.08;max-width:330px;margin:0}
+ .heroStats{gap:6px}
+ .heroStat{padding:7px 10px;border-radius:11px}
+ .heroStat b{font-size:20px}
+ .heroStat small{font-size:9px;margin-top:1px}
+ .dayShell{padding-bottom:6px}
+ .dayButton{padding:7px 10px;min-width:72px}
+ .meta{font-size:10px;margin:5px 0;white-space:nowrap;overflow:hidden}
+ .meta #captured,.meta #player-model-id{display:none}
+ nav[role=tablist]{padding:8px 0;margin:0 0 9px;gap:6px}
+ .tab{min-height:38px;padding:8px 11px}
+ #matchups>.row{margin:7px 0 3px}
+ #matchups>.small{margin:3px 0 5px}
+ .quickFilters{margin:8px 0 5px}
+ .filterPanel{margin:2px 0 11px;border:1px solid #344967;background:#142238;border-radius:11px}
+ .filterPanel>summary{display:block;padding:10px 13px;font-size:11px;font-weight:800;color:#c3d8f2;cursor:pointer;list-style:none}
+ .filterPanel>summary:after{content:"⌄";float:right;color:#69ddb9;font-size:14px}
+ .filterPanel[open]>summary:after{content:"⌃"}
+ .filterPanel .tool{margin:0;padding:9px 11px 12px;border-top:1px solid #30435c}
+}
 </style></head>
 <body>
 <header><div class="wrap">
@@ -418,16 +449,16 @@ footer{padding:20px 0;margin-top:34px}
   </div>
 </div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
 <main class="wrap">
-<details class="researchDisclosure"><summary>Model status: experimental · How to read these projections</summary><p>V04 is a research model, not a validated betting advantage. Book quotes are observed from public sources and may not match the time the forecast was generated. Live scores never update archived pregame selections. Full source limitations and provenance are under Sources.</p></details>
+
 <div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span><span id="player-model-id">Player outlook pending</span></div>
 <nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Games</button><button role="tab" class="tab" data-tab="live" aria-selected="false">Live <span id="live-tab-count" class="liveTabCount">0</span></button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Results</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Sources</button></nav>
 <section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern · Scores are pregame model estimates, not live scores</p>
 <div class="quickFilters" role="group" aria-label="Quick game filters"><button class="quickFilter" type="button" data-quick="all" aria-pressed="true">All games</button><button class="quickFilter" type="button" data-quick="lines" aria-pressed="false">With odds</button><button class="quickFilter" type="button" data-quick="ats" aria-pressed="false">Spread picks</button><button class="quickFilter" type="button" data-quick="ou" aria-pressed="false">Totals</button><button class="quickFilter" type="button" data-quick="player" aria-pressed="false">Player outlooks</button></div>
-<div class="tool">
+<details class="filterPanel" id="filter-panel"><summary>Search teams &amp; advanced filters</summary><div class="tool">
 <input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
 <select id="sort" aria-label="Sort games"><option value="time">Kickoff · earliest first</option><option value="late">Kickoff · latest first</option><option value="ats">Biggest model ATS difference</option><option value="total">Biggest model total difference</option><option value="alpha">School · A to Z</option></select>
 <select id="market-filter" aria-label="Filter games"><option value="all">All matchups</option><option value="lines">With market lines</option><option value="ats">With ATS comparison</option><option value="ou">With total comparison</option><option value="home">ATS: Home</option><option value="away">ATS: Away</option><option value="over">Totals: Over</option><option value="under">Totals: Under</option><option value="qb">Both QBs officially confirmed (current)</option><option value="qb-named">Both QB names available</option><option value="depth">With QB depth-chart ranks</option><option value="qb-unknown">QB information missing</option><option value="qb-status">Official QB availability reported</option><option value="qb-risk">QB out, questionable or uncertain</option><option value="player">With player projections</option><option value="player-qb">With QB passing projection</option><option value="player-rush">With rushing projection</option><option value="player-rec">With receiving projection</option></select>
-</div>
+</div></details>
 <div class="grid" id="games" aria-live="polite"><div class="empty"><b>Loading actual model forecasts</b>Checking publication status.</div></div></section>
 <section id="live" role="tabpanel" class="hidden"><div class="row"><h2>Games in progress</h2><div class="liveActions"><span class="liveSourceStamp" id="live-updated">Checking ESPN scores…</span><button class="refreshLive" id="refresh-live" type="button">Refresh</button></div></div><p class="small liveIntro">Actual ESPN scores alongside the model's <b>original pre-kickoff forecast</b>. The projected favorite stays visible if they fall behind. Live sportsbook lines and recalculated win probabilities are not available; the original pick never changes.</p><div class="grid" id="live-games" aria-live="polite"><div class="empty"><b>Checking live games</b>Waiting for verified scoreboard data.</div></div></section>
 <section id="performance" role="tabpanel" class="hidden">
@@ -460,7 +491,7 @@ footer{padding:20px 0;margin-top:34px}
  <div class="state" id="player-performance">Player-stat research is separate from the verified SU/ATS/totals grade. No validated player-prop performance is published.</div>
 </div>
 </section>
-<section id="sources" role="tabpanel" class="hidden"><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Score model (frozen)</span><span id="modelid">—</span></div><div class="sourceRow"><span>Player stat research model</span><span id="propmodelid">—</span></div><div class="sourceRow"><span>Player projection coverage</span><span id="propcoverage">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
+<section id="sources" role="tabpanel" class="hidden"><details class="researchDisclosure"><summary>Model status: experimental · How to read these projections</summary><p>V04 is a research model, not a validated betting advantage. Book quotes are observed from public sources and may not match the time the forecast was generated. Live scores never update archived pregame selections. Full source limitations and provenance are under Sources.</p></details><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Score model (frozen)</span><span id="modelid">—</span></div><div class="sourceRow"><span>Player stat research model</span><span id="propmodelid">—</span></div><div class="sourceRow"><span>Player projection coverage</span><span id="propcoverage">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
 <footer>2026 CFB Lab · Research only · No wagers placed. <a href="https://github.com/The-Caves/cfb-model">Open GitHub project</a></footer>
 </main>
 <script id="dashboard-data" type="application/json"></script>
@@ -1368,6 +1399,10 @@ for(const b of document.querySelectorAll("[data-quick]")){
 for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id==="query"?"input":"change",()=>{
  syncQuickFilters();render();
 });
+const filtersPanel=byId("filter-panel");
+const wideFilterView=()=>{if(window.matchMedia("(min-width:700px)").matches)filtersPanel.open=true;};
+wideFilterView();
+window.addEventListener("resize",wideFilterView);
 (async()=>{
  try{
  const embedded=byId("dashboard-data");let d;
