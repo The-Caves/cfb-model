@@ -1479,10 +1479,13 @@ function parseEspnMarket(payload,observedAt){
  return candidates;
 }
 function marketDays(now){
- const keys=[...new Set((data?.games||[]).filter(g=>Date.parse(g.kickoff_utc)>now.getTime())
-   .map(g=>dateKey(dateOf(g.kickoff_utc))))].sort();
- const wanted=selectedDay&&selectedDay!=="all"?keys.filter(k=>k===selectedDay):keys.slice(0,4);
- return wanted.map(s=>s.replace(/\D/g,"")).filter(s=>s.length===8);
+ const available=[...new Set((data?.games||[]).filter(g=>Date.parse(g.kickoff_utc)>now.getTime())
+   .map(g=>dateKey(dateOf(g.kickoff_utc))))].sort((a,b)=>new Date(a)-new Date(b));
+ const wanted=selectedDay&&selectedDay!=="all"?available.filter(k=>k===selectedDay):available.slice(0,4);
+ return wanted.map(key=>{
+   const parts=key.split("/");
+   return parts.length===3?parts[2]+parts[0].padStart(2,"0")+parts[1].padStart(2,"0"):"";
+ }).filter(s=>/^\d{8}$/.test(s));
 }
 async function refreshMarket(){
  if(marketInFlight||document.hidden||!data)return;
