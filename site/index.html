@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0d192c"><title>CFB Lab | 2026 Matchups</title>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0b0911"><title>PRESSBOX | College Football</title>
 <style>
 
 :root{
@@ -439,15 +439,151 @@ footer{padding:20px 0;margin-top:34px}
  .filterPanel[open]>summary:after{content:"⌃"}
  .filterPanel .tool{margin:0;padding:9px 11px 12px;border-top:1px solid #30435c}
 }
-.marketTile .researchSide.pass{color:#9badc5;font-weight:750}</style></head>
+.marketTile .researchSide.pass{color:#9badc5;font-weight:750}
+/* PRESSBOX / Purple, ink and white. Game information leads, not hero copy. */
+:root{color:#f7f3ff;background:#0b0911;--bg:#0b0911;--surface:#151020;--surface-2:#211a30;--line:#392c4b;
+ --subtle:#c0b4d0;--mint:#c6a5ff;--sky:#d5c1ff;--violet:#bf94ff;--gold:#f7c778;--red:#fba6b6}
+body{background:radial-gradient(ellipse 62% 24% at 84% 0%,#26123c 0%,transparent 86%),#0b0911;color:#f7f3ff}
+header{background:linear-gradient(180deg,#100b1a 0%,#0b0911 100%);border-bottom:1px solid #332641}
+header .wrap{padding-top:14px;padding-bottom:11px}
+.brand{font-size:19px;letter-spacing:.075em;color:#fff;font-weight:950;gap:11px}
+.brand span{color:inherit}
+.brand .brandMark{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border:1px solid #c69bff;
+ color:#fff;background:linear-gradient(135deg,#b26aff,#6d3bc2);border-radius:10px;font-size:23px;box-shadow:0 4px 22px #873dcb44}
+.brand .brandSeason{color:#af9cbd;letter-spacing:.09em;font-weight:650;font-size:10px;margin-left:1px}
+.headerCounts{display:flex;align-items:center;gap:13px;font-size:11px;color:#aa9bbd;white-space:nowrap}
+.headerCounts span{display:flex;align-items:baseline;gap:5px}
+.headerCounts b{font-size:17px;font-weight:850;font-variant-numeric:tabular-nums;color:#f7f3ff}
+.headerCounts .countLive b{color:#d8b2ff}
+.dayShell{padding-bottom:9px}
+.dayNav{gap:8px;padding-bottom:4px}
+.dayButton{background:#1b1427;color:#d3c8df;border:1px solid #413154;border-radius:10px;padding:9px 12px}
+.dayButton span{color:#b2a6c0}
+.dayButton.selected{background:#5d31a2;border:1px solid #cdabff;color:#fff;box-shadow:inset 0 0 0 1px #b184fa}
+.dayButton.selected span{color:#ebdfff}
+nav[role=tablist]{background:#0b0911f2;border-color:#392c4b;margin-bottom:11px;padding:9px 0}
+.tab{background:#1b1427;border:1px solid #423352;color:#d3c8df;font-weight:780}
+.tab[aria-selected=true]{background:#a66aff;border-color:#c79eff;color:#130b1d;box-shadow:none}
+.tab .liveTabCount{color:#2f1745;background:#f0d9ff}
+#matchups h2,#live h2{color:#faf6ff;font-size:21px}
+#showing{background:#251934;border-color:#403152;color:#dbcbe8}
+.quickFilter{background:#191423;border-color:#433452;color:#cdbedc}
+.quickFilter[aria-pressed=true]{background:#6138a6;border-color:#ba8dff;color:#fff}
+.filterPanel,.search,.tool select{background:#181321;border-color:#49365e;color:#f8f4ff}
+.filterPanel>summary{color:#dbcaef}
+.search:focus,.tool select:focus{outline-color:#ad79f4}
+.game,.panel{background:#15101f;border:1px solid #3e2d53;border-radius:16px;box-shadow:0 12px 40px #0006}
+.game{padding:14px 15px}
+.game:before{background:#a86cff;width:3px}
+.game:hover{border-color:#8662b6}
+.gameTop{margin:0 0 9px}
+.gameTop .small{color:#b6a7c9}
+.game .modelTag,.modelTag{color:#e9d7ff;background:#37214f;border:1px solid #8153b7}
+.teamStack{gap:5px}
+.teamRow{background:#1c1628;border:1px solid #392d4b;border-left:3px solid var(--school-color,#8c5ec5);min-height:55px;padding:7px 9px}
+.teamRow.predictedWinner{background:#2a1d3f;border-color:#705099;border-left-color:#b48bff}
+.schoolBadge{background:#21172e;border-color:#59446d;border-radius:10px;width:38px;height:38px;flex-basis:38px}
+.teamName{color:#fff;font-size:13px}
+.teamSub{color:#bcb0cc}
+.qbRank,.qbConf{color:#d9b4ff}
+.qbSourceMini{color:#a598b6}
+.teamRow .scoreBox .score{color:#fff;font-size:25px}
+.teamRow.predictedWinner .scoreBox .score{color:#dcbbff}
+.scoreBox .scoreHint{color:#aa97be}
+.compactSummary{background:#20162d;border-color:#473457}
+.compactSummary .favorite{color:#d8b4ff}
+.marketTiles{gap:7px}
+.marketTile{background:#21172e;border-color:#443253}
+.marketTile .marketLabel{color:#bba5cf}
+.marketTile .marketValue{color:#fff}
+.marketTile .researchSide{color:#d8b1ff}
+.marketTile:nth-child(2) .researchSide{color:#ded0f7}
+.marketTile .researchSide.pass{color:#b7a8c7}
+.bookStamp{color:#bba9cb}
+.gameMore{border-top:1px solid #463454}
+.gameMore>summary{color:#dbc3fa}
+.playerToggle{background:#1d1629;border:1px solid #4a365e;border-radius:11px;margin-top:10px;overflow:hidden}
+.playerToggle>summary{color:#eadbff;font-weight:850;cursor:pointer;padding:11px 12px;display:flex;justify-content:space-between;align-items:center;gap:9px;font-size:11px;list-style:none}
+.playerToggle>summary::-webkit-details-marker{display:none}
+.playerToggle>summary:before{content:"▦";color:#cfb1ff;font-size:15px;margin-right:1px}
+.playerToggle>summary .playerCount{color:#a99ab8;font-weight:600;font-size:10px;margin-left:auto}
+.playerToggle>summary:after{content:"⌄";font-size:16px;color:#d7b7ff}
+.playerToggle[open]>summary:after{content:"⌃"}
+.playerTwoCol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:0 10px 10px}
+.playerTeam{background:#140f1d;border:1px solid #41304f;border-radius:9px;min-width:0;overflow:hidden}
+.playerTeamTitle{padding:10px;border-bottom:1px solid #3c2e4c}
+.playerTeamTitle span{display:block;font-size:9px;color:#b38eec;letter-spacing:.1em;font-weight:800;margin-bottom:4px}
+.playerTeamTitle strong{display:block;color:#fff;font-size:11px}
+.playerLine{padding:9px 10px;border-bottom:1px solid #31263e;display:flex;gap:8px;justify-content:space-between;align-items:center}
+.playerLine:last-child{border-bottom:0}
+.playerLine .playerName{color:#f4edff;display:block;white-space:normal;font-size:11px}
+.playerMetric{color:#aa9cb8;display:block;font-size:9px;margin-top:3px}
+.playerLineStat{display:flex;gap:2px;align-items:baseline;color:#bb9de1}
+.playerLineStat strong{font-size:18px;color:#e4caff}
+.playerLineStat span{font-size:9px}
+.playerEmpty{padding:10px;color:#a99cb7;font-size:10px}
+.playerProjectionNote{font-size:10px;color:#afa0bd;padding:0 12px 12px;line-height:1.5}
+.comparisonGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0 0}
+.comparison{background:#21172f;border:1px solid #4c3564;border-radius:11px;padding:10px 11px;min-width:0}
+.comparisonTitle{text-transform:uppercase;color:#bf9be7;letter-spacing:.075em;font-weight:850;font-size:10px;margin-bottom:9px}
+.comparisonMain{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.comparisonMain>div{min-width:0}
+.comparisonMain small{font-size:9px;font-weight:750;letter-spacing:.05em;color:#b8a7c8;display:block;margin-bottom:3px}
+.comparisonMain strong{font-size:12px;line-height:1.4;color:#fff;overflow-wrap:anywhere}
+.comparisonMain>div:first-child strong{color:#e3cbff}
+.comparisonGap{margin-top:10px;padding-top:8px;border-top:1px solid #503864;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.comparisonGap b{color:#d6b0ff;font-size:12px;white-space:nowrap}
+.comparisonGap span{color:#baa9ca;font-size:10px;text-align:right}
+.moneyGlance{grid-column:1/-1;background:#1c1527;border:1px solid #3c2d4c;border-radius:9px;padding:7px 10px;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.moneyGlance span{font-size:10px;color:#a996bd}
+.moneyGlance strong{font-size:11px;color:#f6eaff;font-weight:750;text-align:right}
+.gameIndicators{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0 0}
+.weatherChip,.injuryChip{font-size:10px;color:#c5addf;background:#241a32;border:1px solid #493258;border-radius:8px;padding:6px 8px}
+.weatherChip.weatherRisk,.injuryChip{color:#ffd6a0;background:#34271e;border-color:#745034}
+.weatherChip.weatherUnknown{color:#8d809e;background:transparent;border-color:#392c49}
+.scouting,.detailFold,.scoutSide{background:#1c1528;border-color:#463253}
+.scouting summary,.detailFold summary{color:#d8c4ef}
+.scoutSide p,.detailBody,.biasNote{color:#b6abc4}
+.biasWarning,.warningMini{background:#31251b;border-color:#765130;color:#ffddaa}
+.results .panel,.results .panel:nth-child(2),.results .panel:nth-child(3){background:#21172e;border-color:#503568}
+.results .metric{color:#f4e8ff}
+.performanceTable th{background:#2b1e3a;color:#d6c2e9}
+.performanceTable tr:nth-child(even){background:#191321}
+.liveGame{background:#16101f;border-color:#69459e}
+.liveGame:before{background:#ad79ed}
+.liveBadge{background:#412660;border-color:#9d6cce;color:#ebd7ff}
+.liveTeam{background:#271938;border-color:#4d3760}
+.liveTeam strong{color:#dfbaff}
+.livePregame{background:#261934;border-color:#6a4c88}
+.livePregame b{color:#e7c9ff}
+.liveVs>div{background:#302040;border-color:#563a70}
+.liveVs strong{color:#fff}
+.refreshLive{background:#4b2876;border-color:#9f70c8;color:#fff}
+.panel .performanceMeta{color:#baabc9}
+footer{color:#b5a4c6;border-color:#473354}
+@media(max-width:800px){.playerTwoCol{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){header .wrap{padding:10px 14px 8px}.brand{font-size:15px;gap:7px}
+ .brand .brandMark{height:29px;width:29px;flex-basis:29px;font-size:20px}.brand .brandSeason{font-size:9px}
+ .headerCounts{gap:8px;font-size:9px}.headerCounts b{font-size:13px}
+ .headerCounts span:nth-child(2){display:none}
+ .dayShell{padding-bottom:5px}.dayButton{min-width:68px;padding:7px 10px}
+ .comparison{padding:8px}.comparisonMain{gap:5px}.comparisonMain strong{font-size:11px}
+ .comparisonGap{display:block}.comparisonGap span{display:block;text-align:left;margin-top:2px}
+ .playerTwoCol{gap:6px;padding:0 7px 7px}.playerLine{padding:7px 6px}.playerTeamTitle{padding:8px}
+ .playerLine .playerName{font-size:10px}.playerLineStat strong{font-size:14px}
+ .game{padding:11px 11px 12px}.gameTop{margin-bottom:7px}.teamRow{padding:6px 8px;min-height:51px}
+ .schoolBadge{width:34px;height:34px;flex-basis:34px}.teamName{font-size:12px}
+ .teamRow .scoreBox .score{font-size:23px}
+}
+</style></head>
 <body>
-<header><div class="wrap">
-  <div class="top"><div class="brand"><span class="brandMark">CF</span> CFB <span>LAB</span> <span class="small">/ 2026</span></div><div class="pill">V04 model · experimental</div></div>
-  <div class="hero">
-    <div><div class="kicker">2026 SEASON / GAME DAY CONTROL ROOM</div><h1>Every game. One clear view.</h1><p class="intro">Pregame model scores, real sportsbook quotes, live scoreboards and lifetime results—one place to follow the slate.</p></div>
-    <div class="heroStats"><div class="heroStat"><b id="upcoming-count">—</b><small>Upcoming</small></div><div class="heroStat"><b id="today-count">—</b><small>Today (ET)</small></div><div class="heroStat"><b id="live-count">—</b><small>Live now</small></div></div>
-  </div>
-</div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
+<header><div class="wrap"><div class="top">
+ <div class="brand"><span class="brandMark">P</span><span>PRESSBOX</span><span class="brandSeason">CFB / 2026</span></div>
+ <div class="headerCounts" aria-label="Game counts">
+  <span><b id="upcoming-count">—</b> upcoming</span><span><b id="today-count">—</b> today</span>
+  <span class="countLive"><b id="live-count">—</b> live</span>
+ </div>
+</div></div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
 <main class="wrap">
 
 <div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span><span id="player-model-id">Player outlook pending</span></div>
