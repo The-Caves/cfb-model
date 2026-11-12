@@ -60,7 +60,13 @@ def freeze(board,now,run_id):
             raise ValueError("Bad market total")
         provider=g.get("market_provider")
         market_observed=g.get("market_observed_utc")
-        if sp or tt:
+        home_ml=g.get("market_home_moneyline")
+        away_ml=g.get("market_away_moneyline")
+        ml=home_ml is not None or away_ml is not None
+        if ml and not (type(home_ml) is int and type(away_ml) is int and
+                       100<=abs(home_ml)<=10000 and 100<=abs(away_ml)<=10000):
+            raise ValueError("Bad or incomplete source-provided moneyline")
+        if sp or tt or ml:
             if not provider or not market_observed:
                 raise ValueError("Unsourced displayed odds")
             observed=parse_time(market_observed)
@@ -200,6 +206,7 @@ def freeze(board,now,run_id):
             "frozen_forecast_observed_utc":board["forecast_observed_utc"],
             "frozen_forecast_sha256":board["forecast_sha256"],
             "market_home_spread":spread,"market_total":market_total,
+            "market_home_moneyline":home_ml,"market_away_moneyline":away_ml,
             "market_provider":provider,"market_observed_utc":market_observed,
             "displayed_ats_side":side,"displayed_ou_side":over,
             "home_bias_quarantined":g.get("home_bias_quarantined") is True,
