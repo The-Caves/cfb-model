@@ -880,70 +880,39 @@ function scoutingPanel(g){
  return details;
 }
 function playerOutlook(g){
- const section=node("section","playerFocus");
- const line=node("div","playerHead");
- line.append(node("span","playerTitle","Player props · stat outlook"));
- const obj=g.player_props||{},entries=Array.isArray(obj.entries)?obj.entries.filter(p=>p&&Number.isFinite(p.projection)&&typeof p.player==="string"):[];
- line.append(node("span","playerStatus",entries.length?"PlayerForm R1 · role research":"Awaiting verified form"));
- section.append(line);
- if(!entries.length){
-  section.append(node("div","playerMissing","No source-matched player projection yet. No prop line or market edge inferred."));
-  return section;
- }
- const teaser=node("div","playerPicks");
- const rank=entries.slice().sort((a,b)=>{
-  const v={passing_yards:0,receiving_yards:1,rushing_yards:2};
-  return (v[a.metric]??3)-(v[b.metric]??3)||b.projection-a.projection;
- });
- // Give the one-look panel different stat types first; all players are in the fold.
- const first=[];const used=new Set();
- for(const e of rank){
-  if(used.has(e.metric))continue;
-  first.push(e);used.add(e.metric);
-  if(first.length===3)break;
- }
- for(const p of first){
-  const chip=node("div","playerPick");
-  chip.title=p.team+" · "+p.player+" · "+p.label+"; participation unconfirmed";
-  chip.append(node("div","playerName",p.player));
-  const stat=node("div","playerStat");
-  stat.append(node("b","",num(p.projection,1)),node("span",""," yds · "+p.label.replace(" yards","")));
-  chip.append(stat);
-  chip.append(stat);
-  const role=p.workload_role_evidence;
-  if(role&&Number.isFinite(role.recorded_opportunity_share)){
-   const kind=p.metric==="passing_yards"?"recorded passes":p.metric==="rushing_yards"?"recorded carries":"recorded catches";
-   chip.append(node("div","playerRole",num(100*role.recorded_opportunity_share,0)+"% "+kind+" share"));
+ const obj=g.player_props||{},entries=Array.isArray(obj.entries)?
+   obj.entries.filter(p=>p&&Number.isFinite(p.projection)&&typeof p.player==="string"):[];
+ const fold=node("details","playerToggle");
+ const head=node("summary","");
+ head.append(node("span","", "Player projections"));
+ head.append(node("span","playerCount",entries.length?entries.length+" stats · PlayerForm R1":"No matched data"));
+ fold.append(head);
+ const inside=node("div","playerTwoCol");
+ for(const side of ["away","home"]){
+  const team=node("section","playerTeam"),heading=node("div","playerTeamTitle");
+  heading.append(node("span","",side==="away"?"AWAY":"HOME"),
+                 node("strong","",g[side+"_team"]));
+  team.append(heading);
+  const players=entries.filter(p=>p.team_side===side).sort((a,b)=>{
+   const order={passing_yards:0,rushing_yards:1,receiving_yards:2};
+   return (order[a.metric]??3)-(order[b.metric]??3)||b.projection-a.projection;
+  });
+  if(!players.length)team.append(node("p","playerEmpty","No matched player projection"));
+  for(const p of players){
+   const line=node("div","playerLine"),identity=node("div",""),stat=node("div","playerLineStat");
+   identity.append(node("strong","playerName",p.player),
+     node("span","playerMetric",p.label||p.metric));
+   if(p.official_reported_status&&p.official_reported_status!=="UNKNOWN_NOT_REPORTED")
+     identity.append(node("span","playerRisk"," · "+p.official_reported_status.replaceAll("_"," ")));
+   stat.append(node("strong","",num(p.projection,1)),node("span","","yd"));
+   line.append(identity,stat);team.append(line);
   }
-  const status=p.official_reported_status;
-  if(status&&status!=="UNKNOWN_NOT_REPORTED")
-   chip.append(node("div","playerRisk","Official: "+status.replaceAll("_"," ")));
-  teaser.append(chip);
+  inside.append(team);
  }
- section.append(teaser);
- const alertCount=(g.player_availability_home||[]).length+(g.player_availability_away||[]).length;
- section.append(node("div","playerFoot","Conditional stat estimate · unconfirmed participation · no sportsbook line"+(alertCount?" · "+alertCount+" reported non-QB availability flags":"")));
- const details=node("details","playerFold");
- details.append(node("summary","","All "+entries.length+" player outlooks · method & source"));
- const table=node("table","playerTable"),thead=node("thead"),hdr=node("tr");
- for(const label of ["Player / school","Statistic","Projection"])hdr.append(node("th","",label));
- thead.append(hdr);table.append(thead);const body=node("tbody");
- for(const p of rank){
-  const row=node("tr");
-  const playerCell=node("td","",p.player+" · "+(p.team_side==="home"?"Home":"Away"));
-  const role=p.workload_role_evidence;
-  if(role&&Number.isFinite(role.recorded_opportunity_share))
-   playerCell.append(node("div","playerRole",num(role.recorded_opportunity_share*100,0)+"% recorded team opportunity share"));
-  if(p.official_reported_status&&p.official_reported_status!=="UNKNOWN_NOT_REPORTED")
-   playerCell.append(node("div","playerInlineStatus","Official: "+p.official_reported_status.replaceAll("_"," ")));
-  row.append(playerCell);
-  row.append(node("td","",p.label||p.metric));
-  row.append(node("td","",num(p.projection,1)+" yd"));
-  body.append(row);
- }table.append(body);details.append(table);
- details.append(node("p","playerFoldNote","PlayerForm R1 uses recent recorded player games, limited 2025 priors and opponent history. Role shares reflect recorded team attempts, carries or receptions (not targets/snaps). Official reports are game-specific, but unlisted players remain UNKNOWN. Player participation is not confirmed; prior and matchup components are not jointly calibrated. No sportsbook prop lines or validated betting picks."));
- section.append(details);
- return section;
+ fold.append(inside);
+ fold.append(node("div","playerProjectionNote",
+   "PlayerForm R1 conditional yard projections; no verified sportsbook prop lines. Participation is unconfirmed unless independently reported. No calibrated prop probability or market edge."));
+ return fold;
 }
 function opponentMargin(g){
  const x=g.opponent_rating;
@@ -1031,7 +1000,7 @@ function gameCard(g){
  // Keep the score/lean and market glance at the card level; full analyses
  // only appear on explicit expansion. No forecast inputs are modified here.
  const more=node("details","gameMore");
- more.append(node("summary","","Player outlooks, injuries & scouting"));
+ more.append(node("summary","","Scouting, injuries & methodology"));
  more.append(summary);
  const tiles=node("div","marketTiles");
  let spreadLine="No line",atsPick=null,totalLine="No line",ouPick=null;
@@ -1082,7 +1051,7 @@ function gameCard(g){
  el.append(node("div","bookStamp",provider?
    "BOOK · "+provider+" · Observed "+(priceTime||"time unavailable")+" · Pregame quote":
    "BOOK · No matching, source-verified pregame quote"));
- more.append(playerOutlook(g));
+ el.append(playerOutlook(g));
  if(hasQBRisk(g))el.append(node("div","gameRisk","QB availability uncertainty · open details"));
  if(!quarantined&&Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
   more.append(node("div","marginAlert","Large model / spread difference ("+num(g.ats_edge_points)+" pts). Research only; not a validated edge."));
