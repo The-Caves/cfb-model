@@ -484,6 +484,22 @@ function marketTile(label,line,selection,edge){
  return box;
 }
 
+function americanPrice(value){
+ if(!Number.isInteger(value)||Math.abs(value)<100||Math.abs(value)>10000)return "—";
+ return value>0?"+"+value:String(value);
+}
+function shortTeam(team){
+ const words=String(team||"").trim().split(/\s+/);
+ return words.length>2?words.slice(-2).join(" "):String(team||"");
+}
+function activeAts(g){
+ if(g.home_bias_quarantined===true)return v04MarketResearch(g)?.ats_side||null;
+ return g.model_ats_side||null;
+}
+function activeTotal(g){
+ if(g.home_bias_quarantined===true)return v04MarketResearch(g)?.ou_side||null;
+ return g.model_ou_side||null;
+}
 function identityKey(value){return String(value||"").toLowerCase().replace(/[^a-z0-9]+/g,"").trim()}
 function qbIdentity(side,depth,availability,pregame){
  const chart=Array.isArray(depth)?depth.filter(p=>[1,2,3].includes(p.rank)&&p.player):[];
@@ -596,6 +612,9 @@ function opponentScoreScenario(game){
 }
 function teamDisplayRow(game,side){
  const team=game[side+"_team"],brand=game["team_brand_"+side],row=node("div","teamRow");
+ const model=v04ScoreScenario(game);
+ if(model&&Math.abs(model.home_margin)>=0.05&&
+    (side==="home"?model.home_margin>0:model.home_margin<0))row.classList.add("predictedWinner");
  if(/^#[0-9a-f]{6}$/i.test(brand?.color||""))row.style.setProperty("--school-color",brand.color);
  const left=node("div","teamIdentity"),name=node("div","teamLabel");
  name.append(node("div","teamName",team));
@@ -833,10 +852,14 @@ function gameCard(g){
     num(g.research_home_win_probability*100,0)+"% home win (uncal.)":"Win probability unavailable")));
   summary.append(secondary);
  }
- const visible=node("div","compactSummary");
- visible.append(node("span","favorite",lead));
+ const visible=node("div","compactSummary"),modelCall=node("div","");
+ modelCall.append(node("span","modelKick","Pregame model favors"),node("span","favorite",lead));
+ visible.append(modelCall);
  const visibleTotal=v04?v04.total_points:g.model_total;
- visible.append(node("span","scoreTotal","Model total · "+num(visibleTotal,1)));
+ const totalCall=node("div","");
+ totalCall.append(node("span","modelKick","Projected game total"),
+                  node("span","scoreTotal","Model total · "+num(visibleTotal,1)));
+ visible.append(totalCall);
  el.append(visible);
  // Keep the score/lean and market glance at the card level; full analyses
  // only appear on explicit expansion. No forecast inputs are modified here.
@@ -862,12 +885,22 @@ function gameCard(g){
     "V03 total (unvalidated): "+g.model_ou_side):
     g.model_ou_side==="PASS"?"Model: PASS":"Model: "+g.model_ou_side;
  }
- tiles.append(marketTile("Observed spread",spreadLine,atsPick,
+ tiles.append(marketTile("Sportsbook spread",spreadLine,atsPick,
                quarantined?(v04research?.ats_side==="PASS"?null:
                   Math.abs(v04research?.raw_ats_model_market_gap)):g.ats_edge_points),
-              marketTile("Observed O/U",totalLine,ouPick,
+              marketTile("Sportsbook total",totalLine,ouPick,
                quarantined?(v04research?.ou_side==="PASS"?null:
                   Math.abs(v04research?.raw_ou_model_market_gap)):g.ou_edge_points));
+ const awayML=americanPrice(g.market_away_moneyline);
+ const homeML=americanPrice(g.market_home_moneyline);
+ const mlAvailable=awayML!=="—"&&homeML!=="—";
+ const modelWinner=Number.isFinite(margin)&&margin!==0?
+   (margin>0?g.home_team:g.away_team):null;
+ const moneyline=marketTile("Sportsbook moneyline",
+   mlAvailable?shortTeam(g.away_team)+" "+awayML+" · "+shortTeam(g.home_team)+" "+homeML:"No verified moneyline",
+   modelWinner?"Model winner: "+modelWinner:"No reliable winner forecast",null);
+ moneyline.classList.add("moneyline");
+ tiles.append(moneyline);
  if(v04research)more.append(node("div","biasNote",
    "V04 is an unvalidated, market-anchored research policy. "+
    "A PASS means uncertainty; these are not proven betting edges. "+
@@ -876,6 +909,12 @@ function gameCard(g){
      v04research.missing_verified_qb_warning?
      "Unconfirmed QB(s): stronger research thresholds applied.":"")));
  el.append(tiles);
+ const provider=g.market_provider;
+ const priceTime=g.market_observed_utc&&Number.isFinite(Date.parse(g.market_observed_utc))?
+   fmtDate.format(dateOf(g.market_observed_utc)):null;
+ el.append(node("div","bookStamp",provider?
+   "BOOK · "+provider+" · Observed "+(priceTime||"time unavailable")+" · Pregame quote":
+   "BOOK · No matching, source-verified pregame quote"));
  more.append(playerOutlook(g));
  if(hasQBRisk(g))el.append(node("div","gameRisk","QB availability uncertainty · open details"));
  if(!quarantined&&Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
@@ -1207,11 +1246,13 @@ function render(){
  const shown=future.filter(g=>{
   if(selectedDay!=="all"&&dateKey(dateOf(g.kickoff_utc))!==selectedDay)return false;
   if(needle&&!(g.away_team+" "+g.home_team+" "+g.game_id+" "+(g.qb_home?.player||"")+" "+(g.qb_away?.player||"")+" "+(g.player_props?.entries||[]).map(p=>p.player).join(" ")).toLowerCase().includes(needle))return false;
-  if(filter==="lines"&&!Number.isFinite(g.market_home_spread)&&!Number.isFinite(g.market_total))return false;
-  if(filter==="ats"&&!g.model_ats_side)return false;
-  if(filter==="ou"&&!g.model_ou_side)return false;
-  if((filter==="home"||filter==="away")&&g.model_ats_side!==filter.toUpperCase())return false;
-  if((filter==="over"||filter==="under")&&g.model_ou_side!==filter.toUpperCase())return false;
+  if(filter==="lines"&&!Number.isFinite(g.market_home_spread)&&!Number.isFinite(g.market_total)&&
+    (americanPrice(g.market_home_moneyline)==="—"||americanPrice(g.market_away_moneyline)==="—"))return false;
+  const ats=activeAts(g),ou=activeTotal(g);
+  if(filter==="ats"&&![ "HOME","AWAY" ].includes(ats))return false;
+  if(filter==="ou"&&![ "OVER","UNDER" ].includes(ou))return false;
+  if((filter==="home"||filter==="away")&&ats!==filter.toUpperCase())return false;
+  if((filter==="over"||filter==="under")&&ou!==filter.toUpperCase())return false;
   if(filter==="qb"&&(g.qb_home?.status!=="CONFIRMED_OFFICIAL"||g.qb_away?.status!=="CONFIRMED_OFFICIAL"))return false;
   if(filter==="qb-named"&&(!g.qb_home?.player||!g.qb_away?.player))return false;
   if(filter==="depth"&&!(g.qb_depth_home?.length&&g.qb_depth_away?.length))return false;
@@ -1228,9 +1269,13 @@ function render(){
  shown.sort((a,b)=>{
   if(order==="late")return when(b)-when(a)||String(a.game_id).localeCompare(String(b.game_id));
   if(order==="ats"||order==="total"){
-    const prop=order==="ats"?"ats_edge_points":"ou_edge_points";
-    const va=Number.isFinite(a[prop])?a[prop]:-1,vb=Number.isFinite(b[prop])?b[prop]:-1;
-    return vb-va||when(a)-when(b);
+    const edge=(g)=>{
+      const r=g.home_bias_quarantined?v04MarketResearch(g):null;
+      const val=r?(order==="ats"?r.raw_ats_model_market_gap:r.raw_ou_model_market_gap):
+        g[order==="ats"?"ats_edge_points":"ou_edge_points"];
+      return Number.isFinite(val)?Math.abs(val):-1;
+    };
+    return edge(b)-edge(a)||when(a)-when(b);
   }
   if(order==="alpha")return a.away_team.localeCompare(b.away_team)||when(a)-when(b);
   return when(a)-when(b)||String(a.game_id).localeCompare(String(b.game_id));
@@ -1265,7 +1310,22 @@ document.addEventListener("visibilitychange",()=>{
     document.querySelector('[data-tab="live"]').getAttribute("aria-selected")==="true")
   refreshLive();
 });
-for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id==="query"?"input":"change",render);
+function syncQuickFilters(){
+ const v=byId("market-filter").value;
+ for(const b of document.querySelectorAll("[data-quick]")){
+   b.setAttribute("aria-pressed",String(b.dataset.quick===v));
+ }
+}
+for(const b of document.querySelectorAll("[data-quick]")){
+ b.addEventListener("click",()=>{
+   byId("market-filter").value=b.dataset.quick;
+   syncQuickFilters();
+   render();
+ });
+}
+for(const id of ["query","sort","market-filter"])byId(id).addEventListener(id==="query"?"input":"change",()=>{
+ syncQuickFilters();render();
+});
 (async()=>{
  try{
  const embedded=byId("dashboard-data");let d;
