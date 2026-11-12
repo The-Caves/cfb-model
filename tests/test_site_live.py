@@ -34,7 +34,9 @@ def buildroot(root,capture="2026-11-05T18:30:00Z"):
         "v04_direct_home_margin":3.7,"v04_direct_total_points":46.5,
         "v04_research_not_promoted":True,"v04_research_ats_side":"PASS",
         "v04_research_ou_side":"UNDER",
-        "market_home_spread":-2.5,"market_total":48.5}]}
+        "market_home_spread":-2.5,"market_total":48.5,
+        "market_provider":"DraftKings","market_home_moneyline":-135,
+        "market_away_moneyline":115}]}
     file.write_bytes(gzip.compress(json.dumps(frozen).encode()))
     index={"status":"IMMUTABLE_DISPLAYED_RESEARCH_MARKET_SNAPSHOT",
        "schema_version":1,"runs":[{"run_id":"400","path":path,
@@ -69,6 +71,9 @@ class LiveSourceTests(unittest.TestCase):
             self.assertEqual(game["pregame"]["archived_home_points"],25.1)
             self.assertEqual(game["pregame"]["archived_ats_side"],"PASS")
             self.assertTrue(game["pregame"]["pre_kickoff_archive_verified"])
+            self.assertEqual(game["pregame"]["archived_market_provider"],"DraftKings")
+            self.assertEqual(game["pregame"]["archived_market_home_moneyline"],-135)
+            self.assertEqual(game["pregame"]["archived_market_away_moneyline"],115)
             self.assertIsNone(game["in_game_model_update"])
             self.assertEqual(result["prospective_records"],old["prospective_records"])
             self.assertEqual(result["games"],old["games"])
