@@ -114,6 +114,20 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn('renderPerformance();updateDayNav();render();renderLive();',self.html)
         self.assertNotIn('data.prospective_records =',self.html)
 
+    def test_fieldhouse_navigation_and_source_only_moneyline(self):
+        self.assertIn('Every game. One clear view.',self.html)
+        self.assertIn('data-quick="lines"',self.html)
+        self.assertIn('function syncQuickFilters()',self.html)
+        self.assertIn('function americanPrice(value)',self.html)
+        self.assertIn('market_home_moneyline',self.html)
+        self.assertIn('Sportsbook moneyline',self.html)
+        self.assertIn('class="researchDisclosure"',self.html)
+        self.assertIn('liveVs',self.html)
+        self.assertIn('The pregame model favorite is currently trailing',self.html)
+        self.assertIn('Not current in-play odds',self.html)
+        self.assertIn('const ats=activeAts(g),ou=activeTotal(g);',self.html)
+        self.assertNotIn('data.prospective_records=',self.html)
+
     def test_mobile_and_logo_fallback(self):
         self.assertIn('@media(max-width:580px)',self.html)
         self.assertIn('logoBadge(team,brand)',self.html)
