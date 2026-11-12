@@ -439,7 +439,7 @@ footer{padding:20px 0;margin-top:34px}
  .filterPanel[open]>summary:after{content:"⌃"}
  .filterPanel .tool{margin:0;padding:9px 11px 12px;border-top:1px solid #30435c}
 }
-</style></head>
+<style>.marketTile .researchSide.pass{color:#9badc5;font-weight:750}</style></head>
 <body>
 <header><div class="wrap">
   <div class="top"><div class="brand"><span class="brandMark">CF</span> CFB <span>LAB</span> <span class="small">/ 2026</span></div><div class="pill">V04 model · experimental</div></div>
@@ -510,7 +510,7 @@ function empty(title,desc){const box=node("div","empty");box.append(node("b","",
 function marketTile(label,line,selection,edge){
  const box=node("div","marketTile");box.append(node("div","marketLabel",label));
  box.append(node("div","marketValue",line));
- const pick=node("div","researchSide"+(selection?"":" unavailable"),selection||"No comparable line");box.append(pick);
+ const pick=node("div","researchSide"+(selection?(selection.includes("PASS")?" pass":""):" unavailable"),selection||"No comparable line");box.append(pick);
  if(selection&&selection!=="PASS"&&Number.isFinite(edge))box.append(node("div","small","Model difference: "+num(edge)+" pts"));
  return box;
 }
@@ -903,15 +903,15 @@ function gameCard(g){
  if(Number.isFinite(g.market_home_spread)){
   spreadLine=g.home_team+" "+(g.market_home_spread>0?"+":"")+num(g.market_home_spread);
   if(g.model_ats_side)atsPick=quarantined?
-   (v04research?(v04research.ats_side==="PASS"?"V04 research: PASS":
-     "V04 research: "+(v04research.ats_side==="HOME"?g.home_team:g.away_team)+" ATS"):"V03: withheld (bias)"):
+   (v04research?(v04research.ats_side==="PASS"?"Model: PASS":
+     "Model: "+(v04research.ats_side==="HOME"?g.home_team:g.away_team)+" ATS"):"V03: withheld (bias)"):
    g.model_ats_side==="PASS"?"Model: PASS":
    (g.model_ats_side==="HOME"?g.home_team:g.away_team)+" ATS";
  }
  if(Number.isFinite(g.market_total)){
   totalLine=num(g.market_total);
   if(g.model_ou_side)ouPick=quarantined?
-    (v04research?"V04 research: "+v04research.ou_side+" · unvalidated":
+    (v04research?"Model: "+v04research.ou_side:
       v04?"V04 total "+num(v04.total_points)+" · research, no pick":
     "V03 total (unvalidated): "+g.model_ou_side):
     g.model_ou_side==="PASS"?"Model: PASS":"Model: "+g.model_ou_side;
