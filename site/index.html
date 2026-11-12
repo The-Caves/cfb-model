@@ -638,7 +638,7 @@ header .brand .brandSeason{color:#c6afdc}
  <div class="state" id="player-performance">Player-stat research is separate from the verified SU/ATS/totals grade. No validated player-prop performance is published.</div>
 </div>
 </section>
-<section id="sources" role="tabpanel" class="hidden"><details class="researchDisclosure"><summary>Model status: experimental · How to read these projections</summary><p>V04 is a research model, not a validated betting advantage. Book quotes are observed from public sources and may not match the time the forecast was generated. Live scores never update archived pregame selections. Full source limitations and provenance are under Sources.</p></details><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Score model (frozen)</span><span id="modelid">—</span></div><div class="sourceRow"><span>Player stat research model</span><span id="propmodelid">—</span></div><div class="sourceRow"><span>Player projection coverage</span><span id="propcoverage">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
+<section id="sources" role="tabpanel" class="hidden"><details class="researchDisclosure"><summary>Model status: experimental · How to read these projections</summary><p>V04 is a research model, not a validated betting advantage. Book quotes are observed from public sources and may not match the time the forecast was generated. Live scores never update archived pregame selections. Full source limitations and provenance are under Sources.</p></details><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Drive simulation</span><span id="sim-readiness">Awaiting verified historical drives</span></div><div class="sourceRow"><span>Score model (frozen)</span><span id="modelid">—</span></div><div class="sourceRow"><span>Player stat research model</span><span id="propmodelid">—</span></div><div class="sourceRow"><span>Player projection coverage</span><span id="propcoverage">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
 <footer>2026 CFB Lab · Research only · No wagers placed. <a href="https://github.com/The-Caves/cfb-model">Open GitHub project</a></footer>
 </main>
 <script id="dashboard-data" type="application/json"></script>
@@ -1653,6 +1653,10 @@ window.addEventListener("resize",wideFilterView);
  byId("captured").textContent="Forecast: "+fmtDate.format(dateOf(d.forecast_observed_utc));
  byId("refreshed").textContent="Board refreshed: "+fmtDate.format(dateOf(d.generated_at_utc));
  byId("runid").textContent=d.forecast_run_id;
+ const sim=d.simulation_display||{};
+ byId("sim-readiness").textContent=sim.games_with_fit?
+   sim.games_with_fit+" verified-fit game shadows · not validated or promoted":
+   "Not ready · "+(sim.readiness||"reviewed drive data unavailable");
  byId("modelid").textContent="V04 current display (independent score research) · "+
    "V03 frozen baseline: "+d.model+" · V05/V07 shadows not promoted";
  const prop=d.player_prop_display||{};

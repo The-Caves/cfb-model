@@ -8,6 +8,8 @@ on:
       - 'scripts/site_export.py'
       - 'scripts/site_live.py'
       - 'scripts/site_weather.py'
+      - 'scripts/site_simulation_shadow.py'
+      - 'tests/test_site_simulation_shadow.py'
       - 'tests/test_site_weather.py'
       - 'tests/test_site_live.py'
       - 'tests/test_site_live_browser.py'
@@ -275,6 +277,13 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_site_weather.py' -v
           python -m scripts.site_weather --dashboard site/data/dashboard.json --context .context-state/state/latest.json.gz
+      - name: Run source-gated empirical drive simulation shadow (no fabricated drives)
+        run: |
+          python -m unittest discover -s tests -p 'test_site_simulation_shadow.py' -v
+          python -m scripts.site_simulation_shadow \
+            --dashboard site/data/dashboard.json \
+            --drive-bundle .context-state/state/reviewed_drive_history_2026.json \
+            --trials 1000
       - name: Overlay source-reviewed player-stat outlooks (separate model; scores frozen)
         run: |
           python -m scripts.site_player_props --dashboard site/data/dashboard.json | tee /tmp/site-playerprops.txt
