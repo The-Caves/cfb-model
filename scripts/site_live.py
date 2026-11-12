@@ -150,6 +150,16 @@ def _snapshot_rows(root, runs, live, now):
                 "archived_ou_side": row.get("v04_research_ou_side"),
                 "archived_market_home_spread": row.get("market_home_spread"),
                 "archived_market_total": row.get("market_total"),
+                "archived_market_provider": row.get("market_provider"),
+                "archived_market_observed_at_utc": row.get("market_observed_utc"),
+                "archived_market_home_moneyline": (
+                    row.get("market_home_moneyline")
+                    if type(row.get("market_home_moneyline")) is int
+                    and 100 <= abs(row["market_home_moneyline"]) <= 10000 else None),
+                "archived_market_away_moneyline": (
+                    row.get("market_away_moneyline")
+                    if type(row.get("market_away_moneyline")) is int
+                    and 100 <= abs(row["market_away_moneyline"]) <= 10000 else None),
                 "pre_kickoff_archive_verified": True,
                 "updated_after_kickoff": False}
     return result
