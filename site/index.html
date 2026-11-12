@@ -932,8 +932,13 @@ function gameCard(g){
 function updateDayNav(){
  if(!data)return;
  const keys=[...new Set(data.games.map(g=>dateKey(dateOf(g.kickoff_utc))))].sort((a,b)=>new Date(a)-new Date(b));
- const today=dateKey(new Date());
- if(!keys.includes(selectedDay)&&selectedDay!=="all")selectedDay=keys.includes(today)?today:(keys[0]||"all");
+ const now=new Date(),today=dateKey(now);
+ const upcomingKeys=keys.filter(key=>data.games.some(g=>
+    dateKey(dateOf(g.kickoff_utc))===key&&dateOf(g.kickoff_utc)>now));
+ // On initial load, skip a completed game day rather than showing an empty slate.
+ // A user may still tap an earlier date to inspect the empty pregame view.
+ if(!keys.includes(selectedDay)&&selectedDay!=="all")
+   selectedDay=upcomingKeys.includes(today)?today:(upcomingKeys[0]||"all");
  const nav=byId("day-nav");nav.replaceChildren();
  for(const key of keys){
  const first=data.games.find(g=>dateKey(dateOf(g.kickoff_utc))===key);
