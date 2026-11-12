@@ -635,6 +635,7 @@ footer{color:#b5a4c6;border-color:#473354}
 "use strict";
 
 let data=null,selectedDay=null;
+const marketClientRows=new Map(); // Browser quotes are display-only; never modify archived dashboard data.
 const byId=id=>document.getElementById(id),dateOf=s=>new Date(s),num=(v,d=1)=>Number.isFinite(v)?v.toFixed(d):"—";
 const fmtDate=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});
 const dayFmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
@@ -988,71 +989,87 @@ function gameCard(g){
     num(g.research_home_win_probability*100,0)+"% home win (uncal.)":"Win probability unavailable")));
   summary.append(secondary);
  }
- const visible=node("div","compactSummary"),modelCall=node("div","");
- modelCall.append(node("span","modelKick","Pregame model favors"),node("span","favorite",lead));
- visible.append(modelCall);
+ // Projected scores already show the winner: no repetitive 'model favors' block.
  const visibleTotal=v04?v04.total_points:g.model_total;
- const totalCall=node("div","");
- totalCall.append(node("span","modelKick","Projected game total"),
-                  node("span","scoreTotal","Model total · "+num(visibleTotal,1)));
- visible.append(totalCall);
- el.append(visible);
- // Keep the score/lean and market glance at the card level; full analyses
- // only appear on explicit expansion. No forecast inputs are modified here.
  const more=node("details","gameMore");
  more.append(node("summary","","Scouting, injuries & methodology"));
  more.append(summary);
- const tiles=node("div","marketTiles");
- let spreadLine="No line",atsPick=null,totalLine="No line",ouPick=null;
+ const tiles=node("div","comparisonGrid");
+ const display=marketClientRows.get(String(g.game_id))||g;
+ const modelMargin=margin,modelTotal=visibleTotal;
+ const handicap=Number.isFinite(display.market_home_spread)?display.market_home_spread:null;
+ const total=Number.isFinite(display.market_total)?display.market_total:null;
+ const modelFav=Number.isFinite(modelMargin)&&modelMargin!==0?
+   (modelMargin>0?g.home_team:g.away_team):null;
+ const modelSpread=Number.isFinite(modelMargin)?
+   (modelMargin===0?"Pick'em":shortTeam(modelFav)+" −"+num(Math.abs(modelMargin),1)):"—";
+ const bookFav=handicap!==null&&handicap!==0?(handicap<0?g.home_team:g.away_team):null;
+ const bookSpread=handicap!==null?
+   (handicap===0?"Pick'em":shortTeam(bookFav)+" −"+num(Math.abs(handicap),1)):"—";
+ const comparison=(title,modelValue,bookValue,gap,direction)=>{
+   const box=node("section","comparison");
+   box.append(node("div","comparisonTitle",title));
+   const line=node("div","comparisonMain"),own=node("div",""),quote=node("div","");
+   own.append(node("small","","MODEL"),node("strong","",modelValue));
+   quote.append(node("small","","SPORTSBOOK"),node("strong","",bookValue));
+   line.append(own,quote);box.append(line);
+   const bottom=node("div","comparisonGap");
+   bottom.append(node("b","",Number.isFinite(gap)?"Δ "+num(Math.abs(gap),1)+" pts":"Δ —"));
+   bottom.append(node("span","",direction));
+   box.append(bottom);
+   return box;
+ };
+ const spreadGap=Number.isFinite(modelMargin)&&handicap!==null?modelMargin+handicap:null;
+ const spreadDirection=Number.isFinite(spreadGap)?
+   (spreadGap>0?shortTeam(g.home_team)+" ATS":spreadGap<0?shortTeam(g.away_team)+" ATS":"Even"):"Line unavailable";
+ const totalGap=Number.isFinite(modelTotal)&&total!==null?modelTotal-total:null;
+ const totalDirection=Number.isFinite(totalGap)?
+   (totalGap>0?"Model higher":totalGap<0?"Model lower":"Even"):"Line unavailable";
+ tiles.append(comparison("Spread",modelSpread,bookSpread,spreadGap,spreadDirection),
+              comparison("Over / Under",num(modelTotal,1),total!==null?num(total,1):"—",totalGap,totalDirection));
+ const awayML=americanPrice(display.market_away_moneyline),homeML=americanPrice(display.market_home_moneyline);
+ const money=node("div","moneyGlance");
+ money.append(node("span","","Moneyline"),
+   node("strong","",awayML==="—"&&homeML==="—"?"Not available from this provider":
+     shortTeam(g.away_team)+" "+awayML+" · "+shortTeam(g.home_team)+" "+homeML));
+ tiles.append(money);
  const v04research=quarantined?v04MarketResearch(g):null;
- if(Number.isFinite(g.market_home_spread)){
-  spreadLine=g.home_team+" "+(g.market_home_spread>0?"+":"")+num(g.market_home_spread);
-  if(g.model_ats_side)atsPick=quarantined?
-   (v04research?(v04research.ats_side==="PASS"?"Model: PASS":
-     "Model: "+(v04research.ats_side==="HOME"?g.home_team:g.away_team)+" ATS"):"V03: withheld (bias)"):
-   g.model_ats_side==="PASS"?"Model: PASS":
-   (g.model_ats_side==="HOME"?g.home_team:g.away_team)+" ATS";
- }
- if(Number.isFinite(g.market_total)){
-  totalLine=num(g.market_total);
-  if(g.model_ou_side)ouPick=quarantined?
-    (v04research?"Model: "+v04research.ou_side:
-      v04?"V04 total "+num(v04.total_points)+" · research, no pick":
-    "V03 total (unvalidated): "+g.model_ou_side):
-    g.model_ou_side==="PASS"?"Model: PASS":"Model: "+g.model_ou_side;
- }
- tiles.append(marketTile("Sportsbook spread",spreadLine,atsPick,
-               quarantined?(v04research?.ats_side==="PASS"?null:
-                  Math.abs(v04research?.raw_ats_model_market_gap)):g.ats_edge_points),
-              marketTile("Sportsbook total",totalLine,ouPick,
-               quarantined?(v04research?.ou_side==="PASS"?null:
-                  Math.abs(v04research?.raw_ou_model_market_gap)):g.ou_edge_points));
- const awayML=americanPrice(g.market_away_moneyline);
- const homeML=americanPrice(g.market_home_moneyline);
- const mlAvailable=awayML!=="—"&&homeML!=="—";
- const modelWinner=Number.isFinite(margin)&&margin!==0?
-   (margin>0?g.home_team:g.away_team):null;
- const moneyline=marketTile("Sportsbook moneyline",
-   mlAvailable?shortTeam(g.away_team)+" "+awayML+" · "+shortTeam(g.home_team)+" "+homeML:"No verified moneyline",
-   modelWinner?"Model winner: "+modelWinner:"No reliable winner forecast",null);
- moneyline.classList.add("moneyline");
- tiles.append(moneyline);
  if(v04research)more.append(node("div","biasNote",
-   "V04 is an unvalidated, market-anchored research policy. "+
+   "At the original site quote, the V04 policy was research-only. "+
    "A PASS means uncertainty; these are not proven betting edges. "+
    (v04research.qb_confirmed_season_out_unverified_replacement?
      "Official QB ruled out; replacement value unverified — ATS and O/U: PASS.":
      v04research.missing_verified_qb_warning?
      "Unconfirmed QB(s): stronger research thresholds applied.":"")));
  el.append(tiles);
- const provider=g.market_provider;
- const priceTime=g.market_observed_utc&&Number.isFinite(Date.parse(g.market_observed_utc))?
-   fmtDate.format(dateOf(g.market_observed_utc)):null;
+ const provider=display.market_provider;
+ const priceTime=display.market_observed_utc&&Number.isFinite(Date.parse(display.market_observed_utc))?
+   fmtDate.format(dateOf(display.market_observed_utc)):null;
  el.append(node("div","bookStamp",provider?
-   "BOOK · "+provider+" · Observed "+(priceTime||"time unavailable")+" · Pregame quote":
-   "BOOK · No matching, source-verified pregame quote"));
+   provider+" · "+(display.market_observed_in_browser?"Browser observed ":"Snapshot observed ")+(priceTime||"time unavailable"):
+   "Sportsbook line unavailable"));
+ const indicators=node("div","gameIndicators");
+ const weather=g.weather||{};
+ if(weather.status==="FORECAST"){
+   const parts=[Number.isFinite(weather.temperature_f)?num(weather.temperature_f,0)+"°F":null,
+     Number.isFinite(weather.wind_mph)?num(weather.wind_mph,0)+" mph wind":null,
+     Number.isFinite(weather.precip_probability_pct)?num(weather.precip_probability_pct,0)+"% precip":null].filter(Boolean);
+   const chip=node("span","weatherChip"+(weather.risk===true?" weatherRisk":""),
+     (weather.risk===true?"⚠ ":"☁ ")+parts.join(" · "));
+   chip.title="Open-Meteo pregame forecast; not actual game conditions or a score adjustment. Observed "+(weather.captured_at_utc||"unknown");
+   indicators.append(chip);
+ }else if(weather.status==="INDOOR"){
+   indicators.append(node("span","weatherChip","Indoor venue"));
+ }else{
+   indicators.append(node("span","weatherChip weatherUnknown","Weather unavailable"));
+ }
+ if(hasQBRisk(g))indicators.append(node("span","injuryChip","⚠ QB availability"));
+ const injuryCount=["away","home"].reduce((n,side)=>n+(g["player_availability_"+side]||[]).filter(p=>
+   ["OUT","QUESTIONABLE","DOUBTFUL","SUSPENDED","LIMITED","GAME_TIME_DECISION"].includes(p.status)).length,0);
+ if(injuryCount)indicators.append(node("span","injuryChip","⚠ "+injuryCount+" reported player flags"));
+ el.append(indicators);
  el.append(playerOutlook(g));
- if(hasQBRisk(g))el.append(node("div","gameRisk","QB availability uncertainty · open details"));
+
  if(!quarantined&&Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
   more.append(node("div","marginAlert","Large model / spread difference ("+num(g.ats_edge_points)+" pts). Research only; not a validated edge."));
  }
