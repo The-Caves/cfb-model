@@ -71,7 +71,7 @@ class CompactSiteTests(unittest.TestCase):
     def test_v04_market_policy_is_research_only_with_visible_passes(self):
         self.assertIn("function v04MarketResearch(game)",self.html)
         self.assertIn("V04_FIXED_RESIDUAL_RULE_20261101_V1",self.html)
-        self.assertIn("V04 research: PASS",self.html)
+        self.assertIn("Model: PASS",self.html)
         self.assertIn("Unconfirmed QB(s): stronger research thresholds",self.html)
         self.assertIn("ARCHIVED_PREKICKOFF_V04_MARKET_RESEARCH_GRADES",self.html)
         self.assertIn("First-quote eligible games",self.html)
