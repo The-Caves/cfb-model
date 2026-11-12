@@ -242,3 +242,45 @@ The dedicated **Live** tab obtains only ESPN `state=in` actual game scores from 
 
 The static GitHub Pages site publishes score snapshots at build time, not continuously streaming ESPN data. Extra game-night workflow clocks target roughly 30-minute refreshes (subject to GitHub Actions queue and source access); the Live tab checks for a newer published dashboard every two minutes while visible and provides a manual refresh button. Each card/source panel shows ESPN observation time. Scores may be stale between builds, and the capture can be unavailable. No AWS, paid data feed or new billing service is used.
 
+
+## November 11, 2026 — Fieldhouse mobile UI and pregame bookmaker prices
+
+The game desk now uses a brighter navy/teal/blue palette, high-contrast V04
+score projections, highlighted model favorite, three quick bookmaker
+comparisons, date strip, quick-filter buttons, search, and improved responsive
+navigation. The one-time experimental-model disclosure remains available
+without filling every card with repeated warnings; deep QB, player, scouting,
+model alternatives, source clocks and evidence limitations remain expandable.
+
+* **Moneyline / spread / total:** `scripts/free_market_capture.py` accepts
+  actual public ESPN scoreboard odds from the source-named bookmaker. Signed
+  spreads still require explicit favorite flags; source-provided American
+  moneylines require both home/away prices between ±100 and ±10000. Zero, EVEN,
+  missing sides, malformed prices and inferred prices are not accepted.
+  `scripts/site_market.py` exposes the same-provider original quote as
+  `market_home_moneyline` and `market_away_moneyline`, or null when absent.
+* **Model forecast is not a sportsbook quote:** The score-based V04 pregame
+  winning side is a directional prediction, not a calibrated moneyline price.
+  The V04 ATS and O/U **decision policy** continues to return a conspicuous
+  `PASS` when confidence, market comparability, or QB safety gates fail.
+  V03's quarantined favorite must not accidentally appear as a V04 pick.
+* **Pregame snapshot in Live:** Pre-kickoff archived model scores, winner,
+  spread/totals research selections, and original book line/quote time remain
+  visibly separate from the latest ESPN scoreboard state. When the original
+  model favorite is trailing, the UI labels that fact clearly but **does not**
+  claim the live win probability or in-play model has changed. Archived
+  moneylines are kept only when originally observed before kickoff.
+* **Bookmaker limits:** ESPN's no-key public scoreboard can return DraftKings,
+  ESPN BET or another identified quote provider. It is not a direct FanDuel
+  integration, a guaranteed bookmaker feed, a reliable opening/closing
+  sportsbook archive, or a live in-play price source. Empty fields stay
+  empty. A dedicated authenticated sportsbook provider and independently
+  timed live odds are **future work**, not silently fabricated.
+* **No score-model change:** All changes are interface and observed-market
+  presentation only. Archived picks, grade cohorts, model coefficients,
+  settlement status, source limits, and `PASS_UNVALIDATED` remain unchanged.
+
+Validated by `test_site_ui_compact.py`, `test_site_market.py`,
+`test_free_market_capture.py` and `test_site_live.py` in the GitHub
+workflow. Any individual build must still pass and deploy before the current
+Pages URL is considered updated.
