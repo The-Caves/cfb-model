@@ -53,6 +53,7 @@ on:
       - 'tests/test_site_availability.py'
       - 'tests/test_site_qb.py'
       - 'tests/test_site_market.py'
+      - 'tests/test_site_market_browser.py'
       - 'tests/test_site_export.py'
       - '.github/workflows/cfb-site.yml'
   schedule:
@@ -151,8 +152,10 @@ jobs:
           python -m unittest discover -s tests -p 'test_official_longterm_qb_absences.py' -v
           python -m unittest discover -s tests -p 'test_v05_robust_scores.py' -v
           python -m unittest discover -s tests -p 'test_v05_score_benchmark.py' -v
-      - name: Test source-matched market comparisons
-        run: python -m unittest discover -s tests -p 'test_site_market.py' -v
+      - name: Test source-matched market comparisons and safe browser quote updates
+        run: |
+          python -m unittest discover -s tests -p 'test_site_market.py' -v
+          python -m unittest discover -s tests -p 'test_site_market_browser.py' -v
       - name: Test game-specific QB status and season-passer fallback
         run: python -m unittest discover -s tests -p 'test_site_qb.py' -v
       - name: Test canonical official report parsing and Exempt exclusion
