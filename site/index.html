@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0b1422"><title>CFB Lab | 2026 Matchups</title>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0d192c"><title>CFB Lab | 2026 Matchups</title>
 <style>
 
 :root{
@@ -278,20 +278,151 @@ header{background:linear-gradient(180deg,#111d31 0%,#0c1727 100%);border-color:#
 .refreshLive{border:1px solid #397f6d;border-radius:8px;background:#163a36;color:#a9f0d7;padding:7px 11px;font-size:11px;font-weight:750}
 .refreshLive:hover{background:#215449}
 .refreshLive:disabled{opacity:.55}
+
+/* FIELDHOUSE 2026: mobile-first game desk, visual changes only */
+:root{--bg:#080e1a;--surface:#111b2b;--surface-2:#1a2941;--line:#304461;--subtle:#9cb2cf;--mint:#59ebbf;--sky:#81bcff;--violet:#c6b3ff;--gold:#f6c779;--red:#ff9687;color:#f3f7ff;background:var(--bg)}
+body{background:#080e1a;color:#f3f7ff}
+header{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse 60% 95% at 98% 0%,#25519d50,transparent 78%),radial-gradient(ellipse 55% 95% at 0% 0%,#2bc09c22,transparent 72%),linear-gradient(120deg,#0d192d,#12233d);border-color:#354d70}
+header:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.08;pointer-events:none;background-image:linear-gradient(#d3e5ff 1px,transparent 1px),linear-gradient(90deg,#d3e5ff 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(90deg,transparent,#000)}
+.wrap,.dayShell{max-width:1360px}
+header .top{padding:5px 0 3px}
+.brand{font-size:17px;letter-spacing:.085em;color:#fff}
+.brand span:not(.brandMark){color:#73efd0}
+.brandMark{width:39px;height:39px;border-radius:12px;background:linear-gradient(135deg,#59eabc,#4175ed);color:#07182a;border:1px solid #8dffe0;box-shadow:0 4px 25px #46d5b62c;font-size:15px}
+.top .pill{color:#b2f5e0;border:1px solid #398873;background:#173d3f;font-size:10px}
+.hero{padding:27px 0 24px;align-items:flex-end}
+.hero .kicker{color:#6be6bd;font-size:10px}
+.hero h1{font-size:clamp(34px,4.4vw,56px);line-height:1.04;margin:9px 0 11px;letter-spacing:-.06em;font-weight:900;color:#fbfdff}
+.hero .intro{max-width:670px;color:#b8c9e4;font-size:13px}
+.heroStats{gap:9px}
+.heroStat{min-width:112px;border-radius:14px;background:#172945cc;border:1px solid #3a537a;padding:13px 16px;box-shadow:0 10px 26px #050b1640}
+.heroStat b{font-size:27px;color:#f7fbff}
+.heroStat small{font-size:11px;color:#a9bfe0}
+.heroStat:nth-child(3){border-color:#348d79;background:#123932bd}
+.heroStat:nth-child(3) b{color:#69f9cb}
+.dayShell{padding-bottom:18px}
+.dayNav{gap:9px;padding-bottom:8px}
+.dayButton{background:#12253c;color:#bed0e8;border:1px solid #39506c;min-width:86px;border-radius:12px;padding:10px 14px}
+.dayButton strong{font-size:13px}.dayButton span{font-size:11px}
+.dayButton.selected{background:linear-gradient(140deg,#176c65,#286ca1);border-color:#81f0d3;box-shadow:0 2px 14px #47d9af33}
+main.wrap{padding-top:0}
+nav[role=tablist]{position:sticky;top:0;z-index:30;background:#0b1422f5;backdrop-filter:blur(18px);padding:13px 1px;margin:0 0 18px;border-bottom:1px solid #30435e;gap:9px;scrollbar-width:none}
+.tab{background:#16253a;border:1px solid #304868;color:#b9cce8;border-radius:12px;padding:11px 17px;font-size:13px;font-weight:800;min-height:42px}
+.tab[aria-selected=true]{color:#071c29;background:linear-gradient(125deg,#65ebbf,#70b6f6);border-color:#70e7c8;box-shadow:0 2px 16px #59ccbe34}
+.tab .liveTabCount{color:#0e453d;background:#99ffe4}
+.researchDisclosure{border:1px solid #334661;border-radius:12px;background:#111d2c;padding:0 13px;margin:0 0 18px;color:#a9bfda;font-size:11px}
+.researchDisclosure summary{cursor:pointer;padding:10px 2px;font-size:11px;font-weight:650;color:#adc4db}
+.researchDisclosure[open]{padding-bottom:11px}
+.researchDisclosure p{margin:0;line-height:1.65}
+#matchups>.row,#live>.row{align-items:flex-end;margin:12px 0 5px}
+#matchups h2,#live h2{font-size:24px;letter-spacing:-.04em}
+#matchups>.small{margin:4px 0 6px;font-size:11px}
+#showing{background:#17243a;border:1px solid #304768;border-radius:30px;padding:6px 10px}
+.quickFilters{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin:15px 0 9px;padding:1px 1px 6px}
+.quickFilter{flex:0 0 auto;border:1px solid #344a67;background:#142238;color:#b8cce5;border-radius:100px;padding:8px 14px;font-size:11px;font-weight:750}
+.quickFilter[aria-pressed=true]{background:#315081;border-color:#7fa8fd;color:#f8fbff}
+.tool{margin:8px 0 17px}
+.search,.tool select{background:#111f32;border-color:#38506f;color:#eaf4ff;min-height:44px;font-size:12px;border-radius:11px}
+.search:focus,.tool select:focus{outline:2px solid #52cbaa;outline-offset:1px}
+.grid{gap:16px}
+.game,.panel{background:#111d2f;border:1px solid #304562;border-radius:18px;box-shadow:0 14px 38px #0003}
+.game{padding:17px 18px 16px}
+.game:before{width:4px;opacity:1;background:linear-gradient(180deg,#67e9c5,#658ffd)}
+.game:hover{border-color:#5677a2;box-shadow:0 16px 42px #0005}
+.gameTop{margin:0 0 12px}
+.gameTop .small{font-size:11px;font-weight:750;color:#acc3df}
+.game .modelTag{background:#2c2b54;color:#d8c9ff;border:1px solid #6c609a;border-radius:8px;padding:6px 9px;font-size:10px}
+.teamStack{gap:6px}
+.teamRow{background:#18293e;border:1px solid #304764;border-left:4px solid var(--school-color,#5a7799);border-radius:12px;padding:10px 12px;min-height:65px}
+.teamRow.predictedWinner{background:linear-gradient(90deg,#1c394b,#1b2d47);border-top-color:#347d7a;border-right-color:#347d7a;border-bottom-color:#347d7a}
+.teamIdentity{gap:12px}
+.schoolBadge{width:43px;height:43px;flex-basis:43px;border-radius:12px;background:#213b58;border-color:#416287}
+.teamName{font-size:14px;font-weight:850;letter-spacing:-.014em}
+.teamSub{color:#a3bdd8;font-size:10px}
+.qbSourceMini{color:#829fbd}
+.teamRow .scoreBox .score{font-size:28px;font-weight:900;color:#e2eafe}
+.teamRow.predictedWinner .scoreBox .score{color:#74efcd}
+.scoreBox .scoreHint{color:#7d9bbd}
+.compactSummary{margin:13px 0 11px;background:#17263b;border:1px solid #344967;border-radius:11px;padding:10px 12px;justify-content:space-between;gap:7px}
+.compactSummary .favorite{color:#82efca;font-size:13px;line-height:1.45}
+.compactSummary .scoreTotal{color:#c4d9f4;font-weight:750;font-size:12px}
+.modelKick{font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.11em;color:#91afff;display:block;margin-bottom:3px}
+.marketTiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.marketTile{padding:12px;background:#0e1b2e;border:1px solid #344965;border-radius:12px;display:flex;flex-direction:column;gap:5px}
+.marketTile .marketLabel{color:#91abca;font-size:10px;font-weight:850;letter-spacing:.04em;text-transform:uppercase;margin:0}
+.marketTile .marketValue{font-size:12px;font-weight:800;color:#f1f6ff;min-height:20px;line-height:1.48}
+.marketTile .researchSide{font-size:11px;color:#7cdaef;font-weight:800;line-height:1.4;margin:0}
+.marketTile:nth-child(2) .researchSide{color:#70e5c3}
+.marketTile.moneyline .researchSide{color:#dbc6ff}
+.marketTile .small{color:#8099b5}
+.bookStamp{font-size:10px;color:#8caac9;margin:10px 2px 0;line-height:1.5}
+.gameMore{margin-top:12px;border-top:1px solid #314a66}
+.gameMore>summary{font-size:11px;padding:12px 1px 1px;color:#bad2f3}
+.gameMore[open]>summary{color:#b7a0ff}
+.panel{padding:22px}
+.results{gap:12px}
+.results .panel{background:linear-gradient(145deg,#1b2d48,#151f38);border-color:#3a5177}
+.results .panel:nth-child(2){background:linear-gradient(145deg,#222247,#171e38)}
+.results .panel:nth-child(3){background:linear-gradient(145deg,#153c3a,#152a34)}
+.results .metric{font-size:36px;letter-spacing:-.05em;color:#f6fbff}
+.liveGame{background:#101f2b;border-color:#318d74}
+.liveBadge{font-size:10px;background:#145045;color:#9cf9d5;border-color:#338c77}
+.liveScoreRows{gap:7px}
+.liveTeam{background:#173345;border:1px solid #2a5363;padding:11px 13px;border-radius:11px}
+.liveTeam b{font-size:13px}.liveTeam strong{font-size:30px;color:#79f3c8}
+.livePregame{background:#1a2040;border-color:#6556a0;padding:14px;border-radius:13px}
+.livePregame b{color:#e1d5ff;font-size:12px}
+.livePregame p{font-size:12px}
+.liveVs{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.liveVs>div{background:#1c2c43;border-radius:10px;border:1px solid #3c5271;padding:10px}
+.liveVs small{display:block;color:#a9bfdf;font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+.liveVs strong{display:block;color:#f5f9ff;font-size:13px;margin-top:5px;line-height:1.35}
+.livePregameMarkets{font-size:11px;line-height:1.65;margin-top:9px;color:#c0ceeb}
+.liveNoModel{background:#18283a;border:1px solid #304765;border-radius:10px;padding:12px}
+.refreshLive{background:#195448;border-color:#369b80;color:#d5fff1;font-size:12px}
+.performanceTableShell{border-radius:13px}
+.performanceTable th{background:#1b2b41;color:#b3cae5}
+.performanceTable tr:nth-child(even){background:#162238}
+footer{padding:20px 0;margin-top:34px}
+@media(max-width:920px){.marketTiles{grid-template-columns:repeat(2,minmax(0,1fr))}.marketTile.moneyline{grid-column:1/-1}}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.hero{align-items:flex-start}}
+@media(max-width:580px){
+ .wrap{padding:13px 15px}.hero{padding:17px 0 18px;gap:15px}
+ .hero .kicker{font-size:9px}.hero h1{font-size:34px;margin:7px 0}
+ .heroStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .heroStat{display:block;text-align:left;padding:10px 12px;min-width:0}
+ .heroStat b{font-size:22px}.heroStat small{font-size:9px;margin-top:3px}
+ .dayShell{padding:0 15px 12px}.dayButton{min-width:75px}
+ nav[role=tablist]{padding:11px 0;gap:6px;margin-bottom:12px}
+ .tab{font-size:11px;min-height:40px;padding:9px 11px;border-radius:10px}
+ .researchDisclosure{margin-bottom:13px}
+ #matchups h2,#live h2{font-size:21px}
+ .quickFilters{margin:11px 0 6px}.quickFilter{padding:8px 12px}
+ .tool{margin:7px 0 13px}.search,.tool select{font-size:12px;min-height:42px}
+ .game{padding:13px 14px 14px;border-radius:15px}.teamRow{min-height:61px;padding:8px 9px}
+ .teamName{font-size:13px}.schoolBadge{width:38px;height:38px;flex-basis:38px}
+ .teamRow .scoreBox .score{font-size:25px}
+ .compactSummary{margin:10px 0;padding:10px}.compactSummary .favorite{font-size:12px}
+ .marketTiles{grid-template-columns:repeat(2,minmax(0,1fr))}.marketTile{padding:10px}
+ .marketTile.moneyline{grid-column:1/-1}.marketTile .marketValue{font-size:12px;min-height:0}
+ .marketTile .researchSide{font-size:10px}.panel{padding:16px}.results .panel{padding:17px}
+ .results .metric{font-size:33px}.liveTeam strong{font-size:28px}
+}
 </style></head>
 <body>
 <header><div class="wrap">
-  <div class="top"><div class="brand"><span class="brandMark">CF</span> CFB <span>LAB</span> <span class="small">/ 2026</span></div><div class="pill">Research · unvalidated</div></div>
+  <div class="top"><div class="brand"><span class="brandMark">CF</span> CFB <span>LAB</span> <span class="small">/ 2026</span></div><div class="pill">V04 model · experimental</div></div>
   <div class="hero">
-    <div><div class="kicker">COLLEGE FOOTBALL · GAME CENTER</div><h1>Games, picks &amp; live scores.</h1><p class="intro">V04 research projections, observed markets and live ESPN scores. Deeper scouting is available when you open a matchup.</p></div>
+    <div><div class="kicker">2026 SEASON / GAME DAY CONTROL ROOM</div><h1>Every game. One clear view.</h1><p class="intro">Pregame model scores, real sportsbook quotes, live scoreboards and lifetime results—one place to follow the slate.</p></div>
     <div class="heroStats"><div class="heroStat"><b id="upcoming-count">—</b><small>Upcoming</small></div><div class="heroStat"><b id="today-count">—</b><small>Today (ET)</small></div><div class="heroStat"><b id="live-count">—</b><small>Live now</small></div></div>
   </div>
 </div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
 <main class="wrap">
-<div class="warning"><b>Research only · unvalidated.</b> V04 is the latest displayed score challenger, not a proven betting model. Live ESPN scores never change the frozen pregame picks or lifetime performance history.</div>
+<details class="researchDisclosure"><summary>Model status: experimental · How to read these projections</summary><p>V04 is a research model, not a validated betting advantage. Book quotes are observed from public sources and may not match the time the forecast was generated. Live scores never update archived pregame selections. Full source limitations and provenance are under Sources.</p></details>
 <div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span><span id="player-model-id">Player outlook pending</span></div>
-<nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Matchups</button><button role="tab" class="tab" data-tab="live" aria-selected="false">Live <span id="live-tab-count" class="liveTabCount">0</span></button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Performance</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Data &amp; sources</button></nav>
-<section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern. Scores are model estimates, not live results.</p>
+<nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Games</button><button role="tab" class="tab" data-tab="live" aria-selected="false">Live <span id="live-tab-count" class="liveTabCount">0</span></button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Results</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Sources</button></nav>
+<section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern · Scores are pregame model estimates, not live scores</p>
+<div class="quickFilters" role="group" aria-label="Quick game filters"><button class="quickFilter" type="button" data-quick="all" aria-pressed="true">All games</button><button class="quickFilter" type="button" data-quick="lines" aria-pressed="false">With odds</button><button class="quickFilter" type="button" data-quick="ats" aria-pressed="false">Spread picks</button><button class="quickFilter" type="button" data-quick="ou" aria-pressed="false">Totals</button><button class="quickFilter" type="button" data-quick="player" aria-pressed="false">Player outlooks</button></div>
 <div class="tool">
 <input class="search" type="search" id="query" placeholder="Search teams or game ID" aria-label="Search teams">
 <select id="sort" aria-label="Sort games"><option value="time">Kickoff · earliest first</option><option value="late">Kickoff · latest first</option><option value="ats">Biggest model ATS difference</option><option value="total">Biggest model total difference</option><option value="alpha">School · A to Z</option></select>
