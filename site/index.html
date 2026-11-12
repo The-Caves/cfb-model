@@ -586,7 +586,7 @@ footer{color:#b5a4c6;border-color:#473354}
 </div></div><div class="dayShell"><div class="dayNav" id="day-nav" aria-label="Choose game date"><span class="small">Loading dates…</span></div></div></header>
 <main class="wrap">
 
-<div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Site publication pending</span><span id="player-model-id">Player outlook pending</span></div>
+<div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Board snapshot pending</span><span id="market-refreshed">Book: published snapshot</span><span id="player-model-id">Player outlook pending</span></div>
 <nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Games</button><button role="tab" class="tab" data-tab="live" aria-selected="false">Live <span id="live-tab-count" class="liveTabCount">0</span></button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Results</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Sources</button></nav>
 <section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">All kickoff times Eastern · Scores are pregame model estimates, not live scores</p>
 <div class="quickFilters" role="group" aria-label="Quick game filters"><button class="quickFilter" type="button" data-quick="all" aria-pressed="true">All games</button><button class="quickFilter" type="button" data-quick="lines" aria-pressed="false">With odds</button><button class="quickFilter" type="button" data-quick="ats" aria-pressed="false">Spread picks</button><button class="quickFilter" type="button" data-quick="ou" aria-pressed="false">Totals</button><button class="quickFilter" type="button" data-quick="player" aria-pressed="false">Player outlooks</button></div>
@@ -1099,11 +1099,11 @@ function updateDayNav(){
  const b=node("button","dayButton"+(selectedDay===key?" selected":""),undefined);
  b.type="button";b.dataset.date=key;
  b.append(node("strong","",weekdayFmt.format(d)),node("span","",new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"}).format(d)));
- b.setAttribute("aria-pressed",String(selectedDay===key));b.addEventListener("click",()=>{selectedDay=key;updateDayNav();render();});
+ b.setAttribute("aria-pressed",String(selectedDay===key));b.addEventListener("click",()=>{selectedDay=key;updateDayNav();render();refreshMarket();});
  nav.append(b);
  }
  const all=node("button","dayButton"+(selectedDay==="all"?" selected":""),undefined);
- all.type="button";all.append(node("strong","","All"),node("span","","Dates"));all.setAttribute("aria-pressed",String(selectedDay==="all"));all.addEventListener("click",()=>{selectedDay="all";updateDayNav();render();});nav.append(all);
+ all.type="button";all.append(node("strong","","All"),node("span","","Dates"));all.setAttribute("aria-pressed",String(selectedDay==="all"));all.addEventListener("click",()=>{selectedDay="all";updateDayNav();render();refreshMarket();});nav.append(all);
 }
 function resultRecord(r){return r&&Number.isInteger(r.wins)&&Number.isInteger(r.losses)?r.wins+"–"+r.losses+(r.pushes?"–"+r.pushes+" P":""):"—";}
 function resultMeta(r){return !r||!Number.isInteger(r.decisions)?"Not graded":r.decisions?(r.decisions+" decisions · "+(Number.isFinite(r.win_rate)?num(r.win_rate*100,1)+"% wins":"—")):"No eligible results";}
@@ -1432,6 +1432,96 @@ async function refreshLive(){
  }
 }
 
+// Optional browser-observed ESPN pregame quotes. Never rewrite immutable
+// forecasts, decision receipts, market grades, or bookmaker provenance.
+let marketInFlight=false;
+function americanMarketNumber(value){
+ if(typeof value==="string"&&/^[+-]?\d+$/.test(value.trim()))value=Number(value.trim());
+ return Number.isInteger(value)&&Math.abs(value)>=100&&Math.abs(value)<=10000?value:null;
+}
+function parseEspnMarket(payload,observedAt){
+ if(!payload||!Array.isArray(payload.events))throw Error("Malformed market scoreboard");
+ const candidates=[];
+ const checked=new Map((data?.games||[]).map(g=>[String(g.game_id),g]));
+ for(const event of payload.events){
+  const gid=String(event?.id??""),g=checked.get(gid);
+  if(!g||! /^\d+$/.test(gid))continue;
+  const comps=event.competitions;
+  if(!Array.isArray(comps)||comps.length!==1)continue;
+  const comp=comps[0],people=comp.competitors||[];
+  const h=people.filter(x=>x.homeAway==="home"),a=people.filter(x=>x.homeAway==="away");
+  const kick=comp.date||event.date;
+  if(h.length!==1||a.length!==1||!kick||!Number.isFinite(Date.parse(kick)) ||
+     !Number.isFinite(Date.parse(g.kickoff_utc)) ||
+     Math.abs(Date.parse(g.kickoff_utc)-Date.parse(kick))>15*60000 ||
+     Date.parse(observedAt)>=Date.parse(g.kickoff_utc) ||
+     identityKey(h[0]?.team?.displayName)!==identityKey(g.home_team) ||
+     identityKey(a[0]?.team?.displayName)!==identityKey(g.away_team))continue;
+  for(const offer of comp.odds||[]){
+   const provider=offer?.provider?.name;
+   if(typeof provider!=="string"||!provider.trim())continue;
+   const homeOdds=offer.homeTeamOdds||{},awayOdds=offer.awayTeamOdds||{};
+   const spread=offer.spread,total=offer.overUnder;
+   const spreadOK=typeof spread==="number"&&Number.isFinite(spread)&&spread>0&&spread<80 &&
+      typeof homeOdds.favorite==="boolean"&&typeof awayOdds.favorite==="boolean" &&
+      homeOdds.favorite!==awayOdds.favorite;
+   const totalOK=typeof total==="number"&&Number.isFinite(total)&&total>0&&total<150;
+   const hml=americanMarketNumber(homeOdds.moneyLine),aml=americanMarketNumber(awayOdds.moneyLine);
+   if(!spreadOK&&!totalOK&&hml===null&&aml===null)continue;
+   candidates.push({
+    game_id:gid,market_home_spread:spreadOK?(homeOdds.favorite?-spread:spread):null,
+    market_total:totalOK?total:null,market_home_moneyline:hml,market_away_moneyline:aml,
+    market_provider:provider.trim(),market_observed_utc:observedAt,
+    market_observed_in_browser:true
+   });
+  }
+ }
+ return candidates;
+}
+function marketDays(now){
+ const keys=[...new Set((data?.games||[]).filter(g=>Date.parse(g.kickoff_utc)>now.getTime())
+   .map(g=>dateKey(dateOf(g.kickoff_utc))))].sort();
+ const wanted=selectedDay&&selectedDay!=="all"?keys.filter(k=>k===selectedDay):keys.slice(0,4);
+ return wanted.map(s=>s.replace(/\D/g,"")).filter(s=>s.length===8);
+}
+async function refreshMarket(){
+ if(marketInFlight||document.hidden||!data)return;
+ const days=marketDays(new Date());
+ if(!days.length)return;
+ marketInFlight=true;
+ const stamp=byId("market-refreshed");
+ try{
+  const observedAt=new Date().toISOString();
+  const replies=await Promise.allSettled(days.map(async day=>{
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+    try{
+      const resp=await fetch(ESPN_LIVE_URL+"?dates="+day+"&limit=500&groups=80",
+        {mode:"cors",cache:"no-store",credentials:"omit",signal:controller.signal});
+      if(!resp.ok)throw Error("ESPN HTTP "+resp.status);
+      return parseEspnMarket(await resp.json(),observedAt);
+    }finally{clearTimeout(timer)}
+  }));
+  const ok=replies.filter(r=>r.status==="fulfilled");
+  if(!ok.length)throw Error("ESPN unavailable from browser");
+  let count=0;
+  for(const result of ok){
+   for(const market of result.value){
+    const g=data.games.find(g=>String(g.game_id)===market.game_id);
+    if(!g)continue;
+    const prev=marketClientRows.get(market.game_id);
+    const sourceTime=prev?.market_observed_utc||g.market_observed_utc;
+    if(sourceTime&&Date.parse(market.market_observed_utc)<Date.parse(sourceTime))continue;
+    marketClientRows.set(market.game_id,market);count++;
+   }
+  }
+  stamp.textContent=count?"Book: ESPN browser "+fmtDate.format(dateOf(observedAt)):
+    "Book: no additional ESPN quotes · published snapshot";
+  if(document.querySelector('[data-tab="matchups"]').getAttribute("aria-selected")==="true")render();
+ }catch(error){
+  stamp.textContent="Book: published snapshot · direct refresh unavailable";
+  console.warn("Direct pregame market refresh unavailable; no invented prices",error);
+ }finally{marketInFlight=false}
+}
 function render(){
  if(!data)return;
  const now=new Date(),future=data.games.filter(g=>dateOf(g.kickoff_utc)>now);
@@ -1491,6 +1581,7 @@ for(const button of document.querySelectorAll("[data-tab]"))button.addEventListe
  }
  document.querySelector(".dayShell").classList.toggle("hidden",button.dataset.tab!=="matchups");
  if(button.dataset.tab==="live"){renderLive();refreshLive();}
+ if(button.dataset.tab==="matchups")refreshMarket();
 });
 byId("refresh-live").addEventListener("click",refreshLive);
 // Refresh only when someone is viewing Live. The data is still the most
@@ -1500,6 +1591,11 @@ setInterval(()=>{
     document.querySelector('[data-tab="live"]').getAttribute("aria-selected")==="true")
   refreshLive();
 },60000);
+setInterval(()=>{
+ if(!document.hidden&&data&&
+    document.querySelector('[data-tab="matchups"]').getAttribute("aria-selected")==="true")
+   refreshMarket();
+},300000);
 document.addEventListener("visibilitychange",()=>{
  if(!document.hidden&&
     document.querySelector('[data-tab="live"]').getAttribute("aria-selected")==="true")
@@ -1550,6 +1646,7 @@ window.addEventListener("resize",wideFilterView);
  const extra=" Market source: "+(market.source||"unavailable")+". Observed spread: "+(market.usable_spreads||0)+" games; totals: "+(market.usable_totals||0)+" games. No historical publication-time authentication.";
  byId("limitations").textContent=(d.data_limitations||[]).join(" ")+extra;
  renderPerformance();updateDayNav();render();renderLive();
+ refreshMarket();
  }catch(error){
  byId("captured").textContent="Unable to load research snapshot";byId("refreshed").textContent="See GitHub Actions";
  empty("No verified data published","The research build may have failed or no model archive was found. Games, lines and picks will not be fabricated.");
