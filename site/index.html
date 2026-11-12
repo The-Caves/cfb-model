@@ -1019,12 +1019,17 @@ function gameCard(g){
    box.append(bottom);
    return box;
  };
+ const v04research=quarantined?v04MarketResearch(g):null;
+ const policyCurrent=!display.market_observed_in_browser&&v04research;
  const spreadGap=Number.isFinite(modelMargin)&&handicap!==null?modelMargin+handicap:null;
- const spreadDirection=Number.isFinite(spreadGap)?
-   (spreadGap>0?shortTeam(g.home_team)+" ATS":spreadGap<0?shortTeam(g.away_team)+" ATS":"Even"):"Line unavailable";
+ const spreadDirection=!Number.isFinite(spreadGap)?"No comparable quote":
+   policyCurrent?(policyCurrent.ats_side==="PASS"?"V04: PASS":
+     "V04: "+(policyCurrent.ats_side==="HOME"?shortTeam(g.home_team):shortTeam(g.away_team))+" ATS"):
+   "Gap only · new quote";
  const totalGap=Number.isFinite(modelTotal)&&total!==null?modelTotal-total:null;
- const totalDirection=Number.isFinite(totalGap)?
-   (totalGap>0?"Model higher":totalGap<0?"Model lower":"Even"):"Line unavailable";
+ const totalDirection=!Number.isFinite(totalGap)?"No comparable quote":
+   policyCurrent?(policyCurrent.ou_side==="PASS"?"V04: PASS":"V04: "+policyCurrent.ou_side):
+   "Gap only · new quote";
  tiles.append(comparison("Spread",modelSpread,bookSpread,spreadGap,spreadDirection),
               comparison("Over / Under",num(modelTotal,1),total!==null?num(total,1):"—",totalGap,totalDirection));
  const awayML=americanPrice(display.market_away_moneyline),homeML=americanPrice(display.market_home_moneyline);
@@ -1033,7 +1038,6 @@ function gameCard(g){
    node("strong","",awayML==="—"&&homeML==="—"?"Not available from this provider":
      shortTeam(g.away_team)+" "+awayML+" · "+shortTeam(g.home_team)+" "+homeML));
  tiles.append(money);
- const v04research=quarantined?v04MarketResearch(g):null;
  if(v04research)more.append(node("div","biasNote",
    "At the original site quote, the V04 policy was research-only. "+
    "A PASS means uncertainty; these are not proven betting edges. "+
