@@ -40,6 +40,39 @@ class WebsiteMarketTests(unittest.TestCase):
         self.assertAlmostEqual(g["ou_edge_points"],3.5)
         self.assertEqual(b["betting_status"],"PASS_UNVALIDATED")
         self.assertFalse(b["market_display"]["historical_publication_authenticated"])
+    def test_real_provider_moneylines_are_pass_through_not_model_prices(self):
+        p=sample()
+        offer=p["events"][0]["competitions"][0]["odds"][0]
+        offer["homeTeamOdds"]["moneyLine"]=-135
+        offer["awayTeamOdds"]["moneyLine"]="+115"
+        b=quote_selection(board(),[snapshot(p)],NOW)
+        g=b["games"][0]
+        self.assertEqual(g["market_home_moneyline"],-135)
+        self.assertEqual(g["market_away_moneyline"],115)
+        self.assertEqual(b["market_display"]["usable_moneylines"],1)
+        self.assertEqual(g["market_provider"],"Official ESPN Odds Provider")
+        self.assertEqual(b["betting_status"],"PASS_UNVALIDATED")
+
+    def test_invalid_moneyline_is_never_inferred_from_spread(self):
+        p=sample()
+        offer=p["events"][0]["competitions"][0]["odds"][0]
+        offer["homeTeamOdds"]["moneyLine"]=-90
+        offer["awayTeamOdds"]["moneyLine"]=+115
+        g=quote_selection(board(),[snapshot(p)],NOW)["games"][0]
+        self.assertIsNone(g["market_home_moneyline"])
+        self.assertIsNone(g["market_away_moneyline"])
+        self.assertEqual(g["market_home_spread"],-3.5)
+
+    def test_book_moneyline_only_without_spread_or_total(self):
+        p=sample(spread=None,total=None)
+        offer=p["events"][0]["competitions"][0]["odds"][0]
+        offer["homeTeamOdds"]["moneyLine"]=-125
+        offer["awayTeamOdds"]["moneyLine"]=+105
+        g=quote_selection(board(),[snapshot(p)],NOW)["games"][0]
+        self.assertEqual((g["market_away_moneyline"],g["market_home_moneyline"]),(105,-125))
+        self.assertIsNone(g["model_ats_side"])
+        self.assertIsNone(g["model_ou_side"])
+
     def test_opposite_ats(self):
         b=board();b["games"][0]["model_home_margin"]=2
         g=quote_selection(b,[snapshot()],NOW)["games"][0]
