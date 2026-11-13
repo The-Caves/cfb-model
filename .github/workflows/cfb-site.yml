@@ -15,6 +15,9 @@ on:
       - 'scripts/site_simulation_shadow.py'
       - 'scripts/site_v09_shadow.py'
       - 'scripts/site_v13_shadow.py'
+      - 'scripts/site_v13_performance.py'
+      - 'tests/test_site_v13_performance.py'
+      - 'tests/test_site_v13_archive.py'
       - 'scripts/v13_v04_probabilities.py'
       - 'tests/test_site_v13_shadow.py'
       - 'scripts/v09_score_sim_backtest.py'
@@ -396,6 +399,23 @@ jobs:
           python -m unittest discover -s tests -p 'test_site_history.py' -v
           python -m scripts.site_history --archive-root .context-state --dashboard site/data/dashboard.json | tee /tmp/site-history.txt
           cat /tmp/site-history.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Grade only first actual pre-kickoff V13 receipts against independently settled future games
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -p 'test_site_v13_performance.py' -v
+          python -m scripts.site_v13_performance \
+            --archive-root .context-state \
+            --dashboard site/data/dashboard.json | tee /tmp/site-v13-grade.txt
+          cat /tmp/site-v13-grade.txt >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          b=json.load(open("site/data/dashboard.json"))
+          p=b["v13_prospective_performance"]
+          assert p["status"]=="V13_FIRST_SOURCE_FROZEN_PREGAME_PROBABILITY_PERFORMANCE"
+          assert p["model_promoted"] is False and p["safe_for_betting"] is False
+          assert p["retrospective_predictions_created"] is False
+          assert p["original_v04_predictions_unchanged"] is True
+          PY
       - name: Overlay authenticated ESPN-completed display scores when independently settled final is pending
         run: |
           python -m unittest discover -s tests -p 'test_site_history_scores.py' -v
