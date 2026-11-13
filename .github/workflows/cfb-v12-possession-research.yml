@@ -3,6 +3,7 @@ on:
   push:
     branches: [research/v12-opponent-conditioned-possessions]
     paths:
+      - 'scripts/v10_possession_sim.py'
       - 'scripts/v12_possession_sim.py'
       - 'scripts/v12_possession_backtest.py'
       - 'scripts/v12_availability_gate.py'
