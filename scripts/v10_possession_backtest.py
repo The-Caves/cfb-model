@@ -14,7 +14,7 @@ from scripts.v09_retro_score_sim import load_rows,metrics as v09_metrics
 from scripts.game_context import parse_time
 from scripts.possession_drive_ingest import STATUS as SOURCE_STATUS
 
-REPORT="V10_2026_OBSERVED_POSSESSION_PAIRED_V04_RETROSPECTIVE"
+REPORT="V10_R2_2026_PROFILE_ANCHORED_POSSESSION_PAIRED_V04_RETROSPECTIVE"
 def _score(row,variant):
     if variant=="v04":return row["v04"]
     return row["simulations"][variant]
@@ -78,6 +78,13 @@ def audit(games,source,advanced,min_past=35,trials=500):
         seed=int(hashlib.sha256(("v10|"+game["game_id"]).encode()).hexdigest()[:16],16)
         base=simulate(model,False,trials=trials,seed=seed)
         matchup=simulate(model,True,trials=trials,seed=seed)
+        regressed=simulate(model,True,trials=trials,seed=seed,
+                           regress_turnovers=True)
+        frozen_prior={"source":"EARLIER_FOLD_V04","home_points":game["home_points"],
+                      "away_points":game["away_points"],
+                      "game_id":game["game_id"],"asof_cutoff":game["cutoff"]}
+        anchored=simulate(model,True,trials=trials,seed=seed,
+                          regress_turnovers=True,v04_prior=frozen_prior)
         row={k:game[k] for k in ("game_id","home","away","date","cutoff","kickoff_utc",
                 "final_home","final_away","market")}
         row["v04"]={"home_points":game["home_points"],"away_points":game["away_points"],
@@ -91,7 +98,15 @@ def audit(games,source,advanced,min_past=35,trials=500):
             "matchup_drives":{
                 "margin":matchup["home_margin_mean"],"total":matchup["total_mean"],
                 "home_points":matchup["home_points_mean"],"away_points":matchup["away_points_mean"],
-                "home_win_probability":matchup["home_win_probability"]}}
+                "home_win_probability":matchup["home_win_probability"]},
+            "regressed_turnover_drives":{
+                "margin":regressed["home_margin_mean"],"total":regressed["total_mean"],
+                "home_points":regressed["home_points_mean"],"away_points":regressed["away_points_mean"],
+                "home_win_probability":regressed["home_win_probability"]},
+            "v04_anchored_drives":{
+                "margin":anchored["home_margin_mean"],"total":anchored["total_mean"],
+                "home_points":anchored["home_points_mean"],"away_points":anchored["away_points_mean"],
+                "home_win_probability":anchored["home_win_probability"]}}
         row["turnover_risk"]={
             "expected_home_takeaways":matchup["expected_home_takeaways"],
             "expected_away_takeaways":matchup["expected_away_takeaways"],
@@ -102,13 +117,22 @@ def audit(games,source,advanced,min_past=35,trials=500):
             "prior_verified_games":model["source_prior_games"],
             "prior_drives":model["prior_drives"],
             "team_coverage":model["team_coverage"],
-            "source_first_published_before_game_unverified":True}
+            "source_first_published_before_game_unverified":True,
+            "v04_frozen_scoring_prior_from_earlier_week":True,
+            "asof_advanced_features_recency_half_life_days":28,
+            "available_advanced_metrics":{
+               "home_offense":model["profiles"]["home"]["offense_context"],
+               "away_offense":model["profiles"]["away"]["offense_context"],
+               "home_defense_allowed":model["profiles"]["away"]["defense_context"],
+               "away_defense_allowed":model["profiles"]["home"]["defense_context"],
+            }}
         ready.append(row)
     weeks={}
     for week in sorted({r["cutoff"] for r in ready}):
         wk=[r for r in ready if r["cutoff"]==week]
         weeks[week]={"games":len(wk),"models":{v:_metric(wk,v)
-            for v in ("v04","empirical_drives","matchup_drives")}}
+            for v in ("v04","empirical_drives","matchup_drives",
+                      "regressed_turnover_drives","v04_anchored_drives")}}
     examples=[r for r in ready if "Kentucky Wildcats" in (r["home"],r["away"])]
     return {"status":REPORT,"season":2026,"source_drive_model":STATUS,
         "model_promoted":False,"promotion_eligible":False,"safe_for_betting":False,
@@ -120,7 +144,18 @@ def audit(games,source,advanced,min_past=35,trials=500):
         "drives_source_accepted":len(accepted),
         "drives_source_quarantined":source.get("games_quarantined"),
         "trials_per_model":trials,
-        "summary":{v:_metric(ready,v) for v in ("v04","empirical_drives","matchup_drives")},
+        "feature_inventory":{
+            "v04_score_prior":"opponent-adjusted earlier-fold home/away expected score",
+            "recency_half_life_days":28,
+            "drive_zone_rates":"2026 observed starting field position and drive endings",
+            "turnover_context":"earlier offense giveaway versus opposing defense takeaways with reliability regression",
+            "scoring_shifts":"prior offense and opposing allowed EPA, pass/rush EPA, pressure, third down, explosiveness and red-zone play success",
+            "missing_not_guessed":"verified starting QB, injuries, localized weather, historical PBP publication timestamps",
+            "simulation_engine":"sequential scored possessions with turnover short-field and defensive return TD ownership",
+        },
+        "summary":{v:_metric(ready,v) for v in
+            ("v04","empirical_drives","matchup_drives",
+             "regressed_turnover_drives","v04_anchored_drives")},
         "weeks":weeks,"kentucky_examples":examples,"games":ready,
         "research_limits":[
             "Offensive points and defensive return touchdowns are separate, source matched and boxscore reconciled",
