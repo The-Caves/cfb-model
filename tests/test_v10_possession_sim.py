@@ -131,6 +131,18 @@ class PossessionModelTests(unittest.TestCase):
             simulate(m,True,trials=100,v04_prior={"source":"TODAY_SCORE",
                      "home_points":55.,"away_points":19.})
 
+    def test_source_week_v04_prior_must_be_on_or_before_game_date(self):
+        games,advanced=fixtures()
+        m=fit(games,advanced,{"game_id":"999","home":"Home","away":"Away","date":"2026-10-01"})
+        original={"source":"EARLIER_FOLD_V04","home_points":30.,"away_points":20.,
+                  "game_id":"999","asof_cutoff":"2026-09-29"}
+        x=simulate(m,True,trials=120,seed=41,v04_prior=original)
+        self.assertTrue(x["v04_prior_used"])
+        with self.assertRaisesRegex(ValueError,"Unauthenticated V04"):
+            simulate(m,True,trials=120,v04_prior=dict(original,asof_cutoff="2026-10-04"))
+        with self.assertRaisesRegex(ValueError,"Unauthenticated V04"):
+            simulate(m,True,trials=120,v04_prior=dict(original,game_id="wrong"))
+
     def test_unverified_future_advanced_game_rejected(self):
         games,advanced=fixtures()
         advanced[("1","Home")]["date"]="2026-10-30"
