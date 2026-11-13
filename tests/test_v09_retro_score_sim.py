@@ -12,7 +12,7 @@ class RetroTests(unittest.TestCase):
         self.assertEqual(out["eligible_games"],1)
         self.assertFalse(out["promotion_eligible"])
         self.assertEqual(out["models"]["v04"]["games"],1)
-        self.assertEqual(out["models"]["v04"]["hypothetical_ats"]["wins"],1)
+        self.assertEqual(out["models"]["v04"]["hypothetical_ats"]["losses"],1)
         self.assertEqual(simulate(c,[a,b],"team_form",150),
                          simulate(c,[a,b],"team_form",150))
     def test_same_or_later_week_blocked(self):
