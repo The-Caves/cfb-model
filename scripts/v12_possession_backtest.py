@@ -17,11 +17,14 @@ from scripts.v10_possession_sim import advanced_index, fit, simulate as simulate
 from scripts.v11_dated_profile_bridge import bridge
 from scripts.v11_dated_profile_backtest import STATUS as V11_STATUS
 from scripts.v12_possession_sim import STATUS, fit_v12, simulate
-from scripts.v12_regularized_hazards import train as train_hazards, STATUS as TRAINED_STATUS
+from scripts.v12_regularized_hazards import (
+    train as train_hazards, pace_profile, STATUS as TRAINED_STATUS)
 
 REPORT="V12_SAME_WEEKLY_CUTOFF_OPPONENT_RZ_TURNOVER_PAIRED_RESEARCH_ONLY"
 VERSIONS=("v04","v11_dated_opponent_epa","v12_opponent_rz_turnover")
-TRAINED_VARIANTS=("v12r2_learned_hazards","v12r2_learned_hazards_pace")
+TRAINED_VARIANTS=("v12r2_learned_hazards","v12r2_learned_hazards_pace",
+                  "v12r2_empirical_hazards_learned_pace",
+                  "v11_learned_pace_only")
 
 
 def _crps(draws,observed):
@@ -143,12 +146,22 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35,trained=Fa
                 raise ValueError("Insufficient strictly earlier-week training "+cutoff)
             if any(g["date"]>=cutoff for g in hazard["observed_pace"]):
                 raise ValueError("Trained on held-out game or same football week")
-            for label,pace in ((TRAINED_VARIANTS[0],False),
-                                (TRAINED_VARIANTS[1],True)):
+            pace=pace_profile(hazard,old["home"],old["away"])
+            for label,learned_event,learned_pace in (
+                (TRAINED_VARIANTS[0],True,False),
+                (TRAINED_VARIANTS[1],True,True),
+                (TRAINED_VARIANTS[2],False,True)):
                 result_r2=simulate(context,trials=trials,seed=seed,
                                    trained_hazards=hazard,
-                                   use_learned_pace=pace)
+                                   use_learned_pace=learned_pace,
+                                   use_trained_hazards=learned_event)
                 learned[label]=result_r2
+            # Strongest isolation check: V11's exact scoring probabilities,
+            # but the historically observed possession pace distribution.
+            learned[TRAINED_VARIANTS[3]]=simulate_v11(
+                model,True,trials=trials,seed=seed,regress_turnovers=True,
+                v04_prior=v04,dated_profile=profiles["profiles"][gid],
+                pace_override=pace,return_draws=True)
         m=old["final_home"]-old["final_away"]
         total=old["final_home"]+old["final_away"]
         margin=result.pop("margin_draws")
