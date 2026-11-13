@@ -365,9 +365,13 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
         from scripts.v11_dated_profile_bridge import verify_for_target
         if v04_prior is None or not matchup:
             raise ValueError("Dated profile research requires frozen V04 matchup prior")
+        date=dt.date.fromisoformat(fitted["target_date"])
+        cutoff=dt.date.fromisoformat(v04_prior["asof_cutoff"])
+        if not cutoff<=date<cutoff+dt.timedelta(days=7):
+            raise ValueError("Dated profile and V04 source from wrong football week")
         verify_for_target(dated_profile,{
             "game_id":fitted["target_game_id"],
-            "cutoff":fitted["target_date"],
+            "cutoff":v04_prior["asof_cutoff"],
             "home":fitted["target_home"],"away":fitted["target_away"],
         })
     # The context and source history are fixed for a matchup. Precompute
