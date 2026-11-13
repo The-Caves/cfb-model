@@ -280,7 +280,7 @@ jobs:
       - name: Attach archived pregame weather, preserving unknowns and frozen score inputs
         run: |
           python -m unittest discover -s tests -p 'test_site_weather.py' -v
-          python -m scripts.site_weather --dashboard site/data/dashboard.json --context .context-state/state/latest.json.gz
+          python -m scripts.site_weather --dashboard site/data/dashboard.json --context .context-state/state/latest.json.gz --history-dir .context-state/history/2026
       - name: Run source-gated empirical drive simulation shadow (no fabricated drives)
         run: |
           python -m unittest discover -s tests -p 'test_site_simulation_shadow.py' -v

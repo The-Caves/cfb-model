@@ -50,6 +50,7 @@ jobs:
             --raw-dir data/current_scoreboard/raw \
             --availability-csv data/manual/availability_2026.csv \
             --geo-cache data/context_state/geocache.json \
+            --previous-context data/context_state/previous.json \
             --output data/context_refresh \
             --horizon-days 10 \
             --auto-official

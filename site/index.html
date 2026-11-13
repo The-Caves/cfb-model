@@ -682,6 +682,9 @@ footer{display:flex;justify-content:space-between;align-items:center;gap:12px;fl
  .historyProjection strong{font-size:17px}
  .historyOutcome{padding:8px 6px}
 }
+
+.weatherChip.weatherCached{border-color:#b6a1d7;color:#e8dcf6;background:#2b2239}
+.weatherChip.weatherCached.weatherRisk{border-color:#ceaa71;color:#ffddaa;background:#403021}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top">
@@ -1175,8 +1178,13 @@ function gameCard(g){
      Number.isFinite(weather.wind_mph)?num(weather.wind_mph,0)+" mph wind":null,
      Number.isFinite(weather.precip_probability_pct)?num(weather.precip_probability_pct,0)+"% precip":null].filter(Boolean);
    const chip=node("span","weatherChip"+(weather.risk===true?" weatherRisk":""),
-     (weather.risk===true?"⚠ ":"☁ ")+parts.join(" · "));
-   chip.title="Open-Meteo pregame forecast; not actual game conditions or a score adjustment. Observed "+(weather.captured_at_utc||"unknown");
+     (weather.risk===true?"⚠ ":"☁ ")+
+       (weather.cached?"Saved forecast"+(Number.isFinite(weather.age_hours)?" · "+num(weather.age_hours,0)+"h old":"")+" · ":"")+
+       parts.join(" · "));
+   chip.title="Open-Meteo pregame forecast; not actual game conditions or a score adjustment. "+
+     (weather.cached?"Reused last valid forecast after latest source refresh was unavailable. ":"")+
+     "Forecast retrieved "+(weather.captured_at_utc||"unknown");
+   if(weather.cached)chip.classList.add("weatherCached");
    indicators.append(chip);
  }else if(weather.status==="INDOOR"){
    indicators.append(node("span","weatherChip","Indoor venue"));

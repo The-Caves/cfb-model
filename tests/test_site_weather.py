@@ -73,5 +73,78 @@ class WeatherSiteTests(unittest.TestCase):
         self.assertEqual(attach(board(), c, NOW)["games"][0]["weather"]["status"], "UNKNOWN")
 
 
+
+    def test_fallback_restores_source_observed_conditions_after_timeout(self):
+        from scripts.site_weather import restore_previous_weather
+        current=context()
+        current["asof_utc"]="2026-11-12T15:00:00Z"
+        current["games"][0].update(weather_status="UNAVAILABLE_FORECAST",
+            forecast_retrieved_utc=None, weather_source=None,
+            temperature_f=None, wind_mph=None,gust_mph=None,precip_probability_pct=None)
+        saved=context()
+        changed=restore_previous_weather(current["games"],saved,"2026-11-12T15:10:00Z")
+        self.assertEqual(changed,1)
+        self.assertEqual(current["games"][0]["wind_mph"],23)
+        self.assertEqual(current["games"][0]["forecast_retrieved_utc"],
+                         saved["games"][0]["forecast_retrieved_utc"])
+        self.assertEqual(current["games"][0]["weather_cached_from_asof_utc"],
+                         saved["asof_utc"])
+        result=attach(board(),current,"2026-11-12T15:12:00Z")
+        self.assertEqual(result["games"][0]["weather"]["status"],"FORECAST")
+        self.assertTrue(result["games"][0]["weather"]["cached"])
+        self.assertEqual(result["weather_display"]["cached_forecast_games"],1)
+
+    def test_recover_from_recent_immutable_history_if_current_missing(self):
+        latest=context()
+        latest["games"][0]["weather_status"]="UNAVAILABLE_FORECAST"
+        latest["asof_utc"]="2026-11-12T14:56:00Z"
+        result=attach(board(),latest,"2026-11-12T15:00:00Z",history=[context()])
+        weather=result["games"][0]["weather"]
+        self.assertEqual(weather["status"],"FORECAST")
+        self.assertTrue(weather["cached"])
+        self.assertEqual(weather["flags"],["WIND","PRECIPITATION","COLD"])
+        self.assertEqual(result["weather_display"]["unknown_games"],0)
+        self.assertEqual(result["weather_display"]["cached_forecast_games"],1)
+
+    def test_newest_authentic_forecast_wins_over_older_saved_weather(self):
+        current=context()
+        current["asof_utc"]="2026-11-12T14:58:00Z"
+        current["games"][0]["forecast_retrieved_utc"]="2026-11-12T14:57:00Z"
+        current["games"][0]["forecast_issue_utc"]="2026-11-12T14:55:00Z"
+        current["games"][0]["wind_mph"]=4
+        result=attach(board(),current,"2026-11-12T15:00:00Z",history=[context()])
+        self.assertEqual(result["games"][0]["weather"]["wind_mph"],4)
+        self.assertFalse(result["games"][0]["weather"]["cached"])
+
+    def test_expired_mismatched_or_postkickoff_history_never_used(self):
+        from scripts.site_weather import restore_previous_weather
+        latest=context()
+        latest["games"]=[]
+        for old in (
+            dict(context(),asof_utc="2026-11-10T14:30:00Z"),
+            dict(context(),games=[dict(context()["games"][0],home="Wrong")]),
+            dict(context(),games=[dict(context()["games"][0],
+                                      forecast_retrieved_utc="2026-11-13T01:01:00Z")]),
+        ):
+            self.assertEqual(
+                attach(board(),latest,"2026-11-12T15:00:00Z",history=[old])
+                    ["games"][0]["weather"]["status"],"UNKNOWN")
+        wrong=dict(context(),games=[dict(context()["games"][0],away="Wrong")])
+        missing=[dict(context()["games"][0],weather_status="UNAVAILABLE_FORECAST")]
+        self.assertEqual(restore_previous_weather(missing,wrong,"2026-11-12T15:00:00Z"),0)
+
+    def test_read_historical_gzip_snapshots_from_state_branch(self):
+        import gzip,json,tempfile
+        from pathlib import Path
+        from scripts.site_weather import load_history
+        with tempfile.TemporaryDirectory() as tmp:
+            file=Path(tmp)/"2026/11/12/20261112T143000Z.json.gz"
+            file.parent.mkdir(parents=True)
+            file.write_bytes(gzip.compress(json.dumps(context()).encode()))
+            archived=load_history(tmp,"2026-11-12T15:00:00Z")
+            self.assertEqual(len(archived),1)
+            self.assertEqual(archived[0]["games"][0]["weather_status"],"LIVE_FORECAST")
+            self.assertEqual(load_history(tmp,"2026-11-15T15:00:00Z"),[])
+
 if __name__ == "__main__":
     unittest.main()

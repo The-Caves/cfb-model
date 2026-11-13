@@ -5,6 +5,7 @@ is inferred from missing coverage. All outputs remain PASS_UNVALIDATED.
 """
 import argparse,csv,datetime as dt,hashlib,json,time,urllib.parse,urllib.request
 from pathlib import Path
+from scripts.site_weather import restore_previous_weather
 from scripts.game_context import (ET,UTC,build_context,extract_game,geocode_match,
                                   load_archived_events,parse_forecast,parse_time)
 from scripts.availability_context import evaluate,load_reports
@@ -119,7 +120,8 @@ class WeatherProvider:
 
 def run(raw_dir,output,reports=None,horizon_days=10,now=None,geo_cache=None,
         auto_official=False,alias_registry="data/archive/2026_team_aliases.csv",
-        qb_evidence_csv="data/manual/qb_starter_evidence_2026.csv"):
+        qb_evidence_csv="data/manual/qb_starter_evidence_2026.csv",
+        previous_context=None):
     output=Path(output);output.mkdir(parents=True,exist_ok=True)
     issued=parse_time(now) if now else dt.datetime.now(UTC)
     report={"generated_at_utc":issued.isoformat(),"season":2026,
@@ -151,6 +153,16 @@ def run(raw_dir,output,reports=None,horizon_days=10,now=None,geo_cache=None,
         context,metrics=build_context(upcoming,prev,issued.isoformat(),
             weather.geocode,weather.forecast,
             lambda game,when:evaluate(game,when,source_rows))
+        previous_snapshot=None
+        if previous_context and Path(previous_context).is_file():
+            previous_snapshot=json.loads(Path(previous_context).read_text())
+        restored_weather=restore_previous_weather(
+            context,previous_snapshot,dt.datetime.now(UTC).isoformat())
+        # Coverage reflects the actual published context, including provenance-
+        # retained forecasts recovered during intermittent provider timeouts.
+        metrics["forecast_available"]=sum(
+            row["weather_status"]=="LIVE_FORECAST" for row in context)
+        metrics["weather_cached_from_previous"]=restored_weather
         report["coverage"]=metrics
         report["weather_provider"]={"geocode_requests":weather.geocode_requests,
             "forecast_requests":weather.forecast_requests,
@@ -204,6 +216,7 @@ if __name__=="__main__":
     p.add_argument("--availability-csv",default="data/manual/availability_2026.csv")
     p.add_argument("--horizon-days",type=int,default=10)
     p.add_argument("--geo-cache",default=None)
+    p.add_argument("--previous-context",default=None)
     p.add_argument("--auto-official",action="store_true")
     p.add_argument("--alias-registry",default="data/archive/2026_team_aliases.csv")
     p.add_argument("--qb-evidence-csv",default="data/manual/qb_starter_evidence_2026.csv")
@@ -211,5 +224,6 @@ if __name__=="__main__":
     if not 1<=args.horizon_days<=14:raise SystemExit("horizon days must be 1..14")
     result=run(args.raw_dir,args.output,args.availability_csv,args.horizon_days,
                geo_cache=args.geo_cache,auto_official=args.auto_official,
-               alias_registry=args.alias_registry,qb_evidence_csv=args.qb_evidence_csv)
+               alias_registry=args.alias_registry,qb_evidence_csv=args.qb_evidence_csv,
+               previous_context=args.previous_context)
     raise SystemExit(2 if result["status"] in ("SOURCE_FETCH_FAILURE","CONTEXT_PIPELINE_FAILED") else 0)
