@@ -219,7 +219,13 @@ def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,
         # V11 research challenger: replace raw season EPA with previously
         # reconstructed opponent-adjusted *weekly* EPA, not stack it on
         # raw EPA and count the same scoring advantage twice.
-        if dated_profile is not None:
+        if pace_override is not None:
+        if (not isinstance(pace_override,dict) or
+            pace_override.get("distribution_source")!="EARLIER_REAL_GAME_POSSESSION_COUNTS" or
+            pace_override.get("source_cutoff")!=fitted["target_date"] or
+            not pace_override.get("historical_deviations")):
+            raise ValueError("Unverified earlier-week learned pace source")
+    if dated_profile is not None:
             own=dated_profile["teams"][side]
             other=dated_profile["teams"]["away" if side=="home" else "home"]
             own_form=own["weekly_recent_form"]
@@ -293,12 +299,17 @@ def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,
     return {"TURNOVER":event_to,**{k:(1-event_to)*base[k]/non
                                  for k in OUTCOMES if k!="TURNOVER"}}
 
-def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=None,distributions=None):
+def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=None,
+             distributions=None,pace_override=None):
     prof=fitted["profiles"]
     # Drives per team are sampled from earlier real possession counts, not
     # fitted from final game scores. This is a regulation possession model.
     n=round((prof["home"]["mean_possessions"]+prof["away"]["mean_possessions"])/2)
-    n=clamp(n+rng.choice((-2,-1,0,0,0,1,2)),7,18)
+    if pace_override is None:
+        n=clamp(n+rng.choice((-2,-1,0,0,0,1,2)),7,18)
+    else:
+        n=clamp(round(pace_override["expected_possessions_each"]+
+                      rng.choice(pace_override["historical_deviations"])),7,18)
     total={"home":0,"away":0};takeaways={"home":0,"away":0}
     first="home" if rng.random()<.5 else "away"
     side=first;start=75;trace_rows=[];previous_kind="SCORE"
@@ -338,7 +349,7 @@ def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=No
 
 def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
              regress_turnovers=False,v04_prior=None,dated_profile=None,
-             return_draws=False):
+             return_draws=False,pace_override=None):
     if not fitted.get("ready") or fitted.get("status")!=STATUS:
         raise ValueError("Unverified drive fit")
     if not 100<=trials<=20000 or type(seed) is not int:
@@ -387,7 +398,7 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
     for i in range(trials):
         scores,turnovers,drives=one_game(fitted,matchup,rng,trace=trace and i==0,
             regress_turnovers=regress_turnovers,v04_prior=v04_prior,
-            distributions=distributions)
+            distributions=distributions,pace_override=pace_override)
         h=scores["home"];a=scores["away"]
         hm.append(h-a);ts.append(h+a);hs.append(h);as_.append(a)
         to_h.append(turnovers["home"]);to_a.append(turnovers["away"])
@@ -410,6 +421,7 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
           "OPPONENT_EPA_PRESSURE_RZ_TURNOVER_MATCHUP" if matchup else "OBSERVED_DRIVE_FREQUENCY",
         "v04_prior_used":v04_prior is not None,
         "dated_v04_team_profile_used":dated_profile is not None,
+        "learned_pace_override_used":pace_override is not None,
         "turnover_regression_used":regress_turnovers,
         "sampling_95ci_half_width_home_win":round(wilson_half,5),
         "trials":trials,"home_points_mean":round(mean(hs),3),
