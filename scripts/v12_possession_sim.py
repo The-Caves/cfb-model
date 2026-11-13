@@ -259,11 +259,19 @@ def one_game(model,rng,conditional,trace=False,pace=None):
 
 
 def simulate(model,trials=2000,seed=2026,trace=False,
-             trained_hazards=None,use_learned_pace=False):
+             trained_hazards=None,use_learned_pace=False,
+             use_trained_hazards=True):
     if model.get("status")!=STATUS or not model.get("ready"):
         raise ValueError("Unverified V12 context")
     if type(trials) is not int or not 100<=trials<=20000 or type(seed) is not int:
         raise ValueError("Invalid simulation parameters")
+    if not use_trained_hazards and not use_learned_pace:
+        raise ValueError("Empirical-hazard control requires the separate learned pace ablation")
+    if trained_hazards is not None and (
+        not trained_hazards.get("ready") or
+        trained_hazards.get("cutoff")!=model["cutoff_date_exclusive"] or
+        trained_hazards.get("historical_source_first_publication_verified") is not False):
+        raise ValueError("Learned pace or hazards from mismatched weekly source")
     if use_learned_pace and trained_hazards is None:
         raise ValueError("V12R2 pace requires strictly historical trained hazards")
     pace=None
@@ -271,7 +279,8 @@ def simulate(model,trials=2000,seed=2026,trace=False,
         from scripts.v12_regularized_hazards import pace_profile
         pace=pace_profile(trained_hazards,model["fitted"]["target_home"],
                           model["fitted"]["target_away"])
-    conditional={(side,zone):drive_probabilities(model,side,ytg,trained_hazards)
+    conditional={(side,zone):drive_probabilities(model,side,ytg,
+             trained_hazards if use_trained_hazards else None)
         for side in ("home","away")
         for zone,ytg in (("own_deep",95),("own_half",75),
                          ("midfield",55),("opponent_half",35),("red_zone",15))}
@@ -292,7 +301,9 @@ def simulate(model,trials=2000,seed=2026,trace=False,
     # recorded separately; assigning half to home would make
     # paired Brier scores use incompatible event definitions.
     win=sum(m>0 for m in margins)/trials
-    return {"status":STATUS,"model_variant":("V12R2_TRAINED_RZ_DRIVES_PACE" if use_learned_pace else
+    return {"status":STATUS,"model_variant":("V12R2_EMPIRICAL_HAZARDS_LEARNED_PACE" if
+                         use_learned_pace and not use_trained_hazards else
+                         "V12R2_TRAINED_RZ_DRIVES_PACE" if use_learned_pace else
                          "V12R2_TRAINED_RZ_DRIVES" if trained_hazards is not None else
                          "V12_OPPONENT_CONDITIONED_RZ_AND_TURNOVER_FIELD"),
         "home_points_mean":round(mean(scores_h),4),"away_points_mean":round(mean(scores_a),4),
@@ -309,6 +320,6 @@ def simulate(model,trials=2000,seed=2026,trace=False,
         "sample_possessions":sample,"trials":trials,"model_promoted":False,
         "historical_source_publication_unauthenticated":True,
         "availability_adjustments_applied":False,
-        "learned_drive_hazards_used":trained_hazards is not None,
+        "learned_drive_hazards_used":trained_hazards is not None and use_trained_hazards,
         "learned_possession_pace_used":use_learned_pace,
         "safe_for_betting":False}
