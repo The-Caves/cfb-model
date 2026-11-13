@@ -37,6 +37,8 @@ jobs:
           python -m unittest discover -s tests -p 'test_v14_player_scenarios.py' -v
           python -m unittest discover -s tests -p 'test_player_prop_conserved_opportunities.py' -v
           python -m unittest discover -s tests -p 'test_v13_v04_probabilities.py' -v
+      - name: Full repository test regression, no old model side effects
+        run: python -m unittest discover -s tests -q
       - name: Retrieve original immutable 377-game V13 research comparison set
         uses: actions/download-artifact@v4
         with:
