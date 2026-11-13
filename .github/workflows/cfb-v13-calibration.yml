@@ -43,6 +43,8 @@ jobs:
           python -m unittest discover -s tests -p 'test_site_v13_performance.py' -v
           python -m unittest discover -s tests -p 'test_site_decision_archive.py' -v
           python -m unittest discover -s tests -p 'test_site_ui_compact.py' -v
+      - name: Full CFB repository regression suite before a research website release
+        run: python -m unittest discover -s tests -q
       - name: Ensure V13 website app JavaScript is valid before publishing
         run: |
           python - <<'PY'
