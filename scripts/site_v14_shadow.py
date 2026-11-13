@@ -158,7 +158,7 @@ def run(dashboard,v13_archive,historical_advanced,historical_turnovers,
             "independent_prospective_improvement_proven":False}
         dest=Path(output or dashboard)
         dest.parent.mkdir(parents=True,exist_ok=True)
-        dest.write_text(json.dumps(b,indent=2,allow_nan=False)+"\\n")
+        dest.write_text(json.dumps(b,indent=2,allow_nan=False)+"\n")
         print(json.dumps(b["v14_matchup_display"],sort_keys=True))
         return b
     original=json.loads(Path(v13_archive).read_text())
