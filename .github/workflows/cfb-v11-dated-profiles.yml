@@ -1,0 +1,72 @@
+name: CFB V11 Native V04 Dated Team Profile Backtest
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/v11_dated_profile_bridge.py'
+      - 'scripts/v11_dated_profile_backtest.py'
+      - 'tests/test_v11_dated_profile_bridge.py'
+      - 'scripts/v10_possession_sim.py'
+      - '.github/workflows/cfb-v11-dated-profiles.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cfb-v11-native-v04-profile-backtest
+  cancel-in-progress: true
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install prior project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Test strict historical source identity and V04 score bridge
+        run: |
+          python -m unittest discover -s tests -p 'test_v11_dated_profile_bridge.py' -v
+          python -m unittest discover -s tests -p 'test_v10_possession_sim.py' -v
+      - name: Retrieve original 2026 completed-game/PBP research source
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-2026-data-43475676201
+          run-id: 43475676201
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .source-2026
+      - name: Retrieve fixed source-verified real drives and unchanged V10R2 decisions
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v10-source-verified-drives
+          run-id: 43495556550
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .fixed-v10
+      - name: Reconstruct original weekly V04 components, profile, and paired V11 simulations
+        run: |
+          set -o pipefail
+          python -m scripts.v11_dated_profile_backtest \
+            --previous .fixed-v10/v10r2-possession-v04-paired-backtest.json \
+            --drives .fixed-v10/v10-2026-observed-possessions.json \
+            --games .source-2026/games_2026.csv \
+            --advanced .source-2026/advanced/team_game_advanced_2026.csv \
+            --manifest .source-2026/advanced/advanced_manifest.json \
+            --output artifacts/v11-dated-v04-profile-backtest.json \
+            --trials 2000 | tee artifacts/v11-profile-summary.txt
+      - name: Upload complete same-cohort dated V04 component and possession grading
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-v11-v04-dated-profile-backtest
+          path: |
+            artifacts/v11-dated-v04-profile-backtest.json
+            artifacts/v11-profile-summary.txt
+          if-no-files-found: error
