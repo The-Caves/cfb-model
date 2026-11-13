@@ -685,6 +685,20 @@ footer{display:flex;justify-content:space-between;align-items:center;gap:12px;fl
 
 .weatherChip.weatherCached{border-color:#b6a1d7;color:#e8dcf6;background:#2b2239}
 .weatherChip.weatherCached.weatherRisk{border-color:#ceaa71;color:#ffddaa;background:#403021}
+
+/* Bounded V09 score simulation context, only inside open Team Scouting. */
+.scoreSimulation{border:1px solid #c9b0ed88;border-radius:12px;background:#21172e;
+ padding:11px;margin:4px 0 13px}
+.scoreSimulation .simTitle{color:#f5eaff;font-size:12px;font-weight:900}
+.scoreSimulation .simSubtitle{font-size:10px;color:#c1accf;line-height:1.4;margin-top:3px}
+.simRow{display:flex;justify-content:space-between;align-items:center;gap:9px;
+ border-top:1px solid #d7c0f53b;padding-top:8px;margin-top:8px}
+.simRow>div:first-child>strong{display:block;font-size:11px;color:#e7cffb}
+.simSub{display:block;font-size:10px;color:#baaac9;margin-top:2px}
+.simValue{text-align:right}
+.simPoints{font-size:19px;font-weight:900;color:#fff}
+.simRange{color:#d1bcdf;font-size:10px;margin-top:6px;padding-bottom:3px}
+.simCaution{font-size:10px;color:#a991bc;margin-top:9px;line-height:1.5;border-top:1px solid #d7c0f54a;padding-top:8px}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top">
@@ -957,6 +971,36 @@ function scoutingPanel(g){
  const info=g.matchup_intelligence;if(!info)return null;
  const details=node("details","scouting");
  details.append(node("summary","","Team scouting · Run / Pass / Defense / Turnovers"));
+ const shadows=g.v09_score_shadows;
+ if(shadows?.status==="V09_SOURCE_TIMED_SCORE_MONTE_CARLO_SHADOW_RESEARCH_ONLY" &&
+    shadows.model_promoted===false){
+   const sim=node("div","scoreSimulation");
+   sim.append(node("div","simTitle","V09 · Game score simulation"),
+              node("div","simSubtitle",
+                "Based on "+shadows.earlier_settled_v04_games+
+                " previously settled V04 predictions · "+shadows.projections.global.trials+
+                " trials per variant"));
+   for(const [variant,label] of [["global","Global bias"],["team_form","Team form"]]){
+     const p=shadows.projections?.[variant];
+     if(!p||![p.home_points,p.away_points,p.total,p.home_win_probability].every(Number.isFinite))continue;
+     const block=node("div","simRow");
+     const main=node("div",""),points=node("strong","simPoints",
+       num(p.away_points,0)+" – "+num(p.home_points,0));
+     main.append(node("strong","",label),
+       node("span","simSub",shortTeam(g.away_team)+" @ "+shortTeam(g.home_team)));
+     const number=node("div","simValue");
+     number.append(points,node("span","simSub",
+       num(p.home_win_probability*100,0)+"% home win (uncalibrated)"));
+     block.append(main,number);
+     sim.append(block);
+     sim.append(node("div","simRange",
+       "Total mean "+num(p.total,1)+
+       " · 5–95% interval "+p.total_p05_p50_p95[0]+"–"+p.total_p05_p50_p95[2]));
+   }
+   sim.append(node("div","simCaution",
+      "Research simulation, not the live V04 pick or a calibrated betting probability. Scores and past grades remain frozen."));
+   details.append(sim);
+ }
  const grid=node("div","scoutGrid"),m=info.matchup||{};
  for(const [side,team] of [["away",g.away_team],["home",g.home_team]]){
   const p=info[side]||{},box=node("div","scoutSide");

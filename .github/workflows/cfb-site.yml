@@ -13,6 +13,9 @@ on:
       - 'tests/test_site_history_scores.py'
       - 'tests/test_site_history.py'
       - 'scripts/site_simulation_shadow.py'
+      - 'scripts/site_v09_shadow.py'
+      - 'scripts/v09_score_sim_backtest.py'
+      - 'tests/test_site_v09_shadow.py'
       - 'tests/test_site_simulation_shadow.py'
       - 'tests/test_site_weather.py'
       - 'tests/test_site_live.py'
@@ -288,6 +291,14 @@ jobs:
             --dashboard site/data/dashboard.json \
             --drive-bundle .context-state/state/reviewed_drive_history_2026.json \
             --trials 1000
+      - name: Produce source-gated V09 pregame score Monte Carlo research shadows
+        run: |
+          python -m unittest discover -s tests -p 'test_site_v09_shadow.py' -v
+          python -m scripts.site_v09_shadow \
+            --archive-root .context-state \
+            --dashboard site/data/dashboard.json \
+            --trials 1200 | tee /tmp/site-v09-shadow.txt
+          cat /tmp/site-v09-shadow.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Overlay source-reviewed player-stat outlooks (separate model; scores frozen)
         run: |
           python -m scripts.site_player_props --dashboard site/data/dashboard.json | tee /tmp/site-playerprops.txt
