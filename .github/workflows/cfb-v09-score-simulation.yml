@@ -1,0 +1,48 @@
+name: CFB V09 Archived Pregame Score Simulation Backtest
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/v09_score_sim_backtest.py'
+      - 'tests/test_v09_score_sim_backtest.py'
+      - '.github/workflows/cfb-v09-score-simulation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cfb-v09-score-simulation
+  cancel-in-progress: true
+jobs:
+  simulate-and-grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out timestamped original pregame archive
+        uses: actions/checkout@v4
+        with:
+          ref: context-state
+          path: .context-state
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Validate frozen-source chronology
+        run: python -m unittest discover -s tests -p 'test_v09_score_sim_backtest.py' -v
+      - name: Simulate original V04 and walkforward grade
+        run: |
+          python -m scripts.v09_score_sim_backtest \
+            --archive-root .context-state \
+            --output artifacts/v09-score-sim-backtest.json \
+            --min-train 24 --trials 1200 | tee artifacts-v09-summary.log
+      - name: Upload graded research results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-v09-score-simulation
+          path: |
+            artifacts/v09-score-sim-backtest.json
+            artifacts-v09-summary.log
+          if-no-files-found: error
