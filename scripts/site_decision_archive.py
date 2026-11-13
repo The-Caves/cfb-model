@@ -300,6 +300,73 @@ def freeze(board,now,run_id):
             elif (v13.get("home_cover_probability") is not None or
                   v13.get("over_probability") is not None):
                 raise ValueError("V13 probabilities cannot infer unsourced bookmaker lines")
+        # V14 is a distinct source-timed, not-promoted scoring challenger.
+        # This freezes its predicted points alongside the original V04 and
+        # V13 receipts; NEVER substitutes a V14 pick for displayed V04/V03.
+        v14=g.get("v14_matchup_shadow")
+        if v14 is not None:
+            if (not isinstance(v14,dict) or candidate is None or
+                g.get("home_bias_quarantined") is not True or
+                v14.get("site_status")!="V14_SOURCE_TIMED_OPPONENT_MATCHUP_SCORE_SHADOW" or
+                v14.get("status")!="V14_REGULARIZED_V04_MATCHUP_RESIDUAL_RESEARCH_ONLY" or
+                v14.get("variant")!="joint_close" or
+                v14.get("original_v04_score_unchanged") is not True or
+                v14.get("matchup_evidence_ready") is not True or
+                v14.get("model_promoted") is not False or
+                v14.get("safe_for_betting") is not False or
+                v14.get("historical_source_first_publication_verified") is not False or
+                v14.get("historical_research_not_prospective_backtest") is not True or
+                v14.get("source_cutoff_exclusive") is None or
+                str(v14.get("game_id"))!=gid or
+                v14.get("home")!=home or v14.get("away")!=away or
+                v14.get("kickoff_utc")!=g["kickoff_utc"] or
+                str(v14.get("forecast_run_id"))!=str(board["forecast_run_id"]) or
+                v14.get("original_v04_forecast_observed_utc")!=board["forecast_observed_utc"] or
+                parse_time(v14["source_observed_utc"])>now or
+                parse_time(v14["source_observed_utc"])>=kickoff or
+                parse_time(v14["source_observed_utc"])<orig or
+                type(v14.get("earlier_matchup_training_games")) is not int or
+                v14["earlier_matchup_training_games"]<55 or
+                not all(finite(v14.get(k)) for k in
+                    ("home_points","away_points","margin","total","v04_margin",
+                     "v04_total","margin_adjustment","total_adjustment")) or
+                min(v14["home_points"],v14["away_points"])<0 or
+                abs(v14["home_points"]-v14["away_points"]-v14["margin"])>.02 or
+                abs(v14["home_points"]+v14["away_points"]-v14["total"])>.02 or
+                abs(v14["v04_margin"]-pred_margin)>.02 or
+                abs(v14["v04_total"]-pred_total)>.02 or
+                abs(v14["margin"]-pred_margin-v14["margin_adjustment"])>.02 or
+                abs(v14["total"]-pred_total-v14["total_adjustment"])>.02 or
+                abs(v14["margin_adjustment"])>6.01 or
+                abs(v14["total_adjustment"])>6.01):
+                raise ValueError("V14 pregame shadow is unsourced, tampered or overpromoted")
+            probs=v14.get("probabilities")
+            if probs is not None:
+                if (v13 is None or not isinstance(probs,dict) or
+                    probs.get("model_promoted") is not False or
+                    probs.get("safe_for_betting") is not False or
+                    probs.get("reliability_requires_future_validation") is not True or
+                    not finite(probs.get("home_win")) or
+                    abs(probs["home_win"]-
+                        .5*math.erfc(-v14["margin"]/
+                        (v13["margin_sd"]*math.sqrt(2))))>.00005):
+                    raise ValueError("Unverified V14 win probability")
+                for name,line,expected in (
+                    ("home_cover",spread,sp),
+                    ("over",market_total,tt)):
+                    key=name+"_raw";calkey=name+"_calibrated"
+                    actual=probs.get(key);cal=probs.get(calkey)
+                    if not expected:
+                        if actual is not None or cal is not None:
+                            raise ValueError("V14 invented a missing bookmaker line")
+                    else:
+                        sd=v13["margin_sd"] if name=="home_cover" else v13["total_sd"]
+                        mean=v14["margin"]+line if name=="home_cover" else v14["total"]-line
+                        required=.5*math.erfc(-mean/(sd*math.sqrt(2)))
+                        if (not finite(actual) or not finite(cal) or
+                            abs(actual-required)>.00005 or not 0<=cal<=1 or
+                            not provider or not market_observed):
+                            raise ValueError("V14 market probability has no authenticated quote")
         discrepancy=round(abs(margin+spread),4) if sp else None
         risk="HIGH_MODEL_MARKET_DISAGREEMENT" if discrepancy is not None and discrepancy>=10 else "NONE"
         high_disagreement+=int(risk!="NONE")
@@ -347,6 +414,7 @@ def freeze(board,now,run_id):
             "v05_shadow_not_promoted":v05["model_promoted"] is False if v05 else None,
             "v09_frozen_score_simulation":v09 if v09 else None,
             "v13_frozen_probability_shadow":v13 if v13 else None,
+            "v14_frozen_matchup_shadow":v14 if v14 else None,
             "v04_research_status":research["status"] if research else None,
             "v04_research_policy":research["policy"] if research else None,
             "v04_research_ats_side":research["ats_side"] if research else None,
