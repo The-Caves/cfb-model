@@ -339,7 +339,14 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
             or not all(number(v04_prior.get(k)) is not None
                        for k in ("home_points","away_points"))
             or not all(0<=v04_prior[k]<=120 for k in ("home_points","away_points"))):
-            raise ValueError("Unauthenticated V04 score prior")
+            raise ValueError("Unauthenticated V04 score prior: "+
+                str({"source":v04_prior.get("source"),
+                     "prior_game":v04_prior.get("game_id"),
+                     "target_game":fitted.get("target_game_id"),
+                     "prior_cutoff":v04_prior.get("asof_cutoff"),
+                     "target_date":fitted.get("target_date"),
+                     "home_points":v04_prior.get("home_points"),
+                     "away_points":v04_prior.get("away_points")}))
     # The context and source history are fixed for a matchup. Precompute
     # 10 conditional drive distributions once instead of re-fitting them on
     # each of ~20 possessions in every Monte Carlo draw.
