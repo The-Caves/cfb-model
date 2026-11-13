@@ -337,7 +337,8 @@ def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=No
     return total,takeaways,trace_rows
 
 def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
-             regress_turnovers=False,v04_prior=None,dated_profile=None):
+             regress_turnovers=False,v04_prior=None,dated_profile=None,
+             return_draws=False):
     if not fitted.get("ready") or fitted.get("status")!=STATUS:
         raise ValueError("Unverified drive fit")
     if not 100<=trials<=20000 or type(seed) is not int:
@@ -402,7 +403,7 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
     # naive Wald uncertainty misleadingly reports zero in those cases.
     z=1.96
     wilson_half=z*math.sqrt(pwin*(1-pwin)/trials+(z*z)/(4*trials*trials))/(1+(z*z)/trials)
-    return {"status":STATUS,
+    output = {"status":STATUS,
         "model_variant":"V11_DATED_V04_OPPONENT_ADJUSTED_EPA_POSSESSIONS" if dated_profile else
           "V04_STRENGTH_ANCHORED_POSSESSIONS" if v04_prior else
           "REGRESSED_TURNOVER_MATCHUP" if regress_turnovers else
@@ -426,3 +427,10 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
         "sample_possessions":example,"model_promoted":False,
         "historical_source_publication_unauthenticated":True,
         "safe_for_betting":False}
+    # Research only: callers can request the exact same-run draws for proper
+    # CRPS and betting-line probability calibration against the V12 challenger.
+    # Default remains byte-for-byte compatible with historical V10/V11 scores.
+    if return_draws:
+        output["margin_draws"]=[r[0] for r in results]
+        output["total_draws"]=[r[1] for r in results]
+    return output
