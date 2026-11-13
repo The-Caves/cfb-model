@@ -598,7 +598,7 @@ header .brand .brandSeason{color:#c6afdc}
 <main class="wrap">
 
 <div class="meta"><span id="captured">Checking forecast archive...</span><span id="refreshed">Board snapshot pending</span><span id="market-refreshed">Book: published snapshot</span><span id="player-model-id">Player outlook pending</span></div>
-<nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Games</button><button role="tab" class="tab" data-tab="live" aria-selected="false">Live <span id="live-tab-count" class="liveTabCount">0</span></button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Results</button><button role="tab" class="tab" data-tab="sources" aria-selected="false">Sources</button></nav>
+<nav role="tablist" aria-label="CFB dashboard"><button role="tab" class="tab" data-tab="matchups" aria-selected="true">Games</button><button role="tab" class="tab" data-tab="live" aria-selected="false">Live <span id="live-tab-count" class="liveTabCount">0</span></button><button role="tab" class="tab" data-tab="performance" aria-selected="false">Results</button></nav>
 <section id="matchups" role="tabpanel"><div class="row"><h2 id="day-heading">Upcoming games</h2><div class="small" id="showing"></div></div><p class="small">Kickoffs ET · Frozen pregame projections</p>
 <div class="quickFilters" role="group" aria-label="Quick game filters"><button class="quickFilter" type="button" data-quick="all" aria-pressed="true">All games</button><button class="quickFilter" type="button" data-quick="lines" aria-pressed="false">With odds</button><button class="quickFilter" type="button" data-quick="ats" aria-pressed="false">Spread picks</button><button class="quickFilter" type="button" data-quick="ou" aria-pressed="false">Totals</button><button class="quickFilter" type="button" data-quick="player" aria-pressed="false">Player outlooks</button></div>
 <details class="filterPanel" id="filter-panel"><summary>Search teams &amp; advanced filters</summary><div class="tool">
@@ -639,7 +639,7 @@ header .brand .brandSeason{color:#c6afdc}
 </div>
 </section>
 <section id="sources" role="tabpanel" class="hidden"><details class="researchDisclosure"><summary>Model status: experimental · How to read these projections</summary><p>V04 is a research model, not a validated betting advantage. Book quotes are observed from public sources and may not match the time the forecast was generated. Live scores never update archived pregame selections. Full source limitations and provenance are under Sources.</p></details><div class="panel"><h3>Provenance and evidence</h3><div class="sourceRow"><span>Forecast run</span><span id="runid">—</span></div><div class="sourceRow"><span>Drive simulation</span><span id="sim-readiness">Awaiting verified historical drives</span></div><div class="sourceRow"><span>Score model (frozen)</span><span id="modelid">—</span></div><div class="sourceRow"><span>Player stat research model</span><span id="propmodelid">—</span></div><div class="sourceRow"><span>Player projection coverage</span><span id="propcoverage">—</span></div><div class="sourceRow"><span>Original observation</span><span id="observation">—</span></div><div class="sourceRow"><span>Forecast checksum (SHA-256)</span><span id="hash">—</span></div><div class="sourceRow"><span>Readiness</span><span>PASS_UNVALIDATED</span></div><p class="state" id="limitations">An official news candidate is not a starter confirmation. Historical source publication times remain a constraint.</p></div></section>
-<footer>2026 CFB Lab · Research only · No wagers placed. <a href="https://github.com/The-Caves/cfb-model">Open GitHub project</a></footer>
+<footer><span>PRESSBOX · 2026 CFB research</span><button type="button" class="footerSources" data-tab="sources" role="tab" aria-selected="false">Data &amp; sources</button><a href="https://github.com/The-Caves/cfb-model">GitHub</a></footer>
 </main>
 <script id="dashboard-data" type="application/json"></script>
 <script>
@@ -861,7 +861,11 @@ function scoutingPanel(g){
  const grid=node("div","scoutGrid"),m=info.matchup||{};
  for(const [side,team] of [["away",g.away_team],["home",g.home_team]]){
   const p=info[side]||{},box=node("div","scoutSide");
-  box.append(node("strong","",team+" · Recent form"));
+  const branding=g["team_brand_"+side];
+  if(/^#[0-9a-f]{6}$/i.test(branding?.color||""))box.style.setProperty("--school-color",branding.color);
+  const school=node("div","scoutSchool");
+  school.append(logoBadge(team,branding),node("strong","",team+" · Recent form"));
+  box.append(school);
   const items=[
     ["Rush offense EPA/play",p.run_off,3],
     ["Pass offense EPA/play",p.pass_off,3],
@@ -902,8 +906,13 @@ function playerOutlook(g){
  const inside=node("div","playerTwoCol");
  for(const side of ["away","home"]){
   const team=node("section","playerTeam"),heading=node("div","playerTeamTitle");
-  heading.append(node("span","",side==="away"?"AWAY":"HOME"),
-                 node("strong","",g[side+"_team"]));
+  const branding=g["team_brand_"+side];
+  if(/^#[0-9a-f]{6}$/i.test(branding?.color||""))team.style.setProperty("--school-color",branding.color);
+  const identity=node("div","playerTeamIdentity");
+  identity.append(logoBadge(g[side+"_team"],branding));
+  const headingText=node("div","");
+  headingText.append(node("span","",side==="away"?"AWAY":"HOME"),node("strong","",g[side+"_team"]));
+  identity.append(headingText);heading.append(identity);
   team.append(heading);
   const players=entries.filter(p=>p.team_side===side).sort((a,b)=>{
    const order={passing_yards:0,rushing_yards:1,receiving_yards:2};
@@ -1083,7 +1092,7 @@ function gameCard(g){
    ["OUT","QUESTIONABLE","DOUBTFUL","SUSPENDED","LIMITED","GAME_TIME_DECISION"].includes(p.status)).length,0);
  if(injuryCount)indicators.append(node("span","injuryChip","⚠ "+injuryCount+" reported player flags"));
  el.append(indicators);
- el.append(playerOutlook(g));
+
 
  if(!quarantined&&Number.isFinite(g.ats_edge_points)&&g.ats_edge_points>=10){
   more.append(node("div","marginAlert","Large model / spread difference ("+num(g.ats_edge_points)+" pts). Research only; not a validated edge."));
@@ -1093,8 +1102,34 @@ function gameCard(g){
  more.append(node("div","marketMeta",
   g.market_provider?"Market: ESPN / "+g.market_provider+" · "+fmtDate.format(dateOf(g.market_observed_utc))+" · independently observed":
   "Market line unavailable · ATS/O-U comparisons withheld"));
- el.append(more);
+ el.append(cardSections(g,more));
  return el;
+}
+function cardSections(g,more){
+ const box=node("div","cardSections"),tabs=node("div","cardSectionTabs");
+ const content=node("div","cardSectionPanel hidden");
+ const props=node("button","cardSectionTab","Player Props");
+ const scouting=node("button","cardSectionTab","Team Scouting");
+ for(const b of [props,scouting]){b.type="button";b.setAttribute("aria-expanded","false");}
+ const player=playerOutlook(g);player.open=true;
+ const playerSummary=player.querySelector("summary");if(playerSummary)playerSummary.remove();
+ more.open=true;
+ const researchSummary=more.querySelector("summary");if(researchSummary)researchSummary.remove();
+ const innerScout=more.querySelector(".scouting");
+ if(innerScout){innerScout.open=true;const s=innerScout.querySelector("summary");if(s)s.remove();}
+ let active="";
+ const open=(which)=>{
+  active=active===which?"":which;
+  props.classList.toggle("active",active==="props");
+  scouting.classList.toggle("active",active==="scout");
+  props.setAttribute("aria-expanded",String(active==="props"));
+  scouting.setAttribute("aria-expanded",String(active==="scout"));
+  content.classList.toggle("hidden",!active);
+  content.replaceChildren(...(active==="props"?[player]:active==="scout"?[more]:[]));
+ };
+ props.addEventListener("click",()=>open("props"));
+ scouting.addEventListener("click",()=>open("scout"));
+ tabs.append(props,scouting);box.append(tabs,content);return box;
 }
 
 function updateDayNav(){
