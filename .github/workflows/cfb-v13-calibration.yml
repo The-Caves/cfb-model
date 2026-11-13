@@ -9,6 +9,8 @@ on:
       - 'tests/test_v13_v04_probabilities.py'
       - 'tests/test_site_v13_shadow.py'
       - 'tests/test_site_v13_archive.py'
+      - 'scripts/site_v13_performance.py'
+      - 'tests/test_site_v13_performance.py'
       - 'scripts/site_decision_archive.py'
       - 'site/index.html'
       - '.github/workflows/cfb-site.yml'
@@ -38,6 +40,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_v13_v04_probabilities.py' -v
           python -m unittest discover -s tests -p 'test_site_v13_shadow.py' -v
           python -m unittest discover -s tests -p 'test_site_v13_archive.py' -v
+          python -m unittest discover -s tests -p 'test_site_v13_performance.py' -v
           python -m unittest discover -s tests -p 'test_site_decision_archive.py' -v
           python -m unittest discover -s tests -p 'test_site_ui_compact.py' -v
       - name: Ensure V13 website app JavaScript is valid before publishing
