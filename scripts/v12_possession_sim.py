@@ -271,7 +271,7 @@ def simulate(model,trials=2000,seed=2026,trace=False,
         not trained_hazards.get("ready") or
         trained_hazards.get("cutoff")!=model["cutoff_date_exclusive"] or
         trained_hazards.get("historical_source_first_publication_verified") is not False):
-        raise ValueError("Learned pace or hazards from mismatched weekly source")
+        raise ValueError("Learned pace or hazards from mismatched weekly cutoff source")
     if use_learned_pace and trained_hazards is None:
         raise ValueError("V12R2 pace requires strictly historical trained hazards")
     pace=None
