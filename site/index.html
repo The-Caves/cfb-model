@@ -586,6 +586,102 @@ header .brand .brandSeason{color:#c6afdc}
  .meta #market-refreshed{color:#bda4d7}
  #matchups>.small{margin:2px 0 4px;font-size:10px}
 }
+
+/* PRESSBOX revision: more white structure, full-width navigation, paired card tabs. */
+nav[role=tablist]{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;
+ border-bottom:1px solid #ddd4e845;padding:10px 0 12px}
+nav[role=tablist] .tab{min-width:0;text-align:center;min-height:45px;
+ border:1px solid #d9c6eb50;background:#171220;color:#f3edfc;font-size:13px}
+nav[role=tablist] .tab[aria-selected=true]{background:#eee7fa;color:#281d39;border-color:#fff;
+ box-shadow:inset 0 0 0 1px #fff}
+footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+ border-top:1px solid #d4c4e262;padding-top:20px}
+.footerSources{padding:9px 14px;color:#f6edff;background:#181222;
+ border:1px solid #d4c4e280;border-radius:9px;font-weight:750;cursor:pointer}
+.footerSources[aria-selected=true]{background:#f3ebff;color:#1c1028}
+.game,.historyGame{border-color:#ded1ef55}
+.teamRow{border-top-color:#cdbde83d;border-right-color:#cdbde83d;border-bottom-color:#cdbde83d}
+.comparison{border-color:#c8b5df63}
+.comparisonGap{border-top-color:#ded0ee65}
+.comparisonMain small{color:#dfd1ef}
+.comparisonMain strong{color:#fff}
+.comparisonMain>div:first-child strong{color:#f5e7ff}
+.cardSections{margin-top:10px}
+.cardSectionTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cardSectionTab{border:1px solid #d7c6ef6b;min-width:0;border-radius:10px;color:#eee6f8;
+ background:#21182f;padding:12px 7px;font-size:12px;font-weight:800;text-align:center}
+.cardSectionTab.active{background:#eee7f8;color:#24172e;border-color:#fff;
+ border-radius:10px 10px 2px 2px}
+.cardSectionTab:hover,.footerSources:hover{border-color:#fff}
+.cardSectionPanel{border:1px solid #d4bfeb80;background:#130f1d;margin-top:8px;
+ border-radius:11px;padding:10px}
+.cardSectionPanel .playerToggle{margin:0;border:0;background:transparent;overflow:visible}
+.cardSectionPanel .playerTwoCol{padding:0;gap:9px}
+.cardSectionPanel .playerTeam{border-left:4px solid var(--school-color,#b19ade);
+ background:#1e172a;border-top-color:#65527b;border-right-color:#65527b;border-bottom-color:#65527b}
+.playerTeamIdentity{display:flex;align-items:center;gap:9px;min-width:0}
+.playerTeamIdentity .schoolBadge{width:30px;height:30px;flex-basis:30px}
+.playerTeamIdentity>div:last-child{min-width:0}
+.playerTeamTitle{background:#261b36}
+.cardSectionPanel .gameMore{display:block;border-top:0;margin:0;padding:0}
+.cardSectionPanel .gameMore>summary{display:none}
+.cardSectionPanel .scouting{margin:0;border:0;background:transparent}
+.cardSectionPanel .scouting>summary{display:none}
+.cardSectionPanel .scoutGrid{margin:0 0 8px;gap:10px}
+.cardSectionPanel .scoutSide{border-left:4px solid var(--school-color,#b19ade);
+ border-top:1px solid #9b87b88a;border-right:1px solid #9b87b88a;border-bottom:1px solid #9b87b88a}
+.scoutSchool{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.scoutSchool .schoolBadge{width:30px;height:30px;flex-basis:30px}
+.scoutSchool strong{min-width:0;color:#fff;font-size:12px}
+.cardSectionPanel .detailFold{border:1px solid #c9b4dc55}
+.cardSectionPanel .biasWarning{margin:0 0 8px}
+.pastDay{border-color:#ada0bf6b;background:#16111f;color:#cbbedd}
+.pastDay.selected{background:#eee7fa;color:#281d39;border-color:#fff}
+.pastDay.selected span{color:#65506f}
+.historyGame{padding:15px}
+.historyStatus{border-radius:6px;padding:5px 9px;color:#251b32;background:#f4edff;
+ font-size:10px;font-weight:900;letter-spacing:.07em}
+.historyTeams{display:grid;gap:5px}
+.historyTeamRow{display:flex;align-items:center;justify-content:space-between;
+ border:1px solid #e2d5f345;border-left:4px solid var(--school-color,#baa2d5);
+ background:#21192d;border-radius:10px;padding:8px 12px;gap:10px}
+.historyTeamRow .teamIdentity{min-width:0}
+.historyTeamRow .teamIdentity strong{font-size:12px;overflow-wrap:anywhere}
+.historyActual{font-size:26px;color:#fff;font-variant-numeric:tabular-nums}
+.historyProjection{background:#ede6f5;color:#22182c;border-radius:10px;padding:12px;
+ margin-top:10px;display:flex;flex-direction:column;gap:4px}
+.historyProjection>span:first-child{font-size:10px;letter-spacing:.065em;text-transform:uppercase;font-weight:850;color:#5d476e}
+.historyProjection strong{font-size:18px}
+.historyProjection span:last-child{font-size:10px}
+.historyOutcomes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:9px}
+.historyOutcome{border:1px solid #d4c2eb61;border-radius:9px;background:#1d172a;padding:9px}
+.historyOutcome small{display:block;color:#bdacce;font-size:9px;margin-bottom:5px}
+.historyOutcome strong{font-size:11px;font-weight:850;color:#ded1ed}
+.historyOutcome .outcome-win{color:#c7f0c6}
+.historyOutcome .outcome-loss{color:#ffb7c3}
+.historyOutcome .outcome-push{color:#efe1a8}
+.historyOutcome .outcome-pass{color:#c5b7d8}
+.historyBook{font-size:11px;color:#c9b9d8;line-height:1.6;margin:10px 1px}
+.historyObserved{font-size:10px;color:#9e8eb0}
+.historySource{border-top:1px solid #d0bced65;padding:8px 0 0;font-size:10px}
+.historySource summary{cursor:pointer;color:#f4ecff;font-weight:750}
+.historySource p{line-height:1.55;color:#baa8d0}
+@media(max-width:580px){
+ nav[role=tablist]{gap:6px;padding:7px 0 8px}
+ nav[role=tablist] .tab{min-height:42px;font-size:12px;padding:9px}
+ .cardSectionTab{font-size:11px;padding:10px 5px}
+ .cardSectionPanel{padding:7px}
+ .cardSectionPanel .playerTwoCol{gap:5px}
+ .cardSectionPanel .playerTeamTitle{padding:8px 6px}
+ .cardSectionPanel .scoutGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .cardSectionPanel .scoutSide{padding:8px 6px}
+ .scoutSchool{display:block}
+ .scoutSchool .schoolBadge{margin-bottom:5px}
+ .scoutSchool strong{font-size:10px}
+ .historyActual{font-size:23px}
+ .historyProjection strong{font-size:17px}
+ .historyOutcome{padding:8px 6px}
+}
 </style></head>
 <body>
 <header><div class="wrap"><div class="top">
