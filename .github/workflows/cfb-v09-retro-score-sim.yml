@@ -1,0 +1,69 @@
+name: CFB V09 Retrospective Weekly Score Simulation Backtest
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/v09_retro_score_sim.py'
+      - 'tests/test_v09_retro_score_sim.py'
+      - '.github/workflows/cfb-v09-retro-score-sim.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cfb-v09-retro-score-simulation
+  cancel-in-progress: true
+jobs:
+  reconstruct-and-simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: context-state
+          path: .context-state
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Test chronology and missing sportsbook prices
+        run: python -m unittest discover -s tests -p 'test_v09_retro_score_sim.py' -v
+      - name: Retrieve exact audited November 13 2026 source data
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-2026-data-43475676201
+          run-id: 43475676201
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .source-2026
+      - name: Refit historical V04 week by week, no current team profiles
+        run: |
+          python -m scripts.v04_score_benchmark \
+            --games .source-2026/games_2026.csv \
+            --advanced .source-2026/advanced/team_game_advanced_2026.csv \
+            --advanced-manifest .source-2026/advanced/advanced_manifest.json \
+            --output artifacts/v04-2026-weekly-baseline.json
+      - name: Monte Carlo score simulation against V04 and saved pregame markets
+        run: |
+          python -m scripts.v09_retro_score_sim \
+            --benchmark artifacts/v04-2026-weekly-baseline.json \
+            --games .source-2026/games_2026.csv \
+            --market-root .context-state \
+            --output artifacts/v09-2026-retro-results.json \
+            --min-train 35 --trials 1200 | tee artifacts/v09-retro-summary.txt
+      - name: Upload same-cohort margin totals ATS and O-U comparisons
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-v09-retro-backtest
+          path: |
+            artifacts/v09-2026-retro-results.json
+            artifacts/v09-retro-summary.txt
+            artifacts/v04-2026-weekly-baseline.json
+          if-no-files-found: error
