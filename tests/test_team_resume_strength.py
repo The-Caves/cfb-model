@@ -24,7 +24,7 @@ class AsOfResumeStrengthTests(unittest.TestCase):
         self.assertAlmostEqual(easy,.81)
         self.assertAlmostEqual(hard,.01)
         self.assertGreater(-__import__("math").log10(hard),-__import__("math").log10(easy))
-        self.assertEqual(record_probability_at_least(0,[.05,.02]),1.)
+        self.assertAlmostEqual(record_probability_at_least(0,[.05,.02]),1.)
         with self.assertRaises(ValueError):
             record_probability_at_least(2,[1.5,0.5])
 
