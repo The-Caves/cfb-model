@@ -111,6 +111,53 @@ class PossessionModelTests(unittest.TestCase):
         self.assertIsNone(a["pass_success_count"])
         self.assertGreater(a["source_games"],0)
 
+    def test_source_frozen_v04_prior_modulates_possession_scoring(self):
+        games,advanced=fixtures()
+        m=fit(games,advanced,{"game_id":"999","home":"Home","away":"Away","date":"2026-10-01"})
+        weak={"source":"EARLIER_FOLD_V04","home_points":12.,"away_points":20.}
+        strong={"source":"EARLIER_FOLD_V04","home_points":52.,"away_points":20.}
+        lo=outcome_distribution(m,"home",55,True,True,weak)
+        hi=outcome_distribution(m,"home",55,True,True,strong)
+        self.assertGreater(hi["TD"],lo["TD"])
+        self.assertAlmostEqual(sum(lo.values()),1.0,places=8)
+        self.assertAlmostEqual(sum(hi.values()),1.0,places=8)
+        result=simulate(m,True,trials=120,seed=1,
+                        regress_turnovers=True,v04_prior=strong)
+        self.assertTrue(result["v04_prior_used"])
+        self.assertTrue(result["turnover_regression_used"])
+        self.assertGreaterEqual(result["sampling_95ci_half_width_home_win"],0)
+        with self.assertRaisesRegex(ValueError,"V04"):
+            simulate(m,True,trials=100,v04_prior={"source":"TODAY_SCORE",
+                     "home_points":55.,"away_points":19.})
+
+    def test_unverified_future_advanced_game_rejected(self):
+        games,advanced=fixtures()
+        advanced[("1","Home")]["date"]="2026-10-30"
+        with self.assertRaisesRegex(ValueError,"date identity"):
+            fit(games,advanced,{"game_id":"999","home":"Home","away":"Away",
+                                "date":"2026-10-01"})
+
+    def test_regressed_turnovers_shrink_unverified_takeaway_streak(self):
+        games,advanced=fixtures()
+        m=fit(games,advanced,{"game_id":"999","home":"Home","away":"Away",
+                              "date":"2026-10-01"})
+        original=outcome_distribution(m,"away",75,True,False)["TURNOVER"]
+        regressed=outcome_distribution(m,"away",75,True,True)["TURNOVER"]
+        league=m["profiles"]["away"]["league_turnover_probability"]
+        self.assertLessEqual(abs(regressed-league),abs(original-league)+1e-10)
+
+    def test_10000_trials_stabilize_sampling_without_mutating_profile(self):
+        games,advanced=fixtures()
+        m=fit(games,advanced,{"game_id":"999","home":"Home","away":"Away",
+                              "date":"2026-10-01"})
+        p=simulate(m,True,trials=100,seed=9)
+        high=simulate(m,True,trials=10000,seed=9)
+        self.assertLessEqual(high["sampling_95ci_half_width_home_win"],.0098)
+        self.assertLess(high["sampling_95ci_half_width_home_win"],
+                        p["sampling_95ci_half_width_home_win"])
+        self.assertEqual(high["trials"],10000)
+        self.assertFalse(high["model_promoted"])
+
     def test_not_ready_cannot_publish_probability(self):
         with self.assertRaises(ValueError):
             simulate({"ready":False},True,trials=120)
