@@ -23,14 +23,33 @@ All 377 examples are the *same* complete source-matched, strict original V04 wee
 | Total MAE | **13.5414** | 14.1147 | 14.0368 |
 | Hypothetical ATS directions (156 authentic pregame quote matchups) | 70/156 | **75/156** | 74/156 |
 | Hypothetical O/U directions (154 authentic pregame quote matchups) | 62/154 | **68/154** | 66/154 |
-| Home winner Brier (smaller better) | unavailable | **0.23392** | 0.23486 |
+| Home winner Brier (smaller better) | unavailable | **0.23392** | 0.23842 |
 
 Additional V12 diagnostics:
 - **Margin** empirical 10–90 interval coverage = **75.86%** (nominal 80%); mean width = 39.67 points; CRPS = 10.05976.
 - **Total** empirical 10–90 interval coverage = **73.74%** (nominal 80%); mean width = 39.22 points; CRPS = 9.87700.
 - Hypothetical **ATS cover** probability Brier = **0.282359**, log loss = 0.768581, expected calibration error = 0.142821 (n=156).
 - Hypothetical **total-over** probability Brier = **0.279063**, log loss = 0.755714, expected calibration error = 0.159660 (n=154).
-- Winner probability Brier = **0.234863**, log loss = 0.662124, expected calibration error = 0.067486 (n=377). The first two Brier scores exceed the naive 0.25 all-50% benchmark; this is a warning, not evidence of betting advantage.
+- Winner probability Brier = **0.238422**, log loss = 0.669589, expected calibration error = 0.082265 (n=377). V12 probabilities now use the exact same regulation-home-win and separate-tie definition as V11; earlier prototype results with half of regulation ties awarded to home are not directly comparable. The two quoted sportsbook-line Brier scores exceed the naive 0.25 all-50% benchmark; this is a warning, not evidence of betting advantage.
+
+## Final paired distribution calibration versus V11
+
+The subsequent [GitHub Actions #43504714837](https://github.com/The-Caves/cfb-model/actions/runs/43504714837) **passed** after extending V11 simulation to return optional unchanged seeded raw draws (its original archived mean scores/probabilities were independently rechecked, refusing drift). Its same-week, same-377-game, same-seed comparison is:
+
+| Metric, lower is better except interval coverage | Frozen V11 replay | V12 |
+| --- | ---: | ---: |
+| Winner Brier | **0.233916** | 0.238422 |
+| Winner log loss | **0.659897** | 0.669589 |
+| Margin CRPS | **9.89807** | 10.05976 |
+| Total CRPS | 9.90940 | **9.87700** |
+| 80% margin interval observed coverage | **77.45%** | 75.86% |
+| 80% total interval observed coverage | 72.68% | **73.74%** |
+| Home ATS cover probability Brier (156 quotes) | **0.279111** | 0.282359 |
+| Totals over probability Brier (154 quotes) | 0.280446 | **0.279063** |
+| ATS-cover log loss (156 quotes) | **0.759392** | 0.768581 |
+| Totals-over log loss (154 quotes) | 0.758429 | **0.755714** |
+
+**Assessment:** V12 slightly improves total CRPS and total probability errors, while worsening winner probability, margin CRPS and ATS probability calibration. Both models' empirical interval coverages are below nominal 80%. No independently demonstrated betting advantage, probability-calibration breakthrough or promotion justification exists. This is still one retrospectively sourced, repeatedly examined season, so the apparent total improvement needs independent confirmation.
 
 **Result: reject V12's current heuristic probability transfer for promotion.** It improves total MAE slightly over V11, but weakens SU, margin, ATS, O/U and winner Brier. The under-coverage of 80% margin/total forecast intervals further indicates miscalibrated uncertainty. This comparison is retrospective and on a repeatedly examined season, so it is **not** an independent prospective test.
 
