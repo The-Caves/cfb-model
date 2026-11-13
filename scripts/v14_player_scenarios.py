@@ -56,6 +56,8 @@ def simulate(gamefit,roles,forecast,decision_utc,quotes=None,trials=400,seed=202
             "player_opportunity_scenarios":result["team_scenarios"],
             "matched_sourced_prop_probabilities":
                 result["v14_matched_player_prop_quote_probabilities"],
+            "unsupported_verified_prop_categories":
+                result["v14_unsupported_verified_prop_categories"],
             "shared_possession_distribution":True,
             "team_opportunities_conserved":True,
             "unknown_athletes_preserved":True,
