@@ -6,6 +6,7 @@ but we DO NOT pretend the point estimate is a fitted player-target allocation
 coefficient or turn boxscore averages into betting prop observations.
 All player activity is a conditional scenario unless explicitly sourced.
 """
+import math
 from scripts.game_context import parse_time
 from scripts.player_prop_conserved_opportunities import simulate as conserve
 from scripts.v14_residual_challenger import STATUS as V14_SCORE
@@ -20,7 +21,14 @@ def simulate(gamefit,roles,forecast,decision_utc,quotes=None,trials=400,seed=202
         forecast.get("current_market_line_used_for_training") is not False or
         forecast.get("historical_source_first_publication_verified") is not False or
         not forecast.get("source_cutoff_exclusive") or
-        forecast.get("margin") is None or forecast.get("total") is None):
+        any(type(forecast.get(k)) not in (int,float) or
+            not math.isfinite(forecast[k]) for k in
+            ("home_points","away_points","margin","total")) or
+        min(forecast["home_points"],forecast["away_points"])<0 or
+        abs(forecast["home_points"]-forecast["away_points"]-
+            forecast["margin"])>.02 or
+        abs(forecast["home_points"]+forecast["away_points"]-
+            forecast["total"])>.02):
         raise ValueError("V14 cannot attach unverified or promoted model to player opportunities")
     now=parse_time(decision_utc)
     if now>=parse_time(gamefit["kickoff_utc"]):
