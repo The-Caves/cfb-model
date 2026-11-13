@@ -1,0 +1,82 @@
+name: CFB V12 Opponent Red Zone and Turnover Research
+on:
+  push:
+    branches: [research/v12-opponent-conditioned-possessions]
+    paths:
+      - 'scripts/v12_possession_sim.py'
+      - 'scripts/v12_possession_backtest.py'
+      - 'tests/test_v12_possession_sim.py'
+      - 'docs/V12_OPPONENT_REDZONE_TURNOVER_2026.md'
+      - '.github/workflows/cfb-v12-possession-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cfb-v12-same-weekly-cutoff
+  cancel-in-progress: true
+jobs:
+  v12:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install exact project requirements
+        run: python -m pip install -r requirements.txt
+      - name: Verify V12 fit, future-leakage blocks, and probability calibration tests
+        run: |
+          python -m unittest discover -s tests -p 'test_v12_possession_sim.py' -v
+          python -m unittest discover -s tests -p 'test_v11_dated_profile_bridge.py' -v
+          python -m unittest discover -s tests -p 'test_v10_possession_sim.py' -v
+      - name: Download original 2026 historical scouting source
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-2026-data-43475676201
+          run-id: 43475676201
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .source-2026
+      - name: Download fixed verified drives, never recollect
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v10-source-verified-drives
+          run-id: 43495556550
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .fixed-v10
+      - name: Download original V11 identical 377-game research cohort
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v11-v04-dated-profile-backtest
+          run-id: 43498495510
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .fixed-v11
+      - name: Run V12 held-out research with historic V04 and V11 controls
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          python -m scripts.v12_possession_backtest \
+            --v11 .fixed-v11/v11-dated-v04-profile-backtest.json \
+            --drives .fixed-v10/v10-2026-observed-possessions.json \
+            --games .source-2026/games_2026.csv \
+            --advanced .source-2026/advanced/team_game_advanced_2026.csv \
+            --manifest .source-2026/advanced/advanced_manifest.json \
+            --output artifacts/v12-opponent-rz-turnover-paired-backtest.json \
+            --trials 2000 | tee artifacts/v12-calibration-summary.txt
+      - name: Archive research distributions and comparisons, never published picks
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-v12-opponent-rz-turnover-research
+          path: |
+            artifacts/v12-opponent-rz-turnover-paired-backtest.json
+            artifacts/v12-calibration-summary.txt
+          if-no-files-found: error
