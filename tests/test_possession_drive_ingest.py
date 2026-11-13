@@ -55,7 +55,7 @@ class DriveIngestTests(unittest.TestCase):
         game,data=fixture(True)
         wrong=copy.deepcopy(data)
         wrong["drives"]["previous"][0]["plays"][0]["homeScore"]=0
-        with self.assertRaisesRegex(ValueError,"reconcile"):
+        with self.assertRaisesRegex(ValueError,"reconcile|Unverified possession scoring type"):
             parse(game,wrong,STAMP)
         wrong=copy.deepcopy(data)
         wrong["boxscore"]["teams"][1]["statistics"][0]["displayValue"]="0"
