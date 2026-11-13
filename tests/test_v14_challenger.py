@@ -86,9 +86,9 @@ class V14FeatureTests(unittest.TestCase):
 class V14RegressionTests(unittest.TestCase):
     def setUp(self):
         a,t=source()
-        source=load_inputs(a,t)
-        earlier_match=matchup(profile(source,"2026-09-26"),"Home","Away")
-        self.match=matchup(profile(source,"2026-10-03"),"Home","Away")
+        data_source=load_inputs(a,t)
+        earlier_match=matchup(profile(data_source,"2026-09-26"),"Home","Away")
+        self.match=matchup(profile(data_source,"2026-10-03"),"Home","Away")
         self.history=[old(i,match=earlier_match) for i in range(80)]
 
     def test_ridge_fits_only_past_and_falls_back_without_source(self):
