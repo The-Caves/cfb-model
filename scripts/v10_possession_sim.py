@@ -362,13 +362,17 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
     no_h=[m for m,t,th,ta in results if th==0]
     with_h=[m for m,t,th,ta in results if th>0]
     pwin=sum(v>0 for v in hm)/trials
+    # Wilson interval remains nonzero for 0% / 100% finite samples;
+    # naive Wald uncertainty misleadingly reports zero in those cases.
+    z=1.96
+    wilson_half=z*math.sqrt(pwin*(1-pwin)/trials+(z*z)/(4*trials*trials))/(1+(z*z)/trials)
     return {"status":STATUS,
         "model_variant":"V04_STRENGTH_ANCHORED_POSSESSIONS" if v04_prior else
           "REGRESSED_TURNOVER_MATCHUP" if regress_turnovers else
           "OPPONENT_EPA_PRESSURE_RZ_TURNOVER_MATCHUP" if matchup else "OBSERVED_DRIVE_FREQUENCY",
         "v04_prior_used":v04_prior is not None,
         "turnover_regression_used":regress_turnovers,
-        "sampling_95ci_half_width_home_win":round(1.96*math.sqrt(pwin*(1-pwin)/trials),5),
+        "sampling_95ci_half_width_home_win":round(wilson_half,5),
         "trials":trials,"home_points_mean":round(mean(hs),3),
         "away_points_mean":round(mean(as_),3),
         "home_margin_mean":round(mean(hs)-mean(as_),3),

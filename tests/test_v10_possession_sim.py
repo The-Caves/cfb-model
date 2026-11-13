@@ -95,7 +95,8 @@ class PossessionModelTests(unittest.TestCase):
         profile["league_turnover_probability"]=.10
         regular=outcome_distribution(model,"home",70,True)
         regressed=outcome_distribution(model,"home",70,True,True)
-        self.assertLess(regressed["TURNOVER"],regular["TURNOVER"])
+        self.assertLessEqual(abs(regressed["TURNOVER"]-profile["league_turnover_probability"]),
+                             abs(regular["TURNOVER"]-profile["league_turnover_probability"]))
         self.assertAlmostEqual(sum(regressed.values()),1,places=8)
 
     def test_all_advanced_context_is_asof_and_has_missingness(self):
