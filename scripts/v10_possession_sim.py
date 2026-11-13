@@ -257,7 +257,7 @@ def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,v0
     # this is not a post-simulation blending of invented fractional scores.
     if v04_prior is not None:
         score=v04_prior.get("home_points" if side=="home" else "away_points")
-        if not number(score) is not None or not 0<=score<=120:
+        if number(score) is None or not 0<=float(score)<=120:
             raise ValueError("Invalid earlier-week frozen V04 score prior")
         historical=x["historical_offensive_points_per_game"]
         strength=clamp(math.exp(.55*math.log((score+7)/(historical+7))),.68,1.45)
@@ -329,7 +329,11 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
     if not 100<=trials<=20000 or type(seed) is not int:
         raise ValueError("Invalid Monte Carlo parameters")
     if v04_prior is not None:
-        if (not isinstance(v04_prior,dict) or v04_prior.get("source")!="EARLIER_FOLD_V04"
+        if (not isinstance(v04_prior,dict) or v04_prior.get("source")!="EARLIER_FOLD_V04" or
+            (v04_prior.get("game_id") is not None and
+             str(v04_prior["game_id"])!=str(fitted["target_game_id"])) or
+            (v04_prior.get("asof_cutoff") is not None and
+             v04_prior["asof_cutoff"]!=fitted["target_date"])
             or not all(number(v04_prior.get(k)) is not None
                        for k in ("home_points","away_points"))
             or not all(0<=v04_prior[k]<=120 for k in ("home_points","away_points"))):
