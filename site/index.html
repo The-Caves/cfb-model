@@ -1231,8 +1231,9 @@ function cardSections(g,more){
 function historicalGameCard(g){
  const el=node("article","game historyGame"),top=node("div","gameTop");
  const complete=g.final&&Number.isInteger(g.final.home_score)&&Number.isInteger(g.final.away_score);
+ const provisional=complete&&g.final.source==="ESPN_PUBLIC_SCOREBOARD_COMPLETED";
  top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
-    node("span","historyStatus",complete?"FINAL":"Awaiting verified final"));
+    node("span","historyStatus",complete?(provisional?"FINAL · ESPN":"FINAL"):"Awaiting verified final"));
  el.append(top);
  const teams=node("div","historyTeams");
  for(const side of ["away","home"]){
@@ -1260,6 +1261,7 @@ function historicalGameCard(g){
  for(const [label,key] of [["Winner","su"],["ATS","ats"],["O/U","ou"]]){
   const badge=node("div","historyOutcome"),value=g.outcomes?.[key]||"UNAVAILABLE";
   badge.append(node("small","",label),node("strong","outcome-"+value.toLowerCase(),value));
+  if(g.outcomes_display_only)badge.title="Provisional comparison using source-observed ESPN final; not in the independently settled performance archive";
   outcomes.append(badge);
  }
  el.append(outcomes);
@@ -1272,6 +1274,8 @@ function historicalGameCard(g){
    "Original V04 decision: "+(g.ats_pick||"Unavailable")+" ATS · "+(g.ou_pick||"Unavailable")+" total"));
  if(g.market_observed_utc)book.append(node("div","historyObserved","Quote observed "+fmtDate.format(dateOf(g.market_observed_utc))+" · Not live odds"));
  el.append(book);
+ if(provisional)el.append(node("div","historyObserved",
+   "ESPN completed score · display comparison only until independent final settlement"));
  const source=node("details","historySource");
  source.append(node("summary","","Original forecast evidence"));
  source.append(node("p","",
