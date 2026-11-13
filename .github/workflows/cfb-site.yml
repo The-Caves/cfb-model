@@ -15,6 +15,12 @@ on:
       - 'scripts/site_simulation_shadow.py'
       - 'scripts/site_v09_shadow.py'
       - 'scripts/site_v13_shadow.py'
+      - 'scripts/site_v14_shadow.py'
+      - 'scripts/v14_matchup_features.py'
+      - 'scripts/v14_residual_challenger.py'
+      - 'scripts/v14_market_calibration.py'
+      - 'tests/test_site_v14_shadow.py'
+      - 'scripts/site_decision_archive.py'
       - 'scripts/site_v13_performance.py'
       - 'tests/test_site_v13_performance.py'
       - 'tests/test_site_v13_archive.py'
@@ -326,6 +332,49 @@ jobs:
           assert all(g.get("v13_probability_shadow") is None or
                      (g["v13_probability_shadow"]["v04_mean_scores_unchanged"] is True
                       and g["v13_probability_shadow"]["safe_for_betting"] is False)
+                     for g in b["games"])
+          PY
+      - name: Download original V13 historical research cohort for V14 shadow training only
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v13-v04-anchored-research
+          run-id: 43516023911
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .v14-frozen-v13
+      - name: Download original immutable 2026 matchup source for source-dated historical fit
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-2026-data-43475676201
+          run-id: 43475676201
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .v14-frozen-2026
+      - name: Display V14 matchup scoring shadow but leave V04/V13 model and picks untouched
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -p 'test_site_v14_shadow.py' -v
+          python -m scripts.site_v14_shadow \
+            --dashboard site/data/dashboard.json \
+            --v13-archive .v14-frozen-v13/v13-original-377-games.json \
+            --historical-advanced .v14-frozen-2026/advanced/team_game_advanced_2026.csv \
+            --historical-turnovers .v14-frozen-2026/model_v03/espn-verified-turnovers.json \
+            --current-advanced .score-source/advanced/team_game_advanced_2026.csv \
+            --current-turnovers .score-source/model_v03/espn-verified-turnovers.json \
+            --current-manifest .score-source/advanced/advanced_manifest.json | tee /tmp/site-v14-shadow.txt
+          cat /tmp/site-v14-shadow.txt >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          b=json.load(open("site/data/dashboard.json"))
+          s=b["v14_matchup_display"]
+          assert s["status"] in (
+              "V14_SOURCE_TIMED_OPPONENT_MATCHUP_SCORE_SHADOW",
+              "V14_PASS_STALE_ASOF_SOURCE_RESEARCH_ONLY")
+          assert s["model_promoted"] is False
+          assert s["original_v04_predictions_unchanged"] is True
+          assert all(g.get("v14_matchup_shadow") is None or
+                     (g["v14_matchup_shadow"]["safe_for_betting"] is False and
+                      g["v14_matchup_shadow"]["original_v04_score_unchanged"] is True)
                      for g in b["games"])
           PY
       - name: Overlay source-reviewed player-stat outlooks (separate model; scores frozen)
