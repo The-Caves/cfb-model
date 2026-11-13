@@ -1,0 +1,73 @@
+name: CFB V14 Close-Game and ATS Totals Research
+on:
+  push:
+    branches: [research/v14-close-games-ats-totals-player]
+    paths:
+      - 'scripts/v14_*.py'
+      - 'scripts/player_prop_conserved_opportunities.py'
+      - 'tests/test_v14_*.py'
+      - '.github/workflows/cfb-v14-research.yml'
+      - 'docs/V14_RESEARCH_2026.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cfb-v14-frozen-research
+  cancel-in-progress: true
+jobs:
+  v14:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install fixed existing project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: V14 independent scoring, matchup, ATS/total and player tests
+        run: |
+          python -m unittest discover -s tests -p 'test_v14_challenger.py' -v
+          python -m unittest discover -s tests -p 'test_v14_player_scenarios.py' -v
+          python -m unittest discover -s tests -p 'test_player_prop_conserved_opportunities.py' -v
+          python -m unittest discover -s tests -p 'test_v13_v04_probabilities.py' -v
+      - name: Retrieve original immutable 377-game V13 research comparison set
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v13-v04-anchored-research
+          run-id: 43516023911
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .frozen-v13
+      - name: Retrieve original historical 2026 PBP and turnover research (never recollect)
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-2026-data-43475676201
+          run-id: 43475676201
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .fixed-2026
+      - name: Evaluate V14 chronological V04 residual challenger and calibration
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          python -m scripts.v14_backtest \
+            --v13 .frozen-v13/v13-original-377-games.json \
+            --advanced .fixed-2026/advanced/team_game_advanced_2026.csv \
+            --turnovers .fixed-2026/model_v03/espn-verified-turnovers.json \
+            --output artifacts/v14-matched-377-game-research.json | tee artifacts/v14-summary.txt
+          cat artifacts/v14-summary.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive full source-timed assumptions, segment comparisons and PASS grades
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-v14-close-matchup-ats-total-player-research
+          path: |
+            artifacts/v14-matched-377-game-research.json
+            artifacts/v14-summary.txt
+          if-no-files-found: error
