@@ -46,7 +46,7 @@ jobs:
           import re
           from pathlib import Path
           source=Path("site/index.html").read_text()
-          scripts=re.findall(r'<script(?:\\s+[^>]*)?>([\\s\\S]*?)</script>',source)
+          scripts=re.findall(r'<script(?:\s+[^>]*)?>([\s\S]*?)</script>',source)
           assert len(scripts)==2
           assert "function v13ProbabilityShadow" in scripts[1]
           Path("/tmp/cfb-v13-app.js").write_text(scripts[1])
