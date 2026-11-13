@@ -40,7 +40,7 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn('Experimental',self.html) if False else self.assertIn('Research only',self.html)
     def test_player_glance_research_is_compact_and_does_not_infer_betting_lines(self):
         self.assertIn('function playerOutlook(g)',self.html)
-        self.assertIn('el.append(playerOutlook(g));',self.html)
+        self.assertIn('const player=playerOutlook(g);player.open=true;',self.html)
         self.assertIn('Player projections',self.html)
         self.assertIn('no verified sportsbook prop lines',self.html)
         self.assertIn('playerTwoCol',self.html)
@@ -86,10 +86,10 @@ class CompactSiteTests(unittest.TestCase):
 
     def test_clean_primary_card_and_expanded_secondary_research(self):
         self.assertIn('const more=node("details","gameMore")',self.html)
-        self.assertIn('el.append(playerOutlook(g));',self.html)
+        self.assertIn('const player=playerOutlook(g);player.open=true;',self.html)
         self.assertIn('more.append(qbDetails(g));',self.html)
         self.assertIn('const scouting=scoutingPanel(g);if(scouting)more.append(scouting)',self.html)
-        self.assertIn('el.append(more);',self.html)
+        self.assertIn('el.append(cardSections(g,more));',self.html)
         self.assertIn('const visibleTotal=v04?v04.total_points:g.model_total;',self.html)
         self.assertIn('V04 · current research',self.html)
         self.assertIn('.gameMore',self.html)
@@ -131,6 +131,19 @@ class CompactSiteTests(unittest.TestCase):
         self.assertIn('Not current in-play odds',self.html)
         self.assertIn('const ats=activeAts(g),ou=activeTotal(g);',self.html)
         self.assertNotIn('data.prospective_records=',self.html)
+
+    def test_historical_results_and_pairwise_detail_switches(self):
+        self.assertIn('function historicalGameCard(g)', self.html)
+        self.assertIn('data.history_games||[]', self.html)
+        self.assertIn('dateKey(dateOf(g.kickoff_utc))===selectedDay', self.html)
+        self.assertIn('No saved pregame prediction for this day', self.html)
+        self.assertIn('function cardSections(g,more)', self.html)
+        self.assertIn('const scouting=node("button","cardSectionTab","Team Scouting")', self.html)
+        self.assertIn('const props=node("button","cardSectionTab","Player Props")', self.html)
+        self.assertIn('logoBadge(g[side+"_team"],branding)', self.html)
+        self.assertIn('id="live-tab-count"', self.html)
+        self.assertIn('class="footerSources"', self.html)
+        self.assertIn('grid-template-columns:repeat(3,minmax(0,1fr))', self.html)
 
     def test_mobile_and_logo_fallback(self):
         self.assertIn('@media(max-width:580px)',self.html)
