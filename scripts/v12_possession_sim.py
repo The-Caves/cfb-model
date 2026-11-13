@@ -16,6 +16,7 @@ from scripts.v10_possession_sim import (
     clamp, outcome_distribution,
 )
 from scripts.v11_dated_profile_bridge import verify_for_target
+from scripts.v12_availability_gate import STATUS as PIT_STATUS, _time as verified_utc
 
 STATUS = "V12_RZ_TRIP_OUTCOME_OPPONENT_CONDITIONED_RESEARCH_ONLY"
 ZONES = ("own_deep", "own_half", "midfield", "opponent_half", "red_zone")
@@ -71,7 +72,7 @@ def _empirical_zone(league, offense, defense, zone):
             "league_reached":sum(bool(d["red_zone_visited"]) for d in all_zone)}
 
 
-def fit_v12(fitted,source_games,v04_prior,dated_profile):
+def fit_v12(fitted,source_games,v04_prior,dated_profile,point_in_time_context=None):
     """Fit only from games strictly before the V04 weekly cutoff."""
     if not fitted.get("ready") or fitted.get("status") != V10_STATUS:
         raise ValueError("V12 requires a source-verified V10 historical drive fit")
@@ -89,6 +90,26 @@ def fit_v12(fitted,source_games,v04_prior,dated_profile):
     })
     if str(v04_prior.get("game_id")) != str(fitted["target_game_id"]):
         raise ValueError("V04 score game identity mismatch")
+    availability={"qb":"UNVERIFIED","injury":"UNVERIFIED","weather":"UNVERIFIED"}
+    if point_in_time_context is not None:
+        evidence=point_in_time_context
+        # Original weekly V04 scoring cutoffs are day-level: conservatively
+        # forbid evidence observed at or after that cutoff date.
+        asof=verified_utc(evidence.get("asof_utc"))
+        if (evidence.get("status")!=PIT_STATUS or
+            evidence.get("source_cutoff_checked") is not True or
+            evidence.get("score_effects_applied") is not False or
+            evidence.get("model_promoted") is not False or
+            str(evidence.get("game_id"))!=str(fitted["target_game_id"]) or
+            evidence.get("teams")!={"home":fitted["target_home"],
+                                   "away":fitted["target_away"]} or
+            asof is None or asof >=
+            dt.datetime.combine(dt.date.fromisoformat(cutoff),dt.time(),
+                                tzinfo=dt.timezone.utc)):
+            raise ValueError("V12 evidence not proven before original V04 weekly cutoff")
+        for category in availability:
+            if any(x is not None for x in evidence["evidence"][category].values()):
+                availability[category]="PIT_SOURCE_CONFIRMED_RESEARCH_ONLY"
     if not isinstance(source_games,list):
         raise ValueError("Unverified possession source list")
     prior = [g for g in source_games if g["date"] < cutoff]
@@ -128,8 +149,7 @@ def fit_v12(fitted,source_games,v04_prior,dated_profile):
             "zones":zones,"turnover_field":transition,"prior":v04_prior,
             "dated_profile":dated_profile,"cutoff_date_exclusive":cutoff,
             "historical_first_publication_authenticated":False,
-            "availability_evidence":{"qb":"UNVERIFIED","injury":"UNVERIFIED",
-                                     "weather":"UNVERIFIED"},
+            "availability_evidence":availability,
             "availability_adjustments_applied":False,
             "model_promoted":False}
 
