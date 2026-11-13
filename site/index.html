@@ -1520,6 +1520,28 @@ function renderPerformance(){
   }
   area.append(node("div","performanceMeta","V13 has not replaced V04 scoring or earned a verified betting edge. Only first timestamped V13 forecasts before kickoff count."));
  }
+ const v14grade=data?.v14_prospective_performance;
+ if(v14grade?.status==="V14_FIRST_FROZEN_PREGAME_MATCHUP_CHALLENGER_GRADE"){
+  const v=v14grade.paired||{};
+  area.append(node("div","performanceMeta","V14 matchup challenger · "+(v14grade.first_frozen_v14_games??0)+
+   " first pre-kickoff predictions · "+(v14grade.settled_v14_games??0)+
+   " independently finalized · "+(v14grade.unsettled_v14_games??0)+" awaiting results."));
+  if(v14grade.settled_v14_games>0){
+   area.append(node("div","performanceMeta","Paired margin MAE · V04 "+
+      (Number.isFinite(v.v04_margin_error?.value)?num(v.v04_margin_error.value,2):"—")+
+      " vs V14 "+(Number.isFinite(v.v14_margin_error?.value)?num(v.v14_margin_error.value,2):"—")+
+      " · Paired total MAE · V04 "+
+      (Number.isFinite(v.v04_total_error?.value)?num(v.v04_total_error.value,2):"—")+
+      " vs V14 "+(Number.isFinite(v.v14_total_error?.value)?num(v.v14_total_error.value,2):"—")));
+   area.append(node("div","performanceMeta","Winner accuracy · V04 "+
+      (Number.isFinite(v.v04_winner_correct?.value)?num(100*v.v04_winner_correct.value,1)+"%":"—")+
+      " vs V14 "+(Number.isFinite(v.v14_winner_correct?.value)?num(100*v.v14_winner_correct.value,1)+"%":"—")+
+      " · Exactly the same independent finalized games."));
+  }else{
+   area.append(node("div","performanceMeta","No settled V14 games yet; the old 377-game research backtest is not counted as independent performance."));
+  }
+  area.append(node("div","performanceMeta","V14 is a nonpromoted matchup score model; original V04 projections and betting decisions remain unchanged."));
+ }
  const v=p.v04_challenger;
  if(v?.status==="ARCHIVED_PREKICKOFF_V04_MARKET_RESEARCH_GRADES"){
   area.append(node("div","performanceMeta","V04 pregame research challenger (not promoted): ATS "+resultRecord(v.ats)+" · O/U "+resultRecord(v.ou)));
