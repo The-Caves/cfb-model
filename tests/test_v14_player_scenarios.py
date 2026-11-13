@@ -63,6 +63,18 @@ class V14PlayerScenarios(unittest.TestCase):
         self.assertEqual(x["player_opportunity_scenarios"],
                          original["team_scenarios"])
 
+    def test_verified_touchdown_quotes_are_passed_not_invented(self):
+        q=quotes()
+        td=dict(q["quotes"][0],metric="passing_touchdowns",
+                line=1.5)
+        q["quotes"].append(td)
+        r=simulate(gamefit(),profile(),forecast(),ASOF,
+                   quotes=q,trials=50,seed=2)
+        self.assertEqual(len(r["matched_sourced_prop_probabilities"]),1)
+        self.assertEqual(r["unsupported_verified_prop_categories"][0]["metric"],
+                         "passing_touchdowns")
+        self.assertFalse(r["player_prop_betting_edge_proven"])
+
     def test_after_decision_quote_or_wrong_player_refused(self):
         q=quotes()
         q["quotes"][0]["observed_at_utc"]="2026-10-31T19:00:00Z"
