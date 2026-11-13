@@ -143,10 +143,24 @@ def run(dashboard,v13_archive,historical_advanced,historical_turnovers,
     turnovers=json.loads(Path(current_turnovers).read_text())
     if (manifest.get("season")!=2026 or
         manifest.get("historical_pregame_availability_verified") is not False or
-        manifest.get("asof_exclusive")!=cutoff or
         parse_time(manifest["retrieved_at_utc"])>at or
         parse_time(turnovers["captured_at_utc"])>at):
         raise ValueError("Fresh V14 source was not observed by this forecast's cutoff")
+    if manifest.get("asof_exclusive")!=cutoff:
+        # An interrupted or old intake is NOT a reason to break the whole
+        # existing V04/V13 website. Fail closed for optional V14 predictions.
+        for g in b["games"]:g["v14_matchup_shadow"]=None
+        b["v14_matchup_display"]={
+            "status":"V14_PASS_STALE_ASOF_SOURCE_RESEARCH_ONLY",
+            "ready":0,"model_promoted":False,
+            "reason":"CURRENT_SOURCE_NOT_FROM_FORECAST_DATE",
+            "original_v04_predictions_unchanged":True,
+            "independent_prospective_improvement_proven":False}
+        dest=Path(output or dashboard)
+        dest.parent.mkdir(parents=True,exist_ok=True)
+        dest.write_text(json.dumps(b,indent=2,allow_nan=False)+"\\n")
+        print(json.dumps(b["v14_matchup_display"],sort_keys=True))
+        return b
     original=json.loads(Path(v13_archive).read_text())
     fixed_turnover=json.loads(Path(historical_turnovers).read_text())
     with open(historical_advanced,newline="") as fh:
