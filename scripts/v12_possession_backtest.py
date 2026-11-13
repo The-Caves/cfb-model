@@ -13,7 +13,7 @@ from pathlib import Path
 
 from scripts.possession_drive_ingest import STATUS as DRIVE_STATUS
 from scripts.v10_possession_backtest import _metric
-from scripts.v10_possession_sim import advanced_index, fit
+from scripts.v10_possession_sim import advanced_index, fit, simulate as simulate_v11
 from scripts.v11_dated_profile_bridge import bridge
 from scripts.v11_dated_profile_backtest import STATUS as V11_STATUS
 from scripts.v12_possession_sim import STATUS, fit_v12, simulate
@@ -52,12 +52,13 @@ def _reliability(items,groups=10):
             "log_loss":round(ll,6),"ece":round(ece,6),"bins":bins}
 
 
-def _distribution_grade(rows):
+def _distribution_grade(rows,version="v12"):
     if not rows:return {"games":0}
     summary={}
-    for name,metric,key in (("margin","margin","final_margin"),
-                            ("total","total","final_total")):
-        scores=[r["calibration"][name] for r in rows]
+    group="v11_calibration" if version=="v11" else "calibration"
+    pgroup="v11_probabilities" if version=="v11" else "probabilities"
+    for name in ("margin","total"):
+        scores=[r[group][name] for r in rows]
         summary[name]={
             "games":len(rows),
             "crps":round(sum(s["crps"] for s in scores)/len(scores),5),
@@ -65,16 +66,16 @@ def _distribution_grade(rows):
                 sum(s["within_80pct_interval"] for s in scores)/len(scores),5),
             "mean_p10_p90_width":round(
                 sum(s["width"] for s in scores)/len(scores),4)}
-    winner=[(r["probabilities"]["home_win"],
+    winner=[(r[pgroup]["home_win"],
              int(r["final_home"]>r["final_away"])) for r in rows
              if r["final_home"]!=r["final_away"]]
-    ats=[(r["probabilities"]["home_cover"],
+    ats=[(r[pgroup]["home_cover"],
           int(r["final_home"]-r["final_away"]+r["market"]["home_spread"]>0))
-         for r in rows if r["probabilities"]["home_cover"] is not None
+         for r in rows if r[pgroup]["home_cover"] is not None
          and r["final_home"]-r["final_away"]+r["market"]["home_spread"]!=0]
-    ou=[(r["probabilities"]["over"],
+    ou=[(r[pgroup]["over"],
          int(r["final_home"]+r["final_away"]>r["market"]["total"]))
-        for r in rows if r["probabilities"]["over"] is not None
+        for r in rows if r[pgroup]["over"] is not None
         and r["final_home"]+r["final_away"]!=r["market"]["total"]]
     summary["winner"]=_reliability(winner)
     summary["ats_home_cover"]=_reliability(ats)
@@ -111,11 +112,25 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
             continue
         context=fit_v12(model,source["games"],v04,profiles["profiles"][gid])
         seed=int(hashlib.sha256(("v11|"+gid).encode()).hexdigest()[:16],16)
+        # Recompute V11 once, same seed and 2026 week, to recover full draws
+        # without fabricating independent historical distributions.
+        previous=simulate_v11(model,True,trials=trials,seed=seed,
+             regress_turnovers=True,v04_prior=v04,
+             dated_profile=profiles["profiles"][gid],return_draws=True)
+        frozen=old["simulations"]["v11_dated_opponent_epa"]
+        for key,field in (("home_points_mean","home_points"),
+                          ("away_points_mean","away_points"),
+                          ("home_margin_mean","margin"),("total_mean","total"),
+                          ("home_win_probability","home_win_probability")):
+            if abs(previous[key]-frozen[field])>0.00001:
+                raise ValueError("V11 source-frozen Monte Carlo drift for "+gid+" "+key)
         result=simulate(context,trials=trials,seed=seed)
         m=old["final_home"]-old["final_away"]
         total=old["final_home"]+old["final_away"]
         margin=result.pop("margin_draws")
         sums=result.pop("total_draws")
+        prev_margin=previous.pop("margin_draws")
+        prev_total=previous.pop("total_draws")
         probs={"home_win":result["home_win_probability"],"home_cover":None,
                "over":None}
         sp=old["market"].get("home_spread")
@@ -124,14 +139,24 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
             probs["home_cover"]=sum(x+sp>0 for x in margin)/len(margin)
         if line is not None:
             probs["over"]=sum(x>line for x in sums)/len(sums)
-        cal={}
-        for key,draws,actual in (("margin",margin,m),("total",sums,total)):
-            values=sorted(draws)
-            lo=values[int((len(values)-1)*.1)]
-            hi=values[int((len(values)-1)*.9)]
-            cal[key]={"crps":_crps(draws,actual),
-                      "within_80pct_interval":int(lo<=actual<=hi),
-                      "width":hi-lo,"p10":lo,"p90":hi}
+        prior_probs={"home_win":previous["home_win_probability"],
+                     "home_cover":None,"over":None}
+        if sp is not None:
+            prior_probs["home_cover"]=sum(x+sp>0 for x in prev_margin)/len(prev_margin)
+        if line is not None:
+            prior_probs["over"]=sum(x>line for x in prev_total)/len(prev_total)
+        def grade(margins,totals):
+            scores={}
+            for key,draws,actual in (("margin",margins,m),("total",totals,total)):
+                values=sorted(draws)
+                lo=values[int((len(values)-1)*.1)]
+                hi=values[int((len(values)-1)*.9)]
+                scores[key]={"crps":_crps(draws,actual),
+                             "within_80pct_interval":int(lo<=actual<=hi),
+                             "width":hi-lo,"p10":lo,"p90":hi}
+            return scores
+        cal=grade(margin,sums)
+        prior_cal=grade(prev_margin,prev_total)
         row={k:old[k] for k in
              ("game_id","home","away","date","cutoff","kickoff_utc",
               "final_home","final_away","market")}
@@ -148,6 +173,8 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
                                       if k not in ("sample_possessions",)}
         row["probabilities"]=probs
         row["calibration"]=cal
+        row["v11_probabilities"]=prior_probs
+        row["v11_calibration"]=prior_cal
         row["provenance"]={
             "cutoff_date_exclusive":cutoff,"original_v04_game_id":gid,
             "verified_prior_drives":model["prior_drives"],
@@ -167,6 +194,7 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
     return {"status":REPORT,"season":2026,"matched_games":len(rows),
             "prior_v11_games":len(archive["games"]),"excluded":dict(skips),
             "models":{k:_metric(rows,k) for k in VERSIONS},
+            "v11_distribution_calibration":_distribution_grade(rows,version="v11"),
             "v12_distribution_calibration":_distribution_grade(rows),
             "weekly":weekly,"games":rows,
             "observed_pregame_lines_only":True,
@@ -195,8 +223,8 @@ def run(v11,drives,games,advanced,manifest,output,trials=2000):
     dest=Path(output);dest.parent.mkdir(parents=True,exist_ok=True)
     dest.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n")
     print(json.dumps({k:result[k] for k in
-        ("status","matched_games","excluded","models","v12_distribution_calibration",
-         "promotion_eligible")},sort_keys=True))
+        ("status","matched_games","excluded","models","v11_distribution_calibration",
+         "v12_distribution_calibration","promotion_eligible")},sort_keys=True))
     return result
 
 
