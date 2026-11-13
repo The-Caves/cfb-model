@@ -269,13 +269,6 @@ def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,
     # Keep V04's opponent-adjusted expected scoring in the possession process.
     # A fixed, capped PRIOR changes touchdown/FG likelihood on each drive;
     # this is not a post-simulation blending of invented fractional scores.
-    if r3_field or r3_redzone:
-        from scripts.v12r3_possession_context import STATUS as R3_STATUS
-        if (not isinstance(r3_context,dict) or r3_context.get("status")!=R3_STATUS or
-            not r3_context.get("ready") or r3_context.get("cutoff")!=fitted["target_date"] or
-            r3_context.get("source_games")!=fitted["source_prior_games"] or
-            r3_context.get("first_publication_verified") is not False):
-            raise ValueError("V12R3 source must match original weekly V04 cutoff")
     if v04_prior is not None:
         score=v04_prior.get("home_points" if side=="home" else "away_points")
         if number(score) is None or not 0<=float(score)<=120:
@@ -374,6 +367,13 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
             pace_override.get("source_cutoff")!=fitted["target_date"] or
             not pace_override.get("historical_deviations")):
             raise ValueError("Unverified earlier-week learned pace source")
+    if r3_field or r3_redzone:
+        from scripts.v12r3_possession_context import STATUS as R3_STATUS
+        if (not isinstance(r3_context,dict) or r3_context.get("status")!=R3_STATUS or
+            not r3_context.get("ready") or r3_context.get("cutoff")!=fitted["target_date"] or
+            r3_context.get("source_games")!=fitted["source_prior_games"] or
+            r3_context.get("first_publication_verified") is not False):
+            raise ValueError("V12R3 source must match original weekly V04 cutoff")
     if v04_prior is not None:
         if (not isinstance(v04_prior,dict) or v04_prior.get("source")!="EARLIER_FOLD_V04" or
             (v04_prior.get("game_id") is not None and
