@@ -5,9 +5,11 @@ on:
     paths:
       - 'scripts/v10_possession_sim.py'
       - 'scripts/v12_possession_sim.py'
+      - 'scripts/v12_regularized_hazards.py'
       - 'scripts/v12_possession_backtest.py'
       - 'scripts/v12_availability_gate.py'
       - 'tests/test_v12_possession_sim.py'
+      - 'tests/test_v12_regularized_hazards.py'
       - 'tests/test_v12_availability_gate.py'
       - 'docs/V12_OPPONENT_REDZONE_TURNOVER_2026.md'
       - '.github/workflows/cfb-v12-possession-research.yml'
@@ -37,6 +39,7 @@ jobs:
       - name: Verify V12 fit, future-leakage blocks, and probability calibration tests
         run: |
           python -m unittest discover -s tests -p 'test_v12_possession_sim.py' -v
+          python -m unittest discover -s tests -p 'test_v12_regularized_hazards.py' -v
           python -m unittest discover -s tests -p 'test_v12_availability_gate.py' -v
           python -m unittest discover -s tests -p 'test_v11_dated_profile_bridge.py' -v
           python -m unittest discover -s tests -p 'test_v10_possession_sim.py' -v
@@ -64,7 +67,7 @@ jobs:
           repository: The-Caves/cfb-model
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: .fixed-v11
-      - name: Run V12 held-out research with historic V04 and V11 controls
+      - name: Run strictly chronological V12R2 training, pace ablations and frozen V04/V11 controls
         run: |
           set -o pipefail
           mkdir -p artifacts
@@ -75,7 +78,7 @@ jobs:
             --advanced .source-2026/advanced/team_game_advanced_2026.csv \
             --manifest .source-2026/advanced/advanced_manifest.json \
             --output artifacts/v12-opponent-rz-turnover-paired-backtest.json \
-            --trials 2000 | tee artifacts/v12-calibration-summary.txt
+            --trials 2000 --trained | tee artifacts/v12-calibration-summary.txt
       - name: Archive research distributions and comparisons, never published picks
         uses: actions/upload-artifact@v4
         with:
