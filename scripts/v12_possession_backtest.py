@@ -17,9 +17,11 @@ from scripts.v10_possession_sim import advanced_index, fit, simulate as simulate
 from scripts.v11_dated_profile_bridge import bridge
 from scripts.v11_dated_profile_backtest import STATUS as V11_STATUS
 from scripts.v12_possession_sim import STATUS, fit_v12, simulate
+from scripts.v12_regularized_hazards import train as train_hazards, STATUS as TRAINED_STATUS
 
 REPORT="V12_SAME_WEEKLY_CUTOFF_OPPONENT_RZ_TURNOVER_PAIRED_RESEARCH_ONLY"
 VERSIONS=("v04","v11_dated_opponent_epa","v12_opponent_rz_turnover")
+TRAINED_VARIANTS=("v12r2_learned_hazards","v12r2_learned_hazards_pace")
 
 
 def _crps(draws,observed):
@@ -55,8 +57,8 @@ def _reliability(items,groups=10):
 def _distribution_grade(rows,version="v12"):
     if not rows:return {"games":0}
     summary={}
-    group="v11_calibration" if version=="v11" else "calibration"
-    pgroup="v11_probabilities" if version=="v11" else "probabilities"
+    group="calibration" if version=="v12" else version+"_calibration"
+    pgroup="probabilities" if version=="v12" else version+"_probabilities"
     for name in ("margin","total"):
         scores=[r[group][name] for r in rows]
         summary[name]={
@@ -83,7 +85,7 @@ def _distribution_grade(rows,version="v12"):
     return summary
 
 
-def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
+def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35,trained=False):
     if (archive.get("status")!=V11_STATUS or archive.get("model_promoted") is not False
         or archive.get("historical_source_first_publication_verified") is not False
         or len(archive.get("games",[]))!=archive.get("matched_games") or
@@ -94,6 +96,12 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
         len(source.get("games",[]))!=387):
         raise ValueError("Historical source cohort not the frozen V11 same-week cohort")
     seen=set();rows=[];skips=Counter()
+    # Cache the fit by cutoff, so games from the SAME evaluation week never
+    # leak labels to another game in that week.
+    learned_by_week={}
+    if trained and (not isinstance(trials,int) or trials<100):
+        raise ValueError("Trained V12R2 requires genuine Monte Carlo draws")
+    available=VERSIONS+TRAINED_VARIANTS if trained else VERSIONS
     if set(profiles["profiles"])!={str(g["game_id"]) for g in archive["games"]}:
         raise ValueError("V12 dated profile target mismatch")
     for old in archive["games"]:
@@ -125,6 +133,22 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
             if abs(previous[key]-frozen[field])>0.00001:
                 raise ValueError("V11 source-frozen Monte Carlo drift for "+gid+" "+key)
         result=simulate(context,trials=trials,seed=seed)
+        learned={}
+        if trained:
+            if cutoff not in learned_by_week:
+                learned_by_week[cutoff]=train_hazards(
+                    source["games"],archive["games"],cutoff)
+            hazard=learned_by_week[cutoff]
+            if not hazard.get("ready") or hazard.get("status")!=TRAINED_STATUS:
+                raise ValueError("Insufficient strictly earlier-week training "+cutoff)
+            if any(g["date"]>=cutoff for g in hazard["observed_pace"]):
+                raise ValueError("Trained on held-out game or same football week")
+            for label,pace in ((TRAINED_VARIANTS[0],False),
+                                (TRAINED_VARIANTS[1],True)):
+                result_r2=simulate(context,trials=trials,seed=seed,
+                                   trained_hazards=hazard,
+                                   use_learned_pace=pace)
+                learned[label]=result_r2
         m=old["final_home"]-old["final_away"]
         total=old["final_home"]+old["final_away"]
         margin=result.pop("margin_draws")
@@ -171,6 +195,31 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
                 "home_win_probability":result["home_win_probability"]}}
         row["distribution_summary"]={k:v for k,v in result.items()
                                       if k not in ("sample_possessions",)}
+        if trained:
+            row["trained_source"]={
+                "cutoff_date_exclusive":cutoff,
+                "training_games":hazard["source_games"],
+                "trained_prior_game_ids":hazard["prior_game_ids"],
+                "feature_coverage":hazard["feature_coverage"],
+                "learned_parameters_not_tuned_to_heldout":True,
+                "source_publication_verified":False}
+            for label,forecast in learned.items():
+                draws_m=forecast.pop("margin_draws")
+                draws_t=forecast.pop("total_draws")
+                row["simulations"][label]={
+                    "margin":forecast["home_margin_mean"],
+                    "total":forecast["total_mean"],
+                    "home_points":forecast["home_points_mean"],
+                    "away_points":forecast["away_points_mean"],
+                    "home_win_probability":forecast["home_win_probability"]}
+                predicted={"home_win":forecast["home_win_probability"],
+                           "home_cover":None,"over":None}
+                if sp is not None:
+                    predicted["home_cover"]=sum(x+sp>0 for x in draws_m)/len(draws_m)
+                if line is not None:
+                    predicted["over"]=sum(x>line for x in draws_t)/len(draws_t)
+                row[label+"_probabilities"]=predicted
+                row[label+"_calibration"]=grade(draws_m,draws_t)
         row["probabilities"]=probs
         row["calibration"]=cal
         row["v11_probabilities"]=prior_probs
@@ -189,13 +238,20 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
     for date in sorted({g["cutoff"] for g in rows}):
         subset=[g for g in rows if g["cutoff"]==date]
         weekly[date]={"games":len(subset),
-                      "models":{k:_metric(subset,k) for k in VERSIONS},
-                      "v12_calibration":_distribution_grade(subset)}
+                      "models":{k:_metric(subset,k) for k in available},
+                      "v12_calibration":_distribution_grade(subset),
+                      **({k+"_calibration":_distribution_grade(subset,k)
+                          for k in TRAINED_VARIANTS} if trained else {})}
     return {"status":REPORT,"season":2026,"matched_games":len(rows),
             "prior_v11_games":len(archive["games"]),"excluded":dict(skips),
-            "models":{k:_metric(rows,k) for k in VERSIONS},
+            "models":{k:_metric(rows,k) for k in available},
             "v11_distribution_calibration":_distribution_grade(rows,version="v11"),
             "v12_distribution_calibration":_distribution_grade(rows),
+            **({k+"_distribution_calibration":_distribution_grade(rows,k)
+                for k in TRAINED_VARIANTS} if trained else {}),
+            "trained_v12r2_variants":list(TRAINED_VARIANTS) if trained else [],
+            "trained_cutoff_count":len(learned_by_week),
+            "training_is_strictly_before_week":trained,
             "weekly":weekly,"games":rows,
             "observed_pregame_lines_only":True,
             "historical_source_first_publication_verified":False,
@@ -211,7 +267,7 @@ def evaluate(archive,source,advanced,profiles,trials=2000,min_past=35):
             ]}
 
 
-def run(v11,drives,games,advanced,manifest,output,trials=2000):
+def run(v11,drives,games,advanced,manifest,output,trials=2000,trained=False):
     old=json.loads(Path(v11).read_text())
     source=json.loads(Path(drives).read_text())
     target=[{"game_id":str(r["game_id"]),"home":r["home"],
@@ -219,12 +275,21 @@ def run(v11,drives,games,advanced,manifest,output,trials=2000):
              "home_points":r["v04"]["home_points"],
              "away_points":r["v04"]["away_points"]} for r in old["games"]]
     dated=bridge(games,advanced,manifest,target)
-    result=evaluate(old,source,advanced_index(advanced),dated,trials=trials)
+    result=evaluate(old,source,advanced_index(advanced),dated,trials=trials,
+                    trained=trained)
     dest=Path(output);dest.parent.mkdir(parents=True,exist_ok=True)
     dest.write_text(json.dumps(result,indent=2,allow_nan=False)+"\n")
-    print(json.dumps({k:result[k] for k in
-        ("status","matched_games","excluded","models","v11_distribution_calibration",
-         "v12_distribution_calibration","promotion_eligible")},sort_keys=True))
+    print(json.dumps({
+        "status":result["status"],
+        "matched_games":result["matched_games"],
+        "excluded":result["excluded"],
+        "models":result["models"],
+        "trained_cutoff_count":result["trained_cutoff_count"],
+        "calibration":{k:v for k,v in result.items()
+                       if k.endswith("_distribution_calibration")},
+        "promotion_eligible":result["promotion_eligible"],
+        "historical_source_first_publication_verified":False,
+    },sort_keys=True))
     return result
 
 
@@ -233,5 +298,7 @@ if __name__=="__main__":
     for name in ("v11","drives","games","advanced","manifest","output"):
         parser.add_argument("--"+name,required=True)
     parser.add_argument("--trials",type=int,default=2000)
+    parser.add_argument("--trained",action="store_true")
     a=parser.parse_args()
-    run(a.v11,a.drives,a.games,a.advanced,a.manifest,a.output,trials=a.trials)
+    run(a.v11,a.drives,a.games,a.advanced,a.manifest,a.output,
+        trials=a.trials,trained=a.trained)
