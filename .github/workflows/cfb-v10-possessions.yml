@@ -74,6 +74,7 @@ jobs:
           PY
       - name: True possession Monte Carlo vs same historic V04 games and sportsbook lines
         run: |
+          set -o pipefail
           python -m scripts.v10_possession_backtest \
             --source artifacts/v10-2026-observed-possessions.json \
             --advanced .source-2026/advanced/team_game_advanced_2026.csv \

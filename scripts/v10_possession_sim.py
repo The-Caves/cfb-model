@@ -333,7 +333,9 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
             (v04_prior.get("game_id") is not None and
              str(v04_prior["game_id"])!=str(fitted["target_game_id"])) or
             (v04_prior.get("asof_cutoff") is not None and
-             v04_prior["asof_cutoff"]!=fitted["target_date"])
+             not (dt.date.fromisoformat(v04_prior["asof_cutoff"]) <=
+                  dt.date.fromisoformat(fitted["target_date"]) <
+                  dt.date.fromisoformat(v04_prior["asof_cutoff"])+dt.timedelta(days=7)))
             or not all(number(v04_prior.get(k)) is not None
                        for k in ("home_points","away_points"))
             or not all(0<=v04_prior[k]<=120 for k in ("home_points","away_points"))):
