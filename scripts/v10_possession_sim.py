@@ -269,6 +269,13 @@ def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,
     # Keep V04's opponent-adjusted expected scoring in the possession process.
     # A fixed, capped PRIOR changes touchdown/FG likelihood on each drive;
     # this is not a post-simulation blending of invented fractional scores.
+    if r3_field or r3_redzone:
+        from scripts.v12r3_possession_context import STATUS as R3_STATUS
+        if (not isinstance(r3_context,dict) or r3_context.get("status")!=R3_STATUS or
+            not r3_context.get("ready") or r3_context.get("cutoff")!=fitted["target_date"] or
+            r3_context.get("source_games")!=fitted["source_prior_games"] or
+            r3_context.get("first_publication_verified") is not False):
+            raise ValueError("V12R3 source must match original weekly V04 cutoff")
     if v04_prior is not None:
         score=v04_prior.get("home_points" if side=="home" else "away_points")
         if number(score) is None or not 0<=float(score)<=120:
@@ -294,7 +301,7 @@ def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,
                                  for k in OUTCOMES if k!="TURNOVER"}}
 
 def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=None,
-             distributions=None,pace_override=None):
+             distributions=None,pace_override=None,transition_context=None):
     prof=fitted["profiles"]
     # Drives per team are sampled from earlier real possession counts, not
     # fitted from final game scores. This is a regulation possession model.
@@ -307,6 +314,10 @@ def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=No
     total={"home":0,"away":0};takeaways={"home":0,"away":0}
     first="home" if rng.random()<.5 else "away"
     side=first;start=75;trace_rows=[];previous_kind="SCORE"
+    if transition_context is not None:
+        from scripts.v12r3_possession_context import next_field
+        observed=next_field(transition_context,"OPENING","",prof[side]["team"],rng)
+        if observed is not None:start=observed
     for i in range(2*n):
         p=(distributions.get((side,_zone(start))) if distributions is not None else
            outcome_distribution(fitted,side,start,matchup,regress_turnovers,v04_prior))
@@ -327,7 +338,15 @@ def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=No
         transition="TURNOVER" if event=="TURNOVER" and not returns else (
             "SCORE" if event in ("TD","FG") or returns else "NORMAL")
         starts=fitted["next_field_positions"][transition]
-        next_start=rng.choice(starts)
+        if transition_context is None:
+            next_start=rng.choice(starts)
+        else:
+            from scripts.v12r3_possession_context import next_field
+            event_kind="RETURN_TD" if returns else event
+            receiver=side if returns else other
+            actual=next_field(transition_context,event_kind,prof[side]["team"],
+                              prof[receiver]["team"],rng)
+            next_start=actual if actual is not None else rng.choice(starts)
         if trace and i<28:trace_rows.append({"possession":i+1,"offense":side,
             "start_yards_to_goal":start,"event":event,"scoring_team":scorer if points else None,
             "offense_points":points if scorer==side else 0,
@@ -343,7 +362,8 @@ def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=No
 
 def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
              regress_turnovers=False,v04_prior=None,dated_profile=None,
-             return_draws=False,pace_override=None):
+             return_draws=False,pace_override=None,
+             r3_context=None,r3_field=False,r3_redzone=False):
     if not fitted.get("ready") or fitted.get("status")!=STATUS:
         raise ValueError("Unverified drive fit")
     if not 100<=trials<=20000 or type(seed) is not int:
@@ -393,12 +413,20 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
     distributions={(side,zone):outcome_distribution(fitted,side,yard,matchup,
                      regress_turnovers,v04_prior,dated_profile)
         for side in ("home","away") for zone,yard in representatives.items()}
+    if r3_redzone:
+        from scripts.v12r3_possession_context import redzone_distribution
+        distributions={
+            (side,zone):redzone_distribution(r3_context,side,
+                fitted["profiles"][side]["team"],fitted["profiles"][side]["opponent"],
+                zone,source)
+            for (side,zone),source in distributions.items()}
     rng=random.Random(seed);hm=[];ts=[];hs=[];as_=[];to_h=[];to_a=[]
     results=[];example=[]
     for i in range(trials):
         scores,turnovers,drives=one_game(fitted,matchup,rng,trace=trace and i==0,
             regress_turnovers=regress_turnovers,v04_prior=v04_prior,
-            distributions=distributions,pace_override=pace_override)
+            distributions=distributions,pace_override=pace_override,
+            transition_context=r3_context if r3_field else None)
         h=scores["home"];a=scores["away"]
         hm.append(h-a);ts.append(h+a);hs.append(h);as_.append(a)
         to_h.append(turnovers["home"]);to_a.append(turnovers["away"])
@@ -422,6 +450,7 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
         "v04_prior_used":v04_prior is not None,
         "dated_v04_team_profile_used":dated_profile is not None,
         "learned_pace_override_used":pace_override is not None,
+        "r3_field_position_used":r3_field,"r3_redzone_conversion_used":r3_redzone,
         "turnover_regression_used":regress_turnovers,
         "sampling_95ci_half_width_home_win":round(wilson_half,5),
         "trials":trials,"home_points_mean":round(mean(hs),3),
