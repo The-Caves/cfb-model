@@ -154,6 +154,7 @@ def evaluate(frozen,source):
                 "date":g["date"],"cutoff":week,
                 "final_home":g["final_home"],"final_away":g["final_away"],
                 "v04":g["v04"],"market":g["market"],
+                "predictions":{"prior_variance":g["predictions"]["prior_variance"]},
                 "sd_margin":sd_m,"sd_total":sd_t,
                 "matchup":match,"v14":projections,
                 "source_publication_authenticated":False}
