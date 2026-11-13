@@ -8,6 +8,7 @@ Zero synthetic bookmaker lines. No historical player/weather/QB data or live
 site action. This is not an argument for promotion based on this cohort alone.
 """
 import argparse
+import datetime as dt
 import json
 import math
 from collections import defaultdict
@@ -94,8 +95,9 @@ def evaluate(archive):
         gid=str(g["game_id"])
         if gid in seen:raise ValueError("Duplicate source-matched heldout game")
         seen.add(gid)
-        if (g["date"]<g["cutoff"] or
-            g["date"]>g["cutoff"]+"~" or # reject malformed date without reshuffling
+        day=dt.date.fromisoformat(g["date"])
+        first=dt.date.fromisoformat(g["cutoff"])
+        if (not first<=day<first+dt.timedelta(days=7) or
             g.get("r3_source",{}).get("cutoff_date_exclusive")!=g["cutoff"] or
             g.get("r3_source",{}).get("first_publication_verified") is not False):
             raise ValueError("Untrusted original football-week game source")
