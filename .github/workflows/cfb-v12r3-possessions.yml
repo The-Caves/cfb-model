@@ -1,0 +1,84 @@
+name: CFB V12R3 Source-Frozen Possession Ablation
+on:
+  push:
+    branches: [research/v12-opponent-conditioned-possessions]
+    paths:
+      - 'scripts/v10_possession_sim.py'
+      - 'scripts/v12r3_possession_context.py'
+      - 'scripts/v12r3_possession_backtest.py'
+      - 'tests/test_v12r3_possession_context.py'
+      - '.github/workflows/cfb-v12r3-possessions.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cfb-v12r3-source-frozen-comparison
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install original fixed project requirements
+        run: python -m pip install -r requirements.txt
+      - name: Verify V11 backward compatibility and new V12R3 cutoff gates
+        run: |
+          python -m unittest discover -s tests -p 'test_v10_possession_sim.py' -v
+          python -m unittest discover -s tests -p 'test_v11_dated_profile_bridge.py' -v
+          python -m unittest discover -s tests -p 'test_v12_possession_sim.py' -v
+          python -m unittest discover -s tests -p 'test_v12_regularized_hazards.py' -v
+          python -m unittest discover -s tests -p 'test_v12r3_possession_context.py' -v
+      - name: Original 2026 historical source - NEVER requery past results
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-2026-data-43475676201
+          run-id: 43475676201
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .source-2026
+      - name: Fixed 387 source-reconciled earlier ESPN possession ledgers
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v10-source-verified-drives
+          run-id: 43495556550
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .fixed-v10
+      - name: Previously executed V12R2 seven-week 377-game research artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v12-opponent-rz-turnover-research
+          run-id: 43507919303
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .fixed-v12r2
+      - name: Grade identical original 377 games and recheck V11 + pace before ablations
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          python -m scripts.v12r3_possession_backtest \
+            --previous .fixed-v12r2/v12-opponent-rz-turnover-paired-backtest.json \
+            --drives .fixed-v10/v10-2026-observed-possessions.json \
+            --games .source-2026/games_2026.csv \
+            --advanced .source-2026/advanced/team_game_advanced_2026.csv \
+            --manifest .source-2026/advanced/advanced_manifest.json \
+            --output artifacts/v12r3-possession-matched-ablation.json \
+            --trials 2000 | tee artifacts/v12r3-summary.txt
+      - name: Retain researched game grades and probability diagnostics, no production picks
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-v12r3-observed-possession-ablation
+          path: |
+            artifacts/v12r3-possession-matched-ablation.json
+            artifacts/v12r3-summary.txt
+          if-no-files-found: error
