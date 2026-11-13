@@ -133,6 +133,39 @@ class ProspectiveDashboardArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"incoherent"):
             freeze(b,NOW,"888")
 
+    def test_v09_source_timed_probability_research_is_frozen_but_never_promoted(self):
+        b=board();g=b["games"][0]
+        g["home_bias_quarantined"]=True
+        g["model_ats_side"]="PASS"
+        g["v04_direct_scores"]={
+            "status":"SOURCE_OBSERVED_DIRECT_TEAM_SCORE_MODEL_RESEARCH_ONLY",
+            "model":"V04_INDEPENDENT_OPPONENT_ADJUSTED_SCORES_RESEARCH_ONLY",
+            "home_points":17.4,"away_points":25.1,
+            "home_margin":-7.7,"total_points":42.5,
+            "direct_scoring_fit_uses_v03_total":False,
+            "no_market_lines_in_training":True,"model_promoted":False}
+        projection={"home_points":18.,"away_points":24.,
+                    "margin":-6.,"total":42.,
+                    "home_win_probability":.29,"trials":1200,
+                    "model_promoted":False}
+        g["v09_score_shadows"]={
+            "status":"V09_SOURCE_TIMED_SCORE_MONTE_CARLO_SHADOW_RESEARCH_ONLY",
+            "source_provenance":"IMMUTABLE_CAPTURED_PREKICKOFF_SETTLED_V04",
+            "model_promoted":False,"safe_for_betting":False,
+            "calibrated_betting_probability":False,
+            "published_scores_unchanged":True,"historical_grades_unchanged":True,
+            "forecast_observed_utc":b["forecast_observed_utc"],
+            "generated_at_utc":"2026-10-24T15:40:00Z",
+            "earlier_settled_v04_games":40,
+            "projections":{"global":dict(projection),
+                           "team_form":dict(projection)}}
+        row=freeze(b,NOW,"888")["rows"][0]
+        self.assertEqual(row["v09_frozen_score_simulation"]["projections"]["global"]["margin"],-6.)
+        self.assertEqual(row["frozen_forecast_home_margin"],10.)
+        g["v09_score_shadows"]["model_promoted"]=True
+        with self.assertRaisesRegex(ValueError,"V09"):
+            freeze(b,NOW,"888")
+
     def test_v04_market_research_is_recomputed_not_trusted(self):
         from scripts.v04_market_challenger import decide
         b=board();g=b["games"][0]
