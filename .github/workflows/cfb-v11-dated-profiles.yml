@@ -54,6 +54,7 @@ jobs:
       - name: Reconstruct original weekly V04 components, profile, and paired V11 simulations
         run: |
           set -o pipefail
+          mkdir -p artifacts
           python -m scripts.v11_dated_profile_backtest \
             --previous .fixed-v10/v10r2-possession-v04-paired-backtest.json \
             --drives .fixed-v10/v10-2026-observed-possessions.json \
