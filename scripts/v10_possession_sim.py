@@ -279,7 +279,7 @@ def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,v0
     return {"TURNOVER":event_to,**{k:(1-event_to)*base[k]/non
                                  for k in OUTCOMES if k!="TURNOVER"}}
 
-def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=None):
+def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=None,distributions=None):
     prof=fitted["profiles"]
     # Drives per team are sampled from earlier real possession counts, not
     # fitted from final game scores. This is a regulation possession model.
@@ -289,7 +289,8 @@ def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=No
     first="home" if rng.random()<.5 else "away"
     side=first;start=75;trace_rows=[];previous_kind="SCORE"
     for i in range(2*n):
-        p=outcome_distribution(fitted,side,start,matchup,regress_turnovers,v04_prior)
+        p=(distributions.get((side,_zone(start))) if distributions is not None else
+           outcome_distribution(fitted,side,start,matchup,regress_turnovers,v04_prior))
         u=rng.random();acc=0;event="EMPTY"
         for k in OUTCOMES:
             acc+=p[k]
@@ -333,11 +334,19 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
                        for k in ("home_points","away_points"))
             or not all(0<=v04_prior[k]<=120 for k in ("home_points","away_points"))):
             raise ValueError("Unauthenticated V04 score prior")
+    # The context and source history are fixed for a matchup. Precompute
+    # 10 conditional drive distributions once instead of re-fitting them on
+    # each of ~20 possessions in every Monte Carlo draw.
+    representatives={"own_deep":95,"own_half":75,"midfield":55,"opponent_half":35,"red_zone":15}
+    distributions={(side,zone):outcome_distribution(fitted,side,yard,matchup,
+                     regress_turnovers,v04_prior)
+        for side in ("home","away") for zone,yard in representatives.items()}
     rng=random.Random(seed);hm=[];ts=[];hs=[];as_=[];to_h=[];to_a=[]
     results=[];example=[]
     for i in range(trials):
         scores,turnovers,drives=one_game(fitted,matchup,rng,trace=trace and i==0,
-            regress_turnovers=regress_turnovers,v04_prior=v04_prior)
+            regress_turnovers=regress_turnovers,v04_prior=v04_prior,
+            distributions=distributions)
         h=scores["home"];a=scores["away"]
         hm.append(h-a);ts.append(h+a);hs.append(h);as_.append(a)
         to_h.append(turnovers["home"]);to_a.append(turnovers["away"])
