@@ -6,6 +6,8 @@ on:
       - 'scripts/v14_*.py'
       - 'scripts/player_prop_conserved_opportunities.py'
       - 'tests/test_v14_*.py'
+      - 'scripts/site_v14_shadow.py'
+      - 'tests/test_site_v14_shadow.py'
       - '.github/workflows/cfb-v14-research.yml'
       - 'docs/V14_RESEARCH_2026.md'
   workflow_dispatch:
@@ -35,6 +37,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_v14_challenger.py' -v
           python -m unittest discover -s tests -p 'test_v14_player_scenarios.py' -v
+          python -m unittest discover -s tests -p 'test_site_v14_shadow.py' -v
           python -m unittest discover -s tests -p 'test_player_prop_conserved_opportunities.py' -v
           python -m unittest discover -s tests -p 'test_v13_v04_probabilities.py' -v
       - name: Full repository test regression, no old model side effects
