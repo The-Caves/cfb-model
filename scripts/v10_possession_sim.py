@@ -7,6 +7,7 @@ EARLIER FOOTBALL DATES; historical raw source publication time remains unknown.
 Do not treat as a validated or actively promoted betting model.
 """
 import csv
+import datetime as dt
 import hashlib
 import math
 import random
@@ -44,35 +45,62 @@ def _team_drives(past,team,offense=True):
     return [d for g in past for d in g["drives"]
             if (d["team"]==team if offense else d["team"]!=team and team in (g["home"],g["away"]))]
 
-def _context(games,team,advanced,offense):
-    """Historical EPA, play style, red-zone play success, and QB pressure.
-    Def context reads opponent's offense against this team's defense, not
-    this team's own offensive stat lines.
+# Keep an explicit as-of feature inventory. Team-game rows have no genuine
+# historical first-publication timestamps in this 2026 research source.
+FEATURE_RATIOS=(
+    ("off_epa_sum","epa_plays"),
+    ("def_epa_sum","def_epa_plays"),
+    ("pass_epa_sum","pass_epa_plays"),
+    ("rush_epa_sum","rush_epa_plays"),
+    ("pressure_count","pressure_observed"),
+    ("sack_count","sack_observed"),
+    ("redzone_success","redzone_plays"),
+    ("pass_plays","scrimmage_plays"),
+    ("pass_success_count","pass_success_plays"),
+    ("rush_success_count","rush_success_plays"),
+    ("third_success","third_plays"),
+    ("fourth_success","fourth_plays"),
+    ("explosive_pass","pass_plays"),
+    ("explosive_rush","rush_plays"),
+)
+RECENCY_HALF_LIFE_DAYS=28
+
+def _context(games,team,advanced,offense,asof_day):
+    """Coverage-aware, earlier-game EPA/pressure/style with 28d recency.
+
+    Defense-facing opponent offensive statistics represent what prior
+    opposing offenses actually achieved against the defense (allowed),
+    not proof of a particular current defensive personnel lineup.
     """
+    cutoff=dt.date.fromisoformat(asof_day)
     sums=defaultdict(float);totals=defaultdict(float)
+    team_dates=set()
     for g in games:
         if team not in (g["home"],g["away"]):continue
+        day=dt.date.fromisoformat(g["date"])
+        if day>=cutoff:raise ValueError("Game-date lookahead in matchup features")
         target=team if offense else (g["away"] if team==g["home"] else g["home"])
-        row=advanced.get((g["game_id"],target))
-        if not row:continue
-        for key,den in (
-            ("off_epa_sum","epa_plays"),
-            ("pass_epa_sum","pass_epa_plays"),
-            ("rush_epa_sum","rush_epa_plays"),
-            ("pressure_count","pressure_observed"),
-            ("redzone_success","redzone_plays"),
-            ("pass_plays","scrimmage_plays"),
-        ):
+        row=advanced.get((str(g["game_id"]),target))
+        if row is None:continue
+        if row.get("date") and row["date"]!=g["date"]:
+            raise ValueError("Advanced EPA game/date identity mismatch")
+        if row.get("opponent") and row["opponent"]!=(g["away"] if target==g["home"] else g["home"]):
+            raise ValueError("Advanced EPA opponent identity mismatch")
+        weight=math.exp2(-(cutoff-day).days/RECENCY_HALF_LIFE_DAYS)
+        team_dates.add(g["date"])
+        for key,den in FEATURE_RATIOS:
             n=number(row.get(key));d=number(row.get(den))
             if n is not None and d is not None and d>0 and abs(n)<1e6 and d<2000:
-                sums[key]+=n;totals[key]+=d
+                if key not in ("off_epa_sum","def_epa_sum","pass_epa_sum","rush_epa_sum") and (n<0 or n>d):
+                    continue
+                sums[key]+=n*weight
+                totals[key]+=d*weight
     result={}
-    for key,den in (
-        ("off_epa_sum","epa_plays"),("pass_epa_sum","pass_epa_plays"),
-        ("rush_epa_sum","rush_epa_plays"),("pressure_count","pressure_observed"),
-        ("redzone_success","redzone_plays"),("pass_plays","scrimmage_plays")):
+    for key,den in FEATURE_RATIOS:
         result[key]=sums[key]/totals[key] if totals[key]>0 else None
-        result[key+"_plays"]=int(totals[key])
+        result[key+"_weighted_plays"]=round(totals[key],2)
+    result["source_games"]=len(team_dates)
+    result["recency_half_life_days"]=RECENCY_HALF_LIFE_DAYS
     return result
 
 def fit(source_games,advanced,target,min_games=35,min_team_games=1):
@@ -122,8 +150,8 @@ def fit(source_games,advanced,target,min_games=35,min_team_games=1):
     for side,team,opponent in (("home",home,away),("away",away,home)):
         att=_team_drives(past,team)
         defn=_team_drives(past,opponent,False)
-        offense_ctx=_context(past,team,advanced,True)
-        defense_ctx=_context(past,opponent,advanced,False)
+        offense_ctx=_context(past,team,advanced,True,day)
+        defense_ctx=_context(past,opponent,advanced,False,day)
         byzone={}
         for zone in league_result:
             aa=[d for d in att if d["field_zone"]==zone]
@@ -152,7 +180,12 @@ def fit(source_games,advanced,target,min_games=35,min_team_games=1):
         team_games=[g for g in past if team in (g["home"],g["away"])]
         possessions=[sum(x["team"]==team for x in g["drives"]) for g in team_games]
         profiles[side]={
-            "team":team,"opponent":opponent,"team_games":len(team_games),
+            "team":team,
+            "historical_offensive_points_per_game":sum(d["offense_points"] for d in att)/len(team_games),
+            "source_feature_coverage":{
+                "offense_advanced_games":offense_ctx["source_games"],
+                "opponent_defense_advanced_games":defense_ctx["source_games"],
+            },"opponent":opponent,"team_games":len(team_games),
             "offense_drives":len(att),"defense_exposure_drives":len(defn),
             "zone_outcomes":byzone,"turnover_probability":turnover_probability,
             "return_td_probability_conditional_turnover":pick_six_p,
@@ -173,7 +206,7 @@ def _zone(ytg):
     return "red_zone" if ytg<=20 else "opponent_half" if ytg<=50 else (
         "midfield" if ytg<=60 else "own_half" if ytg<=90 else "own_deep")
 
-def outcome_distribution(fitted,side,ytg,matchup=True):
+def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,v04_prior=None):
     x=fitted["profiles"][side]
     zone=_zone(ytg)
     base=x["zone_outcomes"][zone].copy()
@@ -204,15 +237,49 @@ def outcome_distribution(fitted,side,ytg,matchup=True):
             rz=clamp((off_rz+def_rz-1)*.6,-.4,.4)
             base["TD"]*=math.exp(.2*rz)
             base["FG"]*=math.exp(-.08*rz)
+        # Additional observed opponent/style metrics. Unavailable denominators
+        # preserve missingness and produce NO guessed effect.
+        ps=attack["pass_success_count"];pd=defense["pass_success_count"]
+        rs=attack["rush_success_count"];rd=defense["rush_success_count"]
+        if ps is not None and pd is not None and rs is not None and rd is not None:
+            success=clamp(pass_rate*(ps+pd-1)+(1-pass_rate)*(rs+rd-1),-.7,.7)
+            base["TD"]*=math.exp(.13*success)
+        ep=attack["explosive_pass"];ed=defense["explosive_pass"]
+        er=attack["explosive_rush"];erd=defense["explosive_rush"]
+        if all(v is not None for v in (ep,ed,er,erd)):
+            explosive=clamp(pass_rate*(ep+ed-.14)+(1-pass_rate)*(er+erd-.14),-.25,.25)
+            base["TD"]*=math.exp(.19*explosive)
+        third=attack["third_success"];third_allowed=defense["third_success"]
+        if third is not None and third_allowed is not None:
+            base["TD"]*=math.exp(.06*clamp(third+third_allowed-.8,-.6,.6))
+    # Keep V04's opponent-adjusted expected scoring in the possession process.
+    # A fixed, capped PRIOR changes touchdown/FG likelihood on each drive;
+    # this is not a post-simulation blending of invented fractional scores.
+    if v04_prior is not None:
+        score=v04_prior.get("home_points" if side=="home" else "away_points")
+        if not number(score) is not None or not 0<=score<=120:
+            raise ValueError("Invalid earlier-week frozen V04 score prior")
+        historical=x["historical_offensive_points_per_game"]
+        strength=clamp(math.exp(.55*math.log((score+7)/(historical+7))),.68,1.45)
+        base["TD"]*=strength
+        base["FG"]*=math.sqrt(strength)
     # Turnover risk is modeled independently of an offense's scored TDs.
     # League/category conditional decomposition renormalizes non-turnovers.
     event_to=clamp(x["turnover_probability"]*(base["TURNOVER"]/
                        max(.01,x["league_turnover_probability"])),.015,.36)
+    if regress_turnovers:
+        # Only prior OFFENSE giveaway and OPPONENT defense takeaway exposure
+        # can move a game materially away from the league turnover baseline.
+        # Recent takeaway streaks with little independent evidence regress.
+        exposure=min(x["offense_drives"],x["defense_exposure_drives"])
+        reliability=clamp(exposure/(exposure+120),0,.70)
+        event_to=clamp(x["league_turnover_probability"]+
+            reliability*(event_to-x["league_turnover_probability"]),.015,.24)
     non=sum(base[k] for k in OUTCOMES if k!="TURNOVER")
     return {"TURNOVER":event_to,**{k:(1-event_to)*base[k]/non
                                  for k in OUTCOMES if k!="TURNOVER"}}
 
-def one_game(fitted,matchup,rng,trace=False):
+def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=None):
     prof=fitted["profiles"]
     # Drives per team are sampled from earlier real possession counts, not
     # fitted from final game scores. This is a regulation possession model.
@@ -222,7 +289,7 @@ def one_game(fitted,matchup,rng,trace=False):
     first="home" if rng.random()<.5 else "away"
     side=first;start=75;trace_rows=[];previous_kind="SCORE"
     for i in range(2*n):
-        p=outcome_distribution(fitted,side,start,matchup)
+        p=outcome_distribution(fitted,side,start,matchup,regress_turnovers,v04_prior)
         u=rng.random();acc=0;event="EMPTY"
         for k in OUTCOMES:
             acc+=p[k]
@@ -254,15 +321,23 @@ def one_game(fitted,matchup,rng,trace=False):
         side=side if returns else other
     return total,takeaways,trace_rows
 
-def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False):
+def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
+             regress_turnovers=False,v04_prior=None):
     if not fitted.get("ready") or fitted.get("status")!=STATUS:
         raise ValueError("Unverified drive fit")
     if not 100<=trials<=20000 or type(seed) is not int:
         raise ValueError("Invalid Monte Carlo parameters")
+    if v04_prior is not None:
+        if (not isinstance(v04_prior,dict) or v04_prior.get("source")!="EARLIER_FOLD_V04"
+            or not all(number(v04_prior.get(k)) is not None
+                       for k in ("home_points","away_points"))
+            or not all(0<=v04_prior[k]<=120 for k in ("home_points","away_points"))):
+            raise ValueError("Unauthenticated V04 score prior")
     rng=random.Random(seed);hm=[];ts=[];hs=[];as_=[];to_h=[];to_a=[]
     results=[];example=[]
     for i in range(trials):
-        scores,turnovers,drives=one_game(fitted,matchup,rng,trace=trace and i==0)
+        scores,turnovers,drives=one_game(fitted,matchup,rng,trace=trace and i==0,
+            regress_turnovers=regress_turnovers,v04_prior=v04_prior)
         h=scores["home"];a=scores["away"]
         hm.append(h-a);ts.append(h+a);hs.append(h);as_.append(a)
         to_h.append(turnovers["home"]);to_a.append(turnovers["away"])
@@ -273,12 +348,19 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False):
     mean=lambda arr:sum(arr)/len(arr)
     no_h=[m for m,t,th,ta in results if th==0]
     with_h=[m for m,t,th,ta in results if th>0]
-    return {"status":STATUS,"model_variant":"OPPONENT_EPA_PRESSURE_RZ_TURNOVER_MATCHUP" if matchup else "OBSERVED_DRIVE_FREQUENCY",
+    pwin=sum(v>0 for v in hm)/trials
+    return {"status":STATUS,
+        "model_variant":"V04_STRENGTH_ANCHORED_POSSESSIONS" if v04_prior else
+          "REGRESSED_TURNOVER_MATCHUP" if regress_turnovers else
+          "OPPONENT_EPA_PRESSURE_RZ_TURNOVER_MATCHUP" if matchup else "OBSERVED_DRIVE_FREQUENCY",
+        "v04_prior_used":v04_prior is not None,
+        "turnover_regression_used":regress_turnovers,
+        "sampling_95ci_half_width_home_win":round(1.96*math.sqrt(pwin*(1-pwin)/trials),5),
         "trials":trials,"home_points_mean":round(mean(hs),3),
         "away_points_mean":round(mean(as_),3),
         "home_margin_mean":round(mean(hs)-mean(as_),3),
         "total_mean":round(mean(ts),3),
-        "home_win_probability":round(sum(v>0 for v in hm)/trials,5),
+        "home_win_probability":round(pwin,5),
         "regulation_tie_probability":round(sum(v==0 for v in hm)/trials,5),
         "margin_p05_p50_p95":quant(hm),"total_p05_p50_p95":quant(ts),
         "expected_home_takeaways":round(mean(to_h),3),
