@@ -9,6 +9,8 @@ on:
       - 'scripts/site_live.py'
       - 'scripts/site_weather.py'
       - 'scripts/site_history.py'
+      - 'scripts/site_history_scores.py'
+      - 'tests/test_site_history_scores.py'
       - 'tests/test_site_history.py'
       - 'scripts/site_simulation_shadow.py'
       - 'tests/test_site_simulation_shadow.py'
@@ -357,6 +359,11 @@ jobs:
           python -m unittest discover -s tests -p 'test_site_history.py' -v
           python -m scripts.site_history --archive-root .context-state --dashboard site/data/dashboard.json | tee /tmp/site-history.txt
           cat /tmp/site-history.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Overlay authenticated ESPN-completed display scores when independently settled final is pending
+        run: |
+          python -m unittest discover -s tests -p 'test_site_history_scores.py' -v
+          python -m scripts.site_history_scores --dashboard site/data/dashboard.json | tee /tmp/site-history-scores.txt
+          cat /tmp/site-history-scores.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Report earliest today research matchups without betting claims
         run: |
           python - <<'PY'
