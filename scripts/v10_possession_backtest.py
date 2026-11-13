@@ -6,13 +6,14 @@ interactions and actual field position and defensive-score events.
 Historical source publication timing is NOT verified at old cutoffs, so this
 is research rather than authenticated prospective wagering performance.
 """
-import argparse,datetime as dt,hashlib,json
+import argparse,csv,datetime as dt,hashlib,json
 from collections import defaultdict
 from pathlib import Path
 from scripts.v10_possession_sim import STATUS,advanced_index,fit,simulate
 from scripts.v09_retro_score_sim import load_rows,metrics as v09_metrics
 from scripts.game_context import parse_time
 from scripts.possession_drive_ingest import STATUS as SOURCE_STATUS
+from scripts.team_resume_strength import calculate as asof_resume, STATUS as RESUME_STATUS
 
 REPORT="V10_R2_2026_PROFILE_ANCHORED_POSSESSION_PAIRED_V04_RETROSPECTIVE"
 def _score(row,variant):
@@ -55,7 +56,7 @@ def _metric(rows,variant):
         "book_spread_mae":round(sum(spread_baseline)/len(spread_baseline),4) if spread_baseline else None,
         "book_total_mae":round(sum(total_baseline)/len(total_baseline),4) if total_baseline else None}
 
-def audit(games,source,advanced,min_past=35,trials=500):
+def audit(games,source,advanced,min_past=35,trials=500,resume_by_cutoff=None):
     if (source.get("status")!=SOURCE_STATUS or source.get("season")!=2026
         or source.get("model_promoted") is not False or source.get("safe_for_betting") is not False
         or source.get("historical_pregame_publication_times_verified") is not False
@@ -107,6 +108,24 @@ def audit(games,source,advanced,min_past=35,trials=500):
                 "margin":anchored["home_margin_mean"],"total":anchored["total_mean"],
                 "home_points":anchored["home_points_mean"],"away_points":anchored["away_points_mean"],
                 "home_win_probability":anchored["home_win_probability"]}}
+        # Separate, source-date diagnostic team résumé. Do not silently add
+        # SOS/SOR/SOV score multipliers on top of V04's opponent ratings.
+        if resume_by_cutoff is not None:
+            resume=resume_by_cutoff.get(game["cutoff"])
+            if (resume is None or resume.get("status")!=RESUME_STATUS or
+                resume["cutoff_date_exclusive"]!=game["cutoff"] or
+                resume.get("historical_publication_verified") is not False or
+                not resume.get("ready")):
+                raise ValueError("Missing source-dated team resume for V10 retrospective")
+            row["team_resume_research"]={
+                "status":RESUME_STATUS,
+                "cutoff_date_exclusive":game["cutoff"],
+                "home":resume["teams"].get(game["home"]),
+                "away":resume["teams"].get(game["away"]),
+                "used_in_drive_scoring":False,
+                "historical_source_publication_verified":False,
+                "correlation_with_v04_team_strength_not_orthogonalized":True,
+            }
         row["turnover_risk"]={
             "expected_home_takeaways":matchup["expected_home_takeaways"],
             "expected_away_takeaways":matchup["expected_away_takeaways"],
@@ -152,6 +171,7 @@ def audit(games,source,advanced,min_past=35,trials=500):
             "scoring_shifts":"prior offense and opposing allowed EPA, pass/rush EPA, pressure, third down, explosiveness and red-zone play success",
             "missing_not_guessed":"verified starting QB, injuries, localized weather, historical PBP publication timestamps",
             "simulation_engine":"sequential scored possessions with turnover short-field and defensive return TD ownership",
+            "resume_strength":"SOS SOV SOR and record-vs-average available as source-dated descriptive team-profile context, not scored until independent residual-value ablation",
         },
         "summary":{v:_metric(ready,v) for v in
             ("v04","empirical_drives","matchup_drives",
@@ -172,7 +192,21 @@ def run(source_file,advanced_file,baseline,game_csv,market_root,output,min_past=
     games,coverage=load_rows(baseline,game_csv,market_root,now)
     source=json.loads(Path(source_file).read_text())
     advanced=advanced_index(advanced_file)
-    result=audit(games,source,advanced,min_past,trials)
+    # Freeze every résumé against the model's original WEEKLY cutoff.
+    # The opponent-rating graph must never use opponents' later 2026 games.
+    with open(game_csv,encoding="utf-8-sig",newline="") as source_file:
+        source_games=list(csv.DictReader(source_file))
+    resume_by_cutoff={cutoff:asof_resume(source_games,cutoff)
+        for cutoff in sorted({g["cutoff"] for g in games})}
+    result=audit(games,source,advanced,min_past,trials,
+                 resume_by_cutoff=resume_by_cutoff)
+    result["resume_profile_coverage"]={
+        "status":RESUME_STATUS,
+        "weekly_cutoffs":len(resume_by_cutoff),
+        "total_team_snapshots":sum(len(x["teams"]) for x in resume_by_cutoff.values()),
+        "resume_features_affect_model_scores":False,
+        "historical_source_publication_verified":False,
+    }
     result["v04_coverage"]=coverage
     result["captured_at_utc"]=source["captured_at_utc"]
     dest=Path(output);dest.parent.mkdir(parents=True,exist_ok=True)
