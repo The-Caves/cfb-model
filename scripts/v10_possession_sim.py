@@ -247,7 +247,11 @@ def one_game(fitted,matchup,rng,trace=False):
             "defense_points":points if scorer!=side else 0,
             "takeaway_by":other if event=="TURNOVER" else None,
             "next_start_yards_to_goal":next_start})
-        start=next_start;side=other
+        start=next_start
+        # A defensive return touchdown results in a kickoff back to the
+        # offense that committed the turnover. Do not give the scoring
+        # defense an immediate extra offensive possession.
+        side=side if returns else other
     return total,takeaways,trace_rows
 
 def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False):
