@@ -66,6 +66,51 @@ class PossessionModelTests(unittest.TestCase):
         self.assertGreaterEqual(a["expected_home_takeaways"],0)
         self.assertLessEqual(a["prob_home_zero_takeaways"],1)
         self.assertFalse(a["model_promoted"])
+    def test_v04_prior_integrates_at_possession_level_not_posthoc_score_blend(self):
+        games,advanced=fixtures()
+        model=fit(games,advanced,{"game_id":"999","home":"Home","away":"Away","date":"2026-10-01"})
+        baseline=outcome_distribution(model,"home",75,True,True)
+        weak=outcome_distribution(model,"home",75,True,True,
+                                  {"home_points":10.,"away_points":10.})
+        strong=outcome_distribution(model,"home",75,True,True,
+                                    {"home_points":48.,"away_points":10.})
+        self.assertGreater(strong["TD"],weak["TD"])
+        self.assertAlmostEqual(sum(strong.values()),1,places=8)
+        self.assertAlmostEqual(sum(baseline.values()),1,places=8)
+        source={"source":"EARLIER_FOLD_V04","home_points":48.,"away_points":20.}
+        a=simulate(model,True,trials=250,seed=2002,regress_turnovers=True,v04_prior=source)
+        b=simulate(model,True,trials=250,seed=2002,regress_turnovers=True,v04_prior=source)
+        self.assertEqual(a,b)
+        self.assertTrue(a["v04_prior_used"])
+        self.assertTrue(a["turnover_regression_used"])
+        self.assertLessEqual(a["sampling_95ci_half_width_home_win"],.062)
+        with self.assertRaisesRegex(ValueError,"Unauthenticated V04"):
+            simulate(model,True,trials=100,v04_prior={"home_points":40.,"away_points":20.})
+
+    def test_turnover_regression_reduces_streak_impact(self):
+        games,advanced=fixtures()
+        model=fit(games,advanced,{"game_id":"999","home":"Home","away":"Away","date":"2026-10-01"})
+        profile=model["profiles"]["home"]
+        profile["turnover_probability"]=.35
+        profile["league_turnover_probability"]=.10
+        regular=outcome_distribution(model,"home",70,True)
+        regressed=outcome_distribution(model,"home",70,True,True)
+        self.assertLess(regressed["TURNOVER"],regular["TURNOVER"])
+        self.assertAlmostEqual(sum(regressed.values()),1,places=8)
+
+    def test_all_advanced_context_is_asof_and_has_missingness(self):
+        games,advanced=fixtures()
+        advanced[(str(0),"Home")]["date"]="2026-12-01"
+        with self.assertRaisesRegex(ValueError,"date identity"):
+            fit(games,advanced,{"game_id":"999","home":"Home","away":"Away","date":"2026-10-01"})
+        del advanced[(str(0),"Home")]["date"]
+        model=fit(games,advanced,{"game_id":"999","home":"Home","away":"Away","date":"2026-10-01"})
+        a=model["profiles"]["home"]["offense_context"]
+        self.assertEqual(a["recency_half_life_days"],28)
+        self.assertIsNone(a["def_epa_sum"])
+        self.assertIsNone(a["pass_success_count"])
+        self.assertGreater(a["source_games"],0)
+
     def test_not_ready_cannot_publish_probability(self):
         with self.assertRaises(ValueError):
             simulate({"ready":False},True,trials=120)
