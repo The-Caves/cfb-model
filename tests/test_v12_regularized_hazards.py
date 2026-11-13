@@ -6,6 +6,7 @@ from scripts.v12_regularized_hazards import (
     STATUS, TASKS, _ridge_logit, _features, train, probabilities, pace_profile
 )
 from scripts.v12_possession_sim import fit_v12, simulate
+from scripts.v10_possession_sim import simulate as simulate_v11
 from tests.test_v10_possession_sim import fixtures
 from tests.test_v12_possession_sim import prepared
 
@@ -91,6 +92,16 @@ class RegularizedHazardsTests(unittest.TestCase):
         b=simulate(model,trials=100,seed=991,trained_hazards=hazards,
                    use_learned_pace=True)
         self.assertTrue(b["learned_possession_pace_used"])
+        c=simulate(model,trials=100,seed=991,trained_hazards=hazards,
+                   use_learned_pace=True,use_trained_hazards=False)
+        self.assertFalse(c["learned_drive_hazards_used"])
+        self.assertTrue(c["learned_possession_pace_used"])
+        v11=simulate_v11(base,True,trials=100,seed=991,
+                         regress_turnovers=True,v04_prior=prior,
+                         dated_profile=dated,return_draws=True,
+                         pace_override=pace)
+        self.assertTrue(v11["learned_pace_override_used"])
+        self.assertEqual(len(v11["margin_draws"]),100)
         self.assertFalse(b["model_promoted"])
         self.assertFalse(b["safe_for_betting"])
         with self.assertRaisesRegex(ValueError,"requires"):
