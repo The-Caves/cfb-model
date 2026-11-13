@@ -193,6 +193,38 @@ def freeze(board,now,run_id):
                 raise ValueError("V05 incoherent or untrusted score receipt")
         else:
             v05_hp=v05_ap=v05_m=v05_t=None
+        # Freeze the separately published, non-promoted V09 score
+        # distribution for prospective grading. Never turn it into a V04 pick.
+        v09=g.get("v09_score_shadows")
+        if v09 is not None:
+            if (not isinstance(v09,dict) or
+                v09.get("status")!="V09_SOURCE_TIMED_SCORE_MONTE_CARLO_SHADOW_RESEARCH_ONLY" or
+                v09.get("source_provenance")!="IMMUTABLE_CAPTURED_PREKICKOFF_SETTLED_V04" or
+                v09.get("model_promoted") is not False or
+                v09.get("safe_for_betting") is not False or
+                v09.get("calibrated_betting_probability") is not False or
+                v09.get("published_scores_unchanged") is not True or
+                v09.get("historical_grades_unchanged") is not True or
+                v09.get("forecast_observed_utc")!=board["forecast_observed_utc"] or
+                parse_time(v09["generated_at_utc"])>now or
+                parse_time(v09["generated_at_utc"])>=kickoff or
+                type(v09.get("earlier_settled_v04_games")) is not int or
+                v09["earlier_settled_v04_games"]<24 or
+                candidate is None):
+                raise ValueError("Untrusted, postkickoff or overpromoted V09 forecast")
+            versions=v09.get("projections") or {}
+            if set(versions)!={"global","team_form"}:
+                raise ValueError("Missing prospective V09 simulation comparison")
+            for name,pred in versions.items():
+                h,a=pred.get("home_points"),pred.get("away_points")
+                m,t=pred.get("margin"),pred.get("total")
+                prob=pred.get("home_win_probability")
+                if (not all(finite(x) for x in (h,a,m,t,prob)) or
+                    h<0 or a<0 or not 0<=prob<=1 or
+                    abs(h-a-m)>.01 or abs(h+a-t)>.01 or
+                    pred.get("model_promoted") is not False or
+                    type(pred.get("trials")) is not int or pred["trials"]<100):
+                    raise ValueError("Untrusted V09 simulation score/probability")
         discrepancy=round(abs(margin+spread),4) if sp else None
         risk="HIGH_MODEL_MARKET_DISAGREEMENT" if discrepancy is not None and discrepancy>=10 else "NONE"
         high_disagreement+=int(risk!="NONE")
@@ -238,6 +270,7 @@ def freeze(board,now,run_id):
             "v05_shadow_thin_history":v05["thin_history_warning"] if v05 else None,
             "v05_shadow_source_training_games":v05["source_training_games"] if v05 else None,
             "v05_shadow_not_promoted":v05["model_promoted"] is False if v05 else None,
+            "v09_frozen_score_simulation":v09 if v09 else None,
             "v04_research_status":research["status"] if research else None,
             "v04_research_policy":research["policy"] if research else None,
             "v04_research_ats_side":research["ats_side"] if research else None,
