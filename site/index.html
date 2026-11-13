@@ -864,6 +864,25 @@ function v04ScoreScenario(game){
     Math.abs(m.home_points-m.away_points-m.home_margin)>.03)return null;
  return m;
 }
+function v13ProbabilityShadow(game){
+ const base=v04ScoreScenario(game),x=game?.v13_probability_shadow;
+ if(!base||x?.site_status!=="V13_SOURCE_TIMED_V04_PROBABILITY_SHADOW"||
+    x?.status!=="V13_V04_ANCHORED_PROBABILITIES_RESEARCH_ONLY"||
+    x?.variant!=="prior_variance"||x?.v04_mean_scores_unchanged!==true||
+    x?.model_promoted!==false||x?.safe_for_betting!==false||
+    x?.calibration_prospectively_proven!==false||
+    x?.research_probability_not_certified_betting_edge!==true||
+    x?.original_v04_score_checksum_unchanged!==true||
+    x?.previous_frozen_grades_unchanged!==true||
+    !Number.isFinite(x?.home_win_probability)||
+    !Number.isFinite(x?.margin_mean)||!Number.isFinite(x?.total_mean)||
+    !Number.isFinite(x?.total_p10)||!Number.isFinite(x?.total_p90)||
+    x.home_win_probability<0||x.home_win_probability>1||
+    x.total_p10>=x.total_p90||
+    Math.abs(x.margin_mean-base.home_margin)>.02||
+    Math.abs(x.total_mean-base.total_points)>.02)return null;
+ return x;
+}
 function v04MarketResearch(game){
  const r=game?.v04_market_research;
  if(!v04ScoreScenario(game)||
@@ -1086,7 +1105,8 @@ function opponentMargin(g){
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
-            node("span","modelTag",v04ScoreScenario(g)?"V04 · current research":
+            node("span","modelTag",v13ProbabilityShadow(g)?"V13 + V04 · research":
+                 v04ScoreScenario(g)?"V04 · current research":
                  g.home_bias_quarantined?"R1 · alternative":"V03 · archived research"));
  el.append(top);
  const teams=node("div","teamStack");
@@ -1106,6 +1126,25 @@ function gameCard(g){
    "* V04 directly fits opponent-adjusted team scoring and a separate strength margin from recorded 2026 games. V04 total "+num(v04.total_points)+" · source observed before forecast. Historical results are retrospective; this version is not independently prospectively validated.":
    scoreScenario?"* Illustrated final score uses R1 opponent-adjusted margin and the frozen V03 total ("+num(scoreScenario.scenario_total_points)+"). Not a jointly trained or validated score model.":
    "R1 estimates a margin only; a valid final-score illustration is unavailable."));
+  const v13=v13ProbabilityShadow(g);
+  if(v13){
+   const block=node("div","underStats");
+   block.append(node("strong","","V13 probability layer · unchanged V04 scores"));
+   block.append(node("span","",
+     " · "+num(100*v13.home_win_probability,0)+"% "+g.home_team+
+     " win · total 80% range "+num(v13.total_p10,0)+"–"+num(v13.total_p90,0)));
+   summary.append(block);
+   const book=[];
+   if(v13.market_quote_eligible===true){
+     if(Number.isFinite(v13.home_cover_probability))
+       book.push("Home spread cover "+num(100*v13.home_cover_probability,0)+"%");
+     if(Number.isFinite(v13.over_probability))
+       book.push("Over "+num(100*v13.over_probability,0)+"%");
+   }
+   summary.append(node("div","biasNote",
+     (book.length?book.join(" · ")+" · ":"")+
+     "Prior settled pregame forecasts only. Experimental uncertainty, NOT a verified betting edge; original V04 picks remain frozen."));
+  }
   // Reviewed university sources are future-only; no retrospective
   // "known absence" is painted onto a game archived before first review.
   for(const side of ["home","away"]){
@@ -1422,6 +1461,23 @@ function renderPerformance(){
  area.append(node("div","","Frozen graded games: "+(score.frozen_games??"—")+" · Margin MAE: "+num(score.margin_mae,2)+" pts · Total MAE: "+num(score.total_mae,2)+" pts"));
  area.append(node("div","performanceMeta","Independent final games: "+(score.verified_final_games??"—")+" · Page snapshots: "+(score.website_runs??"—")+" · Unsettled displayed games: "+(score.unsettled_site_market_games??"—")));
  area.append(node("div","performanceMeta","Repeated snapshots excluded · ATS "+(score.duplicate_ats_snapshots_excluded??"—")+" · Totals "+(score.duplicate_ou_snapshots_excluded??"—")+" · Updated "+fmtDate.format(dateOf(p.asof_utc))));
+ const v13grade=data?.v13_prospective_performance;
+ if(v13grade?.status==="V13_FIRST_SOURCE_FROZEN_PREGAME_PROBABILITY_PERFORMANCE"){
+  const v=v13grade.scoring||{};
+  area.append(node("div","performanceMeta","V13 probability layer · "+(v13grade.first_frozen_pregame_v13_games??0)+
+    " first pre-kickoff forecasts captured · "+(v13grade.settled_v13_games??0)+
+    " independently settled · "+(v13grade.unsettled_v13_games??0)+" awaiting finals."));
+  if(v13grade.settled_v13_games>0){
+   area.append(node("div","performanceMeta","V13 winner probability Brier: "+
+     (Number.isFinite(v.winner_brier)?num(v.winner_brier,3):"—")+
+     " · Margin CRPS: "+(Number.isFinite(v.margin_crps)?num(v.margin_crps,2):"—")+
+     " · Total CRPS: "+(Number.isFinite(v.total_crps)?num(v.total_crps,2):"—")+
+     " · Total 80% interval coverage: "+(Number.isFinite(v.total_80pct_coverage)?num(v.total_80pct_coverage*100,1)+"%":"—")));
+  }else{
+   area.append(node("div","performanceMeta","New V13 forecasts have not completed and settled yet; historical research wins are not counted as prospective performance."));
+  }
+  area.append(node("div","performanceMeta","V13 has not replaced V04 scoring or earned a verified betting edge. Only first timestamped V13 forecasts before kickoff count."));
+ }
  const v=p.v04_challenger;
  if(v?.status==="ARCHIVED_PREKICKOFF_V04_MARKET_RESEARCH_GRADES"){
   area.append(node("div","performanceMeta","V04 pregame research challenger (not promoted): ATS "+resultRecord(v.ats)+" · O/U "+resultRecord(v.ou)));

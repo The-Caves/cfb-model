@@ -225,6 +225,81 @@ def freeze(board,now,run_id):
                     pred.get("model_promoted") is not False or
                     type(pred.get("trials")) is not int or pred["trials"]<100):
                     raise ValueError("Untrusted V09 simulation score/probability")
+        # Freeze V13 probability-only shadow as a prospective research receipt.
+        # A new version NEVER rewrites original V04 means or V03 selections.
+        v13=g.get("v13_probability_shadow")
+        if v13 is not None:
+            if (not isinstance(v13,dict) or candidate is None or
+                v13.get("site_status")!="V13_SOURCE_TIMED_V04_PROBABILITY_SHADOW" or
+                v13.get("status")!="V13_V04_ANCHORED_PROBABILITIES_RESEARCH_ONLY" or
+                v13.get("variant")!="prior_variance" or
+                v13.get("scoring_foundation")!="UNCHANGED_V04" or
+                v13.get("v04_mean_scores_unchanged") is not True or
+                v13.get("model_promoted") is not False or
+                v13.get("safe_for_betting") is not False or
+                v13.get("calibration_prospectively_proven") is not False or
+                v13.get("research_probability_not_certified_betting_edge") is not True or
+                v13.get("original_v04_score_checksum_unchanged") is not True or
+                v13.get("previous_frozen_grades_unchanged") is not True or
+                v13.get("source_provenance")!="IMMUTABLE_CAPTURED_PREKICKOFF_SETTLED_V04" or
+                v13.get("original_forecast_observed_utc")!=board["forecast_observed_utc"] or
+                str(v13.get("game_id"))!=gid or
+                v13.get("home")!=home or v13.get("away")!=away or
+                v13.get("kickoff_utc")!=g["kickoff_utc"] or
+                parse_time(v13["generated_at_utc"])>now or
+                parse_time(v13["generated_at_utc"])>=kickoff or
+                str(v13.get("source_run_id"))!=str(board["forecast_run_id"]) or
+                type(v13.get("calibration_earlier_games")) is not int or
+                v13["calibration_earlier_games"]<35 or
+                type(v13.get("calibration_earlier_weeks")) is not int or
+                v13["calibration_earlier_weeks"]<2 or
+                not all(finite(v13.get(k)) for k in ("home_points_mean","away_points_mean",
+                    "margin_mean","total_mean","margin_sd","total_sd",
+                    "home_win_probability","margin_p10","margin_p90",
+                    "total_p10","total_p90")) or
+                abs(v13["home_points_mean"]-home_pts)>.02 or
+                abs(v13["away_points_mean"]-away_pts)>.02 or
+                abs(v13["margin_mean"]-pred_margin)>.02 or
+                abs(v13["total_mean"]-pred_total)>.02 or
+                not (8<=v13["margin_sd"]<=30 and 8<=v13["total_sd"]<=30 and
+                     0<=v13["home_win_probability"]<=1 and
+                     v13["margin_p10"]<v13["margin_p90"] and
+                     v13["total_p10"]<v13["total_p90"])):
+                raise ValueError("Untrusted or modified pregame V13 probability receipt")
+            # Recompute all mathematically derived probabilities and bands
+            # to reject a tampered displayed forecast before immutable archive.
+            def expected_cdf(z):
+                return .5*math.erfc(-z/math.sqrt(2))
+            if (abs(v13["home_win_probability"]-
+                    expected_cdf(v13["margin_mean"]/v13["margin_sd"]))>.00005 or
+                abs(v13["margin_p10"]-
+                    (v13["margin_mean"]-1.2815515655446004*v13["margin_sd"]))>.002 or
+                abs(v13["margin_p90"]-
+                    (v13["margin_mean"]+1.2815515655446004*v13["margin_sd"]))>.002 or
+                abs(v13["total_p10"]-
+                    (v13["total_mean"]-1.2815515655446004*v13["total_sd"]))>.002 or
+                abs(v13["total_p90"]-
+                    (v13["total_mean"]+1.2815515655446004*v13["total_sd"]))>.002):
+                raise ValueError("V13 displayed probability or interval forged")
+            if v13.get("market_quote_eligible") is True:
+                if not provider or not market_observed or not (sp or tt):
+                    raise ValueError("V13 market probability missing authentic quote")
+                checks=(
+                    (v13.get("home_cover_probability"),
+                     expected_cdf((v13["margin_mean"]+spread)/v13["margin_sd"])
+                     if sp else None),
+                    (v13.get("over_probability"),
+                     expected_cdf((v13["total_mean"]-market_total)/v13["total_sd"])
+                     if tt else None))
+                for actual,expected in checks:
+                    if expected is None:
+                        if actual is not None:
+                            raise ValueError("V13 inferred a missing bookmaker line")
+                    elif not finite(actual) or abs(actual-expected)>.00005:
+                        raise ValueError("Unverified V13 market-conditioned probability")
+            elif (v13.get("home_cover_probability") is not None or
+                  v13.get("over_probability") is not None):
+                raise ValueError("V13 probabilities cannot infer unsourced bookmaker lines")
         discrepancy=round(abs(margin+spread),4) if sp else None
         risk="HIGH_MODEL_MARKET_DISAGREEMENT" if discrepancy is not None and discrepancy>=10 else "NONE"
         high_disagreement+=int(risk!="NONE")
@@ -271,6 +346,7 @@ def freeze(board,now,run_id):
             "v05_shadow_source_training_games":v05["source_training_games"] if v05 else None,
             "v05_shadow_not_promoted":v05["model_promoted"] is False if v05 else None,
             "v09_frozen_score_simulation":v09 if v09 else None,
+            "v13_frozen_probability_shadow":v13 if v13 else None,
             "v04_research_status":research["status"] if research else None,
             "v04_research_policy":research["policy"] if research else None,
             "v04_research_ats_side":research["ats_side"] if research else None,
