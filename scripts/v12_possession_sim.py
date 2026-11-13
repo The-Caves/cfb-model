@@ -267,7 +267,10 @@ def simulate(model,trials=2000,seed=2026,trace=False):
     sorted_m=sorted(margins);sorted_t=sorted(totals)
     quant=lambda x,p:x[int((trials-1)*p)]
     mean=lambda x:sum(x)/len(x)
-    win=(sum(m>0 for m in margins)+.5*sum(m==0 for m in margins))/trials
+    # Match V11's P(home leads after regulation) definition. Ties are
+    # recorded separately; assigning half to home would make
+    # paired Brier scores use incompatible event definitions.
+    win=sum(m>0 for m in margins)/trials
     return {"status":STATUS,"model_variant":"V12_OPPONENT_CONDITIONED_RZ_AND_TURNOVER_FIELD",
         "home_points_mean":round(mean(scores_h),4),"away_points_mean":round(mean(scores_a),4),
         "home_margin_mean":round(mean(margins),4),"total_mean":round(mean(totals),4),
