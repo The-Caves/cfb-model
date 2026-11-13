@@ -201,8 +201,8 @@ def redzone_distribution(ctx,side,offense,opponent,zone,original):
     TD probability; they act only as a small relative log-odds adjustment in
     late-field zones. Never infer RZ trip probability on own-half drives.
     """
-    if ctx.get("status")!=STATUS or zone not in
-        ("red_zone","opponent_half","midfield","own_half","own_deep"):
+    if (ctx.get("status")!=STATUS or
+        zone not in ("red_zone","opponent_half","midfield","own_half","own_deep")):
         raise ValueError("Invalid red-zone context")
     result=dict(original)
     if zone not in ("red_zone","opponent_half"):return result
