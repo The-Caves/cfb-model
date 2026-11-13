@@ -1,0 +1,58 @@
+name: CFB V13 V04-Anchored Probabilities Research
+on:
+  push:
+    branches: [research/v13-v04-anchored-probabilities]
+    paths:
+      - 'scripts/v13_v04_probabilities.py'
+      - 'scripts/v13_v04_backtest.py'
+      - 'scripts/site_v13_shadow.py'
+      - 'tests/test_v13_v04_probabilities.py'
+      - 'tests/test_site_v13_shadow.py'
+      - '.github/workflows/cfb-v13-calibration.yml'
+      - 'docs/V13_V04_PROBABILITIES_2026.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cfb-v13-unchanged-v04-probability-evaluation
+  cancel-in-progress: true
+jobs:
+  v13:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Verify V04 score integrity and past-only V13 calibration
+        run: |
+          python -m unittest discover -s tests -p 'test_v04_direct_scores.py' -v
+          python -m unittest discover -s tests -p 'test_v13_v04_probabilities.py' -v
+          python -m unittest discover -s tests -p 'test_site_v13_shadow.py' -v
+      - name: Download exact previously executed 2026 377-game research cohort
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v12r3-observed-possession-ablation
+          run-id: 43511454998
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .frozen-research
+      - name: Retrospective comparison without refitting any historical V04 score
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          python -m scripts.v13_v04_backtest \
+            --previous .frozen-research/v12r3-possession-matched-ablation.json \
+            --output artifacts/v13-original-377-games.json | tee artifacts/v13-metrics.txt
+      - name: Preserve source-aligned V13 research only, no published picks
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-v13-v04-anchored-research
+          path: |
+            artifacts/v13-original-377-games.json
+            artifacts/v13-metrics.txt
+          if-no-files-found: error
