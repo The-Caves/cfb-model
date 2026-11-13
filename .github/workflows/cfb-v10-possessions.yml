@@ -52,12 +52,25 @@ jobs:
           ref: context-state
           path: .context-state
           fetch-depth: 1
-      - name: Retrieve actual ESPN completed possessions with score ownership gates
+      - name: Reuse the identical source-reviewed historical drive cohort from prior V10
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v10-source-verified-drives
+          run-id: 43488854033
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .v10-fixed-cohort
+      - name: Verify frozen drive cohort, no new games or future outcomes
         run: |
-          python -m scripts.possession_drive_ingest \
-            --games .source-2026/games_2026.csv \
-            --output artifacts/v10-2026-observed-possessions.json \
-            --cap 800 --workers 12
+          mkdir -p artifacts
+          cp .v10-fixed-cohort/v10-2026-observed-possessions.json artifacts/v10-2026-observed-possessions.json
+          python - <<'PY'
+          import json
+          x=json.load(open('artifacts/v10-2026-observed-possessions.json'))
+          assert x['games_accepted']==387 and x['games_checked']==693, 'cohort changed'
+          assert not x['historical_pregame_publication_times_verified']
+          print('Fixed historical cohort:',x['games_accepted'],'complete two-sided drive ledgers')
+          PY
       - name: True possession Monte Carlo vs same historic V04 games and sportsbook lines
         run: |
           python -m scripts.v10_possession_backtest \
@@ -67,7 +80,7 @@ jobs:
             --games .source-2026/games_2026.csv \
             --market-root .context-state \
             --output artifacts/v10-possession-v04-paired-backtest.json \
-            --min-past 35 --trials 500 | tee artifacts/v10-possessions-summary.txt
+            --min-past 35 --trials 2000 | tee artifacts/v10-possessions-summary.txt
       - uses: actions/upload-artifact@v4
         with:
           name: cfb-v10-source-verified-drives
