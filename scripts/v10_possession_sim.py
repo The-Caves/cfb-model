@@ -219,13 +219,7 @@ def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,
         # V11 research challenger: replace raw season EPA with previously
         # reconstructed opponent-adjusted *weekly* EPA, not stack it on
         # raw EPA and count the same scoring advantage twice.
-        if pace_override is not None:
-        if (not isinstance(pace_override,dict) or
-            pace_override.get("distribution_source")!="EARLIER_REAL_GAME_POSSESSION_COUNTS" or
-            pace_override.get("source_cutoff")!=fitted["target_date"] or
-            not pace_override.get("historical_deviations")):
-            raise ValueError("Unverified earlier-week learned pace source")
-    if dated_profile is not None:
+        if dated_profile is not None:
             own=dated_profile["teams"][side]
             other=dated_profile["teams"]["away" if side=="home" else "home"]
             own_form=own["weekly_recent_form"]
@@ -354,6 +348,12 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
         raise ValueError("Unverified drive fit")
     if not 100<=trials<=20000 or type(seed) is not int:
         raise ValueError("Invalid Monte Carlo parameters")
+    if pace_override is not None:
+        if (not isinstance(pace_override,dict) or
+            pace_override.get("distribution_source")!="EARLIER_REAL_GAME_POSSESSION_COUNTS" or
+            pace_override.get("source_cutoff")!=fitted["target_date"] or
+            not pace_override.get("historical_deviations")):
+            raise ValueError("Unverified earlier-week learned pace source")
     if v04_prior is not None:
         if (not isinstance(v04_prior,dict) or v04_prior.get("source")!="EARLIER_FOLD_V04" or
             (v04_prior.get("game_id") is not None and
