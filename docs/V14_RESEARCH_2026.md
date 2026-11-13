@@ -52,6 +52,20 @@ The improvements in the close quote subset are encouraging but **only 20/46 = 43
 
 For transparency, **V14's 58% research PASS gate produced only 24 correct directions in 64 ATS signals and 16 correct directions in 36 totals signals** in the historical trial. These are NOT promising selection strategies. Do not use research signals for wagers, or promote them on the website. A future selective betting system needs authentic, timely book odds, threshold calibration and new independent validation rather than greater assertiveness.
 
+## Additional independent within-cohort calibration cross-check
+
+The separate [V14 cross-check run #43527440626](https://github.com/The-Caves/cfb-model/actions/runs/43527440626) **passed**. It runs the original `v14_backtest.py` and a second `v14_walkforward.py` evaluator using `v14_ats_totals_calibration.py`, which fits margin and total variance from earlier **out-of-fold V14 predictions** rather than from scores seen in the same week. That preserves all 377 original game identities and the 331/377 source-ready opponent matchups (46 lacked complete earlier matchup data).
+
+| Cross-checked model | Correct winners / 377 | Margin MAE ↓ | Total MAE ↓ | ATS Brier ↓ | O/U Brier ↓ |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Frozen V04/V13 scores | 246 | 12.92665 | 13.54137 | 0.267208 | 0.270122 |
+| V14 joint regularized matchup residuals | **248** | **12.89079** | **13.46243** | **0.266094** | **0.266631** |
+| V14 close-gated joint variant | **248** | **12.89008** | **13.45919** | 0.266193 | 0.267591 |
+
+The marginal score improvement is not evidence of an independent sportsbook edge. The underlying 156 spread and 154 total historical quotes have limited market-time authentication; neither observed ATS Brier nor totals Brier is reliably better than an untuned 0.25 constant 50% benchmark. The historical 58% confidence PASS policy performed poorly on selected signals, and we will not promote that policy.
+
+V14 player simulation also passed conservation and exact player/price matching gates: a two-sided, time-stamped bookmaker prop quote may produce **conditional** over/under simulation frequencies, but a missing line, unsupported player metric, unverified source, or unconfirmed starter cannot produce a claimed profitable selection. Touchdown opportunities remain unsupported until source-verified goal-line player usage exists. No player-prop profit metric is claimed.
+
 ## Integrity and limits
 
 - GitHub Actions V14 workflow runs stringent date/cutoff, missing-source, score coherence and player-prop quote identity guards, plus the **full repository regression suite**.
