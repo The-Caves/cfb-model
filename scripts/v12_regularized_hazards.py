@@ -219,8 +219,8 @@ def train(source_games,frozen_archive,cutoff):
 def probabilities(fit,side,zone,offense,opponent,v04_prior,dated_profile):
     if fit.get("status")!=STATUS or not fit.get("ready"):
         raise ValueError("Missing strictly historical ridge fit")
-    if side not in ("home","away") or zone not in
-        ("own_deep","own_half","midfield","opponent_half","red_zone"):
+    if (side not in ("home","away") or
+        zone not in ("own_deep","own_half","midfield","opponent_half","red_zone")):
         raise ValueError("Invalid drive position")
     own=dated_profile["teams"][side]["weekly_recent_form"]
     opp=dated_profile["teams"]["away" if side=="home" else "home"]["weekly_recent_form"]
