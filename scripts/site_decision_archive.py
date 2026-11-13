@@ -266,19 +266,36 @@ def freeze(board,now,run_id):
                      v13["margin_p10"]<v13["margin_p90"] and
                      v13["total_p10"]<v13["total_p90"])):
                 raise ValueError("Untrusted or modified pregame V13 probability receipt")
+            # Recompute all mathematically derived probabilities and bands
+            # to reject a tampered displayed forecast before immutable archive.
+            def expected_cdf(z):
+                return .5*math.erfc(-z/math.sqrt(2))
+            if (abs(v13["home_win_probability"]-
+                    expected_cdf(v13["margin_mean"]/v13["margin_sd"]))>.00005 or
+                abs(v13["margin_p10"]-
+                    (v13["margin_mean"]-1.2815515655446004*v13["margin_sd"]))>.002 or
+                abs(v13["margin_p90"]-
+                    (v13["margin_mean"]+1.2815515655446004*v13["margin_sd"]))>.002 or
+                abs(v13["total_p10"]-
+                    (v13["total_mean"]-1.2815515655446004*v13["total_sd"]))>.002 or
+                abs(v13["total_p90"]-
+                    (v13["total_mean"]+1.2815515655446004*v13["total_sd"]))>.002):
+                raise ValueError("V13 displayed probability or interval forged")
             if v13.get("market_quote_eligible") is True:
-                if (not provider or not market_observed or
-                    not finite(v13.get("home_cover_probability")) or
-                    not finite(v13.get("over_probability")) or
-                    not (0<=v13["home_cover_probability"]<=1 and
-                         0<=v13["over_probability"]<=1)):
-                    # Either line may be absent; require a probability only
-                    # for an actually quoted numeric line.
-                    if not (provider and market_observed and
-                        (v13.get("home_cover_probability") is None or
-                         0<=v13["home_cover_probability"]<=1) and
-                        (v13.get("over_probability") is None or
-                         0<=v13["over_probability"]<=1)):
+                if not provider or not market_observed or not (sp or tt):
+                    raise ValueError("V13 market probability missing authentic quote")
+                checks=(
+                    (v13.get("home_cover_probability"),
+                     expected_cdf((v13["margin_mean"]+spread)/v13["margin_sd"])
+                     if sp else None),
+                    (v13.get("over_probability"),
+                     expected_cdf((v13["total_mean"]-market_total)/v13["total_sd"])
+                     if tt else None))
+                for actual,expected in checks:
+                    if expected is None:
+                        if actual is not None:
+                            raise ValueError("V13 inferred a missing bookmaker line")
+                    elif not finite(actual) or abs(actual-expected)>.00005:
                         raise ValueError("Unverified V13 market-conditioned probability")
             elif (v13.get("home_cover_probability") is not None or
                   v13.get("over_probability") is not None):
