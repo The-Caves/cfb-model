@@ -206,7 +206,8 @@ def _zone(ytg):
     return "red_zone" if ytg<=20 else "opponent_half" if ytg<=50 else (
         "midfield" if ytg<=60 else "own_half" if ytg<=90 else "own_deep")
 
-def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,v04_prior=None):
+def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,
+                         v04_prior=None,dated_profile=None):
     x=fitted["profiles"][side]
     zone=_zone(ytg)
     base=x["zone_outcomes"][zone].copy()
@@ -215,7 +216,20 @@ def outcome_distribution(fitted,side,ytg,matchup=True,regress_turnovers=False,v0
         # Offense EPA is complemented by opponent EPA ALLOWED in earlier
         # meetings; no use of today's postgame scouting state.
         off=attack["off_epa_sum"];allowed=defense["off_epa_sum"]
-        pass_rate=attack["pass_plays"] or .5
+        # V11 research challenger: replace raw season EPA with previously
+        # reconstructed opponent-adjusted *weekly* EPA, not stack it on
+        # raw EPA and count the same scoring advantage twice.
+        if dated_profile is not None:
+            own=dated_profile["teams"][side]
+            other=dated_profile["teams"]["away" if side=="home" else "home"]
+            own_form=own["weekly_recent_form"]
+            other_form=other["weekly_recent_form"]
+            if (own["games_before_cutoff"]>=2 and other["games_before_cutoff"]>=2
+                and number(own_form.get("epa_off_adj")) is not None and
+                number(other_form.get("epa_def_adj")) is not None):
+                off=float(own_form["epa_off_adj"])
+                allowed=float(other_form["epa_def_adj"])
+        pass_rate=attack["pass_plays"] if attack["pass_plays"] is not None else .5
         pass_e=attack["pass_epa_sum"];rush_e=attack["rush_epa_sum"]
         pressured=attack["pressure_count"];created=defense["pressure_count"]
         if off is not None and allowed is not None:
@@ -323,7 +337,7 @@ def one_game(fitted,matchup,rng,trace=False,regress_turnovers=False,v04_prior=No
     return total,takeaways,trace_rows
 
 def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
-             regress_turnovers=False,v04_prior=None):
+             regress_turnovers=False,v04_prior=None,dated_profile=None):
     if not fitted.get("ready") or fitted.get("status")!=STATUS:
         raise ValueError("Unverified drive fit")
     if not 100<=trials<=20000 or type(seed) is not int:
@@ -347,12 +361,21 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
                      "target_date":fitted.get("target_date"),
                      "home_points":v04_prior.get("home_points"),
                      "away_points":v04_prior.get("away_points")}))
+    if dated_profile is not None:
+        from scripts.v11_dated_profile_bridge import verify_for_target
+        if v04_prior is None or not matchup:
+            raise ValueError("Dated profile research requires frozen V04 matchup prior")
+        verify_for_target(dated_profile,{
+            "game_id":fitted["target_game_id"],
+            "cutoff":fitted["target_date"],
+            "home":fitted["target_home"],"away":fitted["target_away"],
+        })
     # The context and source history are fixed for a matchup. Precompute
     # 10 conditional drive distributions once instead of re-fitting them on
     # each of ~20 possessions in every Monte Carlo draw.
     representatives={"own_deep":95,"own_half":75,"midfield":55,"opponent_half":35,"red_zone":15}
     distributions={(side,zone):outcome_distribution(fitted,side,yard,matchup,
-                     regress_turnovers,v04_prior)
+                     regress_turnovers,v04_prior,dated_profile)
         for side in ("home","away") for zone,yard in representatives.items()}
     rng=random.Random(seed);hm=[];ts=[];hs=[];as_=[];to_h=[];to_a=[]
     results=[];example=[]
@@ -376,10 +399,12 @@ def simulate(fitted,matchup=True,trials=1200,seed=2026,trace=False,
     z=1.96
     wilson_half=z*math.sqrt(pwin*(1-pwin)/trials+(z*z)/(4*trials*trials))/(1+(z*z)/trials)
     return {"status":STATUS,
-        "model_variant":"V04_STRENGTH_ANCHORED_POSSESSIONS" if v04_prior else
+        "model_variant":"V11_DATED_V04_OPPONENT_ADJUSTED_EPA_POSSESSIONS" if dated_profile else
+          "V04_STRENGTH_ANCHORED_POSSESSIONS" if v04_prior else
           "REGRESSED_TURNOVER_MATCHUP" if regress_turnovers else
           "OPPONENT_EPA_PRESSURE_RZ_TURNOVER_MATCHUP" if matchup else "OBSERVED_DRIVE_FREQUENCY",
         "v04_prior_used":v04_prior is not None,
+        "dated_v04_team_profile_used":dated_profile is not None,
         "turnover_regression_used":regress_turnovers,
         "sampling_95ci_half_width_home_win":round(wilson_half,5),
         "trials":trials,"home_points_mean":round(mean(hs),3),
