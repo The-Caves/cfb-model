@@ -14,6 +14,9 @@ on:
       - 'tests/test_site_history.py'
       - 'scripts/site_simulation_shadow.py'
       - 'scripts/site_v09_shadow.py'
+      - 'scripts/site_v13_shadow.py'
+      - 'scripts/v13_v04_probabilities.py'
+      - 'tests/test_site_v13_shadow.py'
       - 'scripts/v09_score_sim_backtest.py'
       - 'tests/test_site_v09_shadow.py'
       - 'tests/test_site_simulation_shadow.py'
@@ -299,6 +302,29 @@ jobs:
             --dashboard site/data/dashboard.json \
             --trials 1200 | tee /tmp/site-v09-shadow.txt
           cat /tmp/site-v09-shadow.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Build V13 V04-preserving probability shadow from earlier settled pre-kickoff forecasts
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -p 'test_v13_v04_probabilities.py' -v
+          python -m unittest discover -s tests -p 'test_site_v13_shadow.py' -v
+          python -m scripts.site_v13_shadow \
+            --archive-root .context-state \
+            --dashboard site/data/dashboard.json \
+            --min-train 35 | tee /tmp/site-v13-shadow.txt
+          cat /tmp/site-v13-shadow.txt >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          b=json.load(open("site/data/dashboard.json"))
+          d=b["v13_probability_display"]
+          assert d["status"]=="V13_SOURCE_TIMED_V04_PROBABILITY_SHADOW"
+          assert d["original_v04_points_preserved"] is True
+          assert d["updated_score_model_promoted"] is False
+          assert d["independent_prospective_improvement_proven"] is False
+          assert all(g.get("v13_probability_shadow") is None or
+                     (g["v13_probability_shadow"]["v04_mean_scores_unchanged"] is True
+                      and g["v13_probability_shadow"]["safe_for_betting"] is False)
+                     for g in b["games"])
+          PY
       - name: Overlay source-reviewed player-stat outlooks (separate model; scores frozen)
         run: |
           python -m scripts.site_player_props --dashboard site/data/dashboard.json | tee /tmp/site-playerprops.txt
