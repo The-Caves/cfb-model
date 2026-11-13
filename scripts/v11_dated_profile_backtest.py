@@ -81,6 +81,22 @@ def evaluate(archive,source,advanced,bridge_result,min_past=35,trials=2000):
              ("game_id","home","away","date","cutoff","kickoff_utc",
               "final_home","final_away","market")}
         row["v04"]=old
+        # V10 already has separately reconstructed source-dated SOS/SOV/SOR.
+        # Carry the full résumé in the matched original cutoff without
+        # claiming that those correlated metrics affect the score engine.
+        resume=prev.get("team_resume_research")
+        if resume is not None:
+            if (resume.get("cutoff_date_exclusive")!=prev["cutoff"] or
+                resume.get("used_in_drive_scoring") is not False or
+                resume.get("historical_source_publication_verified") is not False
+                or not all(isinstance(resume.get(side),dict)
+                       for side in ("home","away"))):
+                raise ValueError("Unsupported or mismatched SOS/SOV/SOR history")
+            for side in ("home","away"):
+                if (resume[side].get("games_before_cutoff")!=
+                    profile["teams"][side]["games_before_cutoff"]):
+                    raise ValueError("SOS/SOV/SOR and weekly profiles have different source exposure")
+        row["asof_sos_sov_sor_resume"]=resume
         row["simulations"]={
           "v10_same_weekly_cutoff":_score(normal),
           "v11_dated_opponent_epa":_score(enriched)}
@@ -116,6 +132,8 @@ def evaluate(archive,source,advanced,bridge_result,min_past=35,trials=2000):
     result={"status":STATUS,"season":2026,"models":{v:_metric(evaluated,v) for v in VERSIONS},
         "matched_games":len(evaluated),"original_v10_games":len(archive["games"]),
         "excluded":dict(skipped),
+        "dated_resume_available_games":sum(r["asof_sos_sov_sor_resume"] is not None for r in evaluated),
+        "resume_features_used_in_scoring":False,
         "both_teams_asof_adjusted_epa_games":sum(
             r["source_provenance"]["dated_opponent_adjusted_epa_available_both_ways"]
             for r in evaluated),
