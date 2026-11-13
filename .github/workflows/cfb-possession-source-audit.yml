@@ -1,0 +1,28 @@
+name: CFB True Possession Source Audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/drive_source_probe.py'
+      - '.github/workflows/cfb-possession-source-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect-actual-drive-structure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fetch Kentucky/Tennessee, Alabama/Texas A&M live ESPN drive and scoring evidence
+        run: |
+          python -m scripts.drive_source_probe --ids 401856745 401856727 401856715 \
+            --output artifacts/2026-real-drive-schema.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cfb-possession-source-probe
+          path: artifacts/2026-real-drive-schema.json
+          if-no-files-found: error
