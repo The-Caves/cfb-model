@@ -1461,6 +1461,23 @@ function renderPerformance(){
  area.append(node("div","","Frozen graded games: "+(score.frozen_games??"—")+" · Margin MAE: "+num(score.margin_mae,2)+" pts · Total MAE: "+num(score.total_mae,2)+" pts"));
  area.append(node("div","performanceMeta","Independent final games: "+(score.verified_final_games??"—")+" · Page snapshots: "+(score.website_runs??"—")+" · Unsettled displayed games: "+(score.unsettled_site_market_games??"—")));
  area.append(node("div","performanceMeta","Repeated snapshots excluded · ATS "+(score.duplicate_ats_snapshots_excluded??"—")+" · Totals "+(score.duplicate_ou_snapshots_excluded??"—")+" · Updated "+fmtDate.format(dateOf(p.asof_utc))));
+ const v13grade=data?.v13_prospective_performance;
+ if(v13grade?.status==="V13_FIRST_SOURCE_FROZEN_PREGAME_PROBABILITY_PERFORMANCE"){
+  const v=v13grade.scoring||{};
+  area.append(node("div","performanceMeta","V13 probability layer · "+(v13grade.first_frozen_pregame_v13_games??0)+
+    " first pre-kickoff forecasts captured · "+(v13grade.settled_v13_games??0)+
+    " independently settled · "+(v13grade.unsettled_v13_games??0)+" awaiting finals."));
+  if(v13grade.settled_v13_games>0){
+   area.append(node("div","performanceMeta","V13 winner probability Brier: "+
+     (Number.isFinite(v.winner_brier)?num(v.winner_brier,3):"—")+
+     " · Margin CRPS: "+(Number.isFinite(v.margin_crps)?num(v.margin_crps,2):"—")+
+     " · Total CRPS: "+(Number.isFinite(v.total_crps)?num(v.total_crps,2):"—")+
+     " · Total 80% interval coverage: "+(Number.isFinite(v.total_80pct_coverage)?num(v.total_80pct_coverage*100,1)+"%":"—")));
+  }else{
+   area.append(node("div","performanceMeta","New V13 forecasts have not completed and settled yet; historical research wins are not counted as prospective performance."));
+  }
+  area.append(node("div","performanceMeta","V13 has not replaced V04 scoring or earned a verified betting edge. Only first timestamped V13 forecasts before kickoff count."));
+ }
  const v=p.v04_challenger;
  if(v?.status==="ARCHIVED_PREKICKOFF_V04_MARKET_RESEARCH_GRADES"){
   area.append(node("div","performanceMeta","V04 pregame research challenger (not promoted): ATS "+resultRecord(v.ats)+" · O/U "+resultRecord(v.ou)));
