@@ -233,10 +233,48 @@ def _one_team(rng,team,possession_count):
         raise ValueError("Player stat budgets failed exact conservation")
     return totals,{k:dict(v) for k,v in stats.items()}
 
-def simulate(gamefit,profile,decision_utc,trials=400,seed=2026):
+def simulate(gamefit,profile,decision_utc,trials=400,seed=2026,quotes=None):
     now=_validate(profile,gamefit,decision_utc)
     if type(trials) is not int or not 50<=trials<=20000 or type(seed) is not int:
         raise ValueError("Invalid Monte Carlo research trials")
+    # Optional V14 source-verified, exact-player, two-sided pregame quotes.
+    # The simulation never fabricates a prop threshold or assumes starters.
+    eligible_quotes=[]
+    if quotes is not None:
+        from scripts.game_context import parse_time
+        if (quotes.get("status")!="NCAAF_PLAYER_PROP_SOURCE_CAPTURE_RESEARCH_ONLY" or
+            str(quotes.get("espn_game_id"))!=str(gamefit["game_id"]) or
+            quotes.get("safe_for_betting") is not False or
+            quotes.get("model_promoted") is not False or
+            parse_time(quotes["observed_at_utc"])>now or
+            not isinstance(quotes.get("quotes"),list)):
+            raise ValueError("V14 missing source-verified predecision player prop quote")
+        roster={
+            (team["team"],str(p["player_id"]))
+            for team in profile["teams"].values() for p in team["players"]}
+        seen=set()
+        supported={"passing_attempts","passing_completions","passing_yards",
+                   "rushing_attempts","rushing_yards","receptions","receiving_yards"}
+        for quote in quotes["quotes"]:
+            ident=(quote.get("team"),str(quote.get("player_id")),quote.get("metric"))
+            if (quote.get("status")!="OBSERVED_TWO_SIDED_PREDECISION_PROP" or
+                str(quote.get("espn_game_id"))!=str(gamefit["game_id"]) or
+                ident in seen or
+                quote.get("metric") not in supported or
+                ident[:2] not in roster or
+                type(quote.get("line")) not in (int,float) or
+                not math.isfinite(quote["line"]) or quote["line"]<0 or
+                quote.get("kickoff_utc")!=gamefit["kickoff_utc"] or
+                parse_time(quote["observed_at_utc"])>now or
+                parse_time(quote["book_updated_at_utc"])>now or
+                parse_time(quote["market_updated_at_utc"])>now or
+                not isinstance(quote.get("source_snapshot_sha256"),str) or
+                len(quote["source_snapshot_sha256"])!=64 or
+                type(quote.get("over_american_odds")) is not int or
+                type(quote.get("under_american_odds")) is not int):
+                raise ValueError("V14 unverified or ambiguous player-market evidence")
+            seen.add(ident)
+            eligible_quotes.append(quote)
     rng=random.Random(seed)
     history=defaultdict(lambda:defaultdict(list))
     budgets=defaultdict(lambda:defaultdict(list))
@@ -277,6 +315,28 @@ def simulate(gamefit,profile,decision_utc,trials=400,seed=2026):
                        "mean_team_budgets":{k:aggregate(xs)
                                             for k,xs in budgets[side].items()},
                        "player_opportunity_scenarios":records})
+    quote_probabilities=[]
+    if eligible_quotes:
+        for q in eligible_quotes:
+            side="home" if q["team"]==profile["teams"]["home"]["team"] else "away"
+            draws=history[(side,str(q["player_id"]))][q["metric"]]
+            if len(draws)!=trials:
+                raise ValueError("V14 athlete simulated only partial trials")
+            line=q["line"]
+            over=sum(x>line for x in draws)
+            under=sum(x<line for x in draws)
+            pushes=trials-over-under
+            quote_probabilities.append({
+                "player_id":str(q["player_id"]),
+                "team":q["team"],"metric":q["metric"],
+                "bookmaker":q["bookmaker"],"line":line,
+                "conditional_over_probability":round(over/trials,6),
+                "conditional_under_probability":round(under/trials,6),
+                "simulated_push_probability":round(pushes/trials,6),
+                "observed_implied_over_no_vig":q["implied_over_no_vig"],
+                "source_snapshot_sha256":q["source_snapshot_sha256"],
+                "player_active_scenario_conditional":True,
+                "calibrated_prop_edge":False,"model_promoted":False})
     return {"status":STATUS,"game_id":str(gamefit["game_id"]),
             "decision_utc":now.isoformat(),"trials":trials,"seed":seed,
             "team_scenarios":result,
@@ -285,6 +345,8 @@ def simulate(gamefit,profile,decision_utc,trials=400,seed=2026):
             "unknown_players_preserved":True,
             "player_active_scenario_conditional":True,
             "touchdown_allocation_supported":False,
+            "v14_matched_player_prop_quote_probabilities":quote_probabilities,
+            "v14_player_prop_betting_edge_verified":False,
             "historical_source_publication_authenticated":False,
             "prop_model_probabilities_calibrated":False,
             "model_promoted":False,"safe_for_betting":False,
