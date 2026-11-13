@@ -8,6 +8,8 @@ on:
       - 'tests/test_v10_possession_sim.py'
       - 'scripts/v10_possession_sim.py'
       - 'scripts/v10_possession_backtest.py'
+      - 'scripts/team_resume_strength.py'
+      - 'tests/test_team_resume_strength.py'
       - 'scripts/v10_monte_carlo_convergence.py'
       - '.github/workflows/cfb-v10-possessions.yml'
   workflow_dispatch:
@@ -32,6 +34,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_possession_drive_ingest.py' -v
           python -m unittest discover -s tests -p 'test_v10_possession_sim.py' -v
+          python -m unittest discover -s tests -p 'test_team_resume_strength.py' -v
       - name: Retrieve 2026 independently verified ESPN schedule and finals
         uses: actions/download-artifact@v4
         with:
