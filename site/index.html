@@ -1132,28 +1132,90 @@ function cardSections(g,more){
  tabs.append(props,scouting);box.append(tabs,content);return box;
 }
 
+function historicalGameCard(g){
+ const el=node("article","game historyGame"),top=node("div","gameTop");
+ const complete=g.final&&Number.isInteger(g.final.home_score)&&Number.isInteger(g.final.away_score);
+ top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
+    node("span","historyStatus",complete?"FINAL":"Awaiting verified final"));
+ el.append(top);
+ const teams=node("div","historyTeams");
+ for(const side of ["away","home"]){
+  const team=g[side+"_team"],brand=(data.games||[]).find(x=>
+    x.home_team===team||x.away_team===team);
+  const knownBrand=brand?(brand.home_team===team?brand.team_brand_home:brand.team_brand_away):null;
+  const row=node("div","historyTeamRow"),info=node("div","teamIdentity");
+  if(/^#[0-9a-f]{6}$/i.test(knownBrand?.color||""))
+     row.style.setProperty("--school-color",knownBrand.color);
+  info.append(logoBadge(team,knownBrand),node("strong","",team));
+  const actual=node("strong","historyActual",
+      complete?String(g.final[side+"_score"]):"—");
+  row.append(info,actual);teams.append(row);
+ }
+ el.append(teams);
+ const model=node("div","historyProjection");
+ model.append(node("span","",g.archived_model==="V04"?
+   "Original pregame · V04":"Original V03 prediction withheld (home-bias quarantine)"));
+ if(g.archived_model==="V04"&&Number.isFinite(g.model_away_points)&&Number.isFinite(g.model_home_points)){
+  model.append(node("strong","","Model: "+num(g.model_away_points,0)+" – "+num(g.model_home_points,0)));
+  model.append(node("span","",g.away_team+" @ "+g.home_team+" · model total "+num(g.model_total,1)));
+ }else model.append(node("strong","","No trustworthy archived V04 score"));
+ el.append(model);
+ const outcomes=node("div","historyOutcomes");
+ for(const [label,key] of [["Winner","su"],["ATS","ats"],["O/U","ou"]]){
+  const badge=node("div","historyOutcome"),value=g.outcomes?.[key]||"UNAVAILABLE";
+  badge.append(node("small","",label),node("strong","outcome-"+value.toLowerCase(),value));
+  outcomes.append(badge);
+ }
+ el.append(outcomes);
+ const book=node("div","historyBook");
+ const sp=g.market_home_spread,tot=g.market_total;
+ const homeSp=Number.isFinite(sp)?(sp>0?"+":"")+num(sp,1):"—";
+ book.append(node("div","","Pregame book: "+(g.market_provider||"not archived")));
+ book.append(node("div","","Home spread "+homeSp+" · Total "+(Number.isFinite(tot)?num(tot,1):"—")));
+ if(g.archived_model==="V04")book.append(node("div","",
+   "Original V04 decision: "+(g.ats_pick||"Unavailable")+" ATS · "+(g.ou_pick||"Unavailable")+" total"));
+ if(g.market_observed_utc)book.append(node("div","historyObserved","Quote observed "+fmtDate.format(dateOf(g.market_observed_utc))+" · Not live odds"));
+ el.append(book);
+ const source=node("details","historySource");
+ source.append(node("summary","","Original forecast evidence"));
+ source.append(node("p","",
+   "Displayed and saved before kickoff: "+fmtDate.format(dateOf(g.archive_captured_utc))+
+   ". Results are matched from a separate observed final-score archive. V03 predictions with known home bias are not passed off as V04 forecasts."));
+ el.append(source);
+ return el;
+}
 function updateDayNav(){
  if(!data)return;
- const keys=[...new Set(data.games.map(g=>dateKey(dateOf(g.kickoff_utc))))].sort((a,b)=>new Date(a)-new Date(b));
- const now=new Date(),today=dateKey(now);
- const upcomingKeys=keys.filter(key=>data.games.some(g=>
-    dateKey(dateOf(g.kickoff_utc))===key&&dateOf(g.kickoff_utc)>now));
- // On initial load, skip a completed game day rather than showing an empty slate.
- // A user may still tap an earlier date to inspect the empty pregame view.
+ const now=new Date();
+ const upcoming=data.games||[],history=(data.history_games||[]).filter(g=>dateOf(g.kickoff_utc)<=now);
+ const rows=upcoming.concat(history);
+ const keys=[...new Set(rows.map(g=>dateKey(dateOf(g.kickoff_utc))))].sort((a,b)=>new Date(a)-new Date(b));
+ const today=dateKey(now);
+ const upcomingKeys=keys.filter(key=>upcoming.some(g=>
+   dateKey(dateOf(g.kickoff_utc))===key&&dateOf(g.kickoff_utc)>now));
  if(!keys.includes(selectedDay)&&selectedDay!=="all")
-   selectedDay=upcomingKeys.includes(today)?today:(upcomingKeys[0]||"all");
+   selectedDay=upcomingKeys.includes(today)?today:(upcomingKeys[0]||keys[keys.length-1]||"all");
  const nav=byId("day-nav");nav.replaceChildren();
  for(const key of keys){
- const first=data.games.find(g=>dateKey(dateOf(g.kickoff_utc))===key);
- const d=dateOf(first.kickoff_utc);
- const b=node("button","dayButton"+(selectedDay===key?" selected":""),undefined);
- b.type="button";b.dataset.date=key;
- b.append(node("strong","",weekdayFmt.format(d)),node("span","",new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"}).format(d)));
- b.setAttribute("aria-pressed",String(selectedDay===key));b.addEventListener("click",()=>{selectedDay=key;updateDayNav();render();refreshMarket();});
- nav.append(b);
+  const first=rows.find(g=>dateKey(dateOf(g.kickoff_utc))===key);
+  const d=dateOf(first.kickoff_utc);
+  const past=!upcoming.some(g=>dateKey(dateOf(g.kickoff_utc))===key&&dateOf(g.kickoff_utc)>now);
+  const b=node("button","dayButton"+(past?" pastDay":"")+(selectedDay===key?" selected":""),undefined);
+  b.type="button";b.dataset.date=key;
+  b.append(node("strong","",weekdayFmt.format(d)),
+           node("span","",new Intl.DateTimeFormat("en-US",{
+             timeZone:"America/New_York",month:"short",day:"numeric"}).format(d)));
+  b.setAttribute("aria-pressed",String(selectedDay===key));
+  b.title=past?"Historical results and original pregame predictions":"Upcoming games";
+  b.addEventListener("click",()=>{selectedDay=key;updateDayNav();render();if(!past)refreshMarket();});
+  nav.append(b);
  }
  const all=node("button","dayButton"+(selectedDay==="all"?" selected":""),undefined);
- all.type="button";all.append(node("strong","","All"),node("span","","Dates"));all.setAttribute("aria-pressed",String(selectedDay==="all"));all.addEventListener("click",()=>{selectedDay="all";updateDayNav();render();refreshMarket();});nav.append(all);
+ all.type="button";all.append(node("strong","","All"),node("span","","Upcoming"));
+ all.setAttribute("aria-pressed",String(selectedDay==="all"));
+ all.addEventListener("click",()=>{selectedDay="all";updateDayNav();render();refreshMarket();});nav.append(all);
+ const chosen=nav.querySelector(".selected");
+ if(chosen)chosen.scrollIntoView({block:"nearest",inline:"nearest"});
 }
 function resultRecord(r){return r&&Number.isInteger(r.wins)&&Number.isInteger(r.losses)?r.wins+"–"+r.losses+(r.pushes?"–"+r.pushes+" P":""):"—";}
 function resultMeta(r){return !r||!Number.isInteger(r.decisions)?"Not graded":r.decisions?(r.decisions+" decisions · "+(Number.isFinite(r.win_rate)?num(r.win_rate*100,1)+"% wins":"—")):"No eligible results";}
@@ -1578,9 +1640,29 @@ async function refreshMarket(){
 function render(){
  if(!data)return;
  const now=new Date(),future=data.games.filter(g=>dateOf(g.kickoff_utc)>now);
+ const historical=(data.history_games||[]).filter(g=>dateOf(g.kickoff_utc)<=now);
+ const futureDays=new Set(future.map(g=>dateKey(dateOf(g.kickoff_utc))));
+ const pastDay=selectedDay!=="all"&&selectedDay!==null&&!futureDays.has(selectedDay);
  byId("upcoming-count").textContent=future.length;
  byId("today-count").textContent=future.filter(g=>dateKey(dateOf(g.kickoff_utc))===dateKey(now)).length;
  const needle=byId("query").value.trim().toLowerCase(),filter=byId("market-filter").value,order=byId("sort").value;
+ document.querySelector(".quickFilters").classList.toggle("hidden",pastDay);
+ byId("filter-panel").classList.toggle("hidden",pastDay);
+ if(pastDay){
+   const dayGames=historical.filter(g=>dateKey(dateOf(g.kickoff_utc))===selectedDay);
+   dayGames.sort((a,b)=>dateOf(a.kickoff_utc)-dateOf(b.kickoff_utc));
+   const representative=dayGames[0];
+   byId("day-heading").textContent=representative?
+     "Results · "+labelFmt.format(dateOf(representative.kickoff_utc)):"Past games";
+   byId("showing").textContent=dayGames.length+" archived";
+   if(!dayGames.length){
+     empty("No saved pregame prediction for this day",
+       "Only predictions captured before kickoff appear here. This is not a postgame model re-run.");
+   }else{
+     byId("games").replaceChildren(...dayGames.map(historicalGameCard));
+   }
+   return;
+ }
  const shown=future.filter(g=>{
   if(selectedDay!=="all"&&dateKey(dateOf(g.kickoff_utc))!==selectedDay)return false;
   if(needle&&!(g.away_team+" "+g.home_team+" "+g.game_id+" "+(g.qb_home?.player||"")+" "+(g.qb_away?.player||"")+" "+(g.player_props?.entries||[]).map(p=>p.player).join(" ")).toLowerCase().includes(needle))return false;
@@ -1624,7 +1706,7 @@ function render(){
  byId("day-heading").textContent=representative?labelFmt.format(dateOf(representative.kickoff_utc)):"Upcoming games";
  }
  byId("showing").textContent=shown.length+" shown";
- if(!shown.length){empty("No games match this view","Select another day or remove a filter. Only games not yet kicked off can be shown as pregame projections.");return;}
+ if(!shown.length){empty("No upcoming games match this view","Select another date or remove a filter. Earlier dates show archived pregame predictions and results.");return;}
  byId("games").replaceChildren(...shown.map(gameCard));
 }
 for(const button of document.querySelectorAll("[data-tab]"))button.addEventListener("click",()=>{
@@ -1635,6 +1717,7 @@ for(const button of document.querySelectorAll("[data-tab]"))button.addEventListe
  document.querySelector(".dayShell").classList.toggle("hidden",button.dataset.tab!=="matchups");
  if(button.dataset.tab==="live"){renderLive();refreshLive();}
  if(button.dataset.tab==="matchups")refreshMarket();
+ if(button.dataset.tab==="sources")byId("sources").scrollIntoView({behavior:"smooth",block:"start"});
 });
 byId("refresh-live").addEventListener("click",refreshLive);
 // Refresh only when someone is viewing Live. The data is still the most
