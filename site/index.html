@@ -883,6 +883,23 @@ function v13ProbabilityShadow(game){
     Math.abs(x.total_mean-base.total_points)>.02)return null;
  return x;
 }
+function v14MatchupShadow(game){
+ const base=v04ScoreScenario(game),x=game?.v14_matchup_shadow;
+ if(!base||x?.site_status!=="V14_SOURCE_TIMED_OPPONENT_MATCHUP_SCORE_SHADOW"||
+    x?.status!=="V14_REGULARIZED_V04_MATCHUP_RESIDUAL_RESEARCH_ONLY"||
+    x?.variant!=="joint_close"||x?.model_promoted!==false||
+    x?.safe_for_betting!==false||x?.original_v04_score_unchanged!==true||
+    x?.matchup_evidence_ready!==true||
+    x?.historical_source_first_publication_verified!==false||
+    !Number.isFinite(x?.home_points)||!Number.isFinite(x?.away_points)||
+    !Number.isFinite(x?.margin)||!Number.isFinite(x?.total)||
+    Math.abs(x.home_points-x.away_points-x.margin)>.02||
+    Math.abs(x.home_points+x.away_points-x.total)>.02||
+    Math.abs(x.v04_margin-base.home_margin)>.02||
+    Math.abs(x.v04_total-base.total_points)>.02||
+    Math.abs(x.margin_adjustment)>6.01||Math.abs(x.total_adjustment)>6.01)return null;
+ return x;
+}
 function v04MarketResearch(game){
  const r=game?.v04_market_research;
  if(!v04ScoreScenario(game)||
@@ -1105,7 +1122,8 @@ function opponentMargin(g){
 function gameCard(g){
  const el=node("article","game"),top=node("div","gameTop");
  top.append(node("span","small",fmtDate.format(dateOf(g.kickoff_utc))),
-            node("span","modelTag",v13ProbabilityShadow(g)?"V13 + V04 · research":
+            node("span","modelTag",v14MatchupShadow(g)?"V14 matchup · research":
+                 v13ProbabilityShadow(g)?"V13 + V04 · research":
                  v04ScoreScenario(g)?"V04 · current research":
                  g.home_bias_quarantined?"R1 · alternative":"V03 · archived research"));
  el.append(top);
@@ -1144,6 +1162,30 @@ function gameCard(g){
    summary.append(node("div","biasNote",
      (book.length?book.join(" · ")+" · ":"")+
      "Prior settled pregame forecasts only. Experimental uncertainty, NOT a verified betting edge; original V04 picks remain frozen."));
+  }
+  const v14=v14MatchupShadow(g);
+  if(v14){
+   const fold=node("details","detailFold");
+   fold.append(node("summary","","V14 opponent-specific matchup score · research"),
+     node("div","biasNote",
+       g.away_team+" "+num(v14.away_points,1)+" · "+
+       g.home_team+" "+num(v14.home_points,1)+
+       " · Total "+num(v14.total,1)+
+       " · Change vs V04: margin "+(v14.margin_adjustment>=0?"+":"")+num(v14.margin_adjustment,1)+
+       ", total "+(v14.total_adjustment>=0?"+":"")+num(v14.total_adjustment,1)+"."));
+   if(v14.probabilities){
+    const p=v14.probabilities,notes=[];
+    if(Number.isFinite(p.home_win))
+     notes.push("Home win "+num(100*p.home_win,0)+"%");
+    if(Number.isFinite(p.home_cover_calibrated))
+     notes.push("Home spread cover "+num(100*p.home_cover_calibrated,0)+"%");
+    if(Number.isFinite(p.over_calibrated))
+     notes.push("Over "+num(100*p.over_calibrated,0)+"%");
+    fold.append(node("div","biasNote",notes.join(" · ")));
+   }
+   fold.append(node("div","biasWarning",
+     "V14 is a historical-matchup challenger under prospective evaluation, NOT a promoted scoring model or a verified betting edge. Original V04/V13 picks and grades remain unchanged."));
+   summary.append(fold);
   }
   // Reviewed university sources are future-only; no retrospective
   // "known absence" is painted onto a game archived before first review.
