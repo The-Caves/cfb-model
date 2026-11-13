@@ -8,6 +8,10 @@ on:
       - 'scripts/site_v13_shadow.py'
       - 'tests/test_v13_v04_probabilities.py'
       - 'tests/test_site_v13_shadow.py'
+      - 'tests/test_site_v13_archive.py'
+      - 'scripts/site_decision_archive.py'
+      - 'site/index.html'
+      - '.github/workflows/cfb-site.yml'
       - '.github/workflows/cfb-v13-calibration.yml'
       - 'docs/V13_V04_PROBABILITIES_2026.md'
   workflow_dispatch:
@@ -33,6 +37,21 @@ jobs:
           python -m unittest discover -s tests -p 'test_v04_direct_scores.py' -v
           python -m unittest discover -s tests -p 'test_v13_v04_probabilities.py' -v
           python -m unittest discover -s tests -p 'test_site_v13_shadow.py' -v
+          python -m unittest discover -s tests -p 'test_site_v13_archive.py' -v
+          python -m unittest discover -s tests -p 'test_site_decision_archive.py' -v
+          python -m unittest discover -s tests -p 'test_site_ui_compact.py' -v
+      - name: Ensure V13 website app JavaScript is valid before publishing
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          source=Path("site/index.html").read_text()
+          scripts=re.findall(r'<script(?:\\s+[^>]*)?>([\\s\\S]*?)</script>',source)
+          assert len(scripts)==2
+          assert "function v13ProbabilityShadow" in scripts[1]
+          Path("/tmp/cfb-v13-app.js").write_text(scripts[1])
+          PY
+          node --check /tmp/cfb-v13-app.js
       - name: Download exact previously executed 2026 377-game research cohort
         uses: actions/download-artifact@v4
         with:
