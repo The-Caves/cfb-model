@@ -240,6 +240,7 @@ def simulate(gamefit,profile,decision_utc,trials=400,seed=2026,quotes=None):
     # Optional V14 source-verified, exact-player, two-sided pregame quotes.
     # The simulation never fabricates a prop threshold or assumes starters.
     eligible_quotes=[]
+    unsupported_quote_categories=[]
     if quotes is not None:
         from scripts.game_context import parse_time
         if (quotes.get("status")!="NCAAF_PLAYER_PROP_SOURCE_CAPTURE_RESEARCH_ONLY" or
@@ -260,7 +261,6 @@ def simulate(gamefit,profile,decision_utc,trials=400,seed=2026,quotes=None):
             if (quote.get("status")!="OBSERVED_TWO_SIDED_PREDECISION_PROP" or
                 str(quote.get("espn_game_id"))!=str(gamefit["game_id"]) or
                 ident in seen or
-                quote.get("metric") not in supported or
                 ident[:2] not in roster or
                 type(quote.get("line")) not in (int,float) or
                 not math.isfinite(quote["line"]) or quote["line"]<0 or
@@ -274,6 +274,12 @@ def simulate(gamefit,profile,decision_utc,trials=400,seed=2026,quotes=None):
                 type(quote.get("under_american_odds")) is not int):
                 raise ValueError("V14 unverified or ambiguous player-market evidence")
             seen.add(ident)
+            if quote["metric"] not in supported:
+                unsupported_quote_categories.append({
+                    "player_id":str(quote["player_id"]),
+                    "metric":quote["metric"],
+                    "reason":"NO_CONSERVATION_SOURCE_FOR_THIS_PROP_METRIC"})
+                continue
             eligible_quotes.append(quote)
     rng=random.Random(seed)
     history=defaultdict(lambda:defaultdict(list))
@@ -346,6 +352,7 @@ def simulate(gamefit,profile,decision_utc,trials=400,seed=2026,quotes=None):
             "player_active_scenario_conditional":True,
             "touchdown_allocation_supported":False,
             "v14_matched_player_prop_quote_probabilities":quote_probabilities,
+            "v14_unsupported_verified_prop_categories":unsupported_quote_categories,
             "v14_player_prop_betting_edge_verified":False,
             "historical_source_publication_authenticated":False,
             "prop_model_probabilities_calibrated":False,
