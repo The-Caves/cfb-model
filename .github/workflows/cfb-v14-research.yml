@@ -89,6 +89,16 @@ jobs:
             --turnovers .fixed-2026/model_v03/espn-verified-turnovers.json \
             --output artifacts/v14-matched-377-game-research.json | tee artifacts/v14-summary.txt
           cat artifacts/v14-summary.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Independently cross-check V14 scoring with dedicated prior-OOS ATS and total variance
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -p 'test_v14_research.py' -v
+          python -m unittest discover -s tests -p 'test_v14_player_market.py' -v
+          python -m scripts.v14_walkforward \
+            --v13 .frozen-v13/v13-original-377-games.json \
+            --advanced .fixed-2026/advanced/team_game_advanced_2026.csv \
+            --turnovers .fixed-2026/model_v03/espn-verified-turnovers.json \
+            --output artifacts/v14-independent-calibration-crosscheck.json | tee artifacts/v14-crosscheck.txt
       - name: Archive full source-timed assumptions, segment comparisons and PASS grades
         uses: actions/upload-artifact@v4
         with:
@@ -96,4 +106,6 @@ jobs:
           path: |
             artifacts/v14-matched-377-game-research.json
             artifacts/v14-summary.txt
+            artifacts/v14-independent-calibration-crosscheck.json
+            artifacts/v14-crosscheck.txt
           if-no-files-found: error
