@@ -2,7 +2,7 @@
 import copy
 import unittest
 
-from scripts.v10_possession_sim import fit
+from scripts.v10_possession_sim import fit, simulate as simulate_v11
 from scripts.v11_dated_profile_bridge import STATUS as BRIDGE_STATUS
 from scripts.weekly_profiles import STATUS as SNAPSHOT_STATUS
 from scripts.v12_possession_sim import fit_v12,drive_probabilities,simulate
@@ -58,6 +58,17 @@ class V12AcceptanceTests(unittest.TestCase):
         self.assertFalse(a["safe_for_betting"])
         self.assertEqual(len(a["margin_draws"]),120)
         self.assertEqual(len(a["total_draws"]),120)
+
+    def test_v11_distribution_replay_is_bitwise_identical_to_old_output(self):
+        source,model,old,dated=prepared()
+        before=simulate_v11(model,True,trials=120,seed=33,
+                            regress_turnovers=True,v04_prior=old,dated_profile=dated)
+        with_draws=simulate_v11(model,True,trials=120,seed=33,
+                                regress_turnovers=True,v04_prior=old,
+                                dated_profile=dated,return_draws=True)
+        self.assertEqual(with_draws.pop("margin_draws").__len__(),120)
+        self.assertEqual(with_draws.pop("total_draws").__len__(),120)
+        self.assertEqual(before,with_draws)
 
     def test_future_target_or_profile_mismatch_abstains(self):
         source,prior,old,dated=prepared()
