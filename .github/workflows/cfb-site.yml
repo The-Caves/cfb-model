@@ -8,6 +8,8 @@ on:
       - 'scripts/site_export.py'
       - 'scripts/site_live.py'
       - 'scripts/site_weather.py'
+      - 'scripts/site_history.py'
+      - 'tests/test_site_history.py'
       - 'scripts/site_simulation_shadow.py'
       - 'tests/test_site_simulation_shadow.py'
       - 'tests/test_site_weather.py'
@@ -350,6 +352,11 @@ jobs:
                      for row in b["live_games"])
           print("Live score overlays did not modify archived forecast/grade.")
           PY
+      - name: Reconstruct previous-day results from immutable pre-kickoff V04 site snapshots
+        run: |
+          python -m unittest discover -s tests -p 'test_site_history.py' -v
+          python -m scripts.site_history --archive-root .context-state --dashboard site/data/dashboard.json | tee /tmp/site-history.txt
+          cat /tmp/site-history.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Report earliest today research matchups without betting claims
         run: |
           python - <<'PY'
