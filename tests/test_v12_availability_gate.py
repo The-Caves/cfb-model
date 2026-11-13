@@ -43,6 +43,21 @@ class PITTests(unittest.TestCase):
         self.assertEqual(result["rejected_records"]["ACTUAL_WEATHER_IS_LEAKAGE"],1)
         self.assertTrue(all(x is None for x in result["evidence"]["qb"].values()))
 
+    def test_simulator_rejects_evidence_collected_after_frozen_weekly_cutoff(self):
+        from tests.test_v12_possession_sim import prepared
+        from scripts.v12_possession_sim import fit_v12
+        source,model,v04,dated=prepared()
+        verified=self.snap([record("qb","Home")])
+        fitted=fit_v12(model,source,v04,dated,point_in_time_context=verified)
+        self.assertEqual(fitted["availability_evidence"]["qb"],
+                         "PIT_SOURCE_CONFIRMED_RESEARCH_ONLY")
+        self.assertEqual(fitted["availability_evidence"]["injury"],"UNVERIFIED")
+        self.assertFalse(fitted["availability_adjustments_applied"])
+        after_week=snapshot([record("qb","Home")],game_id="999",
+                            home="Home",away="Away",asof_utc="2026-10-01T12:00:00Z")
+        with self.assertRaisesRegex(ValueError,"original V04 weekly cutoff"):
+            fit_v12(model,source,v04,dated,point_in_time_context=after_week)
+
     def test_no_timestamp_inference_and_contradictory_sources(self):
         with self.assertRaisesRegex(ValueError,"timestamp"):
             snapshot([],game_id="999",home="Home",away="Away",
