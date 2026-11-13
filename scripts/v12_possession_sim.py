@@ -154,11 +154,20 @@ def fit_v12(fitted,source_games,v04_prior,dated_profile,point_in_time_context=No
             "model_promoted":False}
 
 
-def drive_probabilities(model,side,ytg):
+def drive_probabilities(model,side,ytg,trained_hazards=None):
     """Event probabilities are conditional on actual red-zone-trip state."""
     if model.get("status") != STATUS or not model.get("ready"):
         raise ValueError("Unfitted V12")
     zone = _zone(ytg)
+    if trained_hazards is not None:
+        from scripts.v12_regularized_hazards import probabilities as trained_probabilities
+        if (not trained_hazards.get("ready") or
+            trained_hazards.get("cutoff")!=model["cutoff_date_exclusive"] or
+            trained_hazards.get("historical_source_first_publication_verified") is not False):
+            raise ValueError("V12R2 learned hazards mismatch original weekly cutoff")
+        profile=model["fitted"]["profiles"][side]
+        return trained_probabilities(trained_hazards,side,zone,profile["team"],
+                                     profile["opponent"],model["prior"],model["dated_profile"])
     raw = model["zones"][side][zone]
     base = outcome_distribution(model["fitted"],side,ytg,True,True,
                                 model["prior"],model["dated_profile"])
@@ -209,12 +218,16 @@ def _next_field(model,side,event,returns,rng):
     return rng.choice(league)
 
 
-def one_game(model,rng,conditional,trace=False):
+def one_game(model,rng,conditional,trace=False,pace=None):
     fitted = model["fitted"]
     profiles=fitted["profiles"]
     n=round((profiles["home"]["mean_possessions"]+
              profiles["away"]["mean_possessions"])/2)
-    n=clamp(n+rng.choice((-2,-1,0,0,0,1,2)),7,18)
+    if pace is None:
+        n=clamp(n+rng.choice((-2,-1,0,0,0,1,2)),7,18)
+    else:
+        n=clamp(round(pace["expected_possessions_each"]+
+                      rng.choice(pace["historical_deviations"])),7,18)
     scores={"home":0,"away":0};takeaways={"home":0,"away":0}
     trips={"home":0,"away":0};rztd={"home":0,"away":0}
     side="home" if rng.random()<.5 else "away"
@@ -245,19 +258,27 @@ def one_game(model,rng,conditional,trace=False):
     return scores,takeaways,trips,rztd,traces
 
 
-def simulate(model,trials=2000,seed=2026,trace=False):
+def simulate(model,trials=2000,seed=2026,trace=False,
+             trained_hazards=None,use_learned_pace=False):
     if model.get("status")!=STATUS or not model.get("ready"):
         raise ValueError("Unverified V12 context")
     if type(trials) is not int or not 100<=trials<=20000 or type(seed) is not int:
         raise ValueError("Invalid simulation parameters")
-    conditional={(side,zone):drive_probabilities(model,side,ytg)
+    if use_learned_pace and trained_hazards is None:
+        raise ValueError("V12R2 pace requires strictly historical trained hazards")
+    pace=None
+    if use_learned_pace:
+        from scripts.v12_regularized_hazards import pace_profile
+        pace=pace_profile(trained_hazards,model["fitted"]["target_home"],
+                          model["fitted"]["target_away"])
+    conditional={(side,zone):drive_probabilities(model,side,ytg,trained_hazards)
         for side in ("home","away")
         for zone,ytg in (("own_deep",95),("own_half",75),
                          ("midfield",55),("opponent_half",35),("red_zone",15))}
     rng=random.Random(seed);margins=[];totals=[];scores_h=[];scores_a=[]
     visits_h=[];visits_a=[];td_h=[];td_a=[];sample=[]
     for i in range(trials):
-        score,_,trips,rztd,traces=one_game(model,rng,conditional,trace and i==0)
+        score,_,trips,rztd,traces=one_game(model,rng,conditional,trace and i==0,pace=pace)
         h=score["home"];a=score["away"]
         scores_h.append(h);scores_a.append(a)
         margins.append(h-a);totals.append(h+a)
@@ -271,7 +292,9 @@ def simulate(model,trials=2000,seed=2026,trace=False):
     # recorded separately; assigning half to home would make
     # paired Brier scores use incompatible event definitions.
     win=sum(m>0 for m in margins)/trials
-    return {"status":STATUS,"model_variant":"V12_OPPONENT_CONDITIONED_RZ_AND_TURNOVER_FIELD",
+    return {"status":STATUS,"model_variant":("V12R2_TRAINED_RZ_DRIVES_PACE" if use_learned_pace else
+                         "V12R2_TRAINED_RZ_DRIVES" if trained_hazards is not None else
+                         "V12_OPPONENT_CONDITIONED_RZ_AND_TURNOVER_FIELD"),
         "home_points_mean":round(mean(scores_h),4),"away_points_mean":round(mean(scores_a),4),
         "home_margin_mean":round(mean(margins),4),"total_mean":round(mean(totals),4),
         "home_win_probability":round(win,6),
@@ -285,4 +308,7 @@ def simulate(model,trials=2000,seed=2026,trace=False):
         "margin_draws":margins,"total_draws":totals,
         "sample_possessions":sample,"trials":trials,"model_promoted":False,
         "historical_source_publication_unauthenticated":True,
-        "availability_adjustments_applied":False,"safe_for_betting":False}
+        "availability_adjustments_applied":False,
+        "learned_drive_hazards_used":trained_hazards is not None,
+        "learned_possession_pace_used":use_learned_pace,
+        "safe_for_betting":False}
