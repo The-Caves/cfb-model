@@ -36,5 +36,28 @@ jobs:
           from scripts.personnel_forecast_grade import _archived_bytes
           assert callable(_archived_bytes)
           PY
+      - name: Checkout genuine immutable context-state branch
+        uses: actions/checkout@v4
+        with:
+          ref: context-state
+          path: .context-state
+          persist-credentials: false
+      - name: Verify entire real grading archive from disk with zero GitHub GETs
+        run: |
+          python - <<'PY'
+          from unittest.mock import patch
+          from scripts.personnel_forecast_grade import read
+          with patch("scripts.personnel_forecast_grade.store.get_blob_file",
+                     side_effect=AssertionError("No per-file GitHub API calls")):
+              index, outcomes, pregame, forecasts, models, finals, prior=read(".context-state")
+          assert isinstance(index["games"],dict)
+          assert isinstance(outcomes["games"],dict)
+          assert len(models)==len(forecasts["runs"])
+          print("Authentic graded archive locally verified:",
+                len(index["games"]),"grades",
+                len(outcomes["games"]),"accepted final games",
+                len(models),"immutable forecast runs",
+                len(prior),"verified earlier grades")
+          PY
       - name: Full repository test suite
         run: python -m unittest discover -s tests -q
