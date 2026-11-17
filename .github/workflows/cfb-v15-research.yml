@@ -1,0 +1,66 @@
+name: CFB V15 Totals Close and Player Opportunity Research
+on:
+  push:
+    branches: [research/v15-totals-close-player-ablation]
+    paths:
+      - 'scripts/v15_*.py'
+      - 'tests/test_v15_*.py'
+      - 'docs/V15_TOTALS_CLOSE_PLAYER_RESEARCH.md'
+      - '.github/workflows/cfb-v15-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cfb-v15-frozen-v14-chronological
+  cancel-in-progress: true
+jobs:
+  v15:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install fixed current CFB requirements
+        run: python -m pip install -r requirements.txt
+      - name: Verify V14 frozen controls and all V15 source cutoffs
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -p 'test_v14_challenger.py' -v
+          python -m unittest discover -s tests -p 'test_v14_research.py' -v
+          python -m unittest discover -s tests -p 'test_v15_residual_challengers.py' -v
+          python -m unittest discover -s tests -p 'test_v15_player_opportunities.py' -v
+      - name: Retrieve EXACT previously frozen V14/ V04 paired research data
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-v14-close-matchup-ats-total-player-research
+          run-id: 43527440626
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .frozen-v14
+      - name: Walk-forward V15 totals, pace and close-game only on earlier weeks
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          python -m scripts.v15_walkforward \
+            --source .frozen-v14/v14-independent-calibration-crosscheck.json \
+            --output artifacts/v15-original-377-matched.json \
+            | tee artifacts/v15-same-cohort-summary.txt
+          cat artifacts/v15-same-cohort-summary.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Full current CFB regression suite
+        run: python -m unittest discover -s tests -q
+      - name: Store source-reconciled research results, never publish picks
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-v15-source-frozen-research
+          path: |
+            artifacts/v15-original-377-matched.json
+            artifacts/v15-same-cohort-summary.txt
+          if-no-files-found: error
