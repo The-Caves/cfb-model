@@ -6,6 +6,7 @@ fit using PRIOR out-of-fold predictions, never target-game labels or lines.
 This previously examined 2026 cohort is NOT independent future validation.
 """
 import argparse
+import datetime as dt
 import json
 import math
 from collections import defaultdict
@@ -72,8 +73,10 @@ def evaluate(archive):
         if not gid or gid in ids or r.get("historical_first_publication_verified") is not False:
             raise ValueError("Duplicate or source-time-invalid historical game")
         ids.add(gid)
-        if not (r["cutoff"]<=r["date"]<r["cutoff"][:8]+"99"):
-            raise ValueError("Historical fixture before original cutoff")
+        week_start=dt.date.fromisoformat(r["cutoff"])
+        gameday=dt.date.fromisoformat(r["date"])
+        if not week_start<=gameday<week_start+dt.timedelta(days=7):
+            raise ValueError("Original weekly football kickoff date mismatch")
         if (not r.get("matchup_feature_ready") and r.get("matchup",{}).get("ready")):
             raise ValueError("Original frozen V14 source gate mismatched")
         byweek[r["cutoff"]].append(r)
