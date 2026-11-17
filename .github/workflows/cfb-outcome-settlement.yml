@@ -118,10 +118,18 @@ jobs:
           python -m scripts.personnel_validation_readiness \
             --dataset-dir "data/settlement_scores/step3e-${{ github.run_id }}" \
             --output "data/settlement_scores/step3e-${{ github.run_id }}/step3f-readiness.json"
+      - name: Refresh immutable context-state checkout after postgame writes
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: context-state
+          path: .context-state
+          persist-credentials: false
       - name: Grade genuinely observed prospective forecasts (Step 3G.1)
         if: steps.gate.outputs.run == 'true'
         run: |
           python -m scripts.personnel_forecast_grade \
+            --archive-root .context-state \
             --output "data/settlement_scores/step3g-grading-${{ github.run_id }}.json"
       - name: Consolidated model finish-line and graded performance audit
         if: steps.gate.outputs.run == 'true'

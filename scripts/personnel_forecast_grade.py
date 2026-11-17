@@ -297,20 +297,44 @@ def verify_prior_grade(index, stored):
     return True
 
 
-def read():
-    src=store.get_blob_file(FORECAST_INDEX)
+def _archived_bytes(path,archive_root=None):
+    """Read archive from freshly checked-out immutable branch, no per-file API GET.
+
+    Unlike silently falling back to GitHub on a missing file, fail closed.
+    The requested local root must be a refreshed context-state checkout from
+    THIS settlement run, not an arbitrary user supplied data directory.
+    """
+    if archive_root is None:
+        return store.get_blob_file(path)
+    rel=Path(path)
+    if (rel.is_absolute() or ".." in rel.parts or
+        not rel.parts or rel.parts[0]!="research_2026"):
+        raise ValueError("Unsafe local context-state grading path")
+    root=Path(archive_root).resolve()
+    if not root.is_dir():
+        raise ValueError("No freshly checked-out context-state archive directory")
+    target=(root/rel).resolve()
+    if not target.is_relative_to(root):
+        raise ValueError("Context-state symlink escapes checkout root")
+    if not target.is_file():
+        raise ValueError("Missing immutable local grading archive file: "+str(rel))
+    return target.read_bytes()
+
+
+def read(archive_root=None):
+    src=_archived_bytes(FORECAST_INDEX,archive_root)
     if src is None:
         raise ValueError("Step 3G forecast archive is not initialized")
     forecast_index=json.loads(src)
     _forecast_index(forecast_index)
     f={}
     for entry in forecast_index["runs"]:
-        blob=store.get_blob_file(entry["path"])
+        blob=_archived_bytes(entry["path"],archive_root)
         if blob is None:
             raise ValueError("Missing source forecast bytes")
         f[entry["path"]]=store.unpack(blob)
-    pre=store.get_blob_file(PREGAME_INDEX)
-    out=store.get_blob_file(OUTCOMES)
+    pre=_archived_bytes(PREGAME_INDEX,archive_root)
+    out=_archived_bytes(OUTCOMES,archive_root)
     if pre is None or out is None:
         raise ValueError("Expected Step 3D archive indexes")
     pre=json.loads(pre);out=json.loads(out)
@@ -322,7 +346,7 @@ def read():
                        for rows in pre["games"].values() for meta in rows}
     for path in sorted(all_pregame_paths):
         safe_path(path,True)
-        blob=store.get_blob_file(path)
+        blob=_archived_bytes(path,archive_root)
         if blob is None:
             raise ValueError("Missing independent original pregame bundle")
         _check_pregame_bundle(path,store.unpack(blob))
@@ -330,11 +354,11 @@ def read():
     for gid,row in out["games"].items():
         path=row["archive_path"]
         safe_path(path,False)
-        blob=store.get_blob_file(path)
+        blob=_archived_bytes(path,archive_root)
         if blob is None:
             raise ValueError("Missing archived result bytes")
         finals[path]=store.unpack(blob)
-    grades=store.get_blob_file(INDEX)
+    grades=_archived_bytes(INDEX,archive_root)
     index=json.loads(grades) if grades else empty_grade_index()
     _index(index)
     prior={}
@@ -342,7 +366,7 @@ def read():
         path=entry["path"]
         if not isinstance(path,str) or not GRADE_PATH.fullmatch(path):
             raise ValueError("Unsafe previously archived grading path")
-        blob=store.get_blob_file(path)
+        blob=_archived_bytes(path,archive_root)
         if blob is None:
             raise ValueError("Missing previously graded immutable bytes")
         prior[path]=store.unpack(blob)
@@ -350,8 +374,8 @@ def read():
     return index,out,pre,forecast_index,f,finals,prior
 
 
-def run(output):
-    index,out,pre,forecast_index,f,finals,prior=read()
+def run(output,archive_root=None):
+    index,out,pre,forecast_index,f,finals,prior=read(archive_root)
     index,created,report=grade(index,out,pre,forecast_index,f,finals,
             dt.datetime.now(dt.timezone.utc).isoformat())
     # Prior files were verified against their individual SHA-256 signatures on
@@ -376,5 +400,6 @@ def run(output):
 if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--output",required=True)
+    p.add_argument("--archive-root",default=None)
     args=p.parse_args()
-    run(args.output)
+    run(args.output,args.archive_root)
