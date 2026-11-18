@@ -1,0 +1,67 @@
+name: CFB Nov18 Context Placeholder and ESPN Retry Regression
+on:
+  push:
+    branches: [fix/cfb-nov18-context-tbd-network]
+    paths:
+      - 'scripts/game_context.py'
+      - 'scripts/ingest_espn.py'
+      - 'tests/test_game_context.py'
+      - 'tests/test_ingest_espn_retries.py'
+      - '.github/workflows/cfb-nov18-context-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Recheck original source, QB queue and transient ESPN behavior
+        run: |
+          python -m unittest discover -s tests -p 'test_game_context.py' -v
+          python -m unittest discover -s tests -p 'test_qb_review_queue.py' -v
+          python -m unittest discover -s tests -p 'test_qb_history.py' -v
+          python -m unittest discover -s tests -p 'test_injury_history.py' -v
+          python -m unittest discover -s tests -p 'test_ingest_espn_retries.py' -v
+      - name: Retrieve the actual failed Nov 18 Context Delta artifact (no new sources)
+        uses: actions/download-artifact@v4
+        with:
+          name: cfb-context-delta-44309081090
+          run-id: 44309081090
+          repository: The-Caves/cfb-model
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .failed-nov18
+      - name: Verify actual TBD placeholders are excluded while genuine fixtures remain
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.game_context import extract_game
+          raw=json.loads(Path(".failed-nov18/context_refresh/upcoming_game_context_2026.json").read_text())
+          accepted=[];removed=[]
+          for row in raw["games"]:
+              ev={"id":row["game_id"],"date":row["kickoff_utc"],"season":{"year":2026},
+                  "competitions":[{"competitors":[
+                      {"homeAway":side,"id":row[side+"_team_id"],
+                       "team":{"displayName":row[side]}}
+                      for side in ("home","away")]}]}
+              candidate=extract_game(ev)
+              (accepted if candidate is not None else removed).append(row)
+          assert len(raw["games"])==144
+          assert len(removed)==12,(len(removed),[r["game_id"] for r in removed])
+          assert len(accepted)==132
+          assert all(g["home"]!=g["away"] and g["home"]!="TBD" and g["away"]!="TBD"
+                     for g in accepted)
+          assert len({g["game_id"] for g in accepted})==132
+          print("Real failed Nov 18 source replay: excluded",len(removed),
+                "unresolved matchups; preserved",len(accepted),"genuine games")
+          PY
+      - name: Full repository tests, no model scoring or grading regression
+        run: python -m unittest discover -s tests -q

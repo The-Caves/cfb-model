@@ -90,4 +90,54 @@ class GameContextTests(unittest.TestCase):
         self.assertEqual(qa["personnel_verified_both_teams"],0)
         self.assertFalse(rows[0]["safe_for_betting"])
         self.assertEqual(rows[0]["injury_coverage_by_team"],{"A":"UNKNOWN","B":"UNKNOWN"})
+    def test_espn_tbd_championship_slots_never_enter_two_team_context(self):
+        # Nov 18 live ESPN archive had eight TBD/TBD and four fixed/TBD games.
+        # Do NOT map a placeholder to a real team's QB, injury or market line.
+        future="2026-11-28T05:00:00Z"
+        for gid in range(401934095,401934103):
+            self.assertIsNone(extract_game(evt(str(gid),future,
+                home="TBD",away="TBD",hid="-1",aid="-2")))
+        for unknown in ("TBD","TBA","to be determined"," TO BE ANNOUNCED "):
+            self.assertIsNone(extract_game(evt("401860926",future,
+                home="Colorado State Rams",away=unknown,hid="36",aid="-2")))
+            self.assertIsNone(extract_game(evt("other",future,
+                home=unknown,away="Fresno State Bulldogs",hid="-1",aid="278")))
+        # Negative IDs are synthetic even if a provider changes display names.
+        self.assertIsNone(extract_game(evt("a",future,
+            home="Unnamed Team",away="Real Team",hid="-1",aid="278")))
+        self.assertIsNone(extract_game(evt("b",future,
+            home="Real Team",away="Other Real Team",hid="20",aid="-2")))
+        self.assertIsNone(extract_game(evt("c",future,
+            home="Same",away="Same",hid="20",aid="21")))
+        actual=extract_game(evt("real",future,
+            home="Colorado State Rams",away="Fresno State Bulldogs",
+            hid="36",aid="278"))
+        self.assertEqual((actual["home"],actual["away"]),
+            ("Colorado State Rams","Fresno State Bulldogs"))
+        # A future valid school whose proper name includes TBD is not a
+        # known ESPN generic placeholder.
+        self.assertIsNotNone(extract_game(evt("named",future,
+            home="TBD State College",away="Other School",
+            hid="888",aid="889")))
+
+    def test_review_queue_does_not_duplicate_unknown_teams_after_normalization(self):
+        from scripts.qb_review_queue import build_queue
+        future="2026-11-28T05:00:00Z"
+        raw=[evt("real",future,home="A",away="B",hid="10",aid="11")]
+        raw.extend(evt(str(i),future,home="TBD",away="TBD",
+                       hid="-1",aid="-2") for i in range(8))
+        real=[g for g in (extract_game(event) for event in raw) if g is not None]
+        def personnel(g,when):
+            return {"coverage_status":"UNKNOWN","confirmed_qb_starters":{},
+                    "injuries":[],"warnings":[]}
+        context,_=build_context(real,[],"2026-11-18T13:00:00Z",
+            lambda *args:None,lambda *args:None,personnel)
+        news={"manifest":{"status":"OFFICIAL_NEWS_REVIEW_ONLY",
+                 "asof_utc":"2026-11-18T13:00:00Z","feed_status":{}},
+              "candidates":[]}
+        q=build_queue({"games":context},news,"2026-11-18T13:01:00Z")
+        self.assertEqual(q["summary"]["team_game_slots"],2)
+        self.assertEqual({r["team"] for r in q["rows"]},{"A","B"})
+        self.assertEqual(len({(r["game_id"],r["team"]) for r in q["rows"]}),2)
+
 if __name__=="__main__":unittest.main()
