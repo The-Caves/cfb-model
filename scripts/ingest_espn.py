@@ -9,7 +9,11 @@ import csv
 import datetime as dt
 import json
 import time
+import urllib.error
 import urllib.request
+import http.client
+import socket
+import ssl
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -23,8 +27,23 @@ def fetch_day(day):
     request = urllib.request.Request(url, headers={
         "User-Agent": "cfb-model-research/0.2", "Accept": "application/json"
     })
-    with urllib.request.urlopen(request, timeout=30) as response:
-        payload = json.load(response)
+    # ESPN occasionally drops one of the ~100 season-history TLS requests.
+    # Retry only temporary transport errors; never treat a failed day as a
+    # successful (empty) scoreboard, and do not retry malformed valid responses.
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                payload = json.load(response)
+            break
+        except urllib.error.HTTPError as exc:
+            if exc.code not in (429, 500, 502, 503, 504) or attempt == 2:
+                raise
+        except (urllib.error.URLError, ssl.SSLError, socket.timeout,
+                http.client.RemoteDisconnected, TimeoutError,
+                ConnectionResetError) as exc:
+            if attempt == 2:
+                raise
+        time.sleep(.6 * (attempt + 1))
     if not isinstance(payload.get("events"), list):
         raise RuntimeError("ESPN scoreboard response lacked events list")
     return payload
