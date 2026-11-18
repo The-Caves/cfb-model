@@ -40,6 +40,16 @@ def extract_game(event):
         hid=str(home["id"]);aid=str(away["id"])
         hname=home["team"]["displayName"];aname=away["team"]["displayName"]
         if not all((hid,aid,hname,aname)) or hid==aid:return None
+        # ESPN posts future championship placeholders with synthetic -1/-2
+        # team IDs and displayName "TBD".  Such fixtures are NOT two-team
+        # football games and must not reach QB/injury source-history creation.
+        # Reject even one unknown opponent; never attribute TBD to a QB/team.
+        unresolved={"TBD","TBA","TBC","TO BE DETERMINED","TO BE ANNOUNCED"}
+        if (hid.startswith("-") or aid.startswith("-") or
+            hname.strip().upper() in unresolved or
+            aname.strip().upper() in unresolved or
+            hname.strip()==aname.strip()):
+            return None
         return {"game_id":str(event["id"]),
           "kickoff_utc":kickoff.isoformat().replace("+00:00","Z"),
           "date_et":kickoff.astimezone(ET).date().isoformat(),
