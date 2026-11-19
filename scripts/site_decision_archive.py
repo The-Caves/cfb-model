@@ -367,6 +367,51 @@ def freeze(board,now,run_id):
                             abs(actual-required)>.00005 or not 0<=cal<=1 or
                             not provider or not market_observed):
                             raise ValueError("V14 market probability has no authenticated quote")
+        # Freeze roster-risk eligibility independently from V04/V14 scores.
+        # This is an explicit source-timed PASS, never a new ATS/O-U pick.
+        roster=g.get("roster_model_eligibility")
+        if roster is not None:
+            if (not isinstance(roster,dict) or
+                roster.get("status")!="ROSTER_AWARE_MODEL_ELIGIBILITY_RESEARCH_ONLY" or
+                str(roster.get("game_id"))!=gid or
+                roster.get("home")!=home or roster.get("away")!=away or
+                roster.get("kickoff_utc")!=g["kickoff_utc"] or
+                roster.get("model_source")!="V04_V14_UNCONDITIONED_BY_ROSTER" or
+                roster.get("original_scores_and_market_picks_unchanged") is not True or
+                roster.get("confirmed_absence_not_an_estimated_point_penalty") is not True or
+                roster.get("cannot_claim_current_roster_adjusted_projection") is not True or
+                roster.get("model_promoted") is not False or
+                roster.get("safe_for_betting") is not False):
+                raise ValueError("Untrusted source-timed roster forecast eligibility")
+            observed=parse_time(roster["asof_utc"])
+            if not orig<=observed<=now<kickoff:
+                raise ValueError("Roster risk observation after prediction snapshot or kickoff")
+            sides=roster.get("sides")
+            if (not isinstance(sides,dict) or set(sides)!={"home","away"} or
+                any(sides[side].get("team")!=g[side+"_team"] or
+                    sides[side].get("side")!=side for side in ("home","away"))):
+                raise ValueError("Roster injury model game/team identity mismatch")
+            allowed={
+                "PASS_QB_STATUS_OR_REPLACEMENT_UNRESOLVED",
+                "PASS_VERIFIED_NON_QB_EFFECT_UNCALIBRATED",
+                "PASS_NO_VALIDATED_PERSONNEL_EFFECT"}
+            if any(roster.get(k) not in allowed for k in
+                ("injury_sensitive_ats_action","injury_sensitive_total_action",
+                 "injury_sensitive_player_prop_action")):
+                raise ValueError("Roster risk cannot fabricate action/edge")
+            # Recheck original first-seen clocks of every attached player fact.
+            for team_side in ("home","away"):
+                x=sides[team_side]
+                for entry in x.get("confirmed_longterm_absences",[]):
+                    if (not str(entry.get("source_url","")).startswith("https://") or
+                        parse_time(entry["first_eligible_at_utc"])>observed):
+                        raise ValueError("Roster QB absence source after original decision")
+                for kind in ("actionable_qb_reports","other_actionable_reports"):
+                    for entry in x.get(kind,[]):
+                        if (not str(entry.get("source_url","")).startswith("https://") or
+                            not parse_time(entry["published_at_utc"])<=
+                                parse_time(entry["observed_at_utc"])<=observed):
+                            raise ValueError("Roster player status observed after decision")
         discrepancy=round(abs(margin+spread),4) if sp else None
         risk="HIGH_MODEL_MARKET_DISAGREEMENT" if discrepancy is not None and discrepancy>=10 else "NONE"
         high_disagreement+=int(risk!="NONE")
@@ -415,6 +460,7 @@ def freeze(board,now,run_id):
             "v09_frozen_score_simulation":v09 if v09 else None,
             "v13_frozen_probability_shadow":v13 if v13 else None,
             "v14_frozen_matchup_shadow":v14 if v14 else None,
+            "roster_frozen_forecast_eligibility":roster if roster else None,
             "v04_research_status":research["status"] if research else None,
             "v04_research_policy":research["policy"] if research else None,
             "v04_research_ats_side":research["ats_side"] if research else None,

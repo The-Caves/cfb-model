@@ -49,6 +49,8 @@ on:
       - 'tests/test_v05_score_benchmark.py'
       - 'scripts/v04_market_challenger.py'
       - 'scripts/official_longterm_qb_absences.py'
+      - 'scripts/site_injury_forecast_gate.py'
+      - 'tests/test_site_injury_forecast_gate.py'
       - 'data/context/official_longterm_qb_absences_2026.json'
       - 'tests/test_official_longterm_qb_absences.py'
       - 'tests/test_v04_market_challenger.py'
@@ -379,6 +381,27 @@ jobs:
                      (g["v14_matchup_shadow"]["safe_for_betting"] is False and
                       g["v14_matchup_shadow"]["original_v04_score_unchanged"] is True)
                      for g in b["games"])
+          PY
+      - name: Mark injuries and unresolved QB replacements as source-timed model PASS risk
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -p 'test_site_injury_forecast_gate.py' -v
+          python -m scripts.site_injury_forecast_gate \
+            --dashboard site/data/dashboard.json | tee /tmp/roster-forecast-risk.txt
+          cat /tmp/roster-forecast-risk.txt >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          b=json.load(open("site/data/dashboard.json"))
+          s=b["roster_model_eligibility_summary"]
+          assert s["status"]=="ROSTER_AWARE_MODEL_ELIGIBILITY_RESEARCH_ONLY"
+          assert s["original_scores_and_market_picks_unchanged"] is True
+          assert s["independent_injury_scoring_improvement_proven"] is False
+          for g in b["games"]:
+              r=g.get("roster_model_eligibility")
+              if r:
+                  assert r["safe_for_betting"] is False
+                  assert r["model_promoted"] is False
+                  assert r["original_scores_and_market_picks_unchanged"] is True
           PY
       - name: Overlay source-reviewed player-stat outlooks (separate model; scores frozen)
         run: |
