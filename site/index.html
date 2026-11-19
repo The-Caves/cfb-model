@@ -1187,6 +1187,50 @@ function gameCard(g){
      "V14 is a historical-matchup challenger under prospective evaluation, NOT a promoted scoring model or a verified betting edge. Original V04/V13 picks and grades remain unchanged."));
    summary.append(fold);
   }
+  // Injury context is not yet numerically calibrated to player replacement
+  // points. A roster flag is a separate PASS-eligibility decision, not a
+  // retroactive rewrite of the old scoring model or its original bets.
+  const roster=g.roster_model_eligibility;
+  if(roster?.status==="ROSTER_AWARE_MODEL_ELIGIBILITY_RESEARCH_ONLY" &&
+     roster?.original_scores_and_market_picks_unchanged===true &&
+     roster?.model_promoted===false &&
+     roster?.game_id===String(g.game_id) &&
+     roster?.home===g.home_team && roster?.away===g.away_team){
+    const affected=roster.injury_sensitive_ats_action!=="PASS_NO_VALIDATED_PERSONNEL_EFFECT";
+    if(affected){
+     const why=roster.injury_sensitive_ats_action==="PASS_QB_STATUS_OR_REPLACEMENT_UNRESOLVED"?
+       "QB availability / replacement impact not yet calibrated":
+       "Reported roster absences / uncertain roles not yet calibrated";
+     summary.append(node("div","biasWarning",
+       "Roster-aware PASS · "+why+
+       ". V04/V14 projections do not yet include verified injury replacement points."));
+     const fold=node("details","detailFold");
+     fold.append(node("summary","","Source-observed availability and model confidence"));
+     for(const side of ["home","away"]){
+      const information=roster.sides?.[side];
+      if(!information)continue;
+      const lines=[...(information.confirmed_longterm_absences||[]),
+                   ...(information.actionable_qb_reports||[]),
+                   ...(information.other_actionable_reports||[])];
+      if(!lines.length && !information.requires_qb_review_before_pick)continue;
+      fold.append(node("div","underStats",information.team+" · "+
+        information.status.replaceAll("_"," ")+" · QB status "+information.qb_source_status));
+      for(const item of lines){
+       const detail=node("div","biasNote",item.position+" "+item.player+
+         " — "+item.status+" · source observed before the forecast. ");
+       if(/^https:\/\//.test(item.source_url||"")){
+        const a=node("a","","Official source");
+        a.href=item.source_url;a.target="_blank";a.rel="noopener noreferrer";
+        detail.append(a);
+       }
+       fold.append(detail);
+      }
+     }
+     fold.append(node("div","biasNote",
+       "A report alone does not prove an athlete is a starter. Missing reports do not mean the roster is healthy. Player-level effects and prop probabilities are unvalidated."));
+     summary.append(fold);
+    }
+  }
   // Reviewed university sources are future-only; no retrospective
   // "known absence" is painted onto a game archived before first review.
   for(const side of ["home","away"]){
@@ -1317,6 +1361,9 @@ function gameCard(g){
    indicators.append(node("span","weatherChip weatherUnknown","Weather unavailable"));
  }
  if(hasQBRisk(g))indicators.append(node("span","injuryChip","⚠ QB availability"));
+ if(g.roster_model_eligibility?.status==="ROSTER_AWARE_MODEL_ELIGIBILITY_RESEARCH_ONLY" &&
+   g.roster_model_eligibility?.injury_sensitive_ats_action!=="PASS_NO_VALIDATED_PERSONNEL_EFFECT")
+   indicators.append(node("span","injuryChip","Roster-aware PASS"));
  const injuryCount=["away","home"].reduce((n,side)=>n+(g["player_availability_"+side]||[]).filter(p=>
    ["OUT","QUESTIONABLE","DOUBTFUL","SUSPENDED","LIMITED","GAME_TIME_DECISION"].includes(p.status)).length,0);
  if(injuryCount)indicators.append(node("span","injuryChip","⚠ "+injuryCount+" reported player flags"));
