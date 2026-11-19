@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/site_injury_forecast_gate.py'
       - 'tests/test_site_injury_forecast_gate.py'
+      - 'tests/test_site_injury_archive.py'
       - 'scripts/site_decision_archive.py'
       - 'site/index.html'
       - '.github/workflows/cfb-site.yml'
@@ -26,6 +27,7 @@ jobs:
       - name: Confirm all observed injury evidence, missingness, status and score integrity
         run: |
           python -m unittest discover -s tests -p 'test_site_injury_forecast_gate.py' -v
+          python -m unittest discover -s tests -p 'test_site_injury_archive.py' -v
           python -m unittest discover -s tests -p 'test_site_availability.py' -v
           python -m unittest discover -s tests -p 'test_official_longterm_qb_absences.py' -v
           python -m unittest discover -s tests -p 'test_site_decision_archive.py' -v
