@@ -1,0 +1,44 @@
+name: CFB Injury-aware Forecast Eligibility Research
+on:
+  push:
+    branches: [research/injury-aware-forecast-gates]
+    paths:
+      - 'scripts/site_injury_forecast_gate.py'
+      - 'tests/test_site_injury_forecast_gate.py'
+      - 'scripts/site_decision_archive.py'
+      - 'site/index.html'
+      - '.github/workflows/cfb-site.yml'
+      - '.github/workflows/cfb-injury-risk-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Confirm all observed injury evidence, missingness, status and score integrity
+        run: |
+          python -m unittest discover -s tests -p 'test_site_injury_forecast_gate.py' -v
+          python -m unittest discover -s tests -p 'test_site_availability.py' -v
+          python -m unittest discover -s tests -p 'test_official_longterm_qb_absences.py' -v
+          python -m unittest discover -s tests -p 'test_site_decision_archive.py' -v
+      - name: Check full website JavaScript parse
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          code=Path("site/index.html").read_text()
+          scripts=re.findall(r'<script(?:\s+[^>]*)?>([\s\S]*?)</script>',code)
+          assert scripts and any("function v14MatchupShadow" in x for x in scripts)
+          Path("/tmp/cfb-injury-site.js").write_text(max(scripts,key=len))
+          PY
+          node --check /tmp/cfb-injury-site.js
+      - name: Full repository CFB regression suite
+        run: python -m unittest discover -s tests -q
