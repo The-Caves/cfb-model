@@ -400,8 +400,8 @@ def freeze(board,now,run_id):
                  "injury_sensitive_player_prop_action")):
                 raise ValueError("Roster risk cannot fabricate action/edge")
             # Recheck original first-seen clocks of every attached player fact.
-            for side in ("home","away"):
-                x=sides[side]
+            for team_side in ("home","away"):
+                x=sides[team_side]
                 for entry in x.get("confirmed_longterm_absences",[]):
                     if (not str(entry.get("source_url","")).startswith("https://") or
                         parse_time(entry["first_eligible_at_utc"])>observed):
