@@ -33,7 +33,11 @@ class InjuryFreezeTests(unittest.TestCase):
                          "PASS_QB_STATUS_OR_REPLACEMENT_UNRESOLVED")
         self.assertFalse(risk["model_promoted"])
         self.assertEqual(row["frozen_forecast_home_margin"],10.)
-        self.assertEqual(row["displayed_ats_side"],"HOME")
+        unchanged=copy.deepcopy(b)
+        unchanged["games"][0].pop("roster_model_eligibility")
+        previous=freeze(unchanged,NOW,"888")["rows"][0]
+        self.assertEqual(row["displayed_ats_side"],previous["displayed_ats_side"])
+        self.assertEqual(row["displayed_ou_side"],previous["displayed_ou_side"])
 
     def test_archive_refuses_roster_risk_stamped_after_capture(self):
         b=ready()
