@@ -108,8 +108,10 @@ def grade_diagnostics(grades):
     }
 
 
-def read_archived_grades():
-    raw=store.get_blob_file(GRADE_INDEX)
+def read_archived_grades(archive_root=None):
+    """Verify immutable grade receipts from a local checkout when supplied."""
+    from scripts.personnel_forecast_grade import _archived_bytes
+    raw=_archived_bytes(GRADE_INDEX,archive_root)
     index=json.loads(raw) if raw is not None else empty_grade_index()
     records={}
     for entry in index.get("games",{}).values():
@@ -117,7 +119,7 @@ def read_archived_grades():
         # Path membership and checksum are checked by verify_prior_grade.
         if path in records:
             raise ValueError("Duplicated graded archive path")
-        packed=store.get_blob_file(path)
+        packed=_archived_bytes(path,archive_root)
         if packed is None:
             raise ValueError("Missing historical frozen graded record")
         records[path]=store.unpack(packed)
@@ -191,11 +193,11 @@ def build(readiness,grading,grades,context=None):
     }
 
 
-def run(readiness_path,grading_path,output,context_path=None,archive_reader=read_archived_grades):
+def run(readiness_path,grading_path,output,context_path=None,archive_reader=read_archived_grades,archive_root=None):
     readiness=json.loads(Path(readiness_path).read_text())
     grading=json.loads(Path(grading_path).read_text())
     context=json.loads(Path(context_path).read_text()) if context_path else None
-    result=build(readiness,grading,archive_reader(),context)
+    result=build(readiness,grading,archive_reader(archive_root) if archive_root is not None else archive_reader(),context)
     dest=Path(output)
     dest.parent.mkdir(parents=True,exist_ok=True)
     with dest.open("x",encoding="utf-8") as fp:
@@ -223,5 +225,6 @@ if __name__=="__main__":
     parser.add_argument("--grading",required=True)
     parser.add_argument("--output",required=True)
     parser.add_argument("--context")
+    parser.add_argument("--archive-root",default=None)
     args=parser.parse_args()
-    run(args.readiness,args.grading,args.output,args.context)
+    run(args.readiness,args.grading,args.output,args.context,archive_root=args.archive_root)
