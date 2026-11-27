@@ -1150,5 +1150,15 @@
     "admin1": "Michigan",
     "country_code": "US",
     "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
+  },
+  "[\"Arlington\",\"TX\",\"USA\"]": {
+    "latitude": 32.73569,
+    "longitude": -97.10807,
+    "geonames_id": 4671240,
+    "name": "Arlington",
+    "admin1": "Texas",
+    "country_code": "US",
+    "timezone": "America/Chicago",
+    "precision": "CITY_CENTROID_NOT_STADIUM_COORDINATE"
   }
 }
